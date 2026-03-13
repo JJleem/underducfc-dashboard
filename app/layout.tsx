@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "UNDERDUCK FC | 팀 대시보드",
     description: "언더덕 FC 팀원들을 위한 경기 일정 및 기록 확인 대시보드",
-    url: "https://underduck-fc.vercel.app", // 나중에 배포할 실제 주소로 바꿔주세요!
+    url: "https://underducfc-dashboard.vercel.app/", // 나중에 배포할 실제 주소로 바꿔주세요!
     siteName: "UNDERDUCK FC",
     images: [
       {
