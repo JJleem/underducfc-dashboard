@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🦆 UNDERDUCK FC Dashboard
 
-## Getting Started
+> **"때문에"라는 말보다 "덕분에"라는 말을 지향하는 팀, 언더덕 FC.**
+>
+> 우리 팀의 모든 경기 일정과 선수들의 찬란한 기록을 한눈에 확인하고 관리하기 위한 전용 대시보드입니다.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ✨ 주요 기능
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **실시간 선수 랭킹**: 골, 도움, MOM 점수를 합산한 실시간 팀 내 순위 노출
+- **경기 일정 & 결과**: 다가오는 경기 안내 및 지난 경기 스코어/기록 확인
+- **스마트 공지사항**: 운영진이 전달하는 최신 소식을 대시보드 최상단에 상시 노출
+- **모바일 최적화**: 운동장에서 폰으로 접속해도 쾌적하게 볼 수 있는 반응형 UI
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📊 구글 시트 데이터 관리 가이드 (운영진 필독)
 
-## Learn More
+본 대시보드는 구글 시트와 실시간으로 연동됩니다. 데이터가 깨지지 않도록 아래 **입력 규칙**을 반드시 지켜주세요.
 
-To learn more about Next.js, take a look at the following resources:
+### 1️⃣ [matches] 시트 (경기 일정 및 결과)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **득점자 & 도움 매칭**: 득점자와 도움은 적힌 순서대로 짝이 맺어집니다.
+  - **입력 예시**: 득점자: `홍길동,임재준` / 도움: `,홍길동`
+  - **결과**: 1번 골(홍길동-도움 없음), 2번 골(임재준-홍길동 도움)
+- **참석자 기록**: 참석자 칸에 이름을 적으면 `stats` 시트의 출전 횟수가 자동으로 올라갑니다.
+  - **규칙**: 이름 사이에는 **쉼표(,)**를 찍고 **띄어쓰기 없이** 붙여 써주세요.
+- **자체전 표시**: 상대팀 칸에 `자체전`이라고 적으면 대시보드에서 전용 UI가 적용됩니다.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 2️⃣ [stats] 시트 (선수 명단 및 기록)
 
-## Deploy on Vercel
+- **자동화 구역**: **'출전, 득점, 도움, MOM, 포인트'** 칸은 수식이 들어있으므로 **절대 직접 수정하지 마세요.**
+- **신규 선수 등록**: 새로운 선수가 오면 **'등번호'**와 **'이름'**만 추가하고, 윗줄의 수식을 아래로 드래그해서 채워주세요.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 3️⃣ [notice] 시트 (공지사항)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **단일 공지 원칙**: 대시보드에는 항상 **두 번째 줄(2행)**의 내용만 표시됩니다.
+- **업데이트**: 새로운 공지가 있을 때는 기존 내용을 지우고 그 자리에 덮어씌워 작성해 주세요.
+
+---
+
+## 🛠 기술 스택
+
+- **Frontend**: Next.js 15 (App Router)
+- **Styling**: Tailwind CSS, Shadcn UI, Lucide React
+- **Database**: Google Sheets API (v4)
+- **Deployment**: Vercel
+
+---
+
+© 2026 UNDERDUCK FC. Built with passion by **molt**
