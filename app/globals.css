@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* 🚨 이 한 줄을 추가해야 버튼으로 다크모드가 작동합니다! (Tailwind v4 전용) */
+@custom-variant dark (&:is(.dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

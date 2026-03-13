@@ -1,65 +1,87 @@
-import Image from "next/image";
+// app/page.tsx
+import { getSheetData } from "./lib/google-sheets";
+import DashboardClient, {
+  MatchData,
+  NoticeData,
+  PlayerData,
+} from "./components/DashboardClient";
 
-export default function Home() {
+export default async function TeamDashboardPage() {
+  // 💡 1. 가져오는 데이터가 2차원 문자열 배열(string[][])임을 명시합니다.
+  const rawMatches: string[][] = await getSheetData("matches!A1:J50");
+  const rawRoster: string[][] = await getSheetData("roster!A1:J50");
+  const rawStats: string[][] = await getSheetData("stats!A1:F50");
+  const rawNotices: string[][] = await getSheetData("notice!A1:D20");
+  // 💡 2. MatchData 타입에 맞춰서 가공 (row: string[] 명시)
+  const matches: MatchData[] = rawMatches
+    .slice(1)
+    .map((row: string[], index: number) => ({
+      id: index,
+      date: row[0] || "",
+      time: row[1] || "미정",
+      location: row[2] || "미정",
+      opponent: row[3] || "미정",
+      ourScore: row[4] || "-",
+      theirScore: row[5] || "-",
+      result: row[6] || "예정",
+      type: row[7] || "일반 매칭", // H열 (8번째)
+      goals: row[8] || "", // I열 (9번째) 득점자
+      assists: row[9] || "", // J열 (10번째) 어시스트
+    }));
+
+  // 💡 3. Map의 Key와 Value 타입 명시
+  const rosterMap = new Map<string, { no: string; pos: string }>();
+  rawRoster.slice(1).forEach((row: string[]) => {
+    rosterMap.set(row[0], { no: row[1] || "-", pos: row[2] || "-" });
+  });
+
+  // 💡 4. PlayerData 타입에 맞춰서 가공
+  const players: PlayerData[] = rawStats.slice(1).map((row: string[]) => {
+    const name = row[1];
+    const rosterInfo = rosterMap.get(name) || { no: "-", pos: "-" };
+
+    return {
+      name: name,
+      no: rosterInfo.no,
+      pos: rosterInfo.pos,
+      apps: Number(row[2]) || 0,
+      goals: Number(row[3]) || 0,
+      assists: Number(row[4]) || 0,
+      mom: Number(row[5]) || 0,
+    };
+  });
+
+  // 💡 5. 숫자 타입으로 변환했기 때문에 정렬 에러도 사라집니다.
+  players.sort((a, b) => {
+    const scoreA = Number(a.goals) + Number(a.assists) + Number(a.mom);
+    const scoreB = Number(b.goals) + Number(b.assists) + Number(b.mom);
+
+    // 점수가 다르면 높은 순서대로 (내림차순)
+    if (scoreB !== scoreA) {
+      return scoreB - scoreA;
+    }
+
+    // 점수가 같으면 이름 가나다 순으로 (오름차순)
+    return a.name.localeCompare(b.name, "ko");
+  });
+
+  const firstNoticeRow = rawNotices[1]; // index 1이 실제 첫 번째 데이터 줄
+
+  // 2. 데이터가 있을 때만 객체로 만들고, 없으면 undefined 처리를 합니다.
+  const latestNotice: NoticeData | undefined = firstNoticeRow
+    ? {
+        id: 0,
+        date: firstNoticeRow[0] || "",
+        title: firstNoticeRow[1] || "",
+        content: firstNoticeRow[2] || "",
+        important: firstNoticeRow[3] === "Y",
+      }
+    : undefined;
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <DashboardClient
+      matches={matches}
+      players={players}
+      notice={latestNotice}
+    />
   );
 }
