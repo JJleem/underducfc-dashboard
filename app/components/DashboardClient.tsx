@@ -64,7 +64,7 @@ export default function DashboardClient({
   const { theme, setTheme } = useTheme();
   // 💡 1. 완료된 경기만 필터링 (결과가 '예정'이 아닌 경우)
   const completedMatches = matches.filter(
-    (m) => m.result !== "예정" && m.result !== "",
+    (m) => m.result !== "예정" && m.result !== "" && m.result !== "자체전",
   );
   const totalMatchesCount = completedMatches.length;
 
