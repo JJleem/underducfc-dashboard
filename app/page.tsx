@@ -10,7 +10,7 @@ export default async function TeamDashboardPage() {
   // 💡 1. 가져오는 데이터가 2차원 문자열 배열(string[][])임을 명시합니다.
   const rawMatches: string[][] = await getSheetData("matches!A1:J50");
   const rawRoster: string[][] = await getSheetData("roster!A1:J50");
-  const rawStats: string[][] = await getSheetData("stats!A1:F50");
+  const rawStats: string[][] = await getSheetData("stats!A1:G50");
   const rawNotices: string[][] = await getSheetData("notice!A1:D20");
   // 💡 2. MatchData 타입에 맞춰서 가공 (row: string[] 명시)
   const matches: MatchData[] = rawMatches
@@ -39,15 +39,15 @@ export default async function TeamDashboardPage() {
   const players: PlayerData[] = rawStats.slice(1).map((row: string[]) => {
     const name = row[1];
     const rosterInfo = rosterMap.get(name) || { no: "-", pos: "-" };
-
+    const pos = row[2];
     return {
       name: name,
       no: rosterInfo.no,
-      pos: rosterInfo.pos,
-      apps: Number(row[2]) || 0,
-      goals: Number(row[3]) || 0,
-      assists: Number(row[4]) || 0,
-      mom: Number(row[5]) || 0,
+      pos: pos,
+      apps: Number(row[3]) || 0,
+      goals: Number(row[4]) || 0,
+      assists: Number(row[5]) || 0,
+      mom: Number(row[6]) || 0,
     };
   });
 

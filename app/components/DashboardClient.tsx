@@ -106,7 +106,19 @@ export default function DashboardClient({
       return "bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white";
     return "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10";
   };
-
+  // 💡 포지션별 뱃지 컬러 스타일 (대시보드용으로 살짝 심플하게)
+  const getPosBadgeStyle = (pos?: string) => {
+    const p = pos?.toUpperCase().trim() || "";
+    if (p === "GK")
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/70 dark:text-yellow-200";
+    if (p === "DF")
+      return "bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-200";
+    if (p === "MF")
+      return "bg-green-100 text-green-800 dark:bg-green-950/70 dark:text-green-200";
+    if (p === "FW")
+      return "bg-red-100 text-red-800 dark:bg-red-950/70 dark:text-red-200";
+    return "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400";
+  };
   return (
     <div className="min-h-dvh bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-[#F5F5DC] font-sans max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors duration-300">
       {/* 📱 앱 헤더 */}
@@ -474,35 +486,67 @@ export default function DashboardClient({
                 </div>
               </div>
 
-              {/* 하단 섹션: 평균 득점 및 실점 (세로 구분선으로 깔끔하게 반반 분할) */}
-              <div className="grid grid-cols-2 divide-x divide-gray-100 dark:divide-white/5">
-                {/* 평균 득점 영역 */}
-                <div className="p-4 sm:p-5 flex flex-col items-center justify-center">
-                  <div className="flex items-center gap-1.5 mb-1.5">
+              {/* 하단 섹션: 총 득/실 및 평균 득/실 (4분할) */}
+              <div className="grid grid-cols-4 divide-x divide-gray-100 dark:divide-white/5 border-t border-gray-100 dark:border-white/5">
+                {/* 1. 총 득점 영역 */}
+                <div className="p-3 sm:p-5 flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                  <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 mb-1.5">
                     <span className="text-[12px] opacity-80">⚽</span>
-                    <p className="text-[10px] sm:text-[11px] font-bold text-gray-500">
-                      평균 득점
+                    <p className="text-[9px] sm:text-[11px] font-bold text-gray-500 whitespace-nowrap">
+                      총 득점
                     </p>
                   </div>
-                  <p className="text-xl sm:text-2xl font-black text-blue-500">
-                    {avgGoalsFor}
-                    <span className="text-[10px] sm:text-[11px] font-medium text-gray-400 ml-1">
+                  <p className="text-lg sm:text-2xl font-black text-blue-500">
+                    {totalGoalsFor}
+                    <span className="text-[9px] sm:text-[11px] font-medium text-gray-400 ml-0.5 sm:ml-1">
                       골
                     </span>
                   </p>
                 </div>
 
-                {/* 평균 실점 영역 */}
-                <div className="p-4 sm:p-5 flex flex-col items-center justify-center">
-                  <div className="flex items-center gap-1.5 mb-1.5">
+                {/* 2. 총 실점 영역 */}
+                <div className="p-3 sm:p-5 flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                  <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 mb-1.5">
                     <span className="text-[12px] opacity-80">🥅</span>
-                    <p className="text-[10px] sm:text-[11px] font-bold text-gray-500">
+                    <p className="text-[9px] sm:text-[11px] font-bold text-gray-500 whitespace-nowrap">
+                      총 실점
+                    </p>
+                  </div>
+                  <p className="text-lg sm:text-2xl font-black text-[#FF8FA3]">
+                    {totalGoalsAgainst}
+                    <span className="text-[9px] sm:text-[11px] font-medium text-gray-400 ml-0.5 sm:ml-1">
+                      골
+                    </span>
+                  </p>
+                </div>
+
+                {/* 3. 평균 득점 영역 */}
+                <div className="p-3 sm:p-5 flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                  <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 mb-1.5">
+                    <span className="text-[12px] opacity-80">🎯</span>
+                    <p className="text-[9px] sm:text-[11px] font-bold text-gray-500 whitespace-nowrap">
+                      평균 득점
+                    </p>
+                  </div>
+                  <p className="text-lg sm:text-2xl font-black text-blue-500">
+                    {avgGoalsFor}
+                    <span className="text-[9px] sm:text-[11px] font-medium text-gray-400 ml-0.5 sm:ml-1">
+                      골
+                    </span>
+                  </p>
+                </div>
+
+                {/* 4. 평균 실점 영역 */}
+                <div className="p-3 sm:p-5 flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                  <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 mb-1.5">
+                    <span className="text-[12px] opacity-80">🧤</span>
+                    <p className="text-[9px] sm:text-[11px] font-bold text-gray-500 whitespace-nowrap">
                       평균 실점
                     </p>
                   </div>
-                  <p className="text-xl sm:text-2xl font-black text-[#FF8FA3]">
+                  <p className="text-lg sm:text-2xl font-black text-[#FF8FA3]">
                     {avgGoalsAgainst}
-                    <span className="text-[10px] sm:text-[11px] font-medium text-gray-400 ml-1">
+                    <span className="text-[9px] sm:text-[11px] font-medium text-gray-400 ml-0.5 sm:ml-1">
                       골
                     </span>
                   </p>
@@ -514,7 +558,7 @@ export default function DashboardClient({
               <table className="w-full text-left table-fixed border-collapse">
                 <thead>
                   <tr className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10 text-[9px] font-black text-gray-500 uppercase tracking-tighter">
-                    <th className="w-[12%] py-4 pl-4">선수</th>
+                    <th className="w-[22%] py-4 pl-4">선수</th>
                     <th className="w-[12%] py-4 text-center">출전</th>
                     <th className="w-[12%] py-4 text-center">골</th>
                     <th className="w-[12%] py-4 text-center">도움</th>
@@ -531,10 +575,19 @@ export default function DashboardClient({
                       className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
                     >
                       {/* 이름/포지션 */}
+                      {/* 이름/포지션 (수정된 부분) */}
                       <td className="py-4 pl-4 overflow-hidden">
-                        <p className="font-black text-[13px] text-gray-800 dark:text-gray-200 truncate">
-                          {player.name}
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-black text-[13px] text-gray-800 dark:text-gray-200 truncate shrink-0">
+                            {player.name}
+                          </p>
+                          {/* 💡 포지션 뱃지 추가 */}
+                          <span
+                            className={`text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm ${getPosBadgeStyle(player.pos)}`}
+                          >
+                            {player.pos !== "-" ? player.pos : "SUB"}
+                          </span>
+                        </div>
                       </td>
                       {/* 출전 */}
                       <td className="py-4 text-center text-[11px] font-bold text-gray-400">

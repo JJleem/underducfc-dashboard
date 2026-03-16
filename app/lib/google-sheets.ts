@@ -3,7 +3,7 @@
 type SheetRange =
   | "roster!A1:J50"
   | "matches!A1:J50"
-  | "stats!A1:F50"
+  | "stats!A1:G50"
   | "notice!A1:D20";
 
 export async function getSheetData(range: SheetRange) {
