@@ -168,7 +168,7 @@ export default function DashboardClient({
               <span className="text-gray-900 dark:text-white font-bold mx-1 underline underline-offset-4 decoration-[#FFB6C1]">
                 &quot;덕분에&quot;
               </span>
-              란 말을 추구하며, 서로를 존중하는 축구 동호회입니다.
+              란 말을 추구하며, <br /> 서로를 존중하는 축구 동호회입니다.
             </p>
 
             <div className="flex items-center gap-2 mt-2">
