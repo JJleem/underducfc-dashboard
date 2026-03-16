@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "./components/theme-provider";
 import Image from "next/image"; // 👈 추가!
 import "./globals.css";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "UNDERDUCK FC | 언더덕 FC",
@@ -34,7 +35,6 @@ export const metadata: Metadata = {
 
   icons: {
     icon: "/underducklogo.png",
-    // 아이폰 홈 화면 등에 추가할 때 보일 아이콘도 같은 걸로 쓰고 싶다면 아래 줄 추가
     apple: "/underducklogo.png",
   },
 };
@@ -84,9 +84,12 @@ export default function RootLayout({
                       className="object-contain shrink-0"
                     />
                   </div>
-                  <span className="font-black text-xs tracking-wider text-gray-800 dark:text-gray-200">
+                  <Link
+                    href={"https://github.com/JJleem"}
+                    className="font-black text-xs tracking-wider text-gray-800 dark:text-gray-200 hover:text-[#FF8FA3]/80"
+                  >
                     molt
-                  </span>
+                  </Link>
                 </div>
               </div>
             </footer>

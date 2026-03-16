@@ -62,7 +62,42 @@ export default function DashboardClient({
   notice,
 }: DashboardClientProps) {
   const { theme, setTheme } = useTheme();
+  // 💡 1. 완료된 경기만 필터링 (결과가 '예정'이 아닌 경우)
+  const completedMatches = matches.filter(
+    (m) => m.result !== "예정" && m.result !== "",
+  );
+  const totalMatchesCount = completedMatches.length;
 
+  // 💡 2. 승무패 및 득실점 계산
+  let wins = 0;
+  let draws = 0;
+  let losses = 0;
+  let totalGoalsFor = 0;
+  let totalGoalsAgainst = 0;
+
+  completedMatches.forEach((m) => {
+    const gf = Number(m.ourScore) || 0; // 우리 팀 득점
+    const ga = Number(m.theirScore) || 0; // 상대 팀 득점 (실점)
+
+    totalGoalsFor += gf;
+    totalGoalsAgainst += ga;
+
+    if (gf > ga) wins++;
+    else if (gf === ga) draws++;
+    else losses++;
+  });
+
+  // 💡 3. 평균 및 승률 계산
+  const avgGoalsFor =
+    totalMatchesCount > 0
+      ? (totalGoalsFor / totalMatchesCount).toFixed(1)
+      : "0.0";
+  const avgGoalsAgainst =
+    totalMatchesCount > 0
+      ? (totalGoalsAgainst / totalMatchesCount).toFixed(1)
+      : "0.0";
+  const winRate =
+    totalMatchesCount > 0 ? Math.round((wins / totalMatchesCount) * 100) : 0;
   const getResultBadgeStyle = (result: string) => {
     if (result === "승")
       return "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black shadow-[0_0_10px_rgba(255,182,193,0.3)]";
@@ -123,12 +158,51 @@ export default function DashboardClient({
               </span>
               란 말을 추구하며, 서로를 존중하는 축구 동호회입니다.
             </p>
-            <Link
-              href="/roster"
-              className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 dark:bg-white/10 hover:bg-gray-800 dark:hover:bg-white/20 text-white dark:text-[#FFB6C1] rounded-full text-xs font-bold transition-all shadow-md mt-2"
-            >
-              <Menu className="w-4 h-4" />팀 로스터 보기
-            </Link>
+
+            <div className="flex items-center gap-2 mt-2">
+              <Link
+                href="/roster"
+                className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 dark:bg-white/10 hover:bg-gray-800 dark:hover:bg-white/20 text-white dark:text-[#FFB6C1] rounded-full text-xs font-bold transition-all shadow-md"
+              >
+                <Menu className="w-4 h-4" />팀 로스터 보기
+              </Link>
+
+              {/* 💡 인스타그램 버튼 */}
+              <Link
+                href="https://www.instagram.com/underduck_fc/"
+                target="_blank"
+                rel="noopener noreferrer"
+                // 💡 overflow-hidden 추가: 혹시 모를 이미지 삐져나옴 방지
+                className="flex items-center justify-center w-[36px] h-[36px] bg-white dark:bg-[#1a1a1a] rounded-full hover:scale-110 transition-transform shadow-md border border-gray-100 dark:border-white/10 overflow-hidden"
+                aria-label="Instagram"
+              >
+                <Image
+                  src="/instagram-logo.webp"
+                  alt="Instagram"
+                  // 💡 컨테이너(36)보다 작게 설정하여 안정적인 여백 생성
+                  width={22}
+                  height={22}
+                  className="object-contain" // 💡 비율 찌그러짐 방지
+                />
+              </Link>
+
+              {/* 💡 구글 시트 버튼 */}
+              <Link
+                href="https://docs.google.com/spreadsheets/d/1e2w3S5zeiryWlXE3BfhkOoraXCZZays5BPiI5UsKhQs/edit?gid=0#gid=0"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center w-[36px] h-[36px] bg-white dark:bg-[#1a1a1a] rounded-full hover:scale-110 transition-transform shadow-md border border-gray-100 dark:border-white/10 overflow-hidden"
+                aria-label="Google Sheets"
+              >
+                <Image
+                  src="/sheets-logo.png"
+                  alt="Google Sheets"
+                  width={22}
+                  height={22}
+                  className="object-contain h-[22px]!"
+                />
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -353,6 +427,88 @@ export default function DashboardClient({
           </TabsContent>
           {/* 선수 랭킹 탭 */}
           <TabsContent value="stats" className="outline-none">
+            {/* 💡 하나의 통합된 전광판 스타일 카드 (모바일 화면 깨짐 완벽 방지) */}
+            <Card className="mb-6 bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+              {/* 상단 섹션: 전적 및 승률 (배경색을 살짝 다르게 주어 분리감 형성) */}
+              <div className="p-4 sm:p-5 bg-gray-50 dark:bg-white/[0.02] flex items-center justify-between border-b border-gray-100 dark:border-white/5">
+                <div>
+                  <p className="text-[10px] sm:text-[11px] font-bold text-gray-500 mb-1.5">
+                    팀 통산 전적
+                  </p>
+                  {/* flex-wrap을 주어 만약 화면이 극단적으로 좁아져도 자연스럽게 떨어지도록 처리 */}
+                  <div className="flex items-baseline flex-wrap gap-x-2 gap-y-1">
+                    <span className="text-lg sm:text-xl font-black text-gray-900 dark:text-white">
+                      {totalMatchesCount}
+                      <span className="text-[10px] sm:text-[11px] font-medium text-gray-400 ml-0.5">
+                        전
+                      </span>
+                    </span>
+                    <span className="text-lg sm:text-xl font-black text-blue-500 ml-1">
+                      {wins}
+                      <span className="text-[10px] sm:text-[11px] font-medium text-blue-500/70 ml-0.5">
+                        승
+                      </span>
+                    </span>
+                    <span className="text-lg sm:text-xl font-black text-gray-500 ml-1">
+                      {draws}
+                      <span className="text-[10px] sm:text-[11px] font-medium text-gray-400 ml-0.5">
+                        무
+                      </span>
+                    </span>
+                    <span className="text-lg sm:text-xl font-black text-[#FF8FA3] ml-1">
+                      {losses}
+                      <span className="text-[10px] sm:text-[11px] font-medium text-[#FF8FA3]/70 ml-0.5">
+                        패
+                      </span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-right pl-3">
+                  <p className="text-[10px] sm:text-[11px] font-bold text-gray-500 mb-1.5">
+                    승률
+                  </p>
+                  <p className="text-lg sm:text-xl font-black text-gray-900 dark:text-white">
+                    {winRate}%
+                  </p>
+                </div>
+              </div>
+
+              {/* 하단 섹션: 평균 득점 및 실점 (세로 구분선으로 깔끔하게 반반 분할) */}
+              <div className="grid grid-cols-2 divide-x divide-gray-100 dark:divide-white/5">
+                {/* 평균 득점 영역 */}
+                <div className="p-4 sm:p-5 flex flex-col items-center justify-center">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="text-[12px] opacity-80">⚽</span>
+                    <p className="text-[10px] sm:text-[11px] font-bold text-gray-500">
+                      평균 득점
+                    </p>
+                  </div>
+                  <p className="text-xl sm:text-2xl font-black text-blue-500">
+                    {avgGoalsFor}
+                    <span className="text-[10px] sm:text-[11px] font-medium text-gray-400 ml-1">
+                      골
+                    </span>
+                  </p>
+                </div>
+
+                {/* 평균 실점 영역 */}
+                <div className="p-4 sm:p-5 flex flex-col items-center justify-center">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="text-[12px] opacity-80">🥅</span>
+                    <p className="text-[10px] sm:text-[11px] font-bold text-gray-500">
+                      평균 실점
+                    </p>
+                  </div>
+                  <p className="text-xl sm:text-2xl font-black text-[#FF8FA3]">
+                    {avgGoalsAgainst}
+                    <span className="text-[10px] sm:text-[11px] font-medium text-gray-400 ml-1">
+                      골
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </Card>
             <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-lg dark:shadow-2xl">
               {/* 💡 스크롤 제거, table-fixed로 너비 고정 */}
               <table className="w-full text-left table-fixed border-collapse">
