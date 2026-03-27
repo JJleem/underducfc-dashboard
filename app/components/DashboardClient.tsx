@@ -556,6 +556,12 @@ export default function DashboardClient({
                                 </div>
                               )}
 
+                              <Link
+                                href={`/matches/${match.id}`}
+                                className="flex items-center justify-center w-full py-2 mt-1 rounded-xl bg-gray-100 dark:bg-white/5 text-[11px] font-black text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+                              >
+                                자세히 보기 →
+                              </Link>
                             </div>
                           )}
                         </div>
