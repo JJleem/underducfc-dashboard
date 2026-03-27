@@ -246,8 +246,14 @@ export async function shareFormation(
       if (!blob) { reject(new Error("이미지 생성 실패")); return; }
       const file = new File([blob], fileName, { type: "image/png" });
       try {
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        if (isMobile && navigator.canShare?.({ files: [file] })) {
+        // 클립보드에 단일 포맷으로 미리 복사 (Mac 붙여넣기 중복 방지)
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        } catch {
+          // 클립보드 API 미지원 시 무시
+        }
+
+        if (navigator.canShare?.({ files: [file] })) {
           await navigator.share({ files: [file], title: "언더덕 라인업" });
         } else {
           const url = URL.createObjectURL(blob);
