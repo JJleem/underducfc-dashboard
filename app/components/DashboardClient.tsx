@@ -15,8 +15,11 @@ import {
   ChevronDown,
   ChevronUp,
   Users,
+  Share2,
+  Download,
 } from "lucide-react";
 import { MiniFormationField, FORMATION_POSITIONS } from "./FormationField";
+import { shareFormation } from "../lib/draw-formation";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
@@ -81,6 +84,7 @@ export default function DashboardClient({
   const { theme, setTheme } = useTheme();
   const [openLineups, setOpenLineups] = React.useState<Set<number>>(new Set());
   const [activeQuarters, setActiveQuarters] = React.useState<Record<number, string>>({});
+  const [sharingMatch, setSharingMatch] = React.useState<number | null>(null);
 
   const toggleLineup = (matchId: number) => {
     setOpenLineups((prev) => {
@@ -526,11 +530,41 @@ export default function DashboardClient({
 
                               {activeLineup && (
                                 <div className="space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
-                                      {activeLineup.formation}
-                                    </span>
-                                    <span className="text-[9px] text-gray-400">포메이션</span>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+                                        {activeLineup.formation}
+                                      </span>
+                                      <span className="text-[9px] text-gray-400">포메이션</span>
+                                    </div>
+                                    {FORMATION_POSITIONS[activeLineup.formation] && (
+                                      <button
+                                        onClick={async () => {
+                                          setSharingMatch(match.id);
+                                          try {
+                                            await shareFormation(
+                                              activeLineup,
+                                              rosterMap,
+                                              `언더덕_${match.opponent}_${activeQ}_라인업.png`,
+                                              `언더덕 vs ${match.opponent} · ${activeQ}`
+                                            );
+                                          } catch (e) {
+                                            if (e instanceof Error && e.name !== "AbortError") {
+                                              alert("공유 실패: " + e.message);
+                                            }
+                                          } finally {
+                                            setSharingMatch(null);
+                                          }
+                                        }}
+                                        disabled={sharingMatch === match.id}
+                                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-black/10 dark:bg-white/10 text-[10px] font-black text-gray-600 dark:text-gray-300 hover:bg-black/20 dark:hover:bg-white/20 transition-all"
+                                      >
+                                        {sharingMatch === match.id
+                                          ? <Download className="w-3 h-3 animate-bounce" />
+                                          : <Share2 className="w-3 h-3" />}
+                                        공유
+                                      </button>
+                                    )}
                                   </div>
                                   {FORMATION_POSITIONS[activeLineup.formation] ? (
                                     <MiniFormationField lineup={activeLineup} rosterMap={rosterMap} />

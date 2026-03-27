@@ -1,8 +1,9 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { Badge } from "../../components/ui/badge";
 import { Card, CardContent } from "../../components/ui/card";
 import { ArrowLeft, MapPin, Target, Pencil, Share2, Download } from "lucide-react";
+import { shareFormation } from "../../lib/draw-formation";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
@@ -23,39 +24,15 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
   const sortedQuarters = QUARTER_ORDER.filter((q) => lineups.some((l) => l.quarter === q));
   const [activeQ, setActiveQ] = useState(sortedQuarters[0] || "");
   const [sharing, setSharing] = useState(false);
-  const fieldRef = useRef<HTMLDivElement>(null);
   const activeLineup = lineups.find((l) => l.quarter === activeQ);
 
   const handleShare = async () => {
-    if (!fieldRef.current) return;
+    if (!activeLineup) return;
     setSharing(true);
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(fieldRef.current, {
-        useCORS: true,
-        scale: 2,
-        backgroundColor: null,
-      });
-
       const fileName = `언더덕_${match.opponent}_${activeQ}_라인업.png`;
-
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        const file = new File([blob], fileName, { type: "image/png" });
-
-        // Web Share API (iPhone/Android 공유 시트)
-        if (navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], title: `언더덕 ${activeQ} 라인업` });
-        } else {
-          // 지원 안 되면 다운로드
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = fileName;
-          a.click();
-          URL.revokeObjectURL(url);
-        }
-      }, "image/png");
+      const label = `언더덕 vs ${match.opponent} · ${activeQ}`;
+      await shareFormation(activeLineup, rosterMap, fileName, label);
     } catch (e) {
       if (e instanceof Error && e.name !== "AbortError") {
         alert("공유 실패: " + e.message);
@@ -204,7 +181,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
               <>
                 {FORMATION_POSITIONS[activeLineup.formation] ? (
                   <div className="relative">
-                    <div ref={fieldRef}>
+                    <div>
                       <FormationField lineup={activeLineup} rosterMap={rosterMap} />
                     </div>
                     <button
