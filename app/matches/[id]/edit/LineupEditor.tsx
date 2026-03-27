@@ -101,33 +101,82 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
   ] as string[]);
 
   const handleSlotClick = (type: "player" | "sub", index: number) => {
+    // 같은 슬롯 → 해제
     if (activeSlot?.type === type && activeSlot.index === index) {
-      setActiveSlot(null); // 같은 슬롯 → 해제
-    } else {
-      setActiveSlot({ type, index });
+      setActiveSlot(null);
+      return;
     }
+
+    // activeSlot이 없으면 → 선택
+    if (!activeSlot) {
+      setActiveSlot({ type, index });
+      return;
+    }
+
+    // activeSlot이 있고 다른 슬롯 → 두 슬롯 선수 스왑
+    const activePlayer =
+      activeSlot.type === "player" ? assignments[activeSlot.index] : subs[activeSlot.index];
+    const targetPlayer = type === "player" ? assignments[index] : subs[index];
+
+    if (activeSlot.type === "player" && type === "player") {
+      const next = [...assignments];
+      next[activeSlot.index] = targetPlayer;
+      next[index] = activePlayer;
+      setAssignments(next);
+    } else if (activeSlot.type === "sub" && type === "sub") {
+      const next = [...subs];
+      next[activeSlot.index] = targetPlayer;
+      next[index] = activePlayer;
+      setSubs(next);
+    } else if (activeSlot.type === "player" && type === "sub") {
+      const nextA = [...assignments];
+      const nextS = [...subs];
+      nextA[activeSlot.index] = targetPlayer;
+      nextS[index] = activePlayer;
+      setAssignments(nextA);
+      setSubs(nextS);
+    } else {
+      // sub → player
+      const nextA = [...assignments];
+      const nextS = [...subs];
+      nextS[activeSlot.index] = targetPlayer;
+      nextA[index] = activePlayer;
+      setAssignments(nextA);
+      setSubs(nextS);
+    }
+
+    setActiveSlot(null);
   };
 
   const handlePlayerClick = (name: string) => {
     if (!activeSlot) return;
 
-    const alreadyAssignedIn = activeSlot.type === "player"
-      ? assignments.indexOf(name)
-      : subs.indexOf(name);
+    // 선수가 이미 배치된 위치 (assignments / subs 둘 다 확인)
+    const inAssignments = assignments.indexOf(name);
+    const inSubs = subs.indexOf(name);
 
     if (activeSlot.type === "player") {
       const next = [...assignments];
-      // 이미 다른 슬롯에 있으면 제거
-      if (alreadyAssignedIn >= 0) next[alreadyAssignedIn] = null;
+      if (inAssignments >= 0) {
+        next[inAssignments] = null;
+      } else if (inSubs >= 0) {
+        const nextS = [...subs];
+        nextS[inSubs] = null;
+        setSubs(nextS);
+      }
       next[activeSlot.index] = name;
       setAssignments(next);
-      // 다음 빈 슬롯으로 이동
       const nextEmpty = next.findIndex((v, i) => i > activeSlot.index && !v);
       setActiveSlot(nextEmpty >= 0 ? { type: "player", index: nextEmpty } : null);
     } else {
       const next = [...subs];
-      const subIdx = subs.indexOf(name);
-      if (subIdx >= 0) next[subIdx] = null;
+      if (inSubs >= 0) {
+        next[inSubs] = null;
+      } else if (inAssignments >= 0) {
+        const nextA = [...assignments];
+        nextA[inAssignments] = null;
+        setAssignments(nextA);
+      }
       next[activeSlot.index] = name;
       setSubs(next);
       const nextEmpty = next.findIndex((v, i) => i > activeSlot.index && !v);
@@ -247,9 +296,9 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
           <div className="flex items-center justify-between mb-2 px-1">
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
               {activeSlot?.type === "player"
-                ? `슬롯 ${activeSlot.index + 1} 선택됨 → 아래서 선수 탭`
+                ? `슬롯 ${activeSlot.index + 1} 선택됨 → 다른 슬롯 탭 시 스왑`
                 : activeSlot?.type === "sub"
-                ? `교체 슬롯 ${activeSlot.index + 1} 선택됨`
+                ? `교체 슬롯 ${activeSlot.index + 1} 선택됨 → 다른 슬롯 탭 시 스왑`
                 : "슬롯을 탭해서 선택하세요"}
             </span>
             <button
