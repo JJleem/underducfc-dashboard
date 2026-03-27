@@ -99,8 +99,14 @@ export async function writeLineup({
     dataRows.push(newRow);
   }
 
+  // 기존 행보다 줄었으면 빈 행으로 패딩 → 이전 데이터 완전히 덮어쓰기
+  const originalRowCount = rows.length;
   const allRows = [header, ...dataRows];
-  const writeRange = `lineup!A1:S${allRows.length}`;
+  const emptyRow = Array(19).fill("");
+  while (allRows.length < originalRowCount) {
+    allRows.push(emptyRow);
+  }
+  const writeRange = `lineup!A1:S${Math.max(allRows.length, originalRowCount)}`;
 
   await fetch(`${base}/values/${encodeURIComponent(writeRange)}?valueInputOption=USER_ENTERED`, {
     method: "PUT",
