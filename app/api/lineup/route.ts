@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { writeLineup } from "../../lib/sheets-write";
 
 export async function POST(request: NextRequest) {
@@ -11,6 +12,9 @@ export async function POST(request: NextRequest) {
     }
 
     await writeLineup({ matchId, quarter, formation, players: players || [], subs: subs || [] });
+
+    revalidatePath(`/matches/${matchId}`);
+    revalidatePath("/");
 
     return NextResponse.json({ ok: true });
   } catch (err) {

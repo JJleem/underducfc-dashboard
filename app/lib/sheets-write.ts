@@ -71,43 +71,40 @@ export async function writeLineup({
   const readData = await readRes.json();
   const rows: string[][] = readData.values || [];
 
-  // matchId + quarter 행이 있는지 확인
-  let existingRow = -1;
-  for (let i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]) === String(matchId) && rows[i][1] === quarter) {
-      existingRow = i + 1; // 1-based 행 번호
-      break;
-    }
-  }
+  // 헤더 보존 (없으면 기본값)
+  const header = rows.length > 0
+    ? rows[0]
+    : ["matchId", "quarter", "formation", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10", "p11", "sub1", "sub2", "sub3", "sub4", "sub5"];
 
   // 19칸 고정 (match_id, quarter, formation, p1~p11, sub1~sub5)
-  const playerCells = [...players, ...Array(11 - players.length).fill("")];
-  const subCells = [...subs, ...Array(5 - subs.length).fill("")];
+  const playerCells = [...players, ...Array(Math.max(0, 11 - players.length)).fill("")].slice(0, 11);
+  const subCells = [...subs, ...Array(Math.max(0, 5 - subs.length)).fill("")].slice(0, 5);
   const newRow = [String(matchId), quarter, formation, ...playerCells, ...subCells];
 
-  if (existingRow > 0) {
-    // 업데이트
-    const range = `lineup!A${existingRow}:S${existingRow}`;
-    await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ range, values: [newRow] }),
-    });
-  } else {
-    // 새 행 추가
-    await fetch(
-      `${base}/values/${encodeURIComponent("lineup!A1:S1")}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ range: "lineup!A1:S1", values: [newRow] }),
-      }
-    );
+  // 데이터 행만 추출 (헤더 제외), 인메모리에서 수정 → 전체 덮어쓰기
+  // (인덱스 기반 행 번호 계산 시 빈 행으로 인한 오프셋 오류 방지)
+  let found = false;
+  const dataRows = rows.slice(1).map((row) => {
+    if (String(row[0]) === String(matchId) && row[1] === quarter) {
+      found = true;
+      return newRow;
+    }
+    return row;
+  });
+
+  if (!found) {
+    dataRows.push(newRow);
   }
+
+  const allRows = [header, ...dataRows];
+  const writeRange = `lineup!A1:S${allRows.length}`;
+
+  await fetch(`${base}/values/${encodeURIComponent(writeRange)}?valueInputOption=USER_ENTERED`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ range: writeRange, values: allRows }),
+  });
 }
