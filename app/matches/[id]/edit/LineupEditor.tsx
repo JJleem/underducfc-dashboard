@@ -153,7 +153,7 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
       setSaved(true);
       setTimeout(() => {
         setSaved(false);
-        router.push(`/matches/${match.id}`);
+        router.push("/");
       }, 1200);
     } catch (e) {
       alert("저장 실패: " + (e instanceof Error ? e.message : e));
@@ -168,7 +168,7 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
     <div className="min-h-dvh bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-[#F5F5DC] font-sans max-w-md mx-auto shadow-2xl overflow-hidden">
       {/* 헤더 */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-md border-b border-gray-200 dark:border-white/10">
-        <Link href={`/matches/${match.id}`} className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+        <Link href="/" className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
           <ArrowLeft className="w-4 h-4" />
           <span className="font-black text-sm italic uppercase">라인업 편집</span>
         </Link>
