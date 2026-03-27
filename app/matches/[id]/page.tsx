@@ -11,13 +11,23 @@ export default async function MatchDetailPage({
   const { id } = await params;
   const matchId = Number(id);
 
-  const [rawMatchesResult, rawLineupsResult] = await Promise.allSettled([
+  const [rawMatchesResult, rawLineupsResult, rawRosterResult] = await Promise.allSettled([
     getSheetData("matches!A1:J50"),
     getSheetData("lineup!A1:S100"),
+    getSheetData("roster!A1:J50"),
   ]);
 
   const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
   const rawLineups = rawLineupsResult.status === "fulfilled" ? rawLineupsResult.value : [];
+  const rawRoster = rawRosterResult.status === "fulfilled" ? rawRosterResult.value : [];
+
+  // 이름 → 등번호 맵
+  const rosterMap: Record<string, string> = {};
+  rawRoster.slice(1).forEach((row: string[]) => {
+    const name = row[0]?.trim();
+    const no = row[1]?.trim();
+    if (name && no) rosterMap[name] = no;
+  });
 
   const matches: MatchData[] = rawMatches.slice(1).map((row: string[], index: number) => ({
     id: index,
@@ -52,5 +62,5 @@ export default async function MatchDetailPage({
     }))
     .filter((l: LineupData) => l.matchId === matchId);
 
-  return <MatchDetailClient match={match} lineups={lineups} />;
+  return <MatchDetailClient match={match} lineups={lineups} rosterMap={rosterMap} />;
 }

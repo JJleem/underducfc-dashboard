@@ -80,7 +80,7 @@ function getPlayerStyle(layerIndex: number, totalLayers: number) {
   return { bg: "#10B981", border: "#6EE7B7", text: "#FFFFFF", label: "MF" }; // MF
 }
 
-function SoccerField({ lineup }: { lineup: LineupData }) {
+function SoccerField({ lineup, rosterMap }: { lineup: LineupData; rosterMap: Record<string, string> }) {
   const positions = FORMATION_POSITIONS[lineup.formation];
   const totalLayers = lineup.formation.split("-").length;
 
@@ -136,6 +136,9 @@ function SoccerField({ lineup }: { lineup: LineupData }) {
           const layerIdx = getLayerIndex(i, lineup.formation);
           const style = getPlayerStyle(layerIdx, totalLayers);
           const shortName = player.length > 4 ? player.slice(0, 4) : player;
+          const jerseyNo = rosterMap[player.trim()];
+          const displayLabel = jerseyNo ?? "G";
+          const isGuest = !jerseyNo;
 
           return (
             <div
@@ -150,17 +153,18 @@ function SoccerField({ lineup }: { lineup: LineupData }) {
             >
               {/* 선수 원 */}
               <div
-                className="flex items-center justify-center rounded-full font-black text-[9px] shadow-lg"
+                className="flex items-center justify-center rounded-full font-black shadow-lg"
                 style={{
                   width: 34,
                   height: 34,
-                  backgroundColor: style.bg,
-                  border: `2.5px solid ${style.border}`,
-                  color: style.text,
+                  fontSize: isGuest ? 8 : displayLabel.length > 2 ? 9 : 12,
+                  backgroundColor: isGuest ? "#6B7280" : style.bg,
+                  border: `2.5px solid ${isGuest ? "#9CA3AF" : style.border}`,
+                  color: isGuest ? "#FFFFFF" : style.text,
                   boxShadow: `0 2px 8px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.2)`,
                 }}
               >
-                {style.label}
+                {isGuest ? "G" : displayLabel}
               </div>
               {/* 이름 배경 + 텍스트 */}
               <div
@@ -214,9 +218,10 @@ const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q"];
 interface MatchDetailClientProps {
   match: MatchData;
   lineups: LineupData[];
+  rosterMap: Record<string, string>;
 }
 
-export default function MatchDetailClient({ match, lineups }: MatchDetailClientProps) {
+export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDetailClientProps) {
   const { theme, setTheme } = useTheme();
   const sortedQuarters = QUARTER_ORDER.filter((q) =>
     lineups.some((l) => l.quarter === q)
@@ -351,7 +356,7 @@ export default function MatchDetailClient({ match, lineups }: MatchDetailClientP
               <>
                 {/* 축구장 시각화 */}
                 {FORMATION_POSITIONS[activeLineup.formation] ? (
-                  <SoccerField lineup={activeLineup} />
+                  <SoccerField lineup={activeLineup} rosterMap={rosterMap} />
                 ) : (
                   <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 rounded-2xl">
                     <CardContent className="p-4">
