@@ -246,7 +246,8 @@ export async function shareFormation(
       if (!blob) { reject(new Error("이미지 생성 실패")); return; }
       const file = new File([blob], fileName, { type: "image/png" });
       try {
-        if (navigator.canShare?.({ files: [file] })) {
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile && navigator.canShare?.({ files: [file] })) {
           await navigator.share({ files: [file], title: "언더덕 라인업" });
         } else {
           const url = URL.createObjectURL(blob);
