@@ -12,6 +12,9 @@ import {
   MapPin,
   Target,
   BellRing,
+  ChevronDown,
+  ChevronUp,
+  Users,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -36,6 +39,14 @@ export interface PlayerData {
   mom: string | number;
 }
 
+export interface LineupData {
+  matchId: number;
+  quarter: string; // "예상" | "1Q" | "2Q" | "3Q" | "4Q"
+  formation: string; // "4-3-3" | "4-4-2" | "3-5-2" | "4-2-3-1" 등
+  players: string[]; // p1~p11
+  subs: string[]; // sub1~sub5
+}
+
 export interface MatchData {
   id: number;
   date: string;
@@ -54,14 +65,32 @@ interface DashboardClientProps {
   players: PlayerData[];
   matches: MatchData[];
   notice?: NoticeData;
+  lineups: LineupData[];
 }
 
 export default function DashboardClient({
   players,
   matches,
   notice,
+  lineups,
 }: DashboardClientProps) {
   const { theme, setTheme } = useTheme();
+  const [openLineups, setOpenLineups] = React.useState<Set<number>>(new Set());
+  const [activeQuarters, setActiveQuarters] = React.useState<Record<number, string>>({});
+
+  const toggleLineup = (matchId: number) => {
+    setOpenLineups((prev) => {
+      const next = new Set(prev);
+      if (next.has(matchId)) next.delete(matchId);
+      else next.add(matchId);
+      return next;
+    });
+  };
+
+  const getMatchLineups = (matchId: number) =>
+    lineups.filter((l) => l.matchId === matchId);
+
+  const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q"];
   // 💡 1. 완료된 경기만 필터링 (결과가 '예정'이 아닌 경우)
   const completedMatches = matches.filter(
     (m) => m.result !== "예정" && m.result !== "" && m.result !== "자체전",
@@ -432,6 +461,114 @@ export default function DashboardClient({
                         </span>
                       </div>
                     </div>
+                    {/* 라인업 아코디언 */}
+                    {(() => {
+                      const matchLineups = getMatchLineups(match.id);
+                      const isOpen = openLineups.has(match.id);
+                      const sortedQuarters = QUARTER_ORDER.filter((q) =>
+                        matchLineups.some((l) => l.quarter === q)
+                      );
+                      const activeQ =
+                        activeQuarters[match.id] || sortedQuarters[0] || "";
+                      const activeLineup = matchLineups.find(
+                        (l) => l.quarter === activeQ
+                      );
+
+                      return (
+                        <div className="mt-4 border-t border-gray-100 dark:border-white/5 pt-3">
+                          <button
+                            onClick={() => toggleLineup(match.id)}
+                            className="w-full flex items-center justify-between text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <Users className="w-3.5 h-3.5 text-[#FFB6C1]" />
+                              {matchLineups.length > 0
+                                ? "라인업 보기"
+                                : "라인업 미등록"}
+                            </span>
+                            {matchLineups.length > 0 &&
+                              (isOpen ? (
+                                <ChevronUp className="w-3.5 h-3.5" />
+                              ) : (
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              ))}
+                          </button>
+
+                          {isOpen && matchLineups.length > 0 && (
+                            <div className="mt-3 space-y-3">
+                              {/* 쿼터 탭 */}
+                              {sortedQuarters.length > 1 && (
+                                <div className="flex gap-1.5 flex-wrap">
+                                  {sortedQuarters.map((q) => (
+                                    <button
+                                      key={q}
+                                      onClick={() =>
+                                        setActiveQuarters((prev) => ({
+                                          ...prev,
+                                          [match.id]: q,
+                                        }))
+                                      }
+                                      className={`text-[10px] font-black px-2.5 py-1 rounded-lg transition-all ${
+                                        activeQ === q
+                                          ? "bg-[#FFB6C1] dark:bg-[#FFB6C1] text-black"
+                                          : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400"
+                                      }`}
+                                    >
+                                      {q}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+
+                              {activeLineup && (
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+                                      {activeLineup.formation}
+                                    </span>
+                                    <span className="text-[9px] text-gray-400">
+                                      포메이션
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {activeLineup.players.map((p, i) => (
+                                      <span
+                                        key={i}
+                                        className="text-[10px] font-bold px-2 py-0.5 bg-gray-100 dark:bg-white/5 rounded-md text-gray-700 dark:text-gray-300"
+                                      >
+                                        {p}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  {activeLineup.subs.length > 0 && (
+                                    <div className="pt-1 border-t border-gray-100 dark:border-white/5">
+                                      <span className="text-[9px] text-gray-400 mr-1.5">
+                                        교체
+                                      </span>
+                                      {activeLineup.subs.map((s, i) => (
+                                        <span
+                                          key={i}
+                                          className="text-[10px] font-bold px-2 py-0.5 bg-gray-50 dark:bg-white/[0.03] rounded-md text-gray-500 dark:text-gray-500 mr-1"
+                                        >
+                                          {s}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              <Link
+                                href={`/matches/${match.id}`}
+                                className="flex items-center justify-center w-full py-2 mt-1 rounded-xl bg-gray-100 dark:bg-white/5 text-[11px] font-black text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+                              >
+                                자세히 보기 →
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               );

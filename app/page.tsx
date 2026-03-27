@@ -1,6 +1,7 @@
 // app/page.tsx
 import { getSheetData } from "./lib/google-sheets";
 import DashboardClient, {
+  LineupData,
   MatchData,
   NoticeData,
   PlayerData,
@@ -12,6 +13,7 @@ export default async function TeamDashboardPage() {
   const rawRoster: string[][] = await getSheetData("roster!A1:J50");
   const rawStats: string[][] = await getSheetData("stats!A1:G50");
   const rawNotices: string[][] = await getSheetData("notice!A1:D20");
+  const rawLineups: string[][] = await getSheetData("lineup!A1:S100");
   // 💡 2. MatchData 타입에 맞춰서 가공 (row: string[] 명시)
   const matches: MatchData[] = rawMatches
     .slice(1)
@@ -71,6 +73,20 @@ export default async function TeamDashboardPage() {
     return a.name.localeCompare(b.name, "ko");
   });
 
+  const lineups: LineupData[] = rawLineups.slice(1).map((row: string[]) => ({
+    matchId: Number(row[0]) || 0,
+    quarter: row[1] || "",
+    formation: row[2] || "",
+    players: [
+      row[3] || "", row[4] || "", row[5] || "", row[6] || "",
+      row[7] || "", row[8] || "", row[9] || "", row[10] || "",
+      row[11] || "", row[12] || "", row[13] || "",
+    ].filter(Boolean),
+    subs: [
+      row[14] || "", row[15] || "", row[16] || "", row[17] || "", row[18] || "",
+    ].filter(Boolean),
+  }));
+
   const firstNoticeRow = rawNotices[1]; // index 1이 실제 첫 번째 데이터 줄
 
   // 2. 데이터가 있을 때만 객체로 만들고, 없으면 undefined 처리를 합니다.
@@ -88,6 +104,7 @@ export default async function TeamDashboardPage() {
       matches={matches}
       players={players}
       notice={latestNotice}
+      lineups={lineups}
     />
   );
 }

@@ -4,7 +4,8 @@ type SheetRange =
   | "roster!A1:J50"
   | "matches!A1:J50"
   | "stats!A1:G50"
-  | "notice!A1:D20";
+  | "notice!A1:D20"
+  | "lineup!A1:S100";
 
 export async function getSheetData(range: SheetRange) {
   const sheetId = process.env.GOOGLE_SHEET_ID;
