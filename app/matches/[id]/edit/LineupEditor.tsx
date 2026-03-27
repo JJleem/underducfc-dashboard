@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Sun, Moon, RotateCcw, Save, Check } from "lucide-react";
+import { ArrowLeft, Sun, Moon, RotateCcw, Save, Check, UserPlus, X } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { MatchData, LineupData } from "../../../components/DashboardClient";
@@ -49,6 +49,8 @@ export default function LineupEditor({ match, lineups, attendees }: LineupEditor
   const [activeSlot, setActiveSlot] = useState<ActiveSlot | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [guests, setGuests] = useState<string[]>([]);
+  const [guestInput, setGuestInput] = useState("");
 
   // 쿼터 변경 시 기존 라인업 로드
   useEffect(() => {
@@ -75,6 +77,22 @@ export default function LineupEditor({ match, lineups, attendees }: LineupEditor
     setActiveSlot(null);
   };
 
+  const addGuest = () => {
+    const name = guestInput.trim();
+    if (!name || attendees.includes(name) || guests.includes(name)) return;
+    setGuests((prev) => [...prev, name]);
+    setGuestInput("");
+  };
+
+  const removeGuest = (name: string) => {
+    setGuests((prev) => prev.filter((g) => g !== name));
+    // 배치된 곳에서도 제거
+    setAssignments((prev) => prev.map((p) => (p === name ? null : p)));
+    setSubs((prev) => prev.map((s) => (s === name ? null : s)));
+  };
+
+  const allPlayers = [...attendees, ...guests];
+
   const assignedPlayers = new Set([
     ...assignments.filter(Boolean),
     ...subs.filter(Boolean),
@@ -91,10 +109,9 @@ export default function LineupEditor({ match, lineups, attendees }: LineupEditor
   const handlePlayerClick = (name: string) => {
     if (!activeSlot) return;
 
-    const alreadyAssignedIn =
-      activeSlot.type === "player"
-        ? assignments.indexOf(name)
-        : subs.indexOf(name);
+    const alreadyAssignedIn = activeSlot.type === "player"
+      ? assignments.indexOf(name)
+      : subs.indexOf(name);
 
     if (activeSlot.type === "player") {
       const next = [...assignments];
@@ -331,34 +348,73 @@ export default function LineupEditor({ match, lineups, attendees }: LineupEditor
         </div>
 
         {/* 선수 풀 */}
-        <div>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
-            참석 선수 ({attendees.length}명)
+        <div className="space-y-3">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            참석 선수 ({allPlayers.length}명)
           </p>
-          {attendees.length === 0 ? (
+
+          {/* 게스트 추가 입력 */}
+          <div className="flex gap-2">
+            <div className="flex items-center gap-1.5 flex-1 px-3 py-2 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10">
+              <UserPlus className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              <input
+                type="text"
+                value={guestInput}
+                onChange={(e) => setGuestInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addGuest()}
+                placeholder="게스트 이름 입력"
+                className="flex-1 text-[12px] font-bold bg-transparent outline-none text-gray-800 dark:text-gray-100 placeholder-gray-400"
+              />
+            </div>
+            <button
+              onClick={addGuest}
+              className="px-3 py-2 rounded-xl bg-gray-900 dark:bg-white/10 text-white dark:text-gray-200 text-[11px] font-black hover:opacity-80 transition-opacity"
+            >
+              추가
+            </button>
+          </div>
+
+          {allPlayers.length === 0 ? (
             <p className="text-[12px] text-gray-400 dark:text-gray-600">
-              matches 시트 L열에 참석자를 입력해주세요
+              matches 시트 L열에 참석자를 입력하거나 게스트를 추가하세요
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {attendees.map((name) => {
+              {allPlayers.map((name) => {
                 const used = assignedPlayers.has(name);
+                const isGuest = guests.includes(name);
                 return (
-                  <button
-                    key={name}
-                    onClick={() => handlePlayerClick(name)}
-                    disabled={!activeSlot}
-                    className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all ${
-                      used
-                        ? "bg-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] border border-[#FFB6C1]/30"
-                        : activeSlot
-                        ? "bg-white dark:bg-white/10 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-white/20 cursor-pointer"
-                        : "bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10 cursor-default"
-                    }`}
-                  >
-                    {used && <span className="mr-1 text-[8px]">✓</span>}
-                    {name}
-                  </button>
+                  <div key={name} className="relative flex items-center">
+                    <button
+                      onClick={() => handlePlayerClick(name)}
+                      disabled={!activeSlot}
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all ${
+                        isGuest
+                          ? used
+                            ? "bg-gray-200 dark:bg-white/10 text-gray-500 border border-gray-300 dark:border-white/10"
+                            : activeSlot
+                            ? "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 border border-dashed border-gray-400 dark:border-white/30 hover:bg-gray-200 dark:hover:bg-white/20 cursor-pointer"
+                            : "bg-gray-100 dark:bg-white/5 text-gray-500 border border-dashed border-gray-300 dark:border-white/10 cursor-default"
+                          : used
+                          ? "bg-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] border border-[#FFB6C1]/30"
+                          : activeSlot
+                          ? "bg-white dark:bg-white/10 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-white/20 cursor-pointer"
+                          : "bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10 cursor-default"
+                      }`}
+                    >
+                      {isGuest && <span className="mr-1 text-[8px] text-gray-400">G</span>}
+                      {used && !isGuest && <span className="mr-1 text-[8px]">✓</span>}
+                      {name}
+                    </button>
+                    {isGuest && (
+                      <button
+                        onClick={() => removeGuest(name)}
+                        className="ml-1 w-4 h-4 flex items-center justify-center rounded-full bg-gray-200 dark:bg-white/10 text-gray-500 hover:bg-red-100 hover:text-red-500 transition-colors"
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>
