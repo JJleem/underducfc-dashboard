@@ -120,9 +120,10 @@ export function FormationField({
           if (!pos || !player) return null;
           const layerIdx = getLayerIndex(i, lineup.formation);
           const color = getPlayerColor(layerIdx, totalLayers);
+          const isTbd = player.trim() === "미정";
           const jerseyNo = rosterMap[player.trim()];
-          const isGuest = !jerseyNo;
-          const shortName = player.length > 4 ? player.slice(0, 4) : player;
+          const isGuest = !jerseyNo && !isTbd;
+          const shortName = isTbd ? "미정" : player.length > 4 ? player.slice(0, 4) : player;
 
           return (
             <div
@@ -134,14 +135,14 @@ export function FormationField({
                 className="flex items-center justify-center rounded-full font-black shadow-lg"
                 style={{
                   width: 34, height: 34,
-                  fontSize: isGuest ? 8 : (jerseyNo?.length ?? 1) > 2 ? 9 : 12,
-                  backgroundColor: isGuest ? "#6B7280" : color.bg,
-                  border: `2.5px solid ${isGuest ? "#9CA3AF" : color.border}`,
-                  color: isGuest ? "#fff" : color.text,
+                  fontSize: isTbd ? 10 : isGuest ? 8 : (jerseyNo?.length ?? 1) > 2 ? 9 : 12,
+                  backgroundColor: isTbd ? "#374151" : isGuest ? "#6B7280" : color.bg,
+                  border: `2.5px solid ${isTbd ? "#6B7280" : isGuest ? "#9CA3AF" : color.border}`,
+                  color: "#fff",
                   boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
                 }}
               >
-                {isGuest ? "G" : jerseyNo}
+                {isTbd ? "?" : isGuest ? "G" : jerseyNo}
               </div>
               <div
                 className="mt-0.5 px-1 rounded text-[8.5px] font-black text-white text-center leading-tight max-w-[44px] truncate"
@@ -212,9 +213,10 @@ export function MiniFormationField({
           if (!pos || !player) return null;
           const layerIdx = getLayerIndex(i, lineup.formation);
           const color = getPlayerColor(layerIdx, totalLayers);
+          const isTbd = player.trim() === "미정";
           const jerseyNo = rosterMap[player.trim()];
-          const isGuest = !jerseyNo;
-          const shortName = player.slice(0, 3);
+          const isGuest = !jerseyNo && !isTbd;
+          const shortName = isTbd ? "?" : player.slice(0, 3);
 
           return (
             <div
@@ -227,13 +229,13 @@ export function MiniFormationField({
                 style={{
                   width: 20, height: 20,
                   fontSize: 8,
-                  backgroundColor: isGuest ? "#6B7280" : color.bg,
-                  border: `1.5px solid ${isGuest ? "#9CA3AF" : color.border}`,
-                  color: isGuest ? "#fff" : color.text,
+                  backgroundColor: isTbd ? "#374151" : isGuest ? "#6B7280" : color.bg,
+                  border: `1.5px solid ${isTbd ? "#6B7280" : isGuest ? "#9CA3AF" : color.border}`,
+                  color: "#fff",
                   boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
                 }}
               >
-                {isGuest ? "G" : jerseyNo}
+                {isTbd ? "?" : isGuest ? "G" : jerseyNo}
               </div>
               <div
                 className="mt-px text-[6px] font-black text-white text-center leading-tight max-w-[26px] truncate"

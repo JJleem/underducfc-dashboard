@@ -361,7 +361,9 @@ export default function LineupEditor({ match, lineups, attendees }: LineupEditor
                 type="text"
                 value={guestInput}
                 onChange={(e) => setGuestInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addGuest()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) addGuest();
+                }}
                 placeholder="게스트 이름 입력"
                 className="flex-1 text-[12px] font-bold bg-transparent outline-none text-gray-800 dark:text-gray-100 placeholder-gray-400"
               />
@@ -371,6 +373,21 @@ export default function LineupEditor({ match, lineups, attendees }: LineupEditor
               className="px-3 py-2 rounded-xl bg-gray-900 dark:bg-white/10 text-white dark:text-gray-200 text-[11px] font-black hover:opacity-80 transition-opacity"
             >
               추가
+            </button>
+          </div>
+
+          {/* 미정 고정 버튼 */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => handlePlayerClick("미정")}
+              disabled={!activeSlot}
+              className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all border border-dashed ${
+                activeSlot
+                  ? "border-gray-400 dark:border-white/30 bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 cursor-pointer"
+                  : "border-gray-200 dark:border-white/10 bg-transparent text-gray-300 dark:text-gray-600 cursor-default"
+              }`}
+            >
+              ? 미정
             </button>
           </div>
 
