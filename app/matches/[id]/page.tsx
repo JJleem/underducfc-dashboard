@@ -11,10 +11,13 @@ export default async function MatchDetailPage({
   const { id } = await params;
   const matchId = Number(id);
 
-  const [rawMatches, rawLineups] = await Promise.all([
+  const [rawMatchesResult, rawLineupsResult] = await Promise.allSettled([
     getSheetData("matches!A1:J50"),
     getSheetData("lineup!A1:S100"),
   ]);
+
+  const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
+  const rawLineups = rawLineupsResult.status === "fulfilled" ? rawLineupsResult.value : [];
 
   const matches: MatchData[] = rawMatches.slice(1).map((row: string[], index: number) => ({
     id: index,

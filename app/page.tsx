@@ -13,7 +13,12 @@ export default async function TeamDashboardPage() {
   const rawRoster: string[][] = await getSheetData("roster!A1:J50");
   const rawStats: string[][] = await getSheetData("stats!A1:G50");
   const rawNotices: string[][] = await getSheetData("notice!A1:D20");
-  const rawLineups: string[][] = await getSheetData("lineup!A1:S100");
+  let rawLineups: string[][] = [];
+  try {
+    rawLineups = await getSheetData("lineup!A1:S100");
+  } catch {
+    rawLineups = [];
+  }
   // 💡 2. MatchData 타입에 맞춰서 가공 (row: string[] 명시)
   const matches: MatchData[] = rawMatches
     .slice(1)
