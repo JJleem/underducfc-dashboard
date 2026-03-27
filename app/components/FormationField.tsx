@@ -143,9 +143,9 @@ export function FormationField({
                 className="flex items-center justify-center rounded-full font-black shadow-lg"
                 style={{
                   width: 34, height: 34,
-                  fontSize: isTbd ? 10 : isGuest ? 8 : (jerseyNo?.length ?? 1) > 2 ? 9 : 12,
-                  backgroundColor: isTbd ? "#374151" : isGuest ? "#6B7280" : color.bg,
-                  border: `2.5px solid ${isTbd ? "#6B7280" : isGuest ? "#9CA3AF" : color.border}`,
+                  fontSize: isTbd ? 10 : 12,
+                  backgroundColor: isTbd ? "#374151" : color.bg,
+                  border: `2.5px solid ${isTbd ? "#6B7280" : color.border}`,
                   color: "#fff",
                   boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
                 }}
@@ -244,8 +244,8 @@ export function MiniFormationField({
                 style={{
                   width: 20, height: 20,
                   fontSize: 8,
-                  backgroundColor: isTbd ? "#374151" : isGuest ? "#6B7280" : color.bg,
-                  border: `1.5px solid ${isTbd ? "#6B7280" : isGuest ? "#9CA3AF" : color.border}`,
+                  backgroundColor: isTbd ? "#374151" : color.bg,
+                  border: `1.5px solid ${isTbd ? "#6B7280" : color.border}`,
                   color: "#fff",
                   boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
                 }}

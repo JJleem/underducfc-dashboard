@@ -177,8 +177,6 @@ export async function drawFormationCanvas(
 
     const color = isTbd
       ? { bg: "#374151", border: "#9CA3AF", text: "#FFFFFF" }
-      : isGuest
-      ? { bg: "#6B7280", border: "#9CA3AF", text: "#FFFFFF" }
       : getPlayerColor(layerIdx, totalLayers);
 
     // 그림자
