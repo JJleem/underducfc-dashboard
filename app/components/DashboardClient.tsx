@@ -60,6 +60,7 @@ export interface MatchData {
   type?: string;
   goals?: string;
   assists?: string;
+  attendees?: string; // L열 - 참석자 (쉼표 구분)
 }
 
 interface DashboardClientProps {

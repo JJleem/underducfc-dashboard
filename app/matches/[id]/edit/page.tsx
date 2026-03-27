@@ -1,9 +1,9 @@
-import { getSheetData } from "../../lib/google-sheets";
-import { LineupData, MatchData } from "../../components/DashboardClient";
-import MatchDetailClient from "./MatchDetailClient";
+import { getSheetData } from "../../../lib/google-sheets";
+import { LineupData, MatchData } from "../../../components/DashboardClient";
+import LineupEditor from "./LineupEditor";
 import { notFound } from "next/navigation";
 
-export default async function MatchDetailPage({
+export default async function LineupEditPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -11,23 +11,13 @@ export default async function MatchDetailPage({
   const { id } = await params;
   const matchId = Number(id);
 
-  const [rawMatchesResult, rawLineupsResult, rawRosterResult] = await Promise.allSettled([
+  const [rawMatchesResult, rawLineupsResult] = await Promise.allSettled([
     getSheetData("matches!A1:L50"),
     getSheetData("lineup!A1:S100"),
-    getSheetData("roster!A1:J50"),
   ]);
 
   const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
   const rawLineups = rawLineupsResult.status === "fulfilled" ? rawLineupsResult.value : [];
-  const rawRoster = rawRosterResult.status === "fulfilled" ? rawRosterResult.value : [];
-
-  // 이름 → 등번호 맵 (A=등번호, B=이름)
-  const rosterMap: Record<string, string> = {};
-  rawRoster.slice(1).forEach((row: string[]) => {
-    const no = row[0]?.trim();
-    const name = row[1]?.trim();
-    if (name && no) rosterMap[name] = no;
-  });
 
   const matches: MatchData[] = rawMatches.slice(1).map((row: string[], index: number) => ({
     id: index,
@@ -47,7 +37,8 @@ export default async function MatchDetailPage({
   const match = matches.find((m) => m.id === matchId);
   if (!match) notFound();
 
-  const lineups: LineupData[] = rawLineups.slice(1)
+  const lineups: LineupData[] = rawLineups
+    .slice(1)
     .map((row: string[]) => ({
       matchId: Number(row[0]) || 0,
       quarter: row[1] || "",
@@ -63,5 +54,10 @@ export default async function MatchDetailPage({
     }))
     .filter((l: LineupData) => l.matchId === matchId);
 
-  return <MatchDetailClient match={match} lineups={lineups} rosterMap={rosterMap} />;
+  const attendees = (match.attendees || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  return <LineupEditor match={match} lineups={lineups} attendees={attendees} />;
 }

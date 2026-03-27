@@ -9,6 +9,7 @@ import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 import { MatchData, LineupData } from "../../components/DashboardClient";
 import { FormationField, FORMATION_POSITIONS } from "../../components/FormationField";
+import { Pencil } from "lucide-react";
 
 const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q"];
 
@@ -120,6 +121,16 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
           </div>
         ) : (
           <div className="space-y-4">
+            <div className="flex items-center justify-between px-1 mb-1">
+              <h2 className="text-[13px] font-black text-gray-800 dark:text-white">라인업</h2>
+              <Link
+                href={`/matches/${match.id}/edit`}
+                className="flex items-center gap-1 text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] hover:opacity-70 transition-opacity"
+              >
+                <Pencil className="w-3 h-3" /> 편집
+              </Link>
+            </div>
+
             <div className="flex items-center justify-between px-1">
               <div className="flex gap-2 flex-wrap">
                 {sortedQuarters.map((q) => (
