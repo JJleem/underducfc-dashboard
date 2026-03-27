@@ -1,15 +1,14 @@
 "use client";
-import React from "react";
+import React, { useRef, useState } from "react";
 import { Badge } from "../../components/ui/badge";
 import { Card, CardContent } from "../../components/ui/card";
-import { ArrowLeft, MapPin, Target } from "lucide-react";
+import { ArrowLeft, MapPin, Target, Pencil, Share2, Download } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 import { MatchData, LineupData } from "../../components/DashboardClient";
 import { FormationField, FORMATION_POSITIONS } from "../../components/FormationField";
-import { Pencil } from "lucide-react";
 
 const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q"];
 
@@ -22,8 +21,49 @@ interface MatchDetailClientProps {
 export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDetailClientProps) {
   const { theme, setTheme } = useTheme();
   const sortedQuarters = QUARTER_ORDER.filter((q) => lineups.some((l) => l.quarter === q));
-  const [activeQ, setActiveQ] = React.useState(sortedQuarters[0] || "");
+  const [activeQ, setActiveQ] = useState(sortedQuarters[0] || "");
+  const [sharing, setSharing] = useState(false);
+  const fieldRef = useRef<HTMLDivElement>(null);
   const activeLineup = lineups.find((l) => l.quarter === activeQ);
+
+  const handleShare = async () => {
+    if (!fieldRef.current) return;
+    setSharing(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(fieldRef.current, {
+        useCORS: true,
+        scale: 2,
+        backgroundColor: null,
+      });
+
+      const fileName = `언더덕_${match.opponent}_${activeQ}_라인업.png`;
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], fileName, { type: "image/png" });
+
+        // Web Share API (iPhone/Android 공유 시트)
+        if (navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ files: [file], title: `언더덕 ${activeQ} 라인업` });
+        } else {
+          // 지원 안 되면 다운로드
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      }, "image/png");
+    } catch (e) {
+      if (e instanceof Error && e.name !== "AbortError") {
+        alert("공유 실패: " + e.message);
+      }
+    } finally {
+      setSharing(false);
+    }
+  };
   const isInternal = match.opponent === "자체전";
 
   const getResultBadgeStyle = (result: string) => {
@@ -163,7 +203,21 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
             {activeLineup && (
               <>
                 {FORMATION_POSITIONS[activeLineup.formation] ? (
-                  <FormationField lineup={activeLineup} rosterMap={rosterMap} />
+                  <div className="relative">
+                    <div ref={fieldRef}>
+                      <FormationField lineup={activeLineup} rosterMap={rosterMap} />
+                    </div>
+                    <button
+                      onClick={handleShare}
+                      disabled={sharing}
+                      className="absolute top-2 right-2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/40 backdrop-blur-sm text-white text-[11px] font-black hover:bg-black/60 transition-all"
+                    >
+                      {sharing
+                        ? <Download className="w-3.5 h-3.5 animate-bounce" />
+                        : <Share2 className="w-3.5 h-3.5" />}
+                      {sharing ? "준비 중..." : "공유"}
+                    </button>
+                  </div>
                 ) : (
                   <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 rounded-2xl">
                     <CardContent className="p-4">
