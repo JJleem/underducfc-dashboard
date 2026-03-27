@@ -480,24 +480,24 @@ export default function DashboardClient({
 
                       return (
                         <div className="mt-4 border-t border-gray-100 dark:border-white/5 pt-3">
-                          <button
-                            onClick={() => toggleLineup(match.id)}
-                            className="w-full flex items-center justify-between text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                          >
-                            <span className="flex items-center gap-1.5">
+                          <div className="flex items-center justify-between">
+                            <button
+                              onClick={() => matchLineups.length > 0 && toggleLineup(match.id)}
+                              className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                            >
                               <Users className="w-3.5 h-3.5 text-[#FFB6C1]" />
-                              {matchLineups.length > 0
-                                ? "라인업 보기"
-                                : "라인업 미등록"}
-                            </span>
-                            {matchLineups.length > 0 &&
-                              (isOpen ? (
-                                <ChevronUp className="w-3.5 h-3.5" />
-                              ) : (
-                                <ChevronDown className="w-3.5 h-3.5" />
-                              ))}
-                          </button>
-
+                              {matchLineups.length > 0 ? "라인업 보기" : "라인업 미등록"}
+                              {matchLineups.length > 0 && (
+                                isOpen ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                              )}
+                            </button>
+                            <Link
+                              href={`/matches/${match.id}/edit`}
+                              className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] hover:opacity-70 transition-opacity"
+                            >
+                              {matchLineups.length > 0 ? "편집" : "+ 추가"}
+                            </Link>
+                          </div>
                           {isOpen && matchLineups.length > 0 && (
                             <div className="mt-3 space-y-3">
                               {/* 쿼터 탭 */}
