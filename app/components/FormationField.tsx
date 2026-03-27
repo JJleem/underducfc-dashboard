@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 export interface LineupForField {
   formation: string;
@@ -115,6 +116,13 @@ export function FormationField({
           <path d="M92,137 A4,4 0 0,0 96,141" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
         </svg>
 
+        {/* 중앙 로고 */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 5 }}>
+          <div className="relative w-24 h-24 opacity-[0.07]">
+            <Image src="/underducklogo.png" alt="" fill className="object-contain" />
+          </div>
+        </div>
+
         {lineup.players.map((player, i) => {
           const pos = positions?.[i];
           if (!pos || !player) return null;
@@ -207,6 +215,13 @@ export function MiniFormationField({
           <rect x="28" y="2" width="44" height="12" stroke="rgba(255,255,255,0.25)" strokeWidth="0.6" />
           <rect x="28" y="48" width="44" height="12" stroke="rgba(255,255,255,0.25)" strokeWidth="0.6" />
         </svg>
+
+        {/* 중앙 로고 */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 5 }}>
+          <div className="relative w-10 h-10 opacity-[0.07]">
+            <Image src="/underducklogo.png" alt="" fill className="object-contain" />
+          </div>
+        </div>
 
         {lineup.players.map((player, i) => {
           const pos = positions[i];

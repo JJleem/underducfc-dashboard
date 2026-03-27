@@ -11,13 +11,22 @@ export default async function LineupEditPage({
   const { id } = await params;
   const matchId = Number(id);
 
-  const [rawMatchesResult, rawLineupsResult] = await Promise.allSettled([
+  const [rawMatchesResult, rawLineupsResult, rawRosterResult] = await Promise.allSettled([
     getSheetData("matches!A1:L50"),
     getSheetData("lineup!A1:S100"),
+    getSheetData("roster!A1:J50"),
   ]);
 
   const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
   const rawLineups = rawLineupsResult.status === "fulfilled" ? rawLineupsResult.value : [];
+  const rawRoster = rawRosterResult.status === "fulfilled" ? rawRosterResult.value : [];
+
+  const rosterMap: Record<string, string> = {};
+  rawRoster.slice(1).forEach((row: string[]) => {
+    const no = row[0]?.trim();
+    const name = row[1]?.trim();
+    if (name && no) rosterMap[name] = no;
+  });
 
   const matches: MatchData[] = rawMatches.slice(1).map((row: string[], index: number) => ({
     id: index,
@@ -59,5 +68,5 @@ export default async function LineupEditPage({
     .map((s) => s.trim())
     .filter(Boolean);
 
-  return <LineupEditor match={match} lineups={lineups} attendees={attendees} />;
+  return <LineupEditor match={match} lineups={lineups} attendees={attendees} rosterMap={rosterMap} />;
 }

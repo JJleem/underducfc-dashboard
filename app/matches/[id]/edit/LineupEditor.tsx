@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Sun, Moon, RotateCcw, Save, Check, UserPlus, X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useTheme } from "next-themes";
 import { MatchData, LineupData } from "../../../components/DashboardClient";
 import { FORMATION_POSITIONS } from "../../../components/FormationField";
@@ -36,9 +37,10 @@ interface LineupEditorProps {
   match: MatchData;
   lineups: LineupData[];
   attendees: string[];
+  rosterMap: Record<string, string>;
 }
 
-export default function LineupEditor({ match, lineups, attendees }: LineupEditorProps) {
+export default function LineupEditor({ match, lineups, attendees, rosterMap }: LineupEditorProps) {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
 
@@ -278,10 +280,21 @@ export default function LineupEditor({ match, lineups, attendees }: LineupEditor
               <rect x="41" y="135" width="18" height="2" stroke="rgba(255,255,255,0.7)" strokeWidth="0.7" />
             </svg>
 
+            {/* 중앙 로고 */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 5 }}>
+              <div className="relative w-20 h-20 opacity-[0.07]">
+                <Image src="/underducklogo.png" alt="" fill className="object-contain" />
+              </div>
+            </div>
+
             {positions.map((pos, i) => {
               const player = assignments[i];
               const isActive = activeSlot?.type === "player" && activeSlot.index === i;
               const color = getLayerColor(i, formation);
+              const isTbd = player === "미정";
+              const jerseyNo = player ? rosterMap[player] : null;
+              const displayLabel = isTbd ? "?" : jerseyNo ?? (player ? "G" : String(i + 1));
+              const hasPlayer = !!player;
 
               return (
                 <div
@@ -294,25 +307,25 @@ export default function LineupEditor({ match, lineups, attendees }: LineupEditor
                     className="flex items-center justify-center rounded-full font-black transition-all"
                     style={{
                       width: 36, height: 36,
-                      fontSize: player ? 10 : 11,
-                      backgroundColor: player ? color : "rgba(255,255,255,0.15)",
+                      fontSize: hasPlayer ? (displayLabel.length > 2 ? 9 : 13) : 11,
+                      backgroundColor: isTbd ? "#374151" : hasPlayer ? color : "rgba(255,255,255,0.15)",
                       border: isActive
                         ? "2.5px solid #FBBF24"
-                        : player
-                        ? `2.5px solid rgba(255,255,255,0.6)`
+                        : hasPlayer
+                        ? "2.5px solid rgba(255,255,255,0.6)"
                         : "2px dashed rgba(255,255,255,0.4)",
-                      color: player ? (color === "#F59E0B" ? "#78350F" : "#fff") : "rgba(255,255,255,0.6)",
+                      color: hasPlayer ? (color === "#F59E0B" && !isTbd ? "#78350F" : "#fff") : "rgba(255,255,255,0.6)",
                       boxShadow: isActive ? "0 0 0 3px rgba(251,191,36,0.4)" : "0 2px 6px rgba(0,0,0,0.4)",
                     }}
                   >
-                    {player ? player.slice(0, 2) : i + 1}
+                    {displayLabel}
                   </div>
-                  {player && (
+                  {hasPlayer && (
                     <div
                       className="mt-0.5 text-[7px] font-black text-white text-center max-w-[40px] truncate"
                       style={{ textShadow: "0 1px 3px rgba(0,0,0,1)" }}
                     >
-                      {player}
+                      {isTbd ? "미정" : player}
                     </div>
                   )}
                 </div>
