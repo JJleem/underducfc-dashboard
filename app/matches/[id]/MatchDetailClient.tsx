@@ -116,8 +116,14 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
 
         {/* 라인업 섹션 */}
         {lineups.length === 0 ? (
-          <div className="text-center py-10 text-[13px] text-gray-400 dark:text-gray-600 font-bold">
-            등록된 라인업이 없습니다
+          <div className="flex flex-col items-center gap-3 py-10">
+            <p className="text-[13px] text-gray-400 dark:text-gray-600 font-bold">등록된 라인업이 없습니다</p>
+            <Link
+              href={`/matches/${match.id}/edit`}
+              className="flex items-center gap-1.5 px-5 py-2.5 rounded-2xl bg-[#FFB6C1] text-black text-[12px] font-black hover:bg-[#FF8FA3] transition-colors"
+            >
+              <Pencil className="w-3.5 h-3.5" /> 라인업 추가하기
+            </Link>
           </div>
         ) : (
           <div className="space-y-4">

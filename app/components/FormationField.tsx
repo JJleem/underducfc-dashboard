@@ -118,8 +118,8 @@ export function FormationField({
 
         {/* 중앙 로고 */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 5 }}>
-          <div className="relative w-24 h-24 opacity-[0.07]">
-            <Image src="/underducklogo.png" alt="" fill className="object-contain" />
+          <div className="relative w-24 h-24 rounded-full overflow-hidden opacity-[0.13]">
+            <Image src="/underducklogo.png" alt="" fill className="object-cover" />
           </div>
         </div>
 
@@ -218,8 +218,8 @@ export function MiniFormationField({
 
         {/* 중앙 로고 */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 5 }}>
-          <div className="relative w-10 h-10 opacity-[0.07]">
-            <Image src="/underducklogo.png" alt="" fill className="object-contain" />
+          <div className="relative w-10 h-10 rounded-full overflow-hidden opacity-[0.13]">
+            <Image src="/underducklogo.png" alt="" fill className="object-cover" />
           </div>
         </div>
 

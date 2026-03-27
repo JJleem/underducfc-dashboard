@@ -282,8 +282,8 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
 
             {/* 중앙 로고 */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 5 }}>
-              <div className="relative w-20 h-20 opacity-[0.07]">
-                <Image src="/underducklogo.png" alt="" fill className="object-contain" />
+              <div className="relative w-20 h-20 rounded-full overflow-hidden opacity-[0.13]">
+                <Image src="/underducklogo.png" alt="" fill className="object-cover" />
               </div>
             </div>
 
