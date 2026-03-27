@@ -81,18 +81,21 @@ export async function writeLineup({
   const subCells = [...subs, ...Array(Math.max(0, 5 - subs.length)).fill("")].slice(0, 5);
   const newRow = [String(matchId), quarter, formation, ...playerCells, ...subCells];
 
-  // 데이터 행만 추출 (헤더 제외), 인메모리에서 수정 → 전체 덮어쓰기
-  // (인덱스 기반 행 번호 계산 시 빈 행으로 인한 오프셋 오류 방지)
-  let found = false;
-  const dataRows = rows.slice(1).map((row) => {
-    if (String(row[0]) === String(matchId) && row[1] === quarter) {
-      found = true;
-      return newRow;
-    }
-    return row;
-  });
+  // 플레이어/교체 모두 비어있으면 해당 행 삭제, 아니면 업데이트/추가
+  const isEmpty = playerCells.every(p => !p) && subCells.every(s => !s);
 
-  if (!found) {
+  let found = false;
+  const dataRows = rows.slice(1)
+    .map((row): string[] | null => {
+      if (String(row[0]) === String(matchId) && row[1] === quarter) {
+        found = true;
+        return isEmpty ? null : newRow; // 비어있으면 행 삭제
+      }
+      return row;
+    })
+    .filter((row): row is string[] => row !== null);
+
+  if (!found && !isEmpty) {
     dataRows.push(newRow);
   }
 
