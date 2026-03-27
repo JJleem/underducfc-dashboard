@@ -9,100 +9,134 @@ import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 import { MatchData, LineupData } from "../../components/DashboardClient";
 
-// 포메이션별 선수 위치 (x, y: % 기준, 위가 공격방향)
+// 포메이션별 선수 위치 (x, y: % 기준 / 위=공격방향, 아래=GK)
 const FORMATION_POSITIONS: Record<string, { x: number; y: number }[]> = {
   "4-3-3": [
     { x: 50, y: 88 },
-    { x: 15, y: 70 }, { x: 37, y: 70 }, { x: 63, y: 70 }, { x: 85, y: 70 },
-    { x: 25, y: 50 }, { x: 50, y: 48 }, { x: 75, y: 50 },
-    { x: 20, y: 25 }, { x: 50, y: 20 }, { x: 80, y: 25 },
+    { x: 12, y: 70 }, { x: 36, y: 70 }, { x: 64, y: 70 }, { x: 88, y: 70 },
+    { x: 22, y: 48 }, { x: 50, y: 46 }, { x: 78, y: 48 },
+    { x: 16, y: 22 }, { x: 50, y: 18 }, { x: 84, y: 22 },
   ],
   "4-4-2": [
     { x: 50, y: 88 },
-    { x: 15, y: 72 }, { x: 38, y: 72 }, { x: 62, y: 72 }, { x: 85, y: 72 },
-    { x: 15, y: 50 }, { x: 38, y: 50 }, { x: 62, y: 50 }, { x: 85, y: 50 },
-    { x: 35, y: 25 }, { x: 65, y: 25 },
+    { x: 12, y: 70 }, { x: 36, y: 70 }, { x: 64, y: 70 }, { x: 88, y: 70 },
+    { x: 12, y: 48 }, { x: 36, y: 48 }, { x: 64, y: 48 }, { x: 88, y: 48 },
+    { x: 34, y: 22 }, { x: 66, y: 22 },
   ],
   "3-5-2": [
     { x: 50, y: 88 },
-    { x: 25, y: 72 }, { x: 50, y: 72 }, { x: 75, y: 72 },
-    { x: 10, y: 52 }, { x: 30, y: 52 }, { x: 50, y: 50 }, { x: 70, y: 52 }, { x: 90, y: 52 },
-    { x: 35, y: 25 }, { x: 65, y: 25 },
+    { x: 22, y: 70 }, { x: 50, y: 70 }, { x: 78, y: 70 },
+    { x: 8, y: 50 }, { x: 28, y: 50 }, { x: 50, y: 48 }, { x: 72, y: 50 }, { x: 92, y: 50 },
+    { x: 34, y: 22 }, { x: 66, y: 22 },
   ],
   "4-2-3-1": [
     { x: 50, y: 88 },
-    { x: 15, y: 72 }, { x: 38, y: 72 }, { x: 62, y: 72 }, { x: 85, y: 72 },
-    { x: 35, y: 58 }, { x: 65, y: 58 },
-    { x: 15, y: 40 }, { x: 50, y: 38 }, { x: 85, y: 40 },
-    { x: 50, y: 20 },
+    { x: 12, y: 72 }, { x: 36, y: 72 }, { x: 64, y: 72 }, { x: 88, y: 72 },
+    { x: 32, y: 56 }, { x: 68, y: 56 },
+    { x: 14, y: 38 }, { x: 50, y: 36 }, { x: 86, y: 38 },
+    { x: 50, y: 18 },
   ],
   "3-4-3": [
     { x: 50, y: 88 },
-    { x: 25, y: 72 }, { x: 50, y: 72 }, { x: 75, y: 72 },
-    { x: 15, y: 52 }, { x: 38, y: 52 }, { x: 62, y: 52 }, { x: 85, y: 52 },
-    { x: 20, y: 25 }, { x: 50, y: 20 }, { x: 80, y: 25 },
+    { x: 22, y: 70 }, { x: 50, y: 70 }, { x: 78, y: 70 },
+    { x: 12, y: 50 }, { x: 36, y: 50 }, { x: 64, y: 50 }, { x: 88, y: 50 },
+    { x: 16, y: 22 }, { x: 50, y: 18 }, { x: 84, y: 22 },
   ],
   "5-3-2": [
     { x: 50, y: 88 },
-    { x: 10, y: 72 }, { x: 28, y: 72 }, { x: 50, y: 72 }, { x: 72, y: 72 }, { x: 90, y: 72 },
-    { x: 25, y: 50 }, { x: 50, y: 48 }, { x: 75, y: 50 },
-    { x: 35, y: 25 }, { x: 65, y: 25 },
+    { x: 8, y: 70 }, { x: 26, y: 70 }, { x: 50, y: 70 }, { x: 74, y: 70 }, { x: 92, y: 70 },
+    { x: 22, y: 48 }, { x: 50, y: 46 }, { x: 78, y: 48 },
+    { x: 34, y: 22 }, { x: 66, y: 22 },
   ],
   "4-1-4-1": [
     { x: 50, y: 88 },
-    { x: 15, y: 75 }, { x: 38, y: 75 }, { x: 62, y: 75 }, { x: 85, y: 75 },
-    { x: 50, y: 62 },
-    { x: 12, y: 45 }, { x: 35, y: 45 }, { x: 65, y: 45 }, { x: 88, y: 45 },
-    { x: 50, y: 20 },
+    { x: 12, y: 74 }, { x: 36, y: 74 }, { x: 64, y: 74 }, { x: 88, y: 74 },
+    { x: 50, y: 60 },
+    { x: 10, y: 44 }, { x: 34, y: 44 }, { x: 66, y: 44 }, { x: 90, y: 44 },
+    { x: 50, y: 18 },
   ],
 };
 
+// 포메이션 문자열 파싱해서 각 선수의 포지션 레이어 인덱스 반환
+function getLayerIndex(playerIndex: number, formation: string): number {
+  if (playerIndex === 0) return 0; // GK
+  const layers = formation.split("-").map(Number);
+  let count = 1;
+  for (let i = 0; i < layers.length; i++) {
+    if (playerIndex < count + layers[i]) return i + 1;
+    count += layers[i];
+  }
+  return layers.length;
+}
+
+// 레이어별 색상 (GK/DF/MF/FW)
+function getPlayerStyle(layerIndex: number, totalLayers: number) {
+  if (layerIndex === 0) // GK
+    return { bg: "#F59E0B", border: "#FDE68A", text: "#78350F", label: "GK" };
+  if (layerIndex === 1) // DF
+    return { bg: "#3B82F6", border: "#93C5FD", text: "#FFFFFF", label: "DF" };
+  if (layerIndex === totalLayers) // FW (마지막 줄)
+    return { bg: "#FF8FA3", border: "#FFB6C1", text: "#FFFFFF", label: "FW" };
+  return { bg: "#10B981", border: "#6EE7B7", text: "#FFFFFF", label: "MF" }; // MF
+}
+
 function SoccerField({ lineup }: { lineup: LineupData }) {
   const positions = FORMATION_POSITIONS[lineup.formation];
+  const totalLayers = lineup.formation.split("-").length;
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden" style={{ paddingBottom: "140%" }}>
-      {/* 잔디 배경 */}
+    <div className="w-full rounded-2xl overflow-hidden shadow-xl">
+      {/* 필드 컨테이너 */}
       <div
-        className="absolute inset-0"
+        className="relative w-full"
         style={{
-          background: "linear-gradient(180deg, #2d6a2d 0%, #3a8a3a 25%, #2d6a2d 50%, #3a8a3a 75%, #2d6a2d 100%)",
+          paddingBottom: "145%",
+          background: "linear-gradient(180deg, #1a5c1a 0%, #236b23 12.5%, #1a5c1a 25%, #236b23 37.5%, #1a5c1a 50%, #236b23 62.5%, #1a5c1a 75%, #236b23 87.5%, #1a5c1a 100%)",
         }}
       >
-        {/* 필드 라인 */}
+        {/* 필드 라인 SVG */}
         <svg
           className="absolute inset-0 w-full h-full"
-          viewBox="0 0 100 140"
+          viewBox="0 0 100 145"
           preserveAspectRatio="none"
           fill="none"
-          stroke="rgba(255,255,255,0.4)"
-          strokeWidth="0.6"
         >
           {/* 외곽선 */}
-          <rect x="5" y="5" width="90" height="130" />
+          <rect x="4" y="4" width="92" height="137" stroke="rgba(255,255,255,0.6)" strokeWidth="0.8" />
           {/* 하프라인 */}
-          <line x1="5" y1="70" x2="95" y2="70" />
-          {/* 센터 서클 */}
-          <circle cx="50" cy="70" r="12" />
-          <circle cx="50" cy="70" r="0.8" fill="rgba(255,255,255,0.4)" stroke="none" />
-          {/* 위 페널티 박스 */}
-          <rect x="22" y="5" width="56" height="20" />
-          <rect x="33" y="5" width="34" height="10" />
-          <circle cx="50" cy="17" r="0.8" fill="rgba(255,255,255,0.4)" stroke="none" />
-          {/* 아래 페널티 박스 */}
-          <rect x="22" y="115" width="56" height="20" />
-          <rect x="33" y="125" width="34" height="10" />
-          <circle cx="50" cy="123" r="0.8" fill="rgba(255,255,255,0.4)" stroke="none" />
-          {/* 골대 */}
-          <rect x="40" y="2" width="20" height="3" strokeWidth="0.8" />
-          <rect x="40" y="135" width="20" height="3" strokeWidth="0.8" />
+          <line x1="4" y1="72.5" x2="96" y2="72.5" stroke="rgba(255,255,255,0.6)" strokeWidth="0.6" />
+          {/* 센터서클 */}
+          <circle cx="50" cy="72.5" r="13" stroke="rgba(255,255,255,0.6)" strokeWidth="0.6" />
+          <circle cx="50" cy="72.5" r="1" fill="rgba(255,255,255,0.6)" />
+          {/* 위쪽 페널티 박스 */}
+          <rect x="22" y="4" width="56" height="22" stroke="rgba(255,255,255,0.5)" strokeWidth="0.6" />
+          <rect x="34" y="4" width="32" height="10" stroke="rgba(255,255,255,0.5)" strokeWidth="0.6" />
+          {/* 위쪽 페널티 스팟 */}
+          <circle cx="50" cy="18" r="0.8" fill="rgba(255,255,255,0.5)" />
+          {/* 아래쪽 페널티 박스 */}
+          <rect x="22" y="119" width="56" height="22" stroke="rgba(255,255,255,0.5)" strokeWidth="0.6" />
+          <rect x="34" y="131" width="32" height="10" stroke="rgba(255,255,255,0.5)" strokeWidth="0.6" />
+          {/* 아래쪽 페널티 스팟 */}
+          <circle cx="50" cy="127" r="0.8" fill="rgba(255,255,255,0.5)" />
+          {/* 위쪽 골대 */}
+          <rect x="40" y="1.5" width="20" height="2.5" stroke="rgba(255,255,255,0.8)" strokeWidth="0.8" />
+          {/* 아래쪽 골대 */}
+          <rect x="40" y="141" width="20" height="2.5" stroke="rgba(255,255,255,0.8)" strokeWidth="0.8" />
+          {/* 코너 아크 */}
+          <path d="M4,8 A4,4 0 0,0 8,4" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
+          <path d="M92,8 A4,4 0 0,1 96,4" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
+          <path d="M4,137 A4,4 0 0,1 8,141" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
+          <path d="M92,137 A4,4 0 0,0 96,141" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
         </svg>
 
-        {/* 선수 배치 */}
+        {/* 선수 노드 */}
         {lineup.players.map((player, i) => {
           const pos = positions?.[i];
           if (!pos || !player) return null;
-          const isGK = i === 0;
+          const layerIdx = getLayerIndex(i, lineup.formation);
+          const style = getPlayerStyle(layerIdx, totalLayers);
+          const shortName = player.length > 4 ? player.slice(0, 4) : player;
+
           return (
             <div
               key={i}
@@ -111,26 +145,65 @@ function SoccerField({ lineup }: { lineup: LineupData }) {
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,
                 transform: "translate(-50%, -50%)",
+                zIndex: 10,
               }}
             >
+              {/* 선수 원 */}
               <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-[8px] font-black shadow-lg border-2 ${
-                  isGK
-                    ? "bg-yellow-400 border-yellow-200 text-yellow-900"
-                    : "bg-[#FFB6C1] border-white text-gray-900"
-                }`}
+                className="flex items-center justify-center rounded-full font-black text-[9px] shadow-lg"
+                style={{
+                  width: 34,
+                  height: 34,
+                  backgroundColor: style.bg,
+                  border: `2.5px solid ${style.border}`,
+                  color: style.text,
+                  boxShadow: `0 2px 8px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.2)`,
+                }}
               >
-                {i + 1}
+                {style.label}
               </div>
-              <span
-                className="mt-0.5 text-[7px] font-black text-white leading-tight text-center max-w-[36px] truncate"
-                style={{ textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}
+              {/* 이름 배경 + 텍스트 */}
+              <div
+                className="mt-0.5 px-1 rounded text-[8.5px] font-black text-white text-center leading-tight max-w-[44px] truncate"
+                style={{
+                  background: "rgba(0,0,0,0.65)",
+                  textShadow: "0 1px 2px rgba(0,0,0,0.9)",
+                }}
               >
-                {player}
-              </span>
+                {shortName}
+              </div>
             </div>
           );
         })}
+
+        {/* 공격 방향 화살표 */}
+        <div
+          className="absolute right-2 flex flex-col items-center gap-0.5"
+          style={{ top: "42%", transform: "translateY(-50%)" }}
+        >
+          <div className="w-px h-8 bg-white/20" />
+          <svg width="8" height="6" viewBox="0 0 8 6" fill="rgba(255,255,255,0.25)">
+            <path d="M4 0 L8 6 L0 6 Z" />
+          </svg>
+          <span className="text-[6px] text-white/25 font-bold uppercase tracking-widest" style={{ writingMode: "vertical-rl" }}>
+            attack
+          </span>
+        </div>
+      </div>
+
+      {/* 포메이션 하단 레전드 */}
+      <div className="flex items-center justify-center gap-3 py-2.5 bg-[#0f3d0f]">
+        {[
+          { label: "GK", color: "#F59E0B" },
+          { label: "DF", color: "#3B82F6" },
+          { label: "MF", color: "#10B981" },
+          { label: "FW", color: "#FF8FA3" },
+        ].map((item) => (
+          <div key={item.label} className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+            <span className="text-[9px] font-bold text-white/60">{item.label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -150,7 +223,6 @@ export default function MatchDetailClient({ match, lineups }: MatchDetailClientP
   );
   const [activeQ, setActiveQ] = React.useState(sortedQuarters[0] || "");
   const activeLineup = lineups.find((l) => l.quarter === activeQ);
-
   const isInternal = match.opponent === "자체전";
 
   const getResultBadgeStyle = (result: string) => {
@@ -213,7 +285,6 @@ export default function MatchDetailClient({ match, lineups }: MatchDetailClientP
                 </div>
                 <span className="font-bold text-sm">{isInternal ? "언더덕 A" : "언더덕"}</span>
               </div>
-
               <div className="flex flex-col items-center flex-1 px-2">
                 {match.result === "예정" || !match.ourScore || match.ourScore === "-" ? (
                   <div className="text-2xl font-black italic text-gray-300">VS</div>
@@ -227,14 +298,13 @@ export default function MatchDetailClient({ match, lineups }: MatchDetailClientP
                   </div>
                 )}
               </div>
-
               <div className="flex flex-col items-center flex-1">
                 {isInternal ? (
                   <div className="relative w-14 h-14 bg-white dark:bg-black rounded-full mb-2 flex items-center justify-center border-[2px] border-[#FFB6C1]/50 shadow-sm overflow-hidden">
                     <Image src="/underducklogo.png" alt="언더덕 B" fill className="object-cover" />
                   </div>
                 ) : (
-                  <div className="w-14 h-14 bg-gray-100 dark:bg-white/5 rounded-full mb-2 flex items-center justify-center border border-gray-200 dark:border-white/10 text-[11px] font-black text-gray-400 italic shrink-0 shadow-inner">
+                  <div className="w-14 h-14 bg-gray-100 dark:bg-white/5 rounded-full mb-2 flex items-center justify-center border border-gray-200 dark:border-white/10 text-[11px] font-black text-gray-400 italic shrink-0">
                     상대팀
                   </div>
                 )}
@@ -253,12 +323,8 @@ export default function MatchDetailClient({ match, lineups }: MatchDetailClientP
           </div>
         ) : (
           <div className="space-y-4">
-            <h2 className="text-[13px] font-black text-gray-800 dark:text-white px-1">
-              라인업
-            </h2>
-
-            {/* 쿼터 탭 */}
-            {sortedQuarters.length > 1 && (
+            {/* 쿼터 탭 + 포메이션 */}
+            <div className="flex items-center justify-between px-1">
               <div className="flex gap-2 flex-wrap">
                 {sortedQuarters.map((q) => (
                   <button
@@ -274,31 +340,24 @@ export default function MatchDetailClient({ match, lineups }: MatchDetailClientP
                   </button>
                 ))}
               </div>
-            )}
+              {activeLineup && (
+                <span className="text-[13px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+                  {activeLineup.formation}
+                </span>
+              )}
+            </div>
 
             {activeLineup && (
               <>
-                {/* 포메이션 배지 */}
-                <div className="flex items-center gap-2 px-1">
-                  <span className="text-[12px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
-                    {activeLineup.formation}
-                  </span>
-                  <span className="text-[11px] text-gray-400">포메이션</span>
-                </div>
-
                 {/* 축구장 시각화 */}
                 {FORMATION_POSITIONS[activeLineup.formation] ? (
                   <SoccerField lineup={activeLineup} />
                 ) : (
-                  /* 포메이션 프리셋 없으면 리스트로 표시 */
                   <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 rounded-2xl">
                     <CardContent className="p-4">
                       <div className="flex flex-wrap gap-2">
                         {activeLineup.players.map((p, i) => (
-                          <span
-                            key={i}
-                            className="text-[11px] font-bold px-2.5 py-1 bg-gray-100 dark:bg-white/5 rounded-lg text-gray-700 dark:text-gray-300"
-                          >
+                          <span key={i} className="text-[11px] font-bold px-2.5 py-1 bg-gray-100 dark:bg-white/5 rounded-lg text-gray-700 dark:text-gray-300">
                             {p}
                           </span>
                         ))}
@@ -311,15 +370,10 @@ export default function MatchDetailClient({ match, lineups }: MatchDetailClientP
                 {activeLineup.subs.length > 0 && (
                   <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 rounded-2xl">
                     <CardContent className="p-4">
-                      <p className="text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest">
-                        교체 선수
-                      </p>
+                      <p className="text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest">교체 선수</p>
                       <div className="flex flex-wrap gap-2">
                         {activeLineup.subs.map((s, i) => (
-                          <span
-                            key={i}
-                            className="text-[11px] font-bold px-2.5 py-1 bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/5 rounded-lg text-gray-500 dark:text-gray-500"
-                          >
+                          <span key={i} className="text-[11px] font-bold px-2.5 py-1 bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/5 rounded-lg text-gray-500 dark:text-gray-500">
                             {s}
                           </span>
                         ))}
