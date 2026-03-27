@@ -21,11 +21,11 @@ export default async function MatchDetailPage({
   const rawLineups = rawLineupsResult.status === "fulfilled" ? rawLineupsResult.value : [];
   const rawRoster = rawRosterResult.status === "fulfilled" ? rawRosterResult.value : [];
 
-  // 이름 → 등번호 맵
+  // 이름 → 등번호 맵 (A=등번호, B=이름)
   const rosterMap: Record<string, string> = {};
   rawRoster.slice(1).forEach((row: string[]) => {
-    const name = row[0]?.trim();
-    const no = row[1]?.trim();
+    const no = row[0]?.trim();
+    const name = row[1]?.trim();
     if (name && no) rosterMap[name] = no;
   });
 
