@@ -16,6 +16,7 @@ import {
   ChevronUp,
   Users,
 } from "lucide-react";
+import { MiniFormationField, FORMATION_POSITIONS } from "./FormationField";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
@@ -66,6 +67,7 @@ interface DashboardClientProps {
   matches: MatchData[];
   notice?: NoticeData;
   lineups: LineupData[];
+  rosterMap: Record<string, string>;
 }
 
 export default function DashboardClient({
@@ -73,6 +75,7 @@ export default function DashboardClient({
   matches,
   notice,
   lineups,
+  rosterMap,
 }: DashboardClientProps) {
   const { theme, setTheme } = useTheme();
   const [openLineups, setOpenLineups] = React.useState<Set<number>>(new Set());
@@ -526,30 +529,24 @@ export default function DashboardClient({
                                     <span className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
                                       {activeLineup.formation}
                                     </span>
-                                    <span className="text-[9px] text-gray-400">
-                                      포메이션
-                                    </span>
+                                    <span className="text-[9px] text-gray-400">포메이션</span>
                                   </div>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {activeLineup.players.map((p, i) => (
-                                      <span
-                                        key={i}
-                                        className="text-[10px] font-bold px-2 py-0.5 bg-gray-100 dark:bg-white/5 rounded-md text-gray-700 dark:text-gray-300"
-                                      >
-                                        {p}
-                                      </span>
-                                    ))}
-                                  </div>
+                                  {FORMATION_POSITIONS[activeLineup.formation] ? (
+                                    <MiniFormationField lineup={activeLineup} rosterMap={rosterMap} />
+                                  ) : (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {activeLineup.players.map((p, i) => (
+                                        <span key={i} className="text-[10px] font-bold px-2 py-0.5 bg-gray-100 dark:bg-white/5 rounded-md text-gray-700 dark:text-gray-300">
+                                          {p}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
                                   {activeLineup.subs.length > 0 && (
                                     <div className="pt-1 border-t border-gray-100 dark:border-white/5">
-                                      <span className="text-[9px] text-gray-400 mr-1.5">
-                                        교체
-                                      </span>
+                                      <span className="text-[9px] text-gray-400 mr-1.5">교체</span>
                                       {activeLineup.subs.map((s, i) => (
-                                        <span
-                                          key={i}
-                                          className="text-[10px] font-bold px-2 py-0.5 bg-gray-50 dark:bg-white/[0.03] rounded-md text-gray-500 dark:text-gray-500 mr-1"
-                                        >
+                                        <span key={i} className="text-[10px] font-bold px-2 py-0.5 bg-gray-50 dark:bg-white/[0.03] rounded-md text-gray-500 mr-1">
                                           {s}
                                         </span>
                                       ))}

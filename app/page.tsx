@@ -42,6 +42,14 @@ export default async function TeamDashboardPage() {
     rosterMap.set(row[0], { no: row[1] || "-", pos: row[2] || "-" });
   });
 
+  // 라인업용 이름 → 등번호 맵 (A=등번호, B=이름)
+  const lineupRosterMap: Record<string, string> = {};
+  rawRoster.slice(1).forEach((row: string[]) => {
+    const no = row[0]?.trim();
+    const name = row[1]?.trim();
+    if (name && no) lineupRosterMap[name] = no;
+  });
+
   // 💡 4. PlayerData 타입에 맞춰서 가공
   const players: PlayerData[] = rawStats.slice(1).map((row: string[]) => {
     const name = row[1];
@@ -110,6 +118,7 @@ export default async function TeamDashboardPage() {
       players={players}
       notice={latestNotice}
       lineups={lineups}
+      rosterMap={lineupRosterMap}
     />
   );
 }
