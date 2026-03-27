@@ -31,7 +31,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
     setSharing(true);
     try {
       const fileName = `언더덕_${match.opponent}_${activeQ}_라인업.png`;
-      const label = `언더덕 vs ${match.opponent} · ${activeQ}`;
+      const label = `언더덕 vs ${match.opponent} · ${activeQ} · ${match.date}`;
       await shareFormation(activeLineup, rosterMap, fileName, label);
     } catch (e) {
       if (e instanceof Error && e.name !== "AbortError") {

@@ -546,7 +546,7 @@ export default function DashboardClient({
                                               activeLineup,
                                               rosterMap,
                                               `언더덕_${match.opponent}_${activeQ}_라인업.png`,
-                                              `언더덕 vs ${match.opponent} · ${activeQ}`
+                                              `언더덕 vs ${match.opponent} · ${activeQ} · ${match.date}`
                                             );
                                           } catch (e) {
                                             if (e instanceof Error && e.name !== "AbortError") {
