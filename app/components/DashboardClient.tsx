@@ -63,6 +63,7 @@ export interface MatchData {
   type?: string;
   goals?: string;
   assists?: string;
+  mom?: string; // K열 - MOM
   attendees?: string; // L열 - 참석자 (쉼표 구분)
 }
 
@@ -365,6 +366,14 @@ export default function DashboardClient({
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1.5">
+                        {match.mom && (
+                          <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-400/10 border border-yellow-300/50 dark:border-yellow-400/30 rounded-md px-2 py-0.5">
+                            <span className="text-[10px]">⭐</span>
+                            <span className="text-[10px] font-black text-yellow-600 dark:text-yellow-400">
+                              {match.mom.trim()}
+                            </span>
+                          </div>
+                        )}
                         {match.result && (
                           <Badge
                             className={`border-none font-black text-[11px] px-3 ${getResultBadgeStyle(match.result)}`}

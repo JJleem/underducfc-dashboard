@@ -34,6 +34,7 @@ export default async function TeamDashboardPage() {
       type: row[7] || "일반 매칭", // H열 (8번째)
       goals: row[8] || "",
       assists: row[9] || "",
+      mom: row[10] || "", // K열 MOM
       attendees: row[11] || "", // L열 참석자
     }));
 
