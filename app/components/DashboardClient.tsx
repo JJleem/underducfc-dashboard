@@ -694,7 +694,7 @@ export default function DashboardClient({
                       const feedbacks = feedbackMap[match.id] || [];
                       const isOpen = openFeedbacks.has(match.id);
                       const form = feedbackForms[match.id] || { name: "", message: "" };
-                      const firstFb = feedbacks[0];
+                      const firstFb = feedbacks[feedbacks.length - 1];
 
                       const FeedbackAvatar = ({ name }: { name: string }) => {
                         const no = rosterMap[name.trim()];
