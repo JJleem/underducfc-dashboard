@@ -766,7 +766,7 @@ export default function DashboardClient({
                                     value={form.name}
                                     maxLength={20}
                                     onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, name: e.target.value } }))}
-                                    className="w-28 text-[11px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 outline-none focus:border-[#FFB6C1]/60 dark:focus:border-[#FFB6C1]/60 placeholder:text-gray-400 text-gray-800 dark:text-gray-200"
+                                    className="w-28 text-[11px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-2.5 py-1.5 outline-none focus:border-[#FFB6C1]/60 dark:focus:border-[#FFB6C1]/60 placeholder:text-gray-400 text-gray-800 dark:text-gray-200"
                                   />
                                 </div>
                                 {/* 메시지 입력 + 전송 */}
