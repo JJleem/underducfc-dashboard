@@ -17,6 +17,7 @@ import {
   Users,
   Share2,
   Download,
+  SendHorizonal,
 } from "lucide-react";
 import { MiniFormationField, FORMATION_POSITIONS } from "./FormationField";
 import { shareFormation } from "../lib/draw-formation";
@@ -755,32 +756,40 @@ export default function DashboardClient({
                               ))}
 
                               {/* 입력 폼 */}
-                              <div className="pt-2 border-t border-gray-100 dark:border-white/5 space-y-2">
-                                <input
-                                  type="text"
-                                  placeholder="이름"
-                                  value={form.name}
-                                  maxLength={20}
-                                  onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, name: e.target.value } }))}
-                                  className="w-full text-[11px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 outline-none focus:border-[#FFB6C1]/60 dark:focus:border-[#FFB6C1]/60 placeholder:text-gray-400 text-gray-800 dark:text-gray-200"
-                                />
-                                <div className="flex gap-2">
+                              <div className="pt-3 border-t border-gray-100 dark:border-white/5">
+                                {/* 이름 입력 (컴팩트) */}
+                                <div className="flex items-center gap-1.5 mb-2">
+                                  <span className="text-[10px] text-gray-400 shrink-0">닉네임</span>
                                   <input
                                     type="text"
-                                    placeholder="한 마디 남기기 🦆"
-                                    value={form.message}
-                                    maxLength={200}
-                                    onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, message: e.target.value } }))}
-                                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitFeedback(match.id); } }}
-                                    className="flex-1 text-[11px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 outline-none focus:border-[#FFB6C1]/60 dark:focus:border-[#FFB6C1]/60 placeholder:text-gray-400 text-gray-800 dark:text-gray-200"
+                                    placeholder="이름 입력"
+                                    value={form.name}
+                                    maxLength={20}
+                                    onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, name: e.target.value } }))}
+                                    className="w-28 text-[11px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 outline-none focus:border-[#FFB6C1]/60 dark:focus:border-[#FFB6C1]/60 placeholder:text-gray-400 text-gray-800 dark:text-gray-200"
                                   />
-                                  <button
-                                    onClick={() => submitFeedback(match.id)}
-                                    disabled={submittingFeedback === match.id || !form.name?.trim() || !form.message?.trim()}
-                                    className="px-3 py-2 rounded-xl bg-[#FFB6C1]/20 border border-[#FFB6C1]/40 text-[#FF8FA3] dark:text-[#FFB6C1] text-[11px] font-black hover:bg-[#FFB6C1]/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-                                  >
-                                    {submittingFeedback === match.id ? "..." : "남기기"}
-                                  </button>
+                                </div>
+                                {/* 메시지 입력 + 전송 */}
+                                <div className="flex items-center gap-2">
+                                  <FeedbackAvatar name={form.name} />
+                                  <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-[#FFB6C1]/60 dark:focus-within:border-[#FFB6C1]/60 transition-colors">
+                                    <input
+                                      type="text"
+                                      placeholder="댓글 달기 🦆"
+                                      value={form.message}
+                                      maxLength={200}
+                                      onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, message: e.target.value } }))}
+                                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitFeedback(match.id); } }}
+                                      className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-gray-400 text-gray-800 dark:text-gray-200 min-w-0"
+                                    />
+                                    <button
+                                      onClick={() => submitFeedback(match.id)}
+                                      disabled={submittingFeedback === match.id || !form.name?.trim() || !form.message?.trim()}
+                                      className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1] disabled:opacity-30 hover:opacity-70 transition-opacity"
+                                    >
+                                      <SendHorizonal className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
