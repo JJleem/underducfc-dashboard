@@ -44,6 +44,37 @@ async function getAccessToken(): Promise<string> {
   return data.access_token as string;
 }
 
+export async function appendFeedback({
+  matchId,
+  name,
+  message,
+}: {
+  matchId: number;
+  name: string;
+  message: string;
+}) {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 환경변수가 없습니다.");
+
+  const token = await getAccessToken();
+  const timestamp = new Date().toISOString();
+  const row = [String(matchId), timestamp, name.trim(), message.trim()];
+
+  const range = encodeURIComponent("feedback!A:D");
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ values: [row] }),
+    }
+  );
+  if (!res.ok) throw new Error("feedback 시트 쓰기 실패");
+}
+
 export async function writeLineup({
   matchId,
   quarter,

@@ -25,6 +25,13 @@ import Image from "next/image";
 import Link from "next/link";
 
 // --- 타입 정의 ---
+export interface FeedbackData {
+  matchId: number;
+  timestamp: string;
+  name: string;
+  message: string;
+}
+
 export interface NoticeData {
   id: number;
   date: string;
@@ -86,6 +93,76 @@ export default function DashboardClient({
   const [openLineups, setOpenLineups] = React.useState<Set<number>>(new Set());
   const [activeQuarters, setActiveQuarters] = React.useState<Record<number, string>>({});
   const [sharingMatch, setSharingMatch] = React.useState<number | null>(null);
+
+  // 피드백 상태
+  const [feedbackMap, setFeedbackMap] = React.useState<Record<number, FeedbackData[]>>({});
+  const [openFeedbacks, setOpenFeedbacks] = React.useState<Set<number>>(new Set());
+  const [feedbackForms, setFeedbackForms] = React.useState<Record<number, { name: string; message: string }>>({});
+  const [submittingFeedback, setSubmittingFeedback] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    fetch("/api/feedback")
+      .then((r) => r.json())
+      .then((data: FeedbackData[]) => {
+        const map: Record<number, FeedbackData[]> = {};
+        data.forEach((fb) => {
+          if (!map[fb.matchId]) map[fb.matchId] = [];
+          map[fb.matchId].push(fb);
+        });
+        setFeedbackMap(map);
+      })
+      .catch(() => {});
+  }, []);
+
+  const toggleFeedback = (matchId: number) => {
+    setOpenFeedbacks((prev) => {
+      const next = new Set(prev);
+      if (next.has(matchId)) next.delete(matchId);
+      else next.add(matchId);
+      return next;
+    });
+  };
+
+  const submitFeedback = async (matchId: number) => {
+    const form = feedbackForms[matchId];
+    if (!form?.name?.trim() || !form?.message?.trim()) return;
+    setSubmittingFeedback(matchId);
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matchId, name: form.name, message: form.message }),
+      });
+      if (res.ok) {
+        const newFb: FeedbackData = {
+          matchId,
+          timestamp: new Date().toISOString(),
+          name: form.name.trim(),
+          message: form.message.trim(),
+        };
+        setFeedbackMap((prev) => ({
+          ...prev,
+          [matchId]: [...(prev[matchId] || []), newFb],
+        }));
+        setFeedbackForms((prev) => ({ ...prev, [matchId]: { name: form.name, message: "" } }));
+      }
+    } finally {
+      setSubmittingFeedback(null);
+    }
+  };
+
+  const formatFeedbackTime = (iso: string) => {
+    try {
+      const d = new Date(iso);
+      const month = d.getMonth() + 1;
+      const day = d.getDate();
+      const h = String(d.getHours()).padStart(2, "0");
+      const m = String(d.getMinutes()).padStart(2, "0");
+      return `${month}/${day} ${h}:${m}`;
+    } catch {
+      return "";
+    }
+  };
 
   const toggleLineup = (matchId: number) => {
     setOpenLineups((prev) => {
@@ -605,6 +682,107 @@ export default function DashboardClient({
                               >
                                 자세히 보기 →
                               </Link>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* 피드백 섹션 */}
+                    {(() => {
+                      const feedbacks = feedbackMap[match.id] || [];
+                      const isOpen = openFeedbacks.has(match.id);
+                      const form = feedbackForms[match.id] || { name: "", message: "" };
+                      const firstFb = feedbacks[0];
+
+                      const FeedbackAvatar = ({ name }: { name: string }) => {
+                        const no = rosterMap[name.trim()];
+                        return no ? (
+                          <div className="w-7 h-7 rounded-full bg-[#FFB6C1]/20 border border-[#FFB6C1]/40 flex items-center justify-center shrink-0">
+                            <span className="text-[9px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">#{no}</span>
+                          </div>
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0 text-sm">
+                            🦆
+                          </div>
+                        );
+                      };
+
+                      return (
+                        <div className="mt-3 border-t border-gray-100 dark:border-white/5 pt-3">
+                          <button
+                            onClick={() => toggleFeedback(match.id)}
+                            className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors w-full"
+                          >
+                            <span className="text-sm">💬</span>
+                            피드백
+                            {feedbacks.length > 0 && (
+                              <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{feedbacks.length}</span>
+                            )}
+                            <span className="ml-auto">
+                              {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            </span>
+                          </button>
+
+                          {/* 접힌 상태: 첫 댓글 미리보기 */}
+                          {!isOpen && firstFb && (
+                            <div className="flex items-center gap-2 mt-2 px-1">
+                              <FeedbackAvatar name={firstFb.name} />
+                              <div className="flex-1 min-w-0">
+                                <span className="text-[10px] font-black text-gray-700 dark:text-gray-300 mr-1.5">{firstFb.name}</span>
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate">{firstFb.message}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* 펼친 상태: 전체 피드백 + 입력 폼 */}
+                          {isOpen && (
+                            <div className="mt-2 space-y-3">
+                              {feedbacks.length === 0 && (
+                                <p className="text-[10px] text-gray-400 text-center py-2">아직 피드백이 없어요 🦆</p>
+                              )}
+                              {feedbacks.map((fb, i) => (
+                                <div key={i} className="flex gap-2">
+                                  <FeedbackAvatar name={fb.name} />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                      <span className="text-[10px] font-black text-gray-800 dark:text-gray-200">{fb.name}</span>
+                                      <span className="text-[9px] text-gray-400">{formatFeedbackTime(fb.timestamp)}</span>
+                                    </div>
+                                    <p className="text-[11px] text-gray-600 dark:text-gray-300 break-words leading-relaxed">{fb.message}</p>
+                                  </div>
+                                </div>
+                              ))}
+
+                              {/* 입력 폼 */}
+                              <div className="pt-2 border-t border-gray-100 dark:border-white/5 space-y-2">
+                                <input
+                                  type="text"
+                                  placeholder="이름"
+                                  value={form.name}
+                                  maxLength={20}
+                                  onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, name: e.target.value } }))}
+                                  className="w-full text-[11px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 outline-none focus:border-[#FFB6C1]/60 dark:focus:border-[#FFB6C1]/60 placeholder:text-gray-400 text-gray-800 dark:text-gray-200"
+                                />
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="한 마디 남기기 🦆"
+                                    value={form.message}
+                                    maxLength={200}
+                                    onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, message: e.target.value } }))}
+                                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitFeedback(match.id); } }}
+                                    className="flex-1 text-[11px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 outline-none focus:border-[#FFB6C1]/60 dark:focus:border-[#FFB6C1]/60 placeholder:text-gray-400 text-gray-800 dark:text-gray-200"
+                                  />
+                                  <button
+                                    onClick={() => submitFeedback(match.id)}
+                                    disabled={submittingFeedback === match.id || !form.name?.trim() || !form.message?.trim()}
+                                    className="px-3 py-2 rounded-xl bg-[#FFB6C1]/20 border border-[#FFB6C1]/40 text-[#FF8FA3] dark:text-[#FFB6C1] text-[11px] font-black hover:bg-[#FFB6C1]/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                                  >
+                                    {submittingFeedback === match.id ? "..." : "남기기"}
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                           )}
                         </div>
