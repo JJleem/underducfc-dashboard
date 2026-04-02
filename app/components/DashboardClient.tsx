@@ -985,7 +985,8 @@ export default function DashboardClient({
                       <td className="py-4 text-center font-black text-[#FF8FA3] bg-[#FF8FA3]/5 text-[15px]">
                         {Number(player.goals) +
                           Number(player.assists) +
-                          Number(player.mom)}
+                          Number(player.mom) +
+                          Number(player.apps)}
                       </td>
                     </tr>
                   ))}
