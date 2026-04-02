@@ -71,20 +71,15 @@ export default async function TeamDashboardPage() {
   // 💡 5. 숫자 타입으로 변환했기 때문에 정렬 에러도 사라집니다.
   // 💡 5. TypeScript 에러 해결을 위해 Number()로 명시적 형변환
   players.sort((a, b) => {
-    const scoreA = Number(a.goals) + Number(a.assists) + Number(a.mom);
-    const scoreB = Number(b.goals) + Number(b.assists) + Number(b.mom);
+    const scoreA = Number(a.goals) + Number(a.assists) + Number(a.mom) + Number(a.apps);
+    const scoreB = Number(b.goals) + Number(b.assists) + Number(b.mom) + Number(b.apps);
 
-    // 1순위: 공격 포인트 합계 (내림차순)
+    // 1순위: 포인트 합계 (내림차순)
     if (scoreB !== scoreA) {
       return scoreB - scoreA;
     }
 
-    // 2순위: 포인트가 같을 경우, 출전 수(apps) 비교 (내림차순)
-    if (Number(b.apps) !== Number(a.apps)) {
-      return Number(b.apps) - Number(a.apps);
-    }
-
-    // 3순위: 포인트와 출전 수가 모두 같으면 이름순 (오름차순)
+    // 2순위: 포인트가 같으면 이름순 (오름차순)
     return a.name.localeCompare(b.name, "ko");
   });
 
