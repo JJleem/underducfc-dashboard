@@ -75,7 +75,10 @@ export async function uploadToDrive(
       body,
     }
   );
-  if (!uploadRes.ok) throw new Error("Drive 업로드 실패");
+  if (!uploadRes.ok) {
+    const errText = await uploadRes.text();
+    throw new Error(`Drive 업로드 실패: ${uploadRes.status} ${errText}`);
+  }
   const { id: fileId } = await uploadRes.json();
 
   // 공개 설정
