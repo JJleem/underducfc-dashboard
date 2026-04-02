@@ -767,26 +767,15 @@ export default function DashboardClient({
                       const propIds = match.photos ? match.photos.split(",").filter(Boolean) : [];
                       const localIds = localPhotoMap[match.id] || [];
                       const photos = [...propIds, ...localIds];
-                      const isOpen = openPhotos.has(match.id);
 
                       return (
                         <div className="mt-3 border-t border-gray-100 dark:border-white/5 pt-3">
-                          <button
-                            onClick={() => togglePhotos(match.id)}
-                            className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors w-full"
-                          >
+                          <div className="flex items-center gap-1.5 mb-2">
                             <Camera className="w-3.5 h-3.5 text-[#FFB6C1]" />
-                            경기 사진
-                            {photos.length > 0 && (
-                              <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{photos.length}</span>
-                            )}
-                            <span className="ml-auto">
-                              {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                            </span>
-                          </button>
+                            <span className="text-[11px] font-black text-gray-500 dark:text-gray-400">경기 사진</span>
+                          </div>
 
-                          {isOpen && (
-                            <div className="mt-2 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                               {photos.map((id, i) => (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
@@ -823,7 +812,6 @@ export default function DashboardClient({
                                 </>
                               )}
                             </div>
-                          )}
                         </div>
                       );
                     })()}
