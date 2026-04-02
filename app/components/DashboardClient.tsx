@@ -767,15 +767,43 @@ export default function DashboardClient({
                       const propIds = match.photos ? match.photos.split(",").filter(Boolean) : [];
                       const localIds = localPhotoMap[match.id] || [];
                       const photos = [...propIds, ...localIds];
+                      const hasPhotos = photos.length > 0;
 
                       return (
                         <div className="mt-3 border-t border-gray-100 dark:border-white/5 pt-3">
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <Camera className="w-3.5 h-3.5 text-[#FFB6C1]" />
-                            <span className="text-[11px] font-black text-gray-500 dark:text-gray-400">경기 사진</span>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400">
+                              <Camera className="w-3.5 h-3.5 text-[#FFB6C1]" />
+                              {hasPhotos ? `경기 사진 ${photos.length}` : "경기 사진 없음"}
+                            </div>
+                            {photos.length < 5 && (
+                              <>
+                                <button
+                                  onClick={() => fileInputRefs.current[match.id]?.click()}
+                                  disabled={uploadingPhoto === match.id}
+                                  className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] hover:opacity-70 transition-opacity disabled:opacity-40"
+                                >
+                                  {uploadingPhoto === match.id
+                                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    : "+ 추가"
+                                  }
+                                </button>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  className="hidden"
+                                  ref={(el) => { fileInputRefs.current[match.id] = el; }}
+                                  onChange={(e) => {
+                                    if (e.target.files?.length) handlePhotoUpload(match.id, e.target.files);
+                                    e.target.value = "";
+                                  }}
+                                />
+                              </>
+                            )}
                           </div>
-
-                          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                          {hasPhotos && (
+                            <div className="flex gap-2 overflow-x-auto pb-1 mt-2 scrollbar-none">
                               {photos.map((id, i) => (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
@@ -786,32 +814,8 @@ export default function DashboardClient({
                                   className="h-24 w-24 object-cover rounded-2xl shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
                                 />
                               ))}
-                              {photos.length < 5 && (
-                                <>
-                                  <button
-                                    onClick={() => fileInputRefs.current[match.id]?.click()}
-                                    disabled={uploadingPhoto === match.id}
-                                    className="h-24 w-24 rounded-2xl border-2 border-dashed border-gray-200 dark:border-white/10 flex flex-col items-center justify-center gap-1 shrink-0 text-gray-400 hover:border-[#FFB6C1]/50 hover:text-[#FFB6C1] transition-colors disabled:opacity-50"
-                                  >
-                                    {uploadingPhoto === match.id
-                                      ? <Loader2 className="w-5 h-5 animate-spin" />
-                                      : <><Plus className="w-5 h-5" /><span className="text-[9px] font-bold">사진 추가</span></>
-                                    }
-                                  </button>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    className="hidden"
-                                    ref={(el) => { fileInputRefs.current[match.id] = el; }}
-                                    onChange={(e) => {
-                                      if (e.target.files?.length) handlePhotoUpload(match.id, e.target.files);
-                                      e.target.value = "";
-                                    }}
-                                  />
-                                </>
-                              )}
                             </div>
+                          )}
                         </div>
                       );
                     })()}
