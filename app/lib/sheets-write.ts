@@ -21,7 +21,7 @@ async function getAccessToken(
   const payload = base64url(
     JSON.stringify({
       iss: email,
-      scope: "https://www.googleapis.com/auth/spreadsheets",
+      scope,
       aud: "https://oauth2.googleapis.com/token",
       exp: now + 3600,
       iat: now,
