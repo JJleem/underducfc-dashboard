@@ -46,57 +46,14 @@ async function getAccessToken(
   return data.access_token as string;
 }
 
-export async function uploadToCloudinary(
-  file: Buffer,
-  filename: string,
-  mimeType: string
-): Promise<string> {
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-  if (!cloudName || !apiKey || !apiSecret) {
-    throw new Error("Cloudinary 환경변수가 설정되지 않았습니다.");
-  }
-
-  const timestamp = Math.round(Date.now() / 1000);
-  const folder = "underduck";
-  const publicId = filename.replace(/\.[^/.]+$/, "");
-  const paramsToSign = `folder=${folder}&public_id=${publicId}&timestamp=${timestamp}`;
-
-  const { createHash } = await import("node:crypto");
-  const signature = createHash("sha1").update(paramsToSign + apiSecret).digest("hex");
-
-  const resourceType = mimeType.startsWith("video/") ? "video" : "image";
-  const formData = new FormData();
-  formData.append("file", `data:${mimeType};base64,${file.toString("base64")}`);
-  formData.append("api_key", apiKey);
-  formData.append("timestamp", String(timestamp));
-  formData.append("signature", signature);
-  formData.append("folder", folder);
-  formData.append("public_id", publicId);
-
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
-    { method: "POST", body: formData }
-  );
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Cloudinary 업로드 실패: ${res.status} ${errText}`);
-  }
-
-  const data = await res.json();
-  return data.secure_url as string;
-}
-
-export async function addPhotoToMatch(matchId: number, url: string): Promise<void> {
+export async function addPhotosToMatch(matchId: number, newUrls: string[]): Promise<void> {
   const sheetId = process.env.GOOGLE_SHEET_ID;
   if (!sheetId) throw new Error("GOOGLE_SHEET_ID 환경변수가 없습니다.");
 
   const token = await getAccessToken();
   const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
-  const rowNum = matchId + 2; // 헤더(1행) + 0-based index
+  const rowNum = matchId + 2;
 
   const readRes = await fetch(`${base}/values/matches!M${rowNum}`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -105,9 +62,11 @@ export async function addPhotoToMatch(matchId: number, url: string): Promise<voi
   const current: string = readData.values?.[0]?.[0] || "";
   const existing = current ? current.split(",").filter(Boolean) : [];
 
-  if (existing.length >= 5) throw new Error("최대 5장까지 업로드 가능합니다.");
+  const slots = 5 - existing.length;
+  if (slots <= 0) throw new Error("최대 5장까지 업로드 가능합니다.");
 
-  const newVal = [...existing, url].join(",");
+  const toAdd = newUrls.slice(0, slots);
+  const newVal = [...existing, ...toAdd].join(",");
   const range = `matches!M${rowNum}`;
 
   await fetch(

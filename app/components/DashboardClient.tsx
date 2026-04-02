@@ -118,23 +118,51 @@ export default function DashboardClient({
     });
   };
 
-  const handlePhotoUpload = async (matchId: number, file: File) => {
+  const handlePhotoUpload = async (matchId: number, files: FileList) => {
+    const fileArray = Array.from(files);
+    if (fileArray.length === 0) return;
     setUploadingPhoto(matchId);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("matchId", String(matchId));
-      const res = await fetch("/api/photos", { method: "POST", body: formData });
-      if (res.ok) {
-        const { url } = await res.json();
+      // 1. 서버에서 서명 발급
+      const signRes = await fetch("/api/photos/sign");
+      const { timestamp, signature, apiKey, cloudName, folder } = await signRes.json();
+
+      // 2. Cloudinary에 직접 병렬 업로드
+      const uploadedUrls = await Promise.all(
+        fileArray.map(async (file) => {
+          const fd = new FormData();
+          fd.append("file", file);
+          fd.append("api_key", apiKey);
+          fd.append("timestamp", String(timestamp));
+          fd.append("signature", signature);
+          fd.append("folder", folder);
+          const res = await fetch(
+            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+            { method: "POST", body: fd }
+          );
+          const data = await res.json();
+          if (!data.secure_url) throw new Error("업로드 실패");
+          return data.secure_url as string;
+        })
+      );
+
+      // 3. 서버에 URL 저장
+      const saveRes = await fetch("/api/photos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matchId, urls: uploadedUrls }),
+      });
+      if (saveRes.ok) {
         setLocalPhotoMap((prev) => ({
           ...prev,
-          [matchId]: [...(prev[matchId] || []), url],
+          [matchId]: [...(prev[matchId] || []), ...uploadedUrls],
         }));
       } else {
-        const { error } = await res.json();
-        alert(error || "업로드 실패");
+        const { error } = await saveRes.json();
+        alert(error || "저장 실패");
       }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "업로드 실패");
     } finally {
       setUploadingPhoto(null);
     }
@@ -784,11 +812,11 @@ export default function DashboardClient({
                                   <input
                                     type="file"
                                     accept="image/*"
+                                    multiple
                                     className="hidden"
                                     ref={(el) => { fileInputRefs.current[match.id] = el; }}
                                     onChange={(e) => {
-                                      const file = e.target.files?.[0];
-                                      if (file) handlePhotoUpload(match.id, file);
+                                      if (e.target.files?.length) handlePhotoUpload(match.id, e.target.files);
                                       e.target.value = "";
                                     }}
                                   />

@@ -1,26 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { uploadToCloudinary, addPhotoToMatch } from "../../lib/sheets-write";
+import { addPhotosToMatch } from "../../lib/sheets-write";
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
-    const matchId = Number(formData.get("matchId"));
+    const { matchId, urls } = await request.json();
 
-    if (!file || isNaN(matchId)) {
+    if (matchId === undefined || !Array.isArray(urls) || urls.length === 0) {
       return NextResponse.json({ error: "필수 필드 누락" }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const ext = file.type.split("/")[1] || "jpg";
-    const filename = `match${matchId}_${Date.now()}.${ext}`;
-
-    const url = await uploadToCloudinary(buffer, filename, file.type);
-    await addPhotoToMatch(matchId, url);
-
+    await addPhotosToMatch(Number(matchId), urls);
     revalidatePath("/");
-    return NextResponse.json({ ok: true, url });
+    return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
     return NextResponse.json({ error: message }, { status: 500 });
