@@ -126,10 +126,10 @@ export default function DashboardClient({
       formData.append("matchId", String(matchId));
       const res = await fetch("/api/photos", { method: "POST", body: formData });
       if (res.ok) {
-        const { fileId } = await res.json();
+        const { url } = await res.json();
         setLocalPhotoMap((prev) => ({
           ...prev,
-          [matchId]: [...(prev[matchId] || []), fileId],
+          [matchId]: [...(prev[matchId] || []), url],
         }));
       } else {
         const { error } = await res.json();
@@ -763,7 +763,7 @@ export default function DashboardClient({
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                   key={id}
-                                  src={`https://drive.google.com/thumbnail?id=${id}&sz=w400`}
+                                  src={id.replace("/upload/", "/upload/c_fill,w_200,h_200,q_auto,f_auto/")}
                                   alt={`경기사진 ${i + 1}`}
                                   onClick={() => setLightbox({ ids: photos, index: i })}
                                   className="h-24 w-24 object-cover rounded-2xl shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
@@ -939,7 +939,7 @@ export default function DashboardClient({
               {/* 이미지 */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`https://drive.google.com/thumbnail?id=${lightbox.ids[lightbox.index]}&sz=w1600`}
+                src={lightbox.ids[lightbox.index].replace("/upload/", "/upload/q_auto,f_auto/")}
                 alt="경기사진"
                 className="max-h-[88vh] max-w-[88vw] object-contain rounded-xl"
                 onClick={(e) => e.stopPropagation()}

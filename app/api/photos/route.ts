@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { uploadToDrive, addPhotoToMatch } from "../../lib/sheets-write";
+import { uploadToCloudinary, addPhotoToMatch } from "../../lib/sheets-write";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,11 +16,11 @@ export async function POST(request: NextRequest) {
     const ext = file.type.split("/")[1] || "jpg";
     const filename = `match${matchId}_${Date.now()}.${ext}`;
 
-    const fileId = await uploadToDrive(buffer, filename, file.type);
-    await addPhotoToMatch(matchId, fileId);
+    const url = await uploadToCloudinary(buffer, filename, file.type);
+    await addPhotoToMatch(matchId, url);
 
     revalidatePath("/");
-    return NextResponse.json({ ok: true, fileId });
+    return NextResponse.json({ ok: true, url });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
     return NextResponse.json({ error: message }, { status: 500 });

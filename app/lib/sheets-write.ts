@@ -46,52 +46,51 @@ async function getAccessToken(
   return data.access_token as string;
 }
 
-export async function uploadToDrive(
+export async function uploadToCloudinary(
   file: Buffer,
   filename: string,
   mimeType: string
 ): Promise<string> {
-  const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-  if (!folderId) throw new Error("GOOGLE_DRIVE_FOLDER_ID 환경변수가 없습니다.");
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-  const token = await getAccessToken("https://www.googleapis.com/auth/drive.file");
-  const boundary = "underduck_boundary";
-  const metadata = JSON.stringify({ name: filename, parents: [folderId] });
-
-  const body = Buffer.concat([
-    Buffer.from(`--${boundary}\r\nContent-Type: application/json\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`),
-    file,
-    Buffer.from(`\r\n--${boundary}--`),
-  ]);
-
-  const uploadRes = await fetch(
-    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": `multipart/related; boundary=${boundary}`,
-      },
-      body,
-    }
-  );
-  if (!uploadRes.ok) {
-    const errText = await uploadRes.text();
-    throw new Error(`Drive 업로드 실패: ${uploadRes.status} ${errText}`);
+  if (!cloudName || !apiKey || !apiSecret) {
+    throw new Error("Cloudinary 환경변수가 설정되지 않았습니다.");
   }
-  const { id: fileId } = await uploadRes.json();
 
-  // 공개 설정
-  await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ role: "reader", type: "anyone" }),
-  });
+  const timestamp = Math.round(Date.now() / 1000);
+  const folder = "underduck";
+  const publicId = filename.replace(/\.[^/.]+$/, "");
+  const paramsToSign = `folder=${folder}&public_id=${publicId}&timestamp=${timestamp}`;
 
-  return fileId as string;
+  const { createHash } = await import("node:crypto");
+  const signature = createHash("sha1").update(paramsToSign + apiSecret).digest("hex");
+
+  const resourceType = mimeType.startsWith("video/") ? "video" : "image";
+  const formData = new FormData();
+  formData.append("file", `data:${mimeType};base64,${file.toString("base64")}`);
+  formData.append("api_key", apiKey);
+  formData.append("timestamp", String(timestamp));
+  formData.append("signature", signature);
+  formData.append("folder", folder);
+  formData.append("public_id", publicId);
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
+    { method: "POST", body: formData }
+  );
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Cloudinary 업로드 실패: ${res.status} ${errText}`);
+  }
+
+  const data = await res.json();
+  return data.secure_url as string;
 }
 
-export async function addPhotoToMatch(matchId: number, fileId: string): Promise<void> {
+export async function addPhotoToMatch(matchId: number, url: string): Promise<void> {
   const sheetId = process.env.GOOGLE_SHEET_ID;
   if (!sheetId) throw new Error("GOOGLE_SHEET_ID 환경변수가 없습니다.");
 
@@ -108,7 +107,7 @@ export async function addPhotoToMatch(matchId: number, fileId: string): Promise<
 
   if (existing.length >= 5) throw new Error("최대 5장까지 업로드 가능합니다.");
 
-  const newVal = [...existing, fileId].join(",");
+  const newVal = [...existing, url].join(",");
   const range = `matches!M${rowNum}`;
 
   await fetch(
