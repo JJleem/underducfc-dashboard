@@ -12,7 +12,7 @@ export default async function MatchDetailPage({
   const matchId = Number(id);
 
   const [rawMatchesResult, rawLineupsResult, rawRosterResult] = await Promise.allSettled([
-    getSheetData("matches!A1:L50"),
+    getSheetData("matches!A1:M50"),
     getSheetData("lineup!A1:S100"),
     getSheetData("roster!A1:J50"),
   ]);

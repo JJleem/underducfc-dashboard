@@ -9,7 +9,7 @@ import DashboardClient, {
 
 export default async function TeamDashboardPage() {
   // 💡 1. 가져오는 데이터가 2차원 문자열 배열(string[][])임을 명시합니다.
-  const rawMatches: string[][] = await getSheetData("matches!A1:L50");
+  const rawMatches: string[][] = await getSheetData("matches!A1:M50");
   const rawRoster: string[][] = await getSheetData("roster!A1:J50");
   const rawStats: string[][] = await getSheetData("stats!A1:G50");
   const rawNotices: string[][] = await getSheetData("notice!A1:D20");
@@ -36,6 +36,7 @@ export default async function TeamDashboardPage() {
       assists: row[9] || "",
       mom: row[10] || "", // K열 MOM
       attendees: row[11] || "", // L열 참석자
+      photos: row[12] || "", // M열 Drive 파일ID (쉼표 구분)
     }));
 
   // 💡 3. Map의 Key와 Value 타입 명시

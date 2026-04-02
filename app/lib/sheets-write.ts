@@ -4,7 +4,9 @@ function base64url(str: string): string {
   return Buffer.from(str).toString("base64url");
 }
 
-async function getAccessToken(): Promise<string> {
+async function getAccessToken(
+  scope = "https://www.googleapis.com/auth/spreadsheets"
+): Promise<string> {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
 
@@ -42,6 +44,78 @@ async function getAccessToken(): Promise<string> {
   if (!res.ok) throw new Error("Access token 발급 실패");
   const data = await res.json();
   return data.access_token as string;
+}
+
+export async function uploadToDrive(
+  file: Buffer,
+  filename: string,
+  mimeType: string
+): Promise<string> {
+  const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+  if (!folderId) throw new Error("GOOGLE_DRIVE_FOLDER_ID 환경변수가 없습니다.");
+
+  const token = await getAccessToken("https://www.googleapis.com/auth/drive.file");
+  const boundary = "underduck_boundary";
+  const metadata = JSON.stringify({ name: filename, parents: [folderId] });
+
+  const body = Buffer.concat([
+    Buffer.from(`--${boundary}\r\nContent-Type: application/json\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`),
+    file,
+    Buffer.from(`\r\n--${boundary}--`),
+  ]);
+
+  const uploadRes = await fetch(
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": `multipart/related; boundary=${boundary}`,
+      },
+      body,
+    }
+  );
+  if (!uploadRes.ok) throw new Error("Drive 업로드 실패");
+  const { id: fileId } = await uploadRes.json();
+
+  // 공개 설정
+  await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ role: "reader", type: "anyone" }),
+  });
+
+  return fileId as string;
+}
+
+export async function addPhotoToMatch(matchId: number, fileId: string): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 환경변수가 없습니다.");
+
+  const token = await getAccessToken();
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
+  const rowNum = matchId + 2; // 헤더(1행) + 0-based index
+
+  const readRes = await fetch(`${base}/values/matches!M${rowNum}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const readData = await readRes.json();
+  const current: string = readData.values?.[0]?.[0] || "";
+  const existing = current ? current.split(",").filter(Boolean) : [];
+
+  if (existing.length >= 5) throw new Error("최대 5장까지 업로드 가능합니다.");
+
+  const newVal = [...existing, fileId].join(",");
+  const range = `matches!M${rowNum}`;
+
+  await fetch(
+    `${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
+    {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ range, values: [[newVal]] }),
+    }
+  );
 }
 
 export async function appendFeedback({

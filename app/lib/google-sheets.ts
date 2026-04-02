@@ -2,7 +2,7 @@
 
 type SheetRange =
   | "roster!A1:J50"
-  | "matches!A1:L50"
+  | "matches!A1:M50"
   | "stats!A1:G50"
   | "notice!A1:D20"
   | "lineup!A1:S100"

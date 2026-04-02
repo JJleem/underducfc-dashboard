@@ -18,6 +18,12 @@ import {
   Share2,
   Download,
   SendHorizonal,
+  Plus,
+  Loader2,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Camera,
 } from "lucide-react";
 import { MiniFormationField, FORMATION_POSITIONS } from "./FormationField";
 import { shareFormation } from "../lib/draw-formation";
@@ -73,6 +79,7 @@ export interface MatchData {
   assists?: string;
   mom?: string; // K열 - MOM
   attendees?: string; // L열 - 참석자 (쉼표 구분)
+  photos?: string; // M열 - Drive 파일ID (쉼표 구분)
 }
 
 interface DashboardClientProps {
@@ -94,6 +101,44 @@ export default function DashboardClient({
   const [openLineups, setOpenLineups] = React.useState<Set<number>>(new Set());
   const [activeQuarters, setActiveQuarters] = React.useState<Record<number, string>>({});
   const [sharingMatch, setSharingMatch] = React.useState<number | null>(null);
+
+  // 사진 상태
+  const [openPhotos, setOpenPhotos] = React.useState<Set<number>>(new Set());
+  const [localPhotoMap, setLocalPhotoMap] = React.useState<Record<number, string[]>>({});
+  const [uploadingPhoto, setUploadingPhoto] = React.useState<number | null>(null);
+  const [lightbox, setLightbox] = React.useState<{ ids: string[]; index: number } | null>(null);
+  const fileInputRefs = React.useRef<Record<number, HTMLInputElement | null>>({});
+
+  const togglePhotos = (matchId: number) => {
+    setOpenPhotos((prev) => {
+      const next = new Set(prev);
+      if (next.has(matchId)) next.delete(matchId);
+      else next.add(matchId);
+      return next;
+    });
+  };
+
+  const handlePhotoUpload = async (matchId: number, file: File) => {
+    setUploadingPhoto(matchId);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("matchId", String(matchId));
+      const res = await fetch("/api/photos", { method: "POST", body: formData });
+      if (res.ok) {
+        const { fileId } = await res.json();
+        setLocalPhotoMap((prev) => ({
+          ...prev,
+          [matchId]: [...(prev[matchId] || []), fileId],
+        }));
+      } else {
+        const { error } = await res.json();
+        alert(error || "업로드 실패");
+      }
+    } finally {
+      setUploadingPhoto(null);
+    }
+  };
 
   // 피드백 상태
   const [feedbackMap, setFeedbackMap] = React.useState<Record<number, FeedbackData[]>>({});
@@ -689,6 +734,72 @@ export default function DashboardClient({
                       );
                     })()}
 
+                    {/* 사진 섹션 */}
+                    {(() => {
+                      const propIds = match.photos ? match.photos.split(",").filter(Boolean) : [];
+                      const localIds = localPhotoMap[match.id] || [];
+                      const photos = [...propIds, ...localIds];
+                      const isOpen = openPhotos.has(match.id);
+
+                      return (
+                        <div className="mt-3 border-t border-gray-100 dark:border-white/5 pt-3">
+                          <button
+                            onClick={() => togglePhotos(match.id)}
+                            className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors w-full"
+                          >
+                            <Camera className="w-3.5 h-3.5 text-[#FFB6C1]" />
+                            경기 사진
+                            {photos.length > 0 && (
+                              <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{photos.length}</span>
+                            )}
+                            <span className="ml-auto">
+                              {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            </span>
+                          </button>
+
+                          {isOpen && (
+                            <div className="mt-2 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                              {photos.map((id, i) => (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  key={id}
+                                  src={`https://drive.google.com/thumbnail?id=${id}&sz=w400`}
+                                  alt={`경기사진 ${i + 1}`}
+                                  onClick={() => setLightbox({ ids: photos, index: i })}
+                                  className="h-24 w-24 object-cover rounded-2xl shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                                />
+                              ))}
+                              {photos.length < 5 && (
+                                <>
+                                  <button
+                                    onClick={() => fileInputRefs.current[match.id]?.click()}
+                                    disabled={uploadingPhoto === match.id}
+                                    className="h-24 w-24 rounded-2xl border-2 border-dashed border-gray-200 dark:border-white/10 flex flex-col items-center justify-center gap-1 shrink-0 text-gray-400 hover:border-[#FFB6C1]/50 hover:text-[#FFB6C1] transition-colors disabled:opacity-50"
+                                  >
+                                    {uploadingPhoto === match.id
+                                      ? <Loader2 className="w-5 h-5 animate-spin" />
+                                      : <><Plus className="w-5 h-5" /><span className="text-[9px] font-bold">사진 추가</span></>
+                                    }
+                                  </button>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    ref={(el) => { fileInputRefs.current[match.id] = el; }}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handlePhotoUpload(match.id, file);
+                                      e.target.value = "";
+                                    }}
+                                  />
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
                     {/* 피드백 섹션 */}
                     {(() => {
                       const feedbacks = feedbackMap[match.id] || [];
@@ -802,6 +913,61 @@ export default function DashboardClient({
               );
             })}
           </TabsContent>
+
+          {/* 라이트박스 */}
+          {lightbox && (
+            <div
+              className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+              onClick={() => setLightbox(null)}
+            >
+              {/* 닫기 */}
+              <button
+                className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+                onClick={() => setLightbox(null)}
+              >
+                <X className="w-7 h-7" />
+              </button>
+              {/* 이전 */}
+              {lightbox.index > 0 && (
+                <button
+                  className="absolute left-4 text-white/70 hover:text-white transition-colors"
+                  onClick={(e) => { e.stopPropagation(); setLightbox((p) => p ? { ...p, index: p.index - 1 } : null); }}
+                >
+                  <ChevronLeft className="w-8 h-8" />
+                </button>
+              )}
+              {/* 이미지 */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://drive.google.com/thumbnail?id=${lightbox.ids[lightbox.index]}&sz=w1600`}
+                alt="경기사진"
+                className="max-h-[88vh] max-w-[88vw] object-contain rounded-xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+              {/* 다음 */}
+              {lightbox.index < lightbox.ids.length - 1 && (
+                <button
+                  className="absolute right-4 text-white/70 hover:text-white transition-colors"
+                  onClick={(e) => { e.stopPropagation(); setLightbox((p) => p ? { ...p, index: p.index + 1 } : null); }}
+                >
+                  <ChevronRight className="w-8 h-8" />
+                </button>
+              )}
+              {/* 인디케이터 */}
+              {lightbox.ids.length > 1 && (
+                <div className="absolute bottom-5 flex gap-1.5">
+                  {lightbox.ids.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={(e) => { e.stopPropagation(); setLightbox((p) => p ? { ...p, index: i } : null); }}
+                      className={`w-1.5 h-1.5 rounded-full transition-all ${i === lightbox.index ? "bg-white w-4" : "bg-white/40"}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 선수 랭킹 탭 */}
           <TabsContent value="stats" className="outline-none">
             {/* 💡 하나의 통합된 전광판 스타일 카드 (모바일 화면 깨짐 완벽 방지) */}
