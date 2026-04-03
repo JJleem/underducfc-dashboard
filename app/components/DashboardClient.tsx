@@ -900,17 +900,17 @@ export default function DashboardClient({
                           {hasPhotos && (
                             <div className="flex gap-2 overflow-x-auto pb-1 mt-2 scrollbar-none">
                               {photos.map((id, i) => (
-                                <div key={id} className="relative shrink-0">
+                                <div key={id} className="relative shrink-0 group/photo">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img
                                     src={id.replace("/upload/", "/upload/c_fill,w_200,h_200,q_auto,f_auto/")}
                                     alt={`경기사진 ${i + 1}`}
                                     onClick={() => setLightbox({ ids: photos, index: i })}
-                                    className="h-24 w-24 object-cover rounded-2xl cursor-pointer hover:opacity-90 transition-opacity"
+                                    className="h-24 w-24 object-cover rounded-2xl cursor-pointer transition-opacity"
                                   />
                                   <button
                                     onClick={() => deletePhoto(match.id, id)}
-                                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-red-500/80 transition-colors"
+                                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-red-500/80 transition-all opacity-0 group-hover/photo:opacity-100"
                                   >
                                     <X className="w-3 h-3 text-white" />
                                   </button>
