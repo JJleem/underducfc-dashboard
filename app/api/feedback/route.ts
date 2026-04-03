@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSheetData } from "../../lib/google-sheets";
-import { appendFeedback } from "../../lib/sheets-write";
+import { appendFeedback, deleteFeedback } from "../../lib/sheets-write";
 
 export async function GET() {
   try {
@@ -28,6 +28,20 @@ export async function POST(request: NextRequest) {
     }
 
     await appendFeedback({ matchId: Number(matchId), name, message });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "알 수 없는 오류";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { matchId, timestamp, name, message } = await request.json();
+    if (matchId === undefined || !timestamp || !name || !message) {
+      return NextResponse.json({ error: "필수 필드 누락" }, { status: 400 });
+    }
+    await deleteFeedback(Number(matchId), timestamp, name, message);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

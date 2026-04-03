@@ -79,6 +79,67 @@ export async function addPhotosToMatch(matchId: number, newUrls: string[]): Prom
   );
 }
 
+export async function removePhotoFromMatch(matchId: number, url: string): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+
+  const token = await getAccessToken();
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
+  const rowNum = matchId + 2;
+
+  const readRes = await fetch(`${base}/values/matches!M${rowNum}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const readData = await readRes.json();
+  const current: string = readData.values?.[0]?.[0] || "";
+  const remaining = current.split(",").filter((u) => u && u !== url).join(",");
+  const range = `matches!M${rowNum}`;
+
+  await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ range, values: [[remaining]] }),
+  });
+}
+
+export async function deleteFeedback(
+  matchId: number,
+  timestamp: string,
+  name: string,
+  message: string
+): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+
+  const token = await getAccessToken();
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
+
+  const readRes = await fetch(`${base}/values/feedback!A1:D500`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const readData = await readRes.json();
+  const rows: string[][] = readData.values || [];
+
+  let deleted = false;
+  const newRows = rows.filter((row, i) => {
+    if (i === 0) return true;
+    if (!deleted && String(row[0]) === String(matchId) && row[1] === timestamp && row[2] === name && row[3] === message) {
+      deleted = true;
+      return false;
+    }
+    return true;
+  });
+
+  while (newRows.length < rows.length) newRows.push(["", "", "", ""]);
+
+  const range = `feedback!A1:D${Math.max(newRows.length, rows.length)}`;
+  await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ range, values: newRows }),
+  });
+}
+
 export async function appendFeedback({
   matchId,
   name,

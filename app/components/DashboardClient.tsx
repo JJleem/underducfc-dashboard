@@ -24,7 +24,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Camera,
+  Trash2,
 } from "lucide-react";
+import { shareMatchResult } from "../lib/draw-match-result";
 import { MiniFormationField, FORMATION_POSITIONS } from "./FormationField";
 import { shareFormation } from "../lib/draw-formation";
 import { useTheme } from "next-themes";
@@ -102,9 +104,29 @@ export default function DashboardClient({
   const [activeQuarters, setActiveQuarters] = React.useState<Record<number, string>>({});
   const [sharingMatch, setSharingMatch] = React.useState<number | null>(null);
 
+  // 결과 공유
+  const [sharingResult, setSharingResult] = React.useState<number | null>(null);
+
+  // D-Day 계산
+  const getDDay = (dateStr: string): number | null => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    d.setHours(0, 0, 0, 0);
+    return Math.ceil((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const nextMatch = [...matches]
+    .filter((m) => m.result === "예정")
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+  const dDay = nextMatch ? getDDay(nextMatch.date) : null;
+
   // 사진 상태
   const [openPhotos, setOpenPhotos] = React.useState<Set<number>>(new Set());
   const [localPhotoMap, setLocalPhotoMap] = React.useState<Record<number, string[]>>({});
+  const [deletedPhotos, setDeletedPhotos] = React.useState<Record<number, string[]>>({});
   const [uploadingPhoto, setUploadingPhoto] = React.useState<number | null>(null);
   const [lightbox, setLightbox] = React.useState<{ ids: string[]; index: number } | null>(null);
   const fileInputRefs = React.useRef<Record<number, HTMLInputElement | null>>({});
@@ -187,6 +209,38 @@ export default function DashboardClient({
       })
       .catch(() => {});
   }, []);
+
+  const deletePhoto = async (matchId: number, url: string) => {
+    const res = await fetch("/api/photos", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ matchId, url }),
+    });
+    if (res.ok) {
+      setLocalPhotoMap((prev) => ({
+        ...prev,
+        [matchId]: (prev[matchId] || []).filter((u) => u !== url),
+      }));
+      // props photos도 로컬에서 반영 (제거된 것 추적)
+      setDeletedPhotos((prev) => ({ ...prev, [matchId]: [...(prev[matchId] || []), url] }));
+    }
+  };
+
+  const deleteFeedbackItem = async (matchId: number, fb: FeedbackData) => {
+    const res = await fetch("/api/feedback", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ matchId, timestamp: fb.timestamp, name: fb.name, message: fb.message }),
+    });
+    if (res.ok) {
+      setFeedbackMap((prev) => ({
+        ...prev,
+        [matchId]: (prev[matchId] || []).filter(
+          (f) => !(f.timestamp === fb.timestamp && f.name === fb.name && f.message === fb.message)
+        ),
+      }));
+    }
+  };
 
   const toggleFeedback = (matchId: number) => {
     setOpenFeedbacks((prev) => {
@@ -489,6 +543,24 @@ export default function DashboardClient({
               </div>
             )}
 
+            {/* D-Day 배너 */}
+            {nextMatch && dDay !== null && (
+              <div className="mb-4 rounded-3xl bg-gradient-to-r from-[#FFB6C1]/15 to-[#FF8FA3]/5 border border-[#FFB6C1]/25 p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] mb-1 tracking-widest">NEXT MATCH</p>
+                  <p className="text-sm font-black text-gray-800 dark:text-white">vs {nextMatch.opponent}</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    {nextMatch.date} · {nextMatch.time} · {nextMatch.location}
+                  </p>
+                </div>
+                <div className="text-right shrink-0 ml-4">
+                  <div className="text-3xl font-black text-[#FF8FA3] dark:text-[#FFB6C1] leading-none">
+                    {dDay === 0 ? "D-DAY" : dDay < 0 ? `D+${Math.abs(dDay)}` : `D-${dDay}`}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* 경기 일정 리스트 */}
             {[...matches].reverse().map((match) => {
               const isInternal = match.opponent === "자체전";
@@ -525,10 +597,32 @@ export default function DashboardClient({
                             </span>
                           </div>
                         )}
-                        {match.result && (
-                          <Badge
-                            className={`border-none font-black text-[11px] px-3 ${getResultBadgeStyle(match.result)}`}
-                          >
+                        {match.result && match.result !== "예정" && (
+                          <div className="flex items-center gap-1.5">
+                            <Badge
+                              className={`border-none font-black text-[11px] px-3 ${getResultBadgeStyle(match.result)}`}
+                            >
+                              {match.result}
+                            </Badge>
+                            <button
+                              onClick={async () => {
+                                setSharingResult(match.id);
+                                try { await shareMatchResult(match); }
+                                catch (e) { if (e instanceof Error && e.name !== "AbortError") alert("공유 실패"); }
+                                finally { setSharingResult(null); }
+                              }}
+                              disabled={sharingResult === match.id}
+                              className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors disabled:opacity-40"
+                            >
+                              {sharingResult === match.id
+                                ? <Loader2 className="w-3 h-3 animate-spin text-gray-500" />
+                                : <Share2 className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                              }
+                            </button>
+                          </div>
+                        )}
+                        {match.result === "예정" && (
+                          <Badge className={`border-none font-black text-[11px] px-3 ${getResultBadgeStyle(match.result)}`}>
                             {match.result}
                           </Badge>
                         )}
@@ -764,7 +858,8 @@ export default function DashboardClient({
 
                     {/* 사진 섹션 */}
                     {(() => {
-                      const propIds = match.photos ? match.photos.split(",").filter(Boolean) : [];
+                      const deleted = deletedPhotos[match.id] || [];
+                      const propIds = (match.photos ? match.photos.split(",").filter(Boolean) : []).filter((u) => !deleted.includes(u));
                       const localIds = localPhotoMap[match.id] || [];
                       const photos = [...propIds, ...localIds];
                       const hasPhotos = photos.length > 0;
@@ -805,14 +900,21 @@ export default function DashboardClient({
                           {hasPhotos && (
                             <div className="flex gap-2 overflow-x-auto pb-1 mt-2 scrollbar-none">
                               {photos.map((id, i) => (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                  key={id}
-                                  src={id.replace("/upload/", "/upload/c_fill,w_200,h_200,q_auto,f_auto/")}
-                                  alt={`경기사진 ${i + 1}`}
-                                  onClick={() => setLightbox({ ids: photos, index: i })}
-                                  className="h-24 w-24 object-cover rounded-2xl shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
-                                />
+                                <div key={id} className="relative shrink-0">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={id.replace("/upload/", "/upload/c_fill,w_200,h_200,q_auto,f_auto/")}
+                                    alt={`경기사진 ${i + 1}`}
+                                    onClick={() => setLightbox({ ids: photos, index: i })}
+                                    className="h-24 w-24 object-cover rounded-2xl cursor-pointer hover:opacity-90 transition-opacity"
+                                  />
+                                  <button
+                                    onClick={() => deletePhoto(match.id, id)}
+                                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-red-500/80 transition-colors"
+                                  >
+                                    <X className="w-3 h-3 text-white" />
+                                  </button>
+                                </div>
                               ))}
                             </div>
                           )}
@@ -874,12 +976,18 @@ export default function DashboardClient({
                                 <p className="text-[10px] text-gray-400 text-center py-2">아직 피드백이 없어요 🦆</p>
                               )}
                               {feedbacks.map((fb, i) => (
-                                <div key={i} className="flex gap-2">
+                                <div key={i} className="flex gap-2 group">
                                   <FeedbackAvatar name={fb.name} />
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5 mb-0.5">
                                       <span className="text-[10px] font-black text-gray-800 dark:text-gray-200">{fb.name}</span>
                                       <span className="text-[9px] text-gray-400">{formatFeedbackTime(fb.timestamp)}</span>
+                                      <button
+                                        onClick={() => deleteFeedbackItem(match.id, fb)}
+                                        className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-400"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
                                     </div>
                                     <p className="text-[11px] text-gray-600 dark:text-gray-300 break-words leading-relaxed">{fb.message}</p>
                                   </div>

@@ -1,37 +1,49 @@
 "use client";
-// app/loading.tsx
 import React from "react";
-import UnderduckSpinner from "./components/UnderduckSpinner"; // 스피너 경로 맞춰주세요!
 import "./globals.css";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+
+function SkeletonCard({ height = "h-64" }: { height?: string }) {
+  return (
+    <div className={`${height} rounded-3xl bg-gray-100 dark:bg-white/5 animate-pulse mb-4`} />
+  );
+}
+
 export default function Loading() {
   const { theme, setTheme } = useTheme();
   return (
-    // 전체 화면 중앙에 스피너를 예쁘게 배치합니다.
-
-    <div className="min-h-dvh bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-[#F5F5DC] font-sans max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors duration-300">
-      {/* 📱 App Header */}
+    <div className="min-h-dvh bg-gray-50 dark:bg-[#0a0a0a] font-sans max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors duration-300">
       <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10">
         <span className="font-black italic text-lg tracking-tighter text-gray-900 dark:text-white">
           UNDERDUCK
         </span>
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
+          className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10"
         >
           <Moon className="block dark:hidden w-4 h-4 text-gray-700" />
           <Sun className="hidden dark:block w-4 h-4 text-[#FFB6C1]" />
         </button>
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <UnderduckSpinner iconWidth={24} iconHeight={24} />
+      <div className="p-4">
+        {/* 공지 스켈레톤 */}
+        <SkeletonCard height="h-16" />
 
-        {/* 스피너 아래에 은은한 텍스트도 추가해주면 퀄리티가 확 올라갑니다 */}
-        <p className="text-xs font-bold tracking-widest text-gray-400 dark:text-gray-500 animate-pulse italic">
-          LOADING DATA...
-        </p>
+        {/* 탭 스켈레톤 */}
+        <div className="flex gap-2 mb-4">
+          <div className="h-9 w-24 rounded-xl bg-gray-100 dark:bg-white/5 animate-pulse" />
+          <div className="h-9 w-24 rounded-xl bg-gray-100 dark:bg-white/5 animate-pulse" />
+        </div>
+
+        {/* D-Day 스켈레톤 */}
+        <SkeletonCard height="h-20" />
+
+        {/* 경기 카드 스켈레톤 */}
+        <SkeletonCard height="h-56" />
+        <SkeletonCard height="h-56" />
+        <SkeletonCard height="h-56" />
       </div>
     </div>
   );
