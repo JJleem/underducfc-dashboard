@@ -100,6 +100,14 @@ export default function DashboardClient({
   rosterMap,
 }: DashboardClientProps) {
   const { theme, setTheme } = useTheme();
+  const [showTopBtn, setShowTopBtn] = React.useState(false);
+
+  React.useEffect(() => {
+    const onScroll = () => setShowTopBtn(window.scrollY > 300);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const [openLineups, setOpenLineups] = React.useState<Set<number>>(new Set());
   const [activeQuarters, setActiveQuarters] = React.useState<Record<number, string>>({});
   const [sharingMatch, setSharingMatch] = React.useState<number | null>(null);
@@ -1290,6 +1298,17 @@ export default function DashboardClient({
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* 위로 가기 버튼 */}
+      {showTopBtn && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+          aria-label="맨 위로"
+        >
+          <ChevronUp className="w-5 h-5 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+        </button>
+      )}
     </div>
   );
 }
