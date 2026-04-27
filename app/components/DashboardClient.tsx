@@ -962,10 +962,10 @@ export default function DashboardClient({
                           {!isOpen && firstFb && (
                             <div className="flex items-center gap-2 mt-2 px-1">
                               <FeedbackAvatar name={firstFb.name} />
-                              <div className="flex-1 min-w-0">
-                                <span className="text-[10px] font-black text-gray-700 dark:text-gray-300 mr-1.5">{firstFb.name}</span>
-                                <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate">{firstFb.message}</span>
-                              </div>
+                              <p className="flex-1 min-w-0 text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                                <span className="font-black text-gray-700 dark:text-gray-300 mr-1.5">{firstFb.name}</span>
+                                {firstFb.message}
+                              </p>
                             </div>
                           )}
 
