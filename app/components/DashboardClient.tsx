@@ -203,6 +203,7 @@ export default function DashboardClient({
   const [openFeedbacks, setOpenFeedbacks] = React.useState<Set<number>>(new Set());
   const [feedbackForms, setFeedbackForms] = React.useState<Record<number, { name: string; message: string }>>({});
   const [submittingFeedback, setSubmittingFeedback] = React.useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = React.useState<{ matchId: number; fb: FeedbackData } | null>(null);
 
   React.useEffect(() => {
     fetch("/api/feedback")
@@ -991,7 +992,7 @@ export default function DashboardClient({
                                       <span className="text-[10px] font-black text-gray-800 dark:text-gray-200">{fb.name}</span>
                                       <span className="text-[9px] text-gray-400">{formatFeedbackTime(fb.timestamp)}</span>
                                       <button
-                                        onClick={() => deleteFeedbackItem(match.id, fb)}
+                                        onClick={() => setDeleteTarget({ matchId: match.id, fb })}
                                         className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-400"
                                       >
                                         <Trash2 className="w-3 h-3" />
@@ -1298,6 +1299,41 @@ export default function DashboardClient({
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* 댓글 삭제 확인 모달 */}
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-6"
+          onClick={() => setDeleteTarget(null)}
+        >
+          <div
+            className="w-full max-w-xs bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[13px] font-black text-gray-900 dark:text-white mb-1">댓글을 삭제할까요?</p>
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-5 leading-relaxed break-words">
+              &ldquo;{deleteTarget.fb.message}&rdquo;
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 py-2.5 rounded-2xl bg-gray-100 dark:bg-white/10 text-[12px] font-black text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={async () => {
+                  await deleteFeedbackItem(deleteTarget.matchId, deleteTarget.fb);
+                  setDeleteTarget(null);
+                }}
+                className="flex-1 py-2.5 rounded-2xl bg-red-500 text-[12px] font-black text-white hover:bg-red-600 transition-colors"
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 위로 가기 버튼 */}
       {showTopBtn && (
