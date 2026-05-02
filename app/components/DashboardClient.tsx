@@ -116,6 +116,7 @@ export default function DashboardClient({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const [statSort, setStatSort] = React.useState<"apps" | "goals" | "assists" | "mom">("apps");
   const [openLineups, setOpenLineups] = React.useState<Set<number>>(new Set());
   const [activeQuarters, setActiveQuarters] = React.useState<Record<number, string>>({});
   const [sharingMatch, setSharingMatch] = React.useState<number | null>(null);
@@ -571,7 +572,7 @@ export default function DashboardClient({
       rounded-xl py-2.5 font-black text-sm transition-all
     "
             >
-              <Trophy className="w-4 h-4 mr-1.5" /> 선수 랭킹
+              <Trophy className="w-4 h-4 mr-1.5" /> 선수 스탯
             </TabsTrigger>
           </TabsList>
 
@@ -1303,7 +1304,7 @@ export default function DashboardClient({
             </div>
           )}
 
-          {/* 선수 랭킹 탭 */}
+          {/* 선수 스탯 탭 */}
           <TabsContent value="stats" className="outline-none">
             {/* 💡 하나의 통합된 전광판 스타일 카드 (모바일 화면 깨짐 완벽 방지) */}
             <Card className="mb-6 bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 rounded-3xl shadow-sm overflow-hidden flex flex-col">
@@ -1419,81 +1420,86 @@ export default function DashboardClient({
                 </div>
               </div>
             </Card>
-            <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-lg dark:shadow-2xl">
-              {/* 💡 스크롤 제거, table-fixed로 너비 고정 */}
-              <table className="w-full text-left table-fixed border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10 text-[9px] font-black text-gray-500 uppercase tracking-tighter">
-                    <th className="w-[22%] py-4 pl-4">선수</th>
-                    <th className="w-[12%] py-4 text-center">출전</th>
-                    <th className="w-[12%] py-4 text-center">골</th>
-                    <th className="w-[12%] py-4 text-center">도움</th>
-                    <th className="w-[12%] py-4 text-center">MOM</th>
-                    <th className="w-[12%] py-4 text-center text-[#FF8FA3] bg-[#FF8FA3]/5">
-                      포인트
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-                  {players.map((player, idx) => (
-                    <tr
-                      key={idx}
-                      className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
-                    >
-                      {/* 이름/포지션 */}
-                      {/* 이름/포지션 (수정된 부분) */}
-                      <td className="py-4 pl-4 overflow-hidden">
-                        <div className="flex items-center gap-1.5">
-                          <p className="font-black text-[13px] text-gray-800 dark:text-gray-200 truncate shrink-0">
-                            {player.name}
-                          </p>
-                          {/* 💡 포지션 뱃지 추가 */}
-                          <span
-                            className={`text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm ${getPosBadgeStyle(player.pos)}`}
-                          >
-                            {player.pos !== "-" ? player.pos : "SUB"}
-                          </span>
-                        </div>
-                      </td>
-                      {/* 출전 */}
-                      <td className="py-4 text-center text-[11px] font-bold text-gray-400">
-                        {player.apps}
-                      </td>
-                      {/* 골 */}
-                      <td className="py-4 text-center font-black text-[#FF8FA3] dark:text-[#FFB6C1] text-[14px]">
-                        {player.goals}
-                      </td>
-                      {/* 도움 */}
-                      <td className="py-4 text-center font-black text-gray-900 dark:text-white text-[14px]">
-                        {player.assists}
-                      </td>
-                      {/* MOM */}
-                      <td className="py-4 text-center font-black text-gray-900 dark:text-white text-[13px]">
-                        {Number(player.mom) > 0 ? (
-                          <span className="flex items-center justify-center">
-                            {player.mom}
-                            <span className="text-[8px] ml-0.5 text-yellow-500">
-                              ⭐
-                            </span>
-                          </span>
-                        ) : (
-                          <span className="text-gray-200 dark:text-gray-800">
-                            -
-                          </span>
-                        )}
-                      </td>
-                      {/* 총 포인트 */}
-                      <td className="py-4 text-center font-black text-[#FF8FA3] bg-[#FF8FA3]/5 text-[15px]">
-                        {Number(player.goals) +
-                          Number(player.assists) +
-                          Number(player.mom) +
-                          Number(player.apps)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Card>
+            {/* 필터 버튼 */}
+            {(() => {
+              const filters: { key: "apps" | "goals" | "assists" | "mom"; label: string; emoji: string }[] = [
+                { key: "apps", label: "출전", emoji: "🏃" },
+                { key: "goals", label: "골", emoji: "⚽" },
+                { key: "assists", label: "도움", emoji: "🎯" },
+                { key: "mom", label: "MOM", emoji: "⭐" },
+              ];
+              const sortedPlayers = [...players].sort(
+                (a, b) => (Number(b[statSort]) || 0) - (Number(a[statSort]) || 0)
+              );
+
+              return (
+                <>
+                  <div className="flex gap-2 mb-3">
+                    {filters.map(({ key, label, emoji }) => (
+                      <button
+                        key={key}
+                        onClick={() => setStatSort(key)}
+                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-2xl text-[11px] font-black transition-all ${
+                          statSort === key
+                            ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black shadow-md"
+                            : "bg-white dark:bg-[#111] border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400"
+                        }`}
+                      >
+                        <span>{emoji}</span>{label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-lg dark:shadow-2xl">
+                    <table className="w-full text-left table-fixed border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10 text-[9px] font-black text-gray-500 uppercase tracking-tighter">
+                          <th className="w-[30%] py-4 pl-4">선수</th>
+                          <th className={`w-[17%] py-4 text-center ${statSort === "apps" ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : ""}`}>출전</th>
+                          <th className={`w-[17%] py-4 text-center ${statSort === "goals" ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : ""}`}>골</th>
+                          <th className={`w-[17%] py-4 text-center ${statSort === "assists" ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : ""}`}>도움</th>
+                          <th className={`w-[17%] py-4 text-center ${statSort === "mom" ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : ""}`}>MOM</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                        {sortedPlayers.map((player, idx) => (
+                          <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                            <td className="py-4 pl-4 overflow-hidden">
+                              <div className="flex items-center gap-1.5">
+                                <p className="font-black text-[13px] text-gray-800 dark:text-gray-200 truncate shrink-0">
+                                  {player.name}
+                                </p>
+                                <span className={`text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm ${getPosBadgeStyle(player.pos)}`}>
+                                  {player.pos !== "-" ? player.pos : "SUB"}
+                                </span>
+                              </div>
+                            </td>
+                            <td className={`py-4 text-center text-[13px] font-bold ${statSort === "apps" ? "text-[#FF8FA3] dark:text-[#FFB6C1] font-black" : "text-gray-400"}`}>
+                              {player.apps}
+                            </td>
+                            <td className={`py-4 text-center text-[13px] font-bold ${statSort === "goals" ? "text-[#FF8FA3] dark:text-[#FFB6C1] font-black" : "text-gray-700 dark:text-gray-300"}`}>
+                              {player.goals}
+                            </td>
+                            <td className={`py-4 text-center text-[13px] font-bold ${statSort === "assists" ? "text-[#FF8FA3] dark:text-[#FFB6C1] font-black" : "text-gray-700 dark:text-gray-300"}`}>
+                              {player.assists}
+                            </td>
+                            <td className="py-4 text-center text-[13px] font-bold text-gray-700 dark:text-gray-300">
+                              {Number(player.mom) > 0 ? (
+                                <span className={`flex items-center justify-center gap-0.5 ${statSort === "mom" ? "text-[#FF8FA3] dark:text-[#FFB6C1] font-black" : ""}`}>
+                                  {player.mom}<span className="text-[10px] text-yellow-500">⭐</span>
+                                </span>
+                              ) : (
+                                <span className="text-gray-200 dark:text-gray-800">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </Card>
+                </>
+              );
+            })()}
           </TabsContent>
         </Tabs>
       </main>
