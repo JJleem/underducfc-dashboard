@@ -210,6 +210,9 @@ export default function DashboardClient({
   const [momVoterName, setMomVoterName] = React.useState<Record<number, string>>({});
   const [submittingVote, setSubmittingVote] = React.useState<number | null>(null);
   const [openVotes, setOpenVotes] = React.useState<Set<number>>(new Set());
+  const [momModal, setMomModal] = React.useState<{ matchId: number; attendees: string[] } | null>(null);
+  const [momModalVoter, setMomModalVoter] = React.useState("");
+  const [momModalCandidate, setMomModalCandidate] = React.useState("");
 
   React.useEffect(() => {
     fetch("/api/mom-vote")
@@ -1040,10 +1043,11 @@ export default function DashboardClient({
                                   const count = tally[name] || 0;
                                   const pct = Math.round((count / maxVotes) * 100);
                                   const isLeader = count > 0 && count === tally[sorted[0]];
+                                  const iMyvoted = myVote === name;
                                   return (
                                     <div key={name} className="flex items-center gap-2">
                                       <span className={`text-[10px] font-black w-14 shrink-0 truncate ${isLeader ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : "text-gray-600 dark:text-gray-400"}`}>
-                                        {isLeader && "⭐ "}{name}
+                                        {isLeader ? "⭐ " : ""}{name}
                                       </span>
                                       <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
                                         <div
@@ -1052,58 +1056,33 @@ export default function DashboardClient({
                                         />
                                       </div>
                                       <span className="text-[10px] text-gray-400 w-5 text-right shrink-0">{count}</span>
-                                      {/* 내 투표 표시 */}
-                                      {myVote === name && (
-                                        <span className="text-[9px] text-[#FF8FA3] dark:text-[#FFB6C1] font-black shrink-0">✓</span>
+                                      {iMyvoted && (
+                                        <span className="text-[9px] text-[#FF8FA3] dark:text-[#FFB6C1] font-black shrink-0">✓내투표</span>
                                       )}
                                     </div>
                                   );
                                 })}
                               </div>
 
-                              {/* 투표 입력 */}
-                              <div className="pt-3 border-t border-gray-100 dark:border-white/5 space-y-2">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[10px] text-gray-400 shrink-0">내 이름</span>
-                                  <select
-                                    value={voterName}
-                                    onChange={(e) => setMomVoterName((prev) => ({ ...prev, [match.id]: e.target.value }))}
-                                    className="flex-1 text-[11px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-2.5 py-1.5 outline-none focus:border-[#FFB6C1]/60 text-gray-800 dark:text-gray-200"
+                              {/* 투표하기 버튼 */}
+                              <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
+                                <button
+                                  onClick={() => {
+                                    setMomModalVoter(voterName);
+                                    setMomModalCandidate(myVote || "");
+                                    setMomModal({ matchId: match.id, attendees });
+                                  }}
+                                  className="text-[11px] font-black px-4 py-1.5 rounded-2xl bg-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10 text-[#FF8FA3] dark:text-[#FFB6C1] hover:bg-[#FF8FA3]/20 dark:hover:bg-[#FFB6C1]/20 transition-colors"
+                                >
+                                  {myVote ? "투표 변경" : "투표하기"}
+                                </button>
+                                {myVote && (
+                                  <button
+                                    onClick={() => cancelMomVote(match.id)}
+                                    className="text-[10px] text-gray-400 hover:text-red-400 transition-colors"
                                   >
-                                    <option value="">선택</option>
-                                    {attendees.map((n) => <option key={n} value={n}>{n}</option>)}
-                                  </select>
-                                </div>
-                                {voterName && (
-                                  <>
-                                    <p className="text-[10px] text-gray-400">
-                                      {myVote ? `현재 투표: ${myVote} · 변경하려면 다시 클릭` : "투표할 선수를 선택하세요"}
-                                    </p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {attendees.filter((n) => n !== voterName).map((name) => (
-                                        <button
-                                          key={name}
-                                          onClick={() => submitMomVote(match.id, name)}
-                                          disabled={submittingVote === match.id}
-                                          className={`text-[10px] font-black px-2.5 py-1 rounded-xl transition-all disabled:opacity-50 ${
-                                            myVote === name
-                                              ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black"
-                                              : "bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-[#FFB6C1]/20"
-                                          }`}
-                                        >
-                                          {name}
-                                        </button>
-                                      ))}
-                                    </div>
-                                    {myVote && (
-                                      <button
-                                        onClick={() => cancelMomVote(match.id)}
-                                        className="text-[10px] text-gray-400 hover:text-red-400 transition-colors"
-                                      >
-                                        투표 취소
-                                      </button>
-                                    )}
-                                  </>
+                                    투표 취소
+                                  </button>
                                 )}
                               </div>
                             </div>
@@ -1480,6 +1459,84 @@ export default function DashboardClient({
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* MOM 투표 모달 */}
+      {momModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-6"
+          onClick={() => setMomModal(null)}
+        >
+          <div
+            className="w-full max-w-xs bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[14px] font-black text-gray-900 dark:text-white mb-4">⭐ MOM 투표</p>
+
+            {/* 투표자 선택 */}
+            <div className="mb-4">
+              <p className="text-[10px] font-black text-gray-400 mb-1.5 uppercase tracking-widest">나는</p>
+              <div className="flex flex-wrap gap-1.5">
+                {momModal.attendees.map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => { setMomModalVoter(n); if (momModalCandidate === n) setMomModalCandidate(""); }}
+                    className={`text-[11px] font-black px-2.5 py-1 rounded-xl transition-all ${
+                      momModalVoter === n
+                        ? "bg-gray-800 dark:bg-white text-white dark:text-black"
+                        : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 후보 선택 */}
+            <div className="mb-5">
+              <p className="text-[10px] font-black text-gray-400 mb-1.5 uppercase tracking-widest">투표할 선수</p>
+              <div className="flex flex-wrap gap-1.5">
+                {momModal.attendees.filter((n) => n !== momModalVoter).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setMomModalCandidate(n)}
+                    className={`text-[11px] font-black px-2.5 py-1 rounded-xl transition-all ${
+                      momModalCandidate === n
+                        ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black"
+                        : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-[#FFB6C1]/20"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+              {!momModalVoter && (
+                <p className="text-[10px] text-gray-400 mt-2">먼저 본인 이름을 선택해주세요</p>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setMomModal(null)}
+                className="flex-1 py-2.5 rounded-2xl bg-gray-100 dark:bg-white/10 text-[12px] font-black text-gray-600 dark:text-gray-300"
+              >
+                취소
+              </button>
+              <button
+                disabled={!momModalVoter || !momModalCandidate || submittingVote === momModal.matchId}
+                onClick={async () => {
+                  setMomVoterName((prev) => ({ ...prev, [momModal.matchId]: momModalVoter }));
+                  await submitMomVote(momModal.matchId, momModalCandidate);
+                  setMomModal(null);
+                }}
+                className="flex-1 py-2.5 rounded-2xl bg-[#FF8FA3] text-[12px] font-black text-white disabled:opacity-40 transition-opacity"
+              >
+                {submittingVote === momModal.matchId ? "투표 중..." : "투표 완료"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 댓글 삭제 확인 모달 */}
       {deleteTarget && (
