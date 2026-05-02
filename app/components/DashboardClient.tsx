@@ -34,6 +34,13 @@ import Image from "next/image";
 import Link from "next/link";
 
 // --- 타입 정의 ---
+export interface MomVoteData {
+  matchId: number;
+  voterName: string;
+  votedFor: string;
+  timestamp: string;
+}
+
 export interface FeedbackData {
   matchId: number;
   timestamp: string;
@@ -195,6 +202,66 @@ export default function DashboardClient({
       alert(e instanceof Error ? e.message : "업로드 실패");
     } finally {
       setUploadingPhoto(null);
+    }
+  };
+
+  // MOM 투표 상태
+  const [momVoteMap, setMomVoteMap] = React.useState<Record<number, MomVoteData[]>>({});
+  const [momVoterName, setMomVoterName] = React.useState<Record<number, string>>({});
+  const [submittingVote, setSubmittingVote] = React.useState<number | null>(null);
+  const [openVotes, setOpenVotes] = React.useState<Set<number>>(new Set());
+
+  React.useEffect(() => {
+    fetch("/api/mom-vote")
+      .then((r) => r.json())
+      .then((data: MomVoteData[]) => {
+        const map: Record<number, MomVoteData[]> = {};
+        data.forEach((v) => {
+          if (!map[v.matchId]) map[v.matchId] = [];
+          map[v.matchId].push(v);
+        });
+        setMomVoteMap(map);
+      })
+      .catch(() => {});
+  }, []);
+
+  const submitMomVote = async (matchId: number, votedFor: string) => {
+    const voterName = momVoterName[matchId]?.trim();
+    if (!voterName) return;
+    setSubmittingVote(matchId);
+    try {
+      const res = await fetch("/api/mom-vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matchId, voterName, votedFor }),
+      });
+      if (res.ok) {
+        setMomVoteMap((prev) => {
+          const filtered = (prev[matchId] || []).filter((v) => v.voterName !== voterName);
+          return {
+            ...prev,
+            [matchId]: [...filtered, { matchId, voterName, votedFor, timestamp: new Date().toISOString() }],
+          };
+        });
+      }
+    } finally {
+      setSubmittingVote(null);
+    }
+  };
+
+  const cancelMomVote = async (matchId: number) => {
+    const voterName = momVoterName[matchId]?.trim();
+    if (!voterName) return;
+    const res = await fetch("/api/mom-vote", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ matchId, voterName }),
+    });
+    if (res.ok) {
+      setMomVoteMap((prev) => ({
+        ...prev,
+        [matchId]: (prev[matchId] || []).filter((v) => v.voterName !== voterName),
+      }));
     }
   };
 
@@ -925,6 +992,120 @@ export default function DashboardClient({
                                   </button>
                                 </div>
                               ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* MOM 투표 섹션 */}
+                    {match.result !== "예정" && match.attendees && (() => {
+                      const attendees = match.attendees!.split(",").map((n) => n.trim()).filter(Boolean);
+                      const votes = momVoteMap[match.id] || [];
+                      const isOpen = openVotes.has(match.id);
+                      const voterName = momVoterName[match.id] || "";
+                      const myVote = votes.find((v) => v.voterName === voterName.trim())?.votedFor;
+
+                      // 득표 집계
+                      const tally: Record<string, number> = {};
+                      votes.forEach((v) => { tally[v.votedFor] = (tally[v.votedFor] || 0) + 1; });
+                      const sorted = [...attendees].sort((a, b) => (tally[b] || 0) - (tally[a] || 0));
+                      const maxVotes = Math.max(...Object.values(tally), 1);
+                      const leader = sorted[0] && tally[sorted[0]] > 0 ? sorted[0] : null;
+
+                      return (
+                        <div className="mt-3 border-t border-gray-100 dark:border-white/5 pt-3">
+                          <button
+                            onClick={() => setOpenVotes((prev) => { const next = new Set(prev); next.has(match.id) ? next.delete(match.id) : next.add(match.id); return next; })}
+                            className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors w-full"
+                          >
+                            <span className="text-sm">⭐</span>
+                            MOM 투표
+                            {votes.length > 0 && (
+                              <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{votes.length}</span>
+                            )}
+                            {leader && !isOpen && (
+                              <span className="text-[10px] text-gray-400 font-medium">· {leader}</span>
+                            )}
+                            <span className="ml-auto">
+                              {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            </span>
+                          </button>
+
+                          {isOpen && (
+                            <div className="mt-3 space-y-3">
+                              {/* 득표 현황 */}
+                              <div className="space-y-1.5">
+                                {sorted.map((name) => {
+                                  const count = tally[name] || 0;
+                                  const pct = Math.round((count / maxVotes) * 100);
+                                  const isLeader = count > 0 && count === tally[sorted[0]];
+                                  return (
+                                    <div key={name} className="flex items-center gap-2">
+                                      <span className={`text-[10px] font-black w-14 shrink-0 truncate ${isLeader ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : "text-gray-600 dark:text-gray-400"}`}>
+                                        {isLeader && "⭐ "}{name}
+                                      </span>
+                                      <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                        <div
+                                          className={`h-full rounded-full transition-all duration-500 ${isLeader ? "bg-[#FF8FA3] dark:bg-[#FFB6C1]" : "bg-gray-300 dark:bg-white/20"}`}
+                                          style={{ width: count > 0 ? `${pct}%` : "0%" }}
+                                        />
+                                      </div>
+                                      <span className="text-[10px] text-gray-400 w-5 text-right shrink-0">{count}</span>
+                                      {/* 내 투표 표시 */}
+                                      {myVote === name && (
+                                        <span className="text-[9px] text-[#FF8FA3] dark:text-[#FFB6C1] font-black shrink-0">✓</span>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+
+                              {/* 투표 입력 */}
+                              <div className="pt-3 border-t border-gray-100 dark:border-white/5 space-y-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] text-gray-400 shrink-0">내 이름</span>
+                                  <select
+                                    value={voterName}
+                                    onChange={(e) => setMomVoterName((prev) => ({ ...prev, [match.id]: e.target.value }))}
+                                    className="flex-1 text-[11px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-2.5 py-1.5 outline-none focus:border-[#FFB6C1]/60 text-gray-800 dark:text-gray-200"
+                                  >
+                                    <option value="">선택</option>
+                                    {attendees.map((n) => <option key={n} value={n}>{n}</option>)}
+                                  </select>
+                                </div>
+                                {voterName && (
+                                  <>
+                                    <p className="text-[10px] text-gray-400">
+                                      {myVote ? `현재 투표: ${myVote} · 변경하려면 다시 클릭` : "투표할 선수를 선택하세요"}
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {attendees.filter((n) => n !== voterName).map((name) => (
+                                        <button
+                                          key={name}
+                                          onClick={() => submitMomVote(match.id, name)}
+                                          disabled={submittingVote === match.id}
+                                          className={`text-[10px] font-black px-2.5 py-1 rounded-xl transition-all disabled:opacity-50 ${
+                                            myVote === name
+                                              ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black"
+                                              : "bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-[#FFB6C1]/20"
+                                          }`}
+                                        >
+                                          {name}
+                                        </button>
+                                      ))}
+                                    </div>
+                                    {myVote && (
+                                      <button
+                                        onClick={() => cancelMomVote(match.id)}
+                                        className="text-[10px] text-gray-400 hover:text-red-400 transition-colors"
+                                      >
+                                        투표 취소
+                                      </button>
+                                    )}
+                                  </>
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>

@@ -171,6 +171,67 @@ export async function appendFeedback({
   if (!res.ok) throw new Error("feedback 시트 쓰기 실패");
 }
 
+export async function appendMomVote({
+  matchId,
+  voterName,
+  votedFor,
+}: {
+  matchId: number;
+  voterName: string;
+  votedFor: string;
+}) {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 환경변수가 없습니다.");
+
+  const token = await getAccessToken();
+  const timestamp = new Date().toISOString();
+  const row = [String(matchId), voterName.trim(), votedFor.trim(), timestamp];
+
+  const range = encodeURIComponent("mom_vote!A:D");
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ values: [row] }),
+    }
+  );
+  if (!res.ok) throw new Error("mom_vote 시트 쓰기 실패");
+}
+
+export async function deleteMomVote(matchId: number, voterName: string) {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+
+  const token = await getAccessToken();
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
+
+  const readRes = await fetch(`${base}/values/mom_vote!A1:D500`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const readData = await readRes.json();
+  const rows: string[][] = readData.values || [];
+
+  let deleted = false;
+  const newRows = rows.filter((row, i) => {
+    if (i === 0) return true;
+    if (!deleted && String(row[0]) === String(matchId) && row[1] === voterName) {
+      deleted = true;
+      return false;
+    }
+    return true;
+  });
+
+  while (newRows.length < rows.length) newRows.push(["", "", "", ""]);
+
+  const range = `mom_vote!A1:D${Math.max(newRows.length, rows.length)}`;
+  await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ range, values: newRows }),
+  });
+}
+
 export async function writeLineup({
   matchId,
   quarter,
