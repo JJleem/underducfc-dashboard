@@ -232,6 +232,24 @@ export async function deleteMomVote(matchId: number, voterName: string, voteType
   });
 }
 
+export async function writeMatchMom(matchId: number, mom: string): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+
+  const token = await getAccessToken();
+  const rowNum = matchId + 2; // 헤더 1행 + 0-index 보정
+  const range = `matches!K${rowNum}`;
+
+  await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
+    {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ range, values: [[mom]] }),
+    }
+  );
+}
+
 export async function writeLineup({
   matchId,
   quarter,
