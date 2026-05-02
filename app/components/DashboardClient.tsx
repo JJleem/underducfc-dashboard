@@ -116,7 +116,7 @@ export default function DashboardClient({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const [statSort, setStatSort] = React.useState<"apps" | "goals" | "assists" | "mom">("apps");
+  const [statSort, setStatSort] = React.useState<"pos" | "apps" | "goals" | "assists" | "mom">("pos");
   const [openLineups, setOpenLineups] = React.useState<Set<number>>(new Set());
   const [activeQuarters, setActiveQuarters] = React.useState<Record<number, string>>({});
   const [sharingMatch, setSharingMatch] = React.useState<number | null>(null);
@@ -1428,9 +1428,18 @@ export default function DashboardClient({
                 { key: "assists", label: "도움", emoji: "🎯" },
                 { key: "mom", label: "MOM", emoji: "⭐" },
               ];
-              const sortedPlayers = [...players].sort(
-                (a, b) => (Number(b[statSort]) || 0) - (Number(a[statSort]) || 0)
-              );
+              const POS_ORDER: Record<string, number> = { FW: 0, MF: 1, DF: 2, GK: 3 };
+              const sortedPlayers = [...players].sort((a, b) => {
+                if (statSort === "pos") {
+                  const pa = POS_ORDER[a.pos?.toUpperCase()] ?? 4;
+                  const pb = POS_ORDER[b.pos?.toUpperCase()] ?? 4;
+                  if (pa !== pb) return pa - pb;
+                  return a.name.localeCompare(b.name, "ko");
+                }
+                const diff = (Number(b[statSort]) || 0) - (Number(a[statSort]) || 0);
+                if (diff !== 0) return diff;
+                return a.name.localeCompare(b.name, "ko");
+              });
 
               return (
                 <>
@@ -1438,7 +1447,7 @@ export default function DashboardClient({
                     {filters.map(({ key, label, emoji }) => (
                       <button
                         key={key}
-                        onClick={() => setStatSort(key)}
+                        onClick={() => setStatSort(statSort === key ? "pos" : key)}
                         className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-2xl text-[11px] font-black transition-all ${
                           statSort === key
                             ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black shadow-md"
