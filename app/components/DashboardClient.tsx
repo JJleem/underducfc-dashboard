@@ -1107,36 +1107,41 @@ export default function DashboardClient({
                               </div>
 
                               {/* 투표하기 버튼 - 경기 당일까지만 표시 */}
-                              {votingClosed ? (
-                                <p className="pt-2 border-t border-gray-100 dark:border-white/5 text-[10px] text-gray-400 text-center">
-                                  투표가 마감되었습니다
-                                </p>
-                              ) : (
-                                <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
-                                  <button
-                                    onClick={() => {
-                                      setMomModalVoter(voterName);
-                                      setMomModalAtk(myAtkVote || "");
-                                      setMomModalDef(myDefVote || "");
-                                      setMomModal({ matchId: match.id, attendees });
-                                    }}
-                                    className="text-[11px] font-black px-4 py-1.5 rounded-2xl bg-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10 text-[#FF8FA3] dark:text-[#FFB6C1] hover:bg-[#FF8FA3]/20 transition-colors"
-                                  >
-                                    {hasVoted ? "투표 변경" : "투표하기"}
-                                  </button>
-                                  {hasVoted && (
-                                    <button
-                                      onClick={async () => {
-                                        if (myAtkVote) await cancelMomVote(match.id, voterName, "공격");
-                                        if (myDefVote) await cancelMomVote(match.id, voterName, "수비");
-                                      }}
-                                      className="text-[10px] text-gray-400 hover:text-red-400 transition-colors"
-                                    >
-                                      투표 취소
-                                    </button>
-                                  )}
-                                </div>
-                              )}
+                              <div className="pt-2 border-t border-gray-100 dark:border-white/5">
+                                {votingClosed ? (
+                                  <p className="text-[10px] text-gray-400 text-center py-0.5">🔒 투표가 마감되었습니다</p>
+                                ) : (
+                                  <>
+                                    <p className="text-[10px] text-gray-400 mb-2">
+                                      📢 투표는 경기 당일까지만 가능합니다
+                                    </p>
+                                    <div className="flex items-center justify-between">
+                                      <button
+                                        onClick={() => {
+                                          setMomModalVoter(voterName);
+                                          setMomModalAtk(myAtkVote || "");
+                                          setMomModalDef(myDefVote || "");
+                                          setMomModal({ matchId: match.id, attendees });
+                                        }}
+                                        className="text-[11px] font-black px-4 py-1.5 rounded-2xl bg-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10 text-[#FF8FA3] dark:text-[#FFB6C1] hover:bg-[#FF8FA3]/20 transition-colors"
+                                      >
+                                        {hasVoted ? "투표 변경" : "투표하기"}
+                                      </button>
+                                      {hasVoted && (
+                                        <button
+                                          onClick={async () => {
+                                            if (myAtkVote) await cancelMomVote(match.id, voterName, "공격");
+                                            if (myDefVote) await cancelMomVote(match.id, voterName, "수비");
+                                          }}
+                                          className="text-[10px] text-gray-400 hover:text-red-400 transition-colors"
+                                        >
+                                          투표 취소
+                                        </button>
+                                      )}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>
