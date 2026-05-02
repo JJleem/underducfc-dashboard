@@ -230,24 +230,23 @@ export default function DashboardClient({
       .catch(() => {});
   }, []);
 
-  const submitMomVote = async (matchId: number, votedFor: string, voteType: string) => {
-    const voterName = momVoterName[matchId]?.trim();
-    if (!voterName) return;
+  const submitMomVote = async (matchId: number, voterName: string, votedFor: string, voteType: string) => {
+    if (!voterName.trim()) return;
     setSubmittingVote(matchId);
     try {
       const res = await fetch("/api/mom-vote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchId, voterName, votedFor, voteType }),
+        body: JSON.stringify({ matchId, voterName: voterName.trim(), votedFor, voteType }),
       });
       if (res.ok) {
         setMomVoteMap((prev) => {
           const filtered = (prev[matchId] || []).filter(
-            (v) => !(v.voterName === voterName && v.voteType === voteType)
+            (v) => !(v.voterName === voterName.trim() && v.voteType === voteType)
           );
           return {
             ...prev,
-            [matchId]: [...filtered, { matchId, voterName, votedFor, voteType, timestamp: new Date().toISOString() }],
+            [matchId]: [...filtered, { matchId, voterName: voterName.trim(), votedFor, voteType, timestamp: new Date().toISOString() }],
           };
         });
       }
@@ -256,19 +255,18 @@ export default function DashboardClient({
     }
   };
 
-  const cancelMomVote = async (matchId: number, voteType: string) => {
-    const voterName = momVoterName[matchId]?.trim();
-    if (!voterName) return;
+  const cancelMomVote = async (matchId: number, voterName: string, voteType: string) => {
+    if (!voterName.trim()) return;
     const res = await fetch("/api/mom-vote", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ matchId, voterName, voteType }),
+      body: JSON.stringify({ matchId, voterName: voterName.trim(), voteType }),
     });
     if (res.ok) {
       setMomVoteMap((prev) => ({
         ...prev,
         [matchId]: (prev[matchId] || []).filter(
-          (v) => !(v.voterName === voterName && v.voteType === voteType)
+          (v) => !(v.voterName === voterName.trim() && v.voteType === voteType)
         ),
       }));
     }
@@ -1116,8 +1114,8 @@ export default function DashboardClient({
                                 {hasVoted && (
                                   <button
                                     onClick={async () => {
-                                      if (myAtkVote) await cancelMomVote(match.id, "공격");
-                                      if (myDefVote) await cancelMomVote(match.id, "수비");
+                                      if (myAtkVote) await cancelMomVote(match.id, voterName, "공격");
+                                      if (myDefVote) await cancelMomVote(match.id, voterName, "수비");
                                     }}
                                     className="text-[10px] text-gray-400 hover:text-red-400 transition-colors"
                                   >
@@ -1580,8 +1578,9 @@ export default function DashboardClient({
                 disabled={!momModalVoter || (!momModalAtk && !momModalDef) || submittingVote === momModal.matchId}
                 onClick={async () => {
                   setMomVoterName((prev) => ({ ...prev, [momModal.matchId]: momModalVoter }));
-                  if (momModalAtk) await submitMomVote(momModal.matchId, momModalAtk, "공격");
-                  if (momModalDef) await submitMomVote(momModal.matchId, momModalDef, "수비");
+                  if (momModalAtk) await submitMomVote(momModal.matchId, momModalVoter, momModalAtk, "공격");
+                  if (momModalDef) await submitMomVote(momModal.matchId, momModalVoter, momModalDef, "수비");
+                  setMomVoterName((prev) => ({ ...prev, [momModal.matchId]: momModalVoter }));
                   setMomModal(null);
                 }}
                 className="flex-1 py-2.5 rounded-2xl bg-[#FF8FA3] text-[12px] font-black text-white disabled:opacity-40 transition-opacity"
