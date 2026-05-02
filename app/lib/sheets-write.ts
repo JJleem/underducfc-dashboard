@@ -175,19 +175,21 @@ export async function appendMomVote({
   matchId,
   voterName,
   votedFor,
+  voteType,
 }: {
   matchId: number;
   voterName: string;
   votedFor: string;
+  voteType: string;
 }) {
   const sheetId = process.env.GOOGLE_SHEET_ID;
   if (!sheetId) throw new Error("GOOGLE_SHEET_ID 환경변수가 없습니다.");
 
   const token = await getAccessToken();
   const timestamp = new Date().toISOString();
-  const row = [String(matchId), voterName.trim(), votedFor.trim(), timestamp];
+  const row = [String(matchId), voterName.trim(), votedFor.trim(), voteType.trim(), timestamp];
 
-  const range = encodeURIComponent("mom_vote!A:D");
+  const range = encodeURIComponent("mom_vote!A:E");
   const res = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
     {
@@ -199,32 +201,30 @@ export async function appendMomVote({
   if (!res.ok) throw new Error("mom_vote 시트 쓰기 실패");
 }
 
-export async function deleteMomVote(matchId: number, voterName: string) {
+export async function deleteMomVote(matchId: number, voterName: string, voteType?: string) {
   const sheetId = process.env.GOOGLE_SHEET_ID;
   if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
 
   const token = await getAccessToken();
   const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
 
-  const readRes = await fetch(`${base}/values/mom_vote!A1:D500`, {
+  const readRes = await fetch(`${base}/values/mom_vote!A1:E500`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const readData = await readRes.json();
   const rows: string[][] = readData.values || [];
 
-  let deleted = false;
   const newRows = rows.filter((row, i) => {
     if (i === 0) return true;
-    if (!deleted && String(row[0]) === String(matchId) && row[1] === voterName) {
-      deleted = true;
-      return false;
-    }
-    return true;
+    const matchesId = String(row[0]) === String(matchId);
+    const matchesVoter = row[1] === voterName;
+    const matchesType = voteType ? row[3] === voteType : true;
+    return !(matchesId && matchesVoter && matchesType);
   });
 
-  while (newRows.length < rows.length) newRows.push(["", "", "", ""]);
+  while (newRows.length < rows.length) newRows.push(["", "", "", "", ""]);
 
-  const range = `mom_vote!A1:D${Math.max(newRows.length, rows.length)}`;
+  const range = `mom_vote!A1:E${Math.max(newRows.length, rows.length)}`;
   await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
     method: "PUT",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },

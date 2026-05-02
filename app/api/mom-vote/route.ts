@@ -4,12 +4,13 @@ import { appendMomVote, deleteMomVote } from "../../lib/sheets-write";
 
 export async function GET() {
   try {
-    const rows = await getSheetData("mom_vote!A1:D500");
+    const rows = await getSheetData("mom_vote!A1:E500");
     const votes = rows.slice(1).map((row: string[]) => ({
       matchId: Number(row[0]) || 0,
       voterName: row[1] || "",
       votedFor: row[2] || "",
-      timestamp: row[3] || "",
+      voteType: row[3] || "공격",
+      timestamp: row[4] || "",
     }));
     return NextResponse.json(votes);
   } catch (err) {
@@ -20,13 +21,13 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { matchId, voterName, votedFor } = await request.json();
-    if (matchId === undefined || !voterName?.trim() || !votedFor?.trim()) {
+    const { matchId, voterName, votedFor, voteType } = await request.json();
+    if (matchId === undefined || !voterName?.trim() || !votedFor?.trim() || !voteType?.trim()) {
       return NextResponse.json({ error: "필수 필드 누락" }, { status: 400 });
     }
-    // 기존 투표가 있으면 먼저 삭제 후 재등록 (투표 변경)
-    await deleteMomVote(Number(matchId), voterName.trim());
-    await appendMomVote({ matchId: Number(matchId), voterName, votedFor });
+    // 같은 matchId + voterName + voteType 투표가 있으면 삭제 후 재등록
+    await deleteMomVote(Number(matchId), voterName.trim(), voteType.trim());
+    await appendMomVote({ matchId: Number(matchId), voterName, votedFor, voteType });
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
@@ -36,11 +37,11 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { matchId, voterName } = await request.json();
+    const { matchId, voterName, voteType } = await request.json();
     if (matchId === undefined || !voterName) {
       return NextResponse.json({ error: "필수 필드 누락" }, { status: 400 });
     }
-    await deleteMomVote(Number(matchId), voterName);
+    await deleteMomVote(Number(matchId), voterName, voteType);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

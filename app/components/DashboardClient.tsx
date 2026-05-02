@@ -38,6 +38,7 @@ export interface MomVoteData {
   matchId: number;
   voterName: string;
   votedFor: string;
+  voteType: string; // "공격" | "수비"
   timestamp: string;
 }
 
@@ -212,7 +213,8 @@ export default function DashboardClient({
   const [openVotes, setOpenVotes] = React.useState<Set<number>>(new Set());
   const [momModal, setMomModal] = React.useState<{ matchId: number; attendees: string[] } | null>(null);
   const [momModalVoter, setMomModalVoter] = React.useState("");
-  const [momModalCandidate, setMomModalCandidate] = React.useState("");
+  const [momModalAtk, setMomModalAtk] = React.useState("");
+  const [momModalDef, setMomModalDef] = React.useState("");
 
   React.useEffect(() => {
     fetch("/api/mom-vote")
@@ -228,7 +230,7 @@ export default function DashboardClient({
       .catch(() => {});
   }, []);
 
-  const submitMomVote = async (matchId: number, votedFor: string) => {
+  const submitMomVote = async (matchId: number, votedFor: string, voteType: string) => {
     const voterName = momVoterName[matchId]?.trim();
     if (!voterName) return;
     setSubmittingVote(matchId);
@@ -236,14 +238,16 @@ export default function DashboardClient({
       const res = await fetch("/api/mom-vote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchId, voterName, votedFor }),
+        body: JSON.stringify({ matchId, voterName, votedFor, voteType }),
       });
       if (res.ok) {
         setMomVoteMap((prev) => {
-          const filtered = (prev[matchId] || []).filter((v) => v.voterName !== voterName);
+          const filtered = (prev[matchId] || []).filter(
+            (v) => !(v.voterName === voterName && v.voteType === voteType)
+          );
           return {
             ...prev,
-            [matchId]: [...filtered, { matchId, voterName, votedFor, timestamp: new Date().toISOString() }],
+            [matchId]: [...filtered, { matchId, voterName, votedFor, voteType, timestamp: new Date().toISOString() }],
           };
         });
       }
@@ -252,18 +256,20 @@ export default function DashboardClient({
     }
   };
 
-  const cancelMomVote = async (matchId: number) => {
+  const cancelMomVote = async (matchId: number, voteType: string) => {
     const voterName = momVoterName[matchId]?.trim();
     if (!voterName) return;
     const res = await fetch("/api/mom-vote", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ matchId, voterName }),
+      body: JSON.stringify({ matchId, voterName, voteType }),
     });
     if (res.ok) {
       setMomVoteMap((prev) => ({
         ...prev,
-        [matchId]: (prev[matchId] || []).filter((v) => v.voterName !== voterName),
+        [matchId]: (prev[matchId] || []).filter(
+          (v) => !(v.voterName === voterName && v.voteType === voteType)
+        ),
       }));
     }
   };
@@ -1007,14 +1013,51 @@ export default function DashboardClient({
                       const votes = momVoteMap[match.id] || [];
                       const isOpen = openVotes.has(match.id);
                       const voterName = momVoterName[match.id] || "";
-                      const myVote = votes.find((v) => v.voterName === voterName.trim())?.votedFor;
 
-                      // 득표 집계
-                      const tally: Record<string, number> = {};
-                      votes.forEach((v) => { tally[v.votedFor] = (tally[v.votedFor] || 0) + 1; });
-                      const sorted = [...attendees].sort((a, b) => (tally[b] || 0) - (tally[a] || 0));
-                      const maxVotes = Math.max(...Object.values(tally), 1);
-                      const leader = sorted[0] && tally[sorted[0]] > 0 ? sorted[0] : null;
+                      // 포지션으로 공격/수비 분류
+                      const posMap: Record<string, string> = {};
+                      players.forEach((p) => { posMap[p.name] = p.pos?.toUpperCase() || ""; });
+                      const atkPos = new Set(["FW", "MF"]);
+                      const defPos = new Set(["GK", "DF"]);
+                      const atkCandidates = attendees.filter((n) => atkPos.has(posMap[n]) || (!atkPos.has(posMap[n]) && !defPos.has(posMap[n])));
+                      const defCandidates = attendees.filter((n) => defPos.has(posMap[n]) || (!atkPos.has(posMap[n]) && !defPos.has(posMap[n])));
+
+                      // 득표 집계 (타입별)
+                      const makeTally = (type: string) => {
+                        const tally: Record<string, number> = {};
+                        votes.filter((v) => v.voteType === type).forEach((v) => { tally[v.votedFor] = (tally[v.votedFor] || 0) + 1; });
+                        return tally;
+                      };
+                      const atkTally = makeTally("공격");
+                      const defTally = makeTally("수비");
+
+                      const myAtkVote = votes.find((v) => v.voterName === voterName && v.voteType === "공격")?.votedFor;
+                      const myDefVote = votes.find((v) => v.voterName === voterName && v.voteType === "수비")?.votedFor;
+
+                      const VoteBar = ({ name, tally, myVote }: { name: string; tally: Record<string, number>; myVote?: string }) => {
+                        const sorted = Object.keys(tally).sort((a, b) => tally[b] - tally[a]);
+                        const maxV = Math.max(...Object.values(tally), 1);
+                        const count = tally[name] || 0;
+                        const pct = Math.round((count / maxV) * 100);
+                        const isLeader = count > 0 && count === (tally[sorted[0]] || 0);
+                        return (
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] font-black w-14 shrink-0 truncate ${isLeader ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : "text-gray-600 dark:text-gray-400"}`}>
+                              {isLeader ? "⭐ " : ""}{name}
+                            </span>
+                            <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full transition-all duration-500 ${isLeader ? "bg-[#FF8FA3] dark:bg-[#FFB6C1]" : "bg-gray-300 dark:bg-white/20"}`}
+                                style={{ width: count > 0 ? `${pct}%` : "0%" }} />
+                            </div>
+                            <span className="text-[10px] text-gray-400 w-4 text-right shrink-0">{count}</span>
+                            {myVote === name && <span className="text-[9px] text-[#FF8FA3] dark:text-[#FFB6C1] font-black shrink-0">✓</span>}
+                          </div>
+                        );
+                      };
+
+                      const hasVoted = myAtkVote || myDefVote;
+                      const leaderAtk = Object.entries(atkTally).sort((a, b) => b[1] - a[1])[0]?.[0];
+                      const leaderDef = Object.entries(defTally).sort((a, b) => b[1] - a[1])[0]?.[0];
 
                       return (
                         <div className="mt-3 border-t border-gray-100 dark:border-white/5 pt-3">
@@ -1024,44 +1067,37 @@ export default function DashboardClient({
                           >
                             <span className="text-sm">⭐</span>
                             MOM 투표
-                            {votes.length > 0 && (
-                              <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{votes.length}</span>
+                            {votes.length > 0 && <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{votes.length}</span>}
+                            {!isOpen && (leaderAtk || leaderDef) && (
+                              <span className="text-[10px] text-gray-400 font-medium truncate">
+                                {leaderAtk ? `⚽${leaderAtk}` : ""}{leaderAtk && leaderDef ? " · " : ""}{leaderDef ? `🛡️${leaderDef}` : ""}
+                              </span>
                             )}
-                            {leader && !isOpen && (
-                              <span className="text-[10px] text-gray-400 font-medium">· {leader}</span>
-                            )}
-                            <span className="ml-auto">
+                            <span className="ml-auto shrink-0">
                               {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                             </span>
                           </button>
 
                           {isOpen && (
-                            <div className="mt-3 space-y-3">
-                              {/* 득표 현황 */}
-                              <div className="space-y-1.5">
-                                {sorted.map((name) => {
-                                  const count = tally[name] || 0;
-                                  const pct = Math.round((count / maxVotes) * 100);
-                                  const isLeader = count > 0 && count === tally[sorted[0]];
-                                  const iMyvoted = myVote === name;
-                                  return (
-                                    <div key={name} className="flex items-center gap-2">
-                                      <span className={`text-[10px] font-black w-14 shrink-0 truncate ${isLeader ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : "text-gray-600 dark:text-gray-400"}`}>
-                                        {isLeader ? "⭐ " : ""}{name}
-                                      </span>
-                                      <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                        <div
-                                          className={`h-full rounded-full transition-all duration-500 ${isLeader ? "bg-[#FF8FA3] dark:bg-[#FFB6C1]" : "bg-gray-300 dark:bg-white/20"}`}
-                                          style={{ width: count > 0 ? `${pct}%` : "0%" }}
-                                        />
-                                      </div>
-                                      <span className="text-[10px] text-gray-400 w-5 text-right shrink-0">{count}</span>
-                                      {iMyvoted && (
-                                        <span className="text-[9px] text-[#FF8FA3] dark:text-[#FFB6C1] font-black shrink-0">✓내투표</span>
-                                      )}
-                                    </div>
-                                  );
-                                })}
+                            <div className="mt-3 space-y-4">
+                              {/* 공격 MOM */}
+                              <div>
+                                <p className="text-[10px] font-black text-blue-400 mb-1.5">⚽ 공격 MOM</p>
+                                <div className="space-y-1.5">
+                                  {atkCandidates.map((name) => (
+                                    <VoteBar key={name} name={name} tally={atkTally} myVote={myAtkVote} />
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* 수비 MOM */}
+                              <div>
+                                <p className="text-[10px] font-black text-green-500 mb-1.5">🛡️ 수비 MOM</p>
+                                <div className="space-y-1.5">
+                                  {defCandidates.map((name) => (
+                                    <VoteBar key={name} name={name} tally={defTally} myVote={myDefVote} />
+                                  ))}
+                                </div>
                               </div>
 
                               {/* 투표하기 버튼 */}
@@ -1069,16 +1105,20 @@ export default function DashboardClient({
                                 <button
                                   onClick={() => {
                                     setMomModalVoter(voterName);
-                                    setMomModalCandidate(myVote || "");
+                                    setMomModalAtk(myAtkVote || "");
+                                    setMomModalDef(myDefVote || "");
                                     setMomModal({ matchId: match.id, attendees });
                                   }}
-                                  className="text-[11px] font-black px-4 py-1.5 rounded-2xl bg-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10 text-[#FF8FA3] dark:text-[#FFB6C1] hover:bg-[#FF8FA3]/20 dark:hover:bg-[#FFB6C1]/20 transition-colors"
+                                  className="text-[11px] font-black px-4 py-1.5 rounded-2xl bg-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10 text-[#FF8FA3] dark:text-[#FFB6C1] hover:bg-[#FF8FA3]/20 transition-colors"
                                 >
-                                  {myVote ? "투표 변경" : "투표하기"}
+                                  {hasVoted ? "투표 변경" : "투표하기"}
                                 </button>
-                                {myVote && (
+                                {hasVoted && (
                                   <button
-                                    onClick={() => cancelMomVote(match.id)}
+                                    onClick={async () => {
+                                      if (myAtkVote) await cancelMomVote(match.id, "공격");
+                                      if (myDefVote) await cancelMomVote(match.id, "수비");
+                                    }}
                                     className="text-[10px] text-gray-400 hover:text-red-400 transition-colors"
                                   >
                                     투표 취소
@@ -1467,23 +1507,21 @@ export default function DashboardClient({
           onClick={() => setMomModal(null)}
         >
           <div
-            className="w-full max-w-xs bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 shadow-2xl"
+            className="w-full max-w-xs bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-[14px] font-black text-gray-900 dark:text-white mb-4">⭐ MOM 투표</p>
 
-            {/* 투표자 선택 */}
+            {/* 투표자(나) 선택 */}
             <div className="mb-4">
-              <p className="text-[10px] font-black text-gray-400 mb-1.5 uppercase tracking-widest">나는</p>
+              <p className="text-[10px] font-black text-gray-400 mb-1.5 tracking-widest">나는</p>
               <div className="flex flex-wrap gap-1.5">
                 {momModal.attendees.map((n) => (
                   <button
                     key={n}
-                    onClick={() => { setMomModalVoter(n); if (momModalCandidate === n) setMomModalCandidate(""); }}
+                    onClick={() => { setMomModalVoter(n); if (momModalAtk === n) setMomModalAtk(""); if (momModalDef === n) setMomModalDef(""); }}
                     className={`text-[11px] font-black px-2.5 py-1 rounded-xl transition-all ${
-                      momModalVoter === n
-                        ? "bg-gray-800 dark:bg-white text-white dark:text-black"
-                        : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
+                      momModalVoter === n ? "bg-gray-800 dark:bg-white text-white dark:text-black" : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
                     }`}
                   >
                     {n}
@@ -1492,18 +1530,34 @@ export default function DashboardClient({
               </div>
             </div>
 
-            {/* 후보 선택 */}
-            <div className="mb-5">
-              <p className="text-[10px] font-black text-gray-400 mb-1.5 uppercase tracking-widest">투표할 선수</p>
+            {/* 공격 MOM */}
+            <div className="mb-4">
+              <p className="text-[10px] font-black text-blue-400 mb-1.5">⚽ 공격 MOM</p>
               <div className="flex flex-wrap gap-1.5">
                 {momModal.attendees.filter((n) => n !== momModalVoter).map((n) => (
                   <button
                     key={n}
-                    onClick={() => setMomModalCandidate(n)}
+                    onClick={() => setMomModalAtk((prev) => prev === n ? "" : n)}
                     className={`text-[11px] font-black px-2.5 py-1 rounded-xl transition-all ${
-                      momModalCandidate === n
-                        ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black"
-                        : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-[#FFB6C1]/20"
+                      momModalAtk === n ? "bg-blue-400 text-white" : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-400/20"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 수비 MOM */}
+            <div className="mb-5">
+              <p className="text-[10px] font-black text-green-500 mb-1.5">🛡️ 수비 MOM</p>
+              <div className="flex flex-wrap gap-1.5">
+                {momModal.attendees.filter((n) => n !== momModalVoter).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setMomModalDef((prev) => prev === n ? "" : n)}
+                    className={`text-[11px] font-black px-2.5 py-1 rounded-xl transition-all ${
+                      momModalDef === n ? "bg-green-400 text-white" : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-green-100 dark:hover:bg-green-400/20"
                     }`}
                   >
                     {n}
@@ -1523,10 +1577,11 @@ export default function DashboardClient({
                 취소
               </button>
               <button
-                disabled={!momModalVoter || !momModalCandidate || submittingVote === momModal.matchId}
+                disabled={!momModalVoter || (!momModalAtk && !momModalDef) || submittingVote === momModal.matchId}
                 onClick={async () => {
                   setMomVoterName((prev) => ({ ...prev, [momModal.matchId]: momModalVoter }));
-                  await submitMomVote(momModal.matchId, momModalCandidate);
+                  if (momModalAtk) await submitMomVote(momModal.matchId, momModalAtk, "공격");
+                  if (momModalDef) await submitMomVote(momModal.matchId, momModalDef, "수비");
                   setMomModal(null);
                 }}
                 className="flex-1 py-2.5 rounded-2xl bg-[#FF8FA3] text-[12px] font-black text-white disabled:opacity-40 transition-opacity"
