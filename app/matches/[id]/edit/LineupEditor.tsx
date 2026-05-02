@@ -8,7 +8,7 @@ import { useTheme } from "next-themes";
 import { MatchData, LineupData } from "../../../components/DashboardClient";
 import { FORMATION_POSITIONS } from "../../../components/FormationField";
 
-const QUARTERS = ["예상", "1Q", "2Q", "3Q", "4Q"];
+const QUARTERS = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
 const FORMATIONS = ["4-3-3", "4-4-2", "4-2-3-1", "3-5-2", "3-4-3", "5-3-2", "4-1-4-1"];
 const MAX_SUBS = 5;
 

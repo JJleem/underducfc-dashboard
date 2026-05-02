@@ -61,7 +61,7 @@ export interface PlayerData {
 
 export interface LineupData {
   matchId: number;
-  quarter: string; // "예상" | "1Q" | "2Q" | "3Q" | "4Q"
+  quarter: string; // "예상" | "1Q" | "2Q" | "3Q" | "4Q" | "5Q" | "6Q"
   formation: string; // "4-3-3" | "4-4-2" | "3-5-2" | "4-2-3-1" 등
   players: string[]; // p1~p11
   subs: string[]; // sub1~sub5
@@ -312,7 +312,7 @@ export default function DashboardClient({
   const getMatchLineups = (matchId: number) =>
     lineups.filter((l) => l.matchId === matchId);
 
-  const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q"];
+  const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
   // 💡 1. 완료된 경기만 필터링 (결과가 '예정'이 아닌 경우)
   const completedMatches = matches.filter(
     (m) => m.result !== "예정" && m.result !== "" && m.result !== "자체전",

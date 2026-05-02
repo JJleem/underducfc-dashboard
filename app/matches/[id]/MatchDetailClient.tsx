@@ -11,7 +11,7 @@ import { Sun, Moon } from "lucide-react";
 import { MatchData, LineupData } from "../../components/DashboardClient";
 import { FormationField, FORMATION_POSITIONS } from "../../components/FormationField";
 
-const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q"];
+const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
 
 interface MatchDetailClientProps {
   match: MatchData;
