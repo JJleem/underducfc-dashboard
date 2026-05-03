@@ -1,6 +1,5 @@
 // app/page.tsx
 import { getSheetData } from "./lib/google-sheets";
-import { writeMatchMom } from "./lib/sheets-write";
 import DashboardClient, {
   LineupData,
   MatchData,
@@ -98,55 +97,6 @@ export default async function TeamDashboardPage() {
       row[14] || "", row[15] || "", row[16] || "", row[17] || "", row[18] || "",
     ].filter(Boolean),
   }));
-
-  // MOM 자동 확정: 경기일 다음날 이후 + MOM 비어있음 + 투표 있음
-  let rawMomVotes: string[][] = [];
-  try { rawMomVotes = await getSheetData("mom_vote!A1:E500"); } catch { rawMomVotes = []; }
-
-  const votesByMatch: Record<number, { votedFor: string; voteType: string }[]> = {};
-  rawMomVotes.slice(1).forEach((row: string[]) => {
-    const mid = Number(row[0]);
-    if (!votesByMatch[mid]) votesByMatch[mid] = [];
-    votesByMatch[mid].push({ votedFor: row[2] || "", voteType: row[3] || "공격" });
-  });
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  await Promise.all(
-    matches
-      .filter((match) => {
-        if (match.mom) return false; // 이미 MOM 있음
-        const d = new Date(match.date);
-        if (isNaN(d.getTime())) return false;
-        d.setHours(0, 0, 0, 0);
-        return d < today; // 경기일이 오늘 이전
-      })
-      .map(async (match) => {
-        const votes = votesByMatch[match.id] || [];
-        if (votes.length === 0) return;
-
-        const tally = (type: string) => {
-          const t: Record<string, number> = {};
-          votes.filter((v) => v.voteType === type).forEach((v) => { t[v.votedFor] = (t[v.votedFor] || 0) + 1; });
-          return Object.entries(t).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
-        };
-        const topAtk = tally("공격");
-        const topDef = tally("수비");
-
-        let momStr = "";
-        if (topAtk && topDef && topAtk !== topDef) momStr = `${topAtk} / ${topDef}`;
-        else if (topAtk) momStr = topAtk;
-        else if (topDef) momStr = topDef;
-
-        if (momStr) {
-          try {
-            await writeMatchMom(match.id, momStr);
-            match.mom = momStr;
-          } catch { /* 쓰기 실패 시 무시 */ }
-        }
-      })
-  );
 
   const firstNoticeRow = rawNotices[1]; // index 1이 실제 첫 번째 데이터 줄
 

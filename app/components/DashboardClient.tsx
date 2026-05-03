@@ -217,6 +217,11 @@ export default function DashboardClient({
   const [momModalAtk, setMomModalAtk] = React.useState("");
   const [momModalDef, setMomModalDef] = React.useState("");
 
+  // 페이지 로드 시 마감된 경기 MOM 자동 확정
+  React.useEffect(() => {
+    fetch("/api/mom-vote/finalize", { method: "POST" }).catch(() => {});
+  }, []);
+
   React.useEffect(() => {
     fetch("/api/mom-vote")
       .then((r) => r.json())
