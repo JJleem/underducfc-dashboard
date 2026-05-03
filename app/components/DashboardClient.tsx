@@ -108,6 +108,7 @@ export default function DashboardClient({
   rosterMap,
 }: DashboardClientProps) {
   const { theme, setTheme } = useTheme();
+  const [matchList, setMatchList] = React.useState<MatchData[]>(matches);
   const [showTopBtn, setShowTopBtn] = React.useState(false);
 
   React.useEffect(() => {
@@ -135,7 +136,7 @@ export default function DashboardClient({
     return Math.ceil((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   };
 
-  const nextMatch = [...matches]
+  const nextMatch = [...matchList]
     .filter((m) => m.result === "예정")
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
   const dDay = nextMatch ? getDDay(nextMatch.date) : null;
@@ -217,9 +218,21 @@ export default function DashboardClient({
   const [momModalAtk, setMomModalAtk] = React.useState("");
   const [momModalDef, setMomModalDef] = React.useState("");
 
-  // 페이지 로드 시 마감된 경기 MOM 자동 확정
+  // 페이지 로드 시 마감된 경기 MOM 자동 확정 후 카드에 반영
   React.useEffect(() => {
-    fetch("/api/mom-vote/finalize", { method: "POST" }).catch(() => {});
+    fetch("/api/mom-vote/finalize", { method: "POST" })
+      .then((r) => r.json())
+      .then((data: { finalized?: { matchId: number; mom: string }[] }) => {
+        if (data.finalized && data.finalized.length > 0) {
+          setMatchList((prev) =>
+            prev.map((m) => {
+              const found = data.finalized!.find((f) => f.matchId === m.id);
+              return found ? { ...m, mom: found.mom } : m;
+            })
+          );
+        }
+      })
+      .catch(() => {});
   }, []);
 
   React.useEffect(() => {
@@ -395,7 +408,7 @@ export default function DashboardClient({
 
   const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
   // 💡 1. 완료된 경기만 필터링 (결과가 '예정'이 아닌 경우)
-  const completedMatches = matches.filter(
+  const completedMatches = matchList.filter(
     (m) => m.result !== "예정" && m.result !== "" && m.result !== "자체전",
   );
   const totalMatchesCount = completedMatches.length;
@@ -651,7 +664,7 @@ export default function DashboardClient({
             )}
 
             {/* 경기 일정 리스트 */}
-            {[...matches].reverse().map((match) => {
+            {[...matchList].reverse().map((match) => {
               const isInternal = match.opponent === "자체전";
               return (
                 <Card
