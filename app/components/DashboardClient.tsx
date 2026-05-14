@@ -316,6 +316,16 @@ export default function DashboardClient({
     }
   };
 
+  // 엔트리 상태
+  const [openEntries, setOpenEntries] = React.useState<Set<number>>(new Set());
+  const toggleEntry = (matchId: number) => {
+    setOpenEntries((prev) => {
+      const next = new Set(prev);
+      if (next.has(matchId)) next.delete(matchId); else next.add(matchId);
+      return next;
+    });
+  };
+
   // 피드백 상태
   const [feedbackMap, setFeedbackMap] = React.useState<Record<number, FeedbackData[]>>({});
   const [openFeedbacks, setOpenFeedbacks] = React.useState<Set<number>>(new Set());
@@ -936,23 +946,36 @@ export default function DashboardClient({
                     {match.attendees && (() => {
                       const attendees = match.attendees!.split(",").map((n) => n.trim()).filter(Boolean);
                       if (attendees.length === 0) return null;
+                      const isOpen = openEntries.has(match.id);
                       return (
-                        <div className="mt-4 border-t border-gray-100 dark:border-white/5 pt-3">
-                          <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">ENTRY · {attendees.length}명</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {attendees.map((name) => {
-                              const no = rosterMap[name] || "G";
-                              return (
-                                <span
-                                  key={name}
-                                  className="flex items-center gap-1 text-[11px] font-bold bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 rounded-lg px-2 py-0.5"
-                                >
-                                  <span className="font-black text-[#FF8FA3] dark:text-[#FFB6C1] text-[10px] min-w-[12px] text-center">{no}</span>
-                                  {name}
-                                </span>
-                              );
-                            })}
-                          </div>
+                        <div className="mt-3 border-t border-gray-100 dark:border-white/5 pt-3">
+                          <button
+                            onClick={() => toggleEntry(match.id)}
+                            className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors w-full"
+                          >
+                            <Users className="w-3.5 h-3.5 text-[#FFB6C1]" />
+                            엔트리
+                            <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{attendees.length}명</span>
+                            <span className="ml-auto">
+                              {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            </span>
+                          </button>
+                          {isOpen && (
+                            <div className="flex flex-wrap gap-1.5 mt-2.5">
+                              {attendees.map((name) => {
+                                const no = rosterMap[name] || "G";
+                                return (
+                                  <span
+                                    key={name}
+                                    className="flex items-center gap-1 text-[11px] font-bold bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 rounded-lg px-2 py-0.5"
+                                  >
+                                    <span className="font-black text-[#FF8FA3] dark:text-[#FFB6C1] text-[10px] min-w-[12px] text-center">{no}</span>
+                                    {name}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
