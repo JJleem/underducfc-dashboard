@@ -145,6 +145,15 @@ export default function DashboardClient({
   const matchCardRefs = React.useRef<Record<number, HTMLDivElement | null>>({});
   const [calendarMonth, setCalendarMonth] = React.useState<Date>(new Date());
 
+  const scrollToMatch = (id: number) => {
+    const anchor = matchCardRefs.current[id];
+    if (!anchor) return;
+    const card = anchor.nextElementSibling as HTMLElement | null;
+    if (!card) return;
+    const top = window.scrollY + card.getBoundingClientRect().top + card.offsetHeight / 2 - window.innerHeight / 2;
+    window.scrollTo({ top, behavior: "smooth" });
+  };
+
   const matchesByDate = React.useMemo(() => {
     const map: Record<string, MatchData[]> = {};
     matchList.forEach((m) => {
@@ -742,7 +751,7 @@ export default function DashboardClient({
                       const key = toMatchDateStr(date);
                       const match = (matchesByDate[key] ?? [])[0];
                       if (match) {
-                        matchCardRefs.current[match.id]?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        scrollToMatch(match.id);
                       }
                     }}
                     components={{
@@ -793,7 +802,7 @@ export default function DashboardClient({
                             {monthMatches.map((m) => (
                               <button
                                 key={m.id}
-                                onClick={() => matchCardRefs.current[m.id]?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                                onClick={() => scrollToMatch(m.id)}
                                 className="w-full flex items-center gap-2.5 text-left hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl px-2 py-2 transition-colors"
                               >
                                 <span className="text-[11px] font-black text-gray-400 w-9 shrink-0 tabular-nums">
