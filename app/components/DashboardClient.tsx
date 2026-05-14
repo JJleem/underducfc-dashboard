@@ -42,6 +42,14 @@ function getMatchDotStyle(result: string): string {
   return "border border-gray-400 dark:border-gray-500";
 }
 
+function getMatchCircleStyle(result: string): string {
+  if (result === "승") return "bg-[#FF8FA3] text-white";
+  if (result === "패") return "bg-gray-500 text-white";
+  if (result === "무") return "bg-amber-400 text-white";
+  if (result === "자체전") return "bg-violet-400 text-white";
+  return "border-2 border-[#FF8FA3] dark:border-[#FFB6C1] text-[#FF8FA3] dark:text-[#FFB6C1]";
+}
+
 function toMatchDateStr(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
@@ -683,19 +691,38 @@ export default function DashboardClient({
             {/* 매치 캘린더 */}
             <div className="px-1 mb-6">
               <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-md">
-                <CardContent className="p-4 pb-3">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <CalendarDays className="w-3 h-3 text-[#FF8FA3] dark:text-[#FFB6C1]" />
-                    <span className="text-[10px] font-black text-gray-400 tracking-widest">MATCH CALENDAR</span>
+                <CardContent className="p-4">
+                  {/* 헤더 */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-1.5">
+                      <CalendarDays className="w-3.5 h-3.5 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+                      <span className="text-[11px] font-black text-gray-700 dark:text-white tracking-widest">MATCH CALENDAR</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      {[
+                        { dot: "bg-[#FF8FA3]", label: "승" },
+                        { dot: "bg-gray-500", label: "패" },
+                        { dot: "bg-amber-400", label: "무" },
+                        { dot: "bg-violet-400", label: "자체전" },
+                        { dot: "border border-[#FF8FA3] dark:border-[#FFB6C1]", label: "예정" },
+                      ].map(({ dot, label }) => (
+                        <div key={label} className="flex items-center gap-1 text-[9px] font-black text-gray-400 dark:text-gray-500">
+                          <div className={`w-2 h-2 rounded-full ${dot}`} />
+                          {label}
+                        </div>
+                      ))}
+                    </div>
                   </div>
+
+                  {/* 달력 그리드 */}
                   <DayPicker
                     month={calendarMonth}
                     onMonthChange={setCalendarMonth}
                     showOutsideDays
                     classNames={{
                       months: "flex flex-col w-full",
-                      month: "flex flex-col gap-3 w-full",
-                      caption: "flex justify-center py-2 relative items-center",
+                      month: "flex flex-col gap-1 w-full",
+                      caption: "flex justify-center py-1.5 relative items-center",
                       caption_label: "text-sm font-black text-gray-800 dark:text-white",
                       nav: "flex items-center gap-1",
                       nav_button: "size-7 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5 opacity-70 hover:opacity-100 transition-opacity",
@@ -703,12 +730,11 @@ export default function DashboardClient({
                       nav_button_next: "absolute right-0",
                       table: "w-full border-collapse",
                       head_row: "flex",
-                      head_cell: "flex-1 text-center text-[10px] font-black text-gray-400 dark:text-gray-500 pb-1",
-                      row: "flex w-full mt-1",
-                      cell: "flex-1 relative p-0 text-center",
-                      day: "mx-auto w-full h-auto flex flex-col items-center justify-center rounded-lg text-[12px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer py-1",
-                      day_today: "font-black text-[#FF8FA3] dark:text-[#FFB6C1]",
-                      day_outside: "opacity-30",
+                      head_cell: "flex-1 text-center text-[10px] font-bold text-gray-400 dark:text-gray-500 py-1",
+                      row: "flex w-full",
+                      cell: "flex-1 p-0 flex items-center justify-center py-0.5",
+                      day: "flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer",
+                      day_outside: "opacity-25",
                       day_disabled: "opacity-20 cursor-default",
                       day_hidden: "invisible",
                     }}
@@ -724,39 +750,74 @@ export default function DashboardClient({
                       IconRight: () => <ChevronRight className="size-4" />,
                       DayContent: (props: { date: Date }) => {
                         const { date } = props;
-                        const dayMatches = matchesByDate[toMatchDateStr(date)] ?? [];
+                        const dateStr = toMatchDateStr(date);
+                        const dayMatches = matchesByDate[dateStr] ?? [];
+                        const isToday = dateStr === toMatchDateStr(new Date());
+
+                        if (dayMatches.length > 0) {
+                          const circleStyle = getMatchCircleStyle(dayMatches[0].result);
+                          return (
+                            <div className={`w-8 h-8 flex items-center justify-center rounded-full text-[12px] font-black ${circleStyle} ${isToday ? "ring-2 ring-offset-1 ring-[#FF8FA3] dark:ring-offset-[#111]" : ""}`}>
+                              {date.getDate()}
+                            </div>
+                          );
+                        }
                         return (
-                          <div className="flex flex-col items-center leading-none gap-[3px]">
-                            <span>{date.getDate()}</span>
-                            {dayMatches.length > 0 && (
-                              <div className="flex gap-[2px]">
-                                {dayMatches.map((m) => (
-                                  <div
-                                    key={m.id}
-                                    className={`w-[5px] h-[5px] rounded-full ${getMatchDotStyle(m.result)}`}
-                                  />
-                                ))}
-                              </div>
-                            )}
+                          <div className={`w-8 h-8 flex items-center justify-center rounded-full text-[12px] ${isToday ? "font-black text-[#FF8FA3] dark:text-[#FFB6C1] bg-[#FF8FA3]/10" : "font-medium text-gray-600 dark:text-gray-400"}`}>
+                            {date.getDate()}
                           </div>
                         );
                       },
                     }}
                   />
-                  <div className="flex items-center gap-3 mt-2 pt-2.5 border-t border-gray-100 dark:border-white/5 flex-wrap">
-                    {[
-                      { dot: "bg-[#FF8FA3]", label: "승" },
-                      { dot: "bg-gray-400", label: "패" },
-                      { dot: "bg-amber-400", label: "무" },
-                      { dot: "bg-violet-400", label: "자체전" },
-                      { dot: "border border-gray-400 dark:border-gray-500", label: "예정" },
-                    ].map(({ dot, label }) => (
-                      <div key={label} className="flex items-center gap-1 text-[10px] font-black text-gray-500 dark:text-gray-400">
-                        <div className={`w-2 h-2 rounded-full ${dot}`} />
-                        {label}
+
+                  {/* 이달의 경기 목록 */}
+                  {(() => {
+                    const monthMatches = matchList
+                      .filter((m) => {
+                        if (!m.date) return false;
+                        const d = new Date(m.date);
+                        return (
+                          d.getFullYear() === calendarMonth.getFullYear() &&
+                          d.getMonth() === calendarMonth.getMonth()
+                        );
+                      })
+                      .sort((a, b) => a.date.localeCompare(b.date));
+
+                    return (
+                      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5">
+                        {monthMatches.length === 0 ? (
+                          <p className="text-[11px] text-gray-400 dark:text-gray-600 text-center py-2">이달의 경기가 없어요 🦆</p>
+                        ) : (
+                          <div className="space-y-0.5">
+                            {monthMatches.map((m) => (
+                              <button
+                                key={m.id}
+                                onClick={() => matchCardRefs.current[m.id]?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                                className="w-full flex items-center gap-2.5 text-left hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl px-2 py-2 transition-colors"
+                              >
+                                <span className="text-[11px] font-black text-gray-400 w-9 shrink-0 tabular-nums">
+                                  {m.date.slice(5).replace("-", ".")}
+                                </span>
+                                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getMatchDotStyle(m.result)}`} />
+                                <span className="flex-1 min-w-0 text-[12px] font-bold text-gray-700 dark:text-gray-200 truncate">
+                                  vs {m.opponent}
+                                </span>
+                                {m.result !== "예정" && m.ourScore && m.ourScore !== "-" && (
+                                  <span className="text-[11px] font-black text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">
+                                    {m.ourScore} : {m.theirScore}
+                                  </span>
+                                )}
+                                <Badge className={`shrink-0 border-none font-black text-[9px] px-2 py-0.5 ${getResultBadgeStyle(m.result)}`}>
+                                  {m.result}
+                                </Badge>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </div>
