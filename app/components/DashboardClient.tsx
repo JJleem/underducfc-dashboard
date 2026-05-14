@@ -710,7 +710,7 @@ export default function DashboardClient({
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-1.5">
                       <CalendarDays className="w-3.5 h-3.5 text-[#FF8FA3] dark:text-[#FFB6C1]" />
-                      <span className="text-[11px] font-black text-gray-700 dark:text-white tracking-widest">MATCH CALENDAR</span>
+                      <span className="text-[11px] font-black text-gray-700 dark:text-white tracking-widest">CALENDAR</span>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
                       {[
@@ -719,7 +719,7 @@ export default function DashboardClient({
                         { dot: "bg-amber-400", label: "무" },
                         { dot: "bg-violet-400", label: "자체전" },
                         { dot: "border border-[#FF8FA3] dark:border-[#FFB6C1]", label: "예정" },
-                        { dot: "bg-sky-400", label: "야유회" },
+                        { dot: "bg-sky-400", label: "이벤트" },
                       ].map(({ dot, label }) => (
                         <div key={label} className="flex items-center gap-1 text-[9px] font-black text-gray-400 dark:text-gray-500">
                           <div className={`w-2 h-2 rounded-full ${dot}`} />
