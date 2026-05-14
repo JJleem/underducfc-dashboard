@@ -32,6 +32,19 @@ import { shareFormation } from "../lib/draw-formation";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
+import { DayPicker } from "react-day-picker";
+
+function getMatchDotStyle(result: string): string {
+  if (result === "승") return "bg-[#FF8FA3]";
+  if (result === "패") return "bg-gray-400";
+  if (result === "무") return "bg-amber-400";
+  if (result === "자체전") return "bg-violet-400";
+  return "border border-gray-400 dark:border-gray-500";
+}
+
+function toMatchDateStr(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
 
 // --- 타입 정의 ---
 export interface MomVoteData {
@@ -121,6 +134,18 @@ export default function DashboardClient({
   const [openLineups, setOpenLineups] = React.useState<Set<number>>(new Set());
   const [activeQuarters, setActiveQuarters] = React.useState<Record<number, string>>({});
   const [sharingMatch, setSharingMatch] = React.useState<number | null>(null);
+  const matchCardRefs = React.useRef<Record<number, HTMLDivElement | null>>({});
+  const [calendarMonth, setCalendarMonth] = React.useState<Date>(new Date());
+
+  const matchesByDate = React.useMemo(() => {
+    const map: Record<string, MatchData[]> = {};
+    matchList.forEach((m) => {
+      const key = m.date.slice(0, 10);
+      if (!map[key]) map[key] = [];
+      map[key].push(m);
+    });
+    return map;
+  }, [matchList]);
 
   // 결과 공유
   const [sharingResult, setSharingResult] = React.useState<number | null>(null);
@@ -645,6 +670,87 @@ export default function DashboardClient({
               </div>
             )}
 
+            {/* 매치 캘린더 */}
+            <div className="px-1 mb-6">
+              <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-md">
+                <CardContent className="p-4 pb-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <CalendarDays className="w-3 h-3 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+                    <span className="text-[10px] font-black text-gray-400 tracking-widest">MATCH CALENDAR</span>
+                  </div>
+                  <DayPicker
+                    month={calendarMonth}
+                    onMonthChange={setCalendarMonth}
+                    showOutsideDays
+                    classNames={{
+                      months: "flex flex-col w-full",
+                      month: "flex flex-col gap-3 w-full",
+                      caption: "flex justify-center py-2 relative items-center",
+                      caption_label: "text-sm font-black text-gray-800 dark:text-white",
+                      nav: "flex items-center gap-1",
+                      nav_button: "size-7 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5 opacity-70 hover:opacity-100 transition-opacity",
+                      nav_button_previous: "absolute left-0",
+                      nav_button_next: "absolute right-0",
+                      table: "w-full border-collapse",
+                      head_row: "flex",
+                      head_cell: "flex-1 text-center text-[10px] font-black text-gray-400 dark:text-gray-500 pb-1",
+                      row: "flex w-full mt-1",
+                      cell: "flex-1 relative p-0 text-center",
+                      day: "mx-auto w-full h-auto flex flex-col items-center justify-center rounded-lg text-[12px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer py-1",
+                      day_today: "font-black text-[#FF8FA3] dark:text-[#FFB6C1]",
+                      day_outside: "opacity-30",
+                      day_disabled: "opacity-20 cursor-default",
+                      day_hidden: "invisible",
+                    }}
+                    onDayClick={(date) => {
+                      const key = toMatchDateStr(date);
+                      const match = (matchesByDate[key] ?? [])[0];
+                      if (match) {
+                        matchCardRefs.current[match.id]?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }
+                    }}
+                    components={{
+                      IconLeft: () => <ChevronLeft className="size-4" />,
+                      IconRight: () => <ChevronRight className="size-4" />,
+                      DayContent: (props: { date: Date }) => {
+                        const { date } = props;
+                        const dayMatches = matchesByDate[toMatchDateStr(date)] ?? [];
+                        return (
+                          <div className="flex flex-col items-center leading-none gap-[3px]">
+                            <span>{date.getDate()}</span>
+                            {dayMatches.length > 0 && (
+                              <div className="flex gap-[2px]">
+                                {dayMatches.map((m) => (
+                                  <div
+                                    key={m.id}
+                                    className={`w-[5px] h-[5px] rounded-full ${getMatchDotStyle(m.result)}`}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      },
+                    }}
+                  />
+                  <div className="flex items-center gap-3 mt-2 pt-2.5 border-t border-gray-100 dark:border-white/5 flex-wrap">
+                    {[
+                      { dot: "bg-[#FF8FA3]", label: "승" },
+                      { dot: "bg-gray-400", label: "패" },
+                      { dot: "bg-amber-400", label: "무" },
+                      { dot: "bg-violet-400", label: "자체전" },
+                      { dot: "border border-gray-400 dark:border-gray-500", label: "예정" },
+                    ].map(({ dot, label }) => (
+                      <div key={label} className="flex items-center gap-1 text-[10px] font-black text-gray-500 dark:text-gray-400">
+                        <div className={`w-2 h-2 rounded-full ${dot}`} />
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* D-Day 배너 */}
             {nextMatch && dDay !== null && (
               <div className="mb-4 rounded-3xl bg-gradient-to-r from-[#FFB6C1]/15 to-[#FF8FA3]/5 border border-[#FFB6C1]/25 p-4 flex items-center justify-between">
@@ -667,8 +773,9 @@ export default function DashboardClient({
             {[...matchList].reverse().map((match) => {
               const isInternal = match.opponent === "자체전";
               return (
+                <React.Fragment key={match.id}>
+                <div ref={(el) => { matchCardRefs.current[match.id] = el; }} />
                 <Card
-                  key={match.id}
                   className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-md"
                 >
                   <CardContent className="p-6">
@@ -1307,6 +1414,7 @@ export default function DashboardClient({
                     })()}
                   </CardContent>
                 </Card>
+                </React.Fragment>
               );
             })}
           </TabsContent>
