@@ -54,6 +54,11 @@ function toMatchDateStr(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+const SPECIAL_EVENTS: { date: string; label: string }[] = [
+  { date: "2026-06-06", label: "야유회 🦆" },
+  { date: "2026-06-07", label: "야유회 🦆" },
+];
+
 // --- 타입 정의 ---
 export interface MomVoteData {
   matchId: number;
@@ -714,6 +719,7 @@ export default function DashboardClient({
                         { dot: "bg-amber-400", label: "무" },
                         { dot: "bg-violet-400", label: "자체전" },
                         { dot: "border border-[#FF8FA3] dark:border-[#FFB6C1]", label: "예정" },
+                        { dot: "bg-sky-400", label: "야유회" },
                       ].map(({ dot, label }) => (
                         <div key={label} className="flex items-center gap-1 text-[9px] font-black text-gray-400 dark:text-gray-500">
                           <div className={`w-2 h-2 rounded-full ${dot}`} />
@@ -762,11 +768,19 @@ export default function DashboardClient({
                         const dateStr = toMatchDateStr(date);
                         const dayMatches = matchesByDate[dateStr] ?? [];
                         const isToday = dateStr === toMatchDateStr(new Date());
+                        const isEvent = SPECIAL_EVENTS.some((e) => e.date === dateStr);
 
                         if (dayMatches.length > 0) {
                           const circleStyle = getMatchCircleStyle(dayMatches[0].result);
                           return (
                             <div className={`w-8 h-8 flex items-center justify-center rounded-full text-[12px] font-black ${circleStyle} ${isToday ? "ring-2 ring-offset-1 ring-[#FF8FA3] dark:ring-offset-[#111]" : ""}`}>
+                              {date.getDate()}
+                            </div>
+                          );
+                        }
+                        if (isEvent) {
+                          return (
+                            <div className={`w-8 h-8 flex items-center justify-center rounded-full text-[12px] font-black bg-sky-400 text-white ${isToday ? "ring-2 ring-offset-1 ring-sky-400 dark:ring-offset-[#111]" : ""}`}>
                               {date.getDate()}
                             </div>
                           );
@@ -793,35 +807,77 @@ export default function DashboardClient({
                       })
                       .sort((a, b) => a.date.localeCompare(b.date));
 
+                    const monthEvents = SPECIAL_EVENTS.filter((e) => {
+                      const d = new Date(e.date);
+                      return (
+                        d.getFullYear() === calendarMonth.getFullYear() &&
+                        d.getMonth() === calendarMonth.getMonth()
+                      );
+                    });
+
+                    const isEmpty = monthMatches.length === 0 && monthEvents.length === 0;
+
+                    // 경기 + 이벤트를 날짜순으로 합침
+                    type ListItem =
+                      | { kind: "match"; data: typeof monthMatches[number] }
+                      | { kind: "event"; date: string; label: string };
+                    const items: ListItem[] = [
+                      ...monthMatches.map((m) => ({ kind: "match" as const, data: m })),
+                      ...monthEvents.map((e) => ({ kind: "event" as const, date: e.date, label: e.label })),
+                    ].sort((a, b) => {
+                      const da = a.kind === "match" ? a.data.date : a.date;
+                      const db = b.kind === "match" ? b.data.date : b.date;
+                      return da.localeCompare(db);
+                    });
+
                     return (
                       <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5">
-                        {monthMatches.length === 0 ? (
+                        {isEmpty ? (
                           <p className="text-[11px] text-gray-400 dark:text-gray-600 text-center py-2">이달의 경기가 없어요 🦆</p>
                         ) : (
                           <div className="space-y-0.5">
-                            {monthMatches.map((m) => (
-                              <button
-                                key={m.id}
-                                onClick={() => scrollToMatch(m.id)}
-                                className="w-full flex items-center gap-2.5 text-left hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl px-2 py-2 transition-colors"
-                              >
-                                <span className="text-[11px] font-black text-gray-400 w-9 shrink-0 tabular-nums">
-                                  {m.date.slice(5).replace("-", ".")}
-                                </span>
-                                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getMatchDotStyle(m.result)}`} />
-                                <span className="flex-1 min-w-0 text-[12px] font-bold text-gray-700 dark:text-gray-200 truncate">
-                                  vs {m.opponent}
-                                </span>
-                                {m.result !== "예정" && m.ourScore && m.ourScore !== "-" && (
-                                  <span className="text-[11px] font-black text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">
-                                    {m.ourScore} : {m.theirScore}
+                            {items.map((item, idx) => {
+                              if (item.kind === "event") {
+                                return (
+                                  <div
+                                    key={`event-${item.date}`}
+                                    className="flex items-center gap-2.5 px-2 py-2"
+                                  >
+                                    <span className="text-[11px] font-black text-gray-400 w-9 shrink-0 tabular-nums">
+                                      {item.date.slice(5).replace("-", ".")}
+                                    </span>
+                                    <div className="w-1.5 h-1.5 rounded-full shrink-0 bg-sky-400" />
+                                    <span className="flex-1 text-[12px] font-bold text-sky-500 dark:text-sky-400">
+                                      {item.label}
+                                    </span>
+                                  </div>
+                                );
+                              }
+                              const m = item.data;
+                              return (
+                                <button
+                                  key={m.id}
+                                  onClick={() => scrollToMatch(m.id)}
+                                  className="w-full flex items-center gap-2.5 text-left hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl px-2 py-2 transition-colors"
+                                >
+                                  <span className="text-[11px] font-black text-gray-400 w-9 shrink-0 tabular-nums">
+                                    {m.date.slice(5).replace("-", ".")}
                                   </span>
-                                )}
-                                <Badge className={`shrink-0 border-none font-black text-[9px] px-2 py-0.5 ${getResultBadgeStyle(m.result)}`}>
-                                  {m.result}
-                                </Badge>
-                              </button>
-                            ))}
+                                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getMatchDotStyle(m.result)}`} />
+                                  <span className="flex-1 min-w-0 text-[12px] font-bold text-gray-700 dark:text-gray-200 truncate">
+                                    vs {m.opponent}
+                                  </span>
+                                  {m.result !== "예정" && m.ourScore && m.ourScore !== "-" && (
+                                    <span className="text-[11px] font-black text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">
+                                      {m.ourScore} : {m.theirScore}
+                                    </span>
+                                  )}
+                                  <Badge className={`shrink-0 border-none font-black text-[9px] px-2 py-0.5 ${getResultBadgeStyle(m.result)}`}>
+                                    {m.result}
+                                  </Badge>
+                                </button>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
