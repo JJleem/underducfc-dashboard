@@ -825,6 +825,31 @@ export default function DashboardClient({
                         </span>
                       </div>
                     </div>
+                    {/* 엔트리 */}
+                    {match.attendees && (() => {
+                      const attendees = match.attendees!.split(",").map((n) => n.trim()).filter(Boolean);
+                      if (attendees.length === 0) return null;
+                      return (
+                        <div className="mt-4 border-t border-gray-100 dark:border-white/5 pt-3">
+                          <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">ENTRY · {attendees.length}명</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {attendees.map((name) => {
+                              const no = rosterMap[name] || "G";
+                              return (
+                                <span
+                                  key={name}
+                                  className="flex items-center gap-1 text-[11px] font-bold bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 rounded-lg px-2 py-0.5"
+                                >
+                                  <span className="font-black text-[#FF8FA3] dark:text-[#FFB6C1] text-[10px] min-w-[12px] text-center">{no}</span>
+                                  {name}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     {/* 라인업 아코디언 */}
                     {(() => {
                       const matchLineups = getMatchLineups(match.id);
