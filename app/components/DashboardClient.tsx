@@ -3,6 +3,8 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { Calendar } from "./ui/calendar";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "./ui/drawer";
 import {
   Trophy,
   CalendarDays,
@@ -179,7 +181,7 @@ export default function DashboardClient({
   const [addingMatch, setAddingMatch] = React.useState(false);
 
   const addMatch = async () => {
-    if (!addMatchForm.date || !addMatchForm.opponent) return;
+    if (!addMatchForm.date) return;
     setAddingMatch(true);
     try {
       const res = await fetch("/api/matches", {
@@ -193,7 +195,7 @@ export default function DashboardClient({
         date: addMatchForm.date,
         time: addMatchForm.time || "미정",
         location: addMatchForm.location || "미정",
-        opponent: addMatchForm.opponent,
+        opponent: addMatchForm.opponent || "미정",
         ourScore: "-",
         theirScore: "-",
         result: "예정",
@@ -805,14 +807,6 @@ export default function DashboardClient({
                     <div className="flex items-center gap-1.5">
                       <CalendarDays className="w-3.5 h-3.5 text-[#FF8FA3] dark:text-[#FFB6C1]" />
                       <span className="text-[11px] font-black text-gray-700 dark:text-white tracking-widest">CALENDAR</span>
-                      <button
-                        onClick={() => setAddMatchModal(true)}
-                        className="flex items-center gap-0.5 ml-1 px-2 py-0.5 rounded-lg bg-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10 hover:bg-[#FF8FA3]/20 dark:hover:bg-[#FFB6C1]/20 transition-colors"
-                        aria-label="경기 추가"
-                      >
-                        <Plus className="w-3 h-3 text-[#FF8FA3] dark:text-[#FFB6C1]" />
-                        <span className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">경기 추가</span>
-                      </button>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
                       {[
@@ -1006,6 +1000,18 @@ export default function DashboardClient({
                 </div>
               </div>
             )}
+
+            {/* 경기 일정 등록 버튼 */}
+            <button
+              onClick={() => {
+                setAddMatchForm({ date: "", time: "", location: "", opponent: "", type: "일반 매칭" });
+                setAddMatchModal(true);
+              }}
+              className="w-full mb-2 flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-[#FFB6C1]/40 dark:border-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] text-[12px] font-black hover:bg-[#FF8FA3]/5 dark:hover:bg-[#FFB6C1]/5 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              경기 일정 등록
+            </button>
 
             {/* 경기 일정 리스트 */}
             {[...matchList].reverse().map((match) => {
@@ -1996,95 +2002,106 @@ export default function DashboardClient({
         </div>
       )}
 
-      {/* 경기 일정 등록 모달 */}
-      {addMatchModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-6"
-          onClick={() => setAddMatchModal(false)}
-        >
-          <div
-            className="w-full max-w-xs bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-[14px] font-black text-gray-900 dark:text-white mb-4">🗓️ 경기 일정 등록</p>
+      {/* 경기 일정 등록 Drawer */}
+      <Drawer open={addMatchModal} onOpenChange={setAddMatchModal}>
+        <DrawerContent className="bg-white dark:bg-[#1a1a1a] max-h-[92dvh]">
+          <DrawerHeader className="pb-0">
+            <DrawerTitle className="text-[15px] font-black text-gray-900 dark:text-white">🗓️ 경기 일정 등록</DrawerTitle>
+          </DrawerHeader>
 
-            <div className="space-y-3 mb-5">
-              <div>
-                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">날짜 *</p>
-                <input
-                  type="date"
-                  value={addMatchForm.date}
-                  onChange={(e) => setAddMatchForm((p) => ({ ...p, date: e.target.value }))}
-                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none"
-                />
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">시간</p>
-                <input
-                  type="time"
-                  value={addMatchForm.time}
-                  onChange={(e) => setAddMatchForm((p) => ({ ...p, time: e.target.value }))}
-                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none"
-                />
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">상대팀 *</p>
-                <input
-                  type="text"
-                  value={addMatchForm.opponent}
-                  onChange={(e) => setAddMatchForm((p) => ({ ...p, opponent: e.target.value }))}
-                  placeholder="상대팀 이름"
-                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none placeholder:text-gray-400"
-                />
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">장소</p>
-                <input
-                  type="text"
-                  value={addMatchForm.location}
-                  onChange={(e) => setAddMatchForm((p) => ({ ...p, location: e.target.value }))}
-                  placeholder="경기장 이름"
-                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none placeholder:text-gray-400"
-                />
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">경기 유형</p>
-                <div className="flex gap-2">
-                  {["일반 매칭", "자체전"].map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setAddMatchForm((p) => ({ ...p, type: t }))}
-                      className={`flex-1 py-2 rounded-xl text-[11px] font-black transition-colors ${
-                        addMatchForm.type === t
-                          ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black"
-                          : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
+          <div className="overflow-y-auto px-4 py-4 space-y-5">
+            {/* 날짜 */}
+            <div>
+              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">날짜 *</p>
+              <Calendar
+                mode="single"
+                selected={addMatchForm.date ? new Date(addMatchForm.date + "T12:00:00") : undefined}
+                onSelect={(date) => {
+                  if (date) setAddMatchForm((p) => ({ ...p, date: toMatchDateStr(date) }));
+                }}
+                className="rounded-2xl border border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 w-full [&_table]:w-full"
+              />
+              {addMatchForm.date && (
+                <p className="text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] mt-1.5 text-center">{addMatchForm.date} 선택됨</p>
+              )}
+            </div>
+
+            {/* 시간 */}
+            <div>
+              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">시간</p>
+              <div className="flex flex-wrap gap-1.5">
+                {["미정", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"].map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setAddMatchForm((p) => ({ ...p, time: t === "미정" ? "" : t }))}
+                    className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-colors ${
+                      (t === "미정" && !addMatchForm.time) || addMatchForm.time === t
+                        ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black"
+                        : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <button
-                onClick={() => setAddMatchModal(false)}
-                className="flex-1 py-2.5 rounded-2xl bg-gray-100 dark:bg-white/10 text-[12px] font-black text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
-              >
-                취소
-              </button>
-              <button
-                onClick={addMatch}
-                disabled={addingMatch || !addMatchForm.date || !addMatchForm.opponent}
-                className="flex-1 py-2.5 rounded-2xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[12px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1"
-              >
-                {addingMatch ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "등록"}
-              </button>
+            {/* 상대팀 */}
+            <div>
+              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">상대팀 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(미입력 시 미정)</span></p>
+              <input
+                type="text"
+                value={addMatchForm.opponent}
+                onChange={(e) => setAddMatchForm((p) => ({ ...p, opponent: e.target.value }))}
+                placeholder="상대팀 이름"
+                className="w-full text-[13px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600"
+              />
+            </div>
+
+            {/* 장소 */}
+            <div>
+              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">장소 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(미입력 시 미정)</span></p>
+              <input
+                type="text"
+                value={addMatchForm.location}
+                onChange={(e) => setAddMatchForm((p) => ({ ...p, location: e.target.value }))}
+                placeholder="경기장 이름"
+                className="w-full text-[13px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600"
+              />
+            </div>
+
+            {/* 경기 유형 */}
+            <div>
+              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">경기 유형</p>
+              <div className="flex gap-2">
+                {["일반 매칭", "자체전"].map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setAddMatchForm((p) => ({ ...p, type: t }))}
+                    className={`flex-1 py-2.5 rounded-xl text-[12px] font-black transition-colors ${
+                      addMatchForm.type === t
+                        ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black"
+                        : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+
+          <DrawerFooter className="pt-2">
+            <button
+              onClick={addMatch}
+              disabled={addingMatch || !addMatchForm.date}
+              className="w-full py-3 rounded-2xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
+            >
+              {addingMatch ? <Loader2 className="w-4 h-4 animate-spin" /> : "등록하기"}
+            </button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       {/* MOM 투표 모달 */}
       {momModal && (
