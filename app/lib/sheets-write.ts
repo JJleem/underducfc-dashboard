@@ -337,12 +337,13 @@ export async function updateNotice(notice: {
   title: string;
   content: string;
   important: boolean;
+  location?: string;
 }): Promise<void> {
   const sheetId = process.env.GOOGLE_SHEET_ID;
   if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
   const token = await getAccessToken();
-  const range = "notice!A2:D2";
-  const values = [[notice.date, notice.title, notice.content, notice.important ? "Y" : "N"]];
+  const range = "notice!A2:E2";
+  const values = [[notice.date, notice.title, notice.content, notice.important ? "Y" : "N", notice.location || ""]];
   const res = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
     {

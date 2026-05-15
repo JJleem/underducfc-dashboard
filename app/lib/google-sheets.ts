@@ -4,7 +4,7 @@ type SheetRange =
   | "roster!A1:J50"
   | "matches!A1:M50"
   | "stats!A1:G50"
-  | "notice!A1:D20"
+  | "notice!A1:E20"
   | "lineup!A1:S100"
   | "feedback!A1:D500"
   | "mom_vote!A1:E500";

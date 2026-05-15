@@ -4,7 +4,7 @@ import { updateNotice } from "@/app/lib/sheets-write";
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { date, title, content, important } = body;
+    const { date, title, content, important, location } = body;
     if (!title || !content) {
       return NextResponse.json({ error: "제목과 내용은 필수입니다." }, { status: 400 });
     }
@@ -13,6 +13,7 @@ export async function PUT(req: NextRequest) {
       title,
       content,
       important: !!important,
+      location: location || "",
     });
     return NextResponse.json({ ok: true });
   } catch (e) {

@@ -12,7 +12,7 @@ export default async function TeamDashboardPage() {
   const rawMatches: string[][] = await getSheetData("matches!A1:M50");
   const rawRoster: string[][] = await getSheetData("roster!A1:J50");
   const rawStats: string[][] = await getSheetData("stats!A1:G50");
-  const rawNotices: string[][] = await getSheetData("notice!A1:D20");
+  const rawNotices: string[][] = await getSheetData("notice!A1:E20");
   let rawLineups: string[][] = [];
   try {
     rawLineups = await getSheetData("lineup!A1:S100");
@@ -108,6 +108,7 @@ export default async function TeamDashboardPage() {
         title: firstNoticeRow[1] || "",
         content: firstNoticeRow[2] || "",
         important: firstNoticeRow[3] === "Y",
+        location: firstNoticeRow[4] || "",
       }
     : undefined;
   return (

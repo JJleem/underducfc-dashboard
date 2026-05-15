@@ -84,6 +84,7 @@ export interface NoticeData {
   title: string;
   content: string;
   important: boolean;
+  location?: string;
 }
 
 export interface PlayerData {
@@ -148,6 +149,7 @@ export default function DashboardClient({
     title: notice?.title || "",
     content: notice?.content || "",
     important: notice?.important || false,
+    location: notice?.location || "",
   });
   const [savingNotice, setSavingNotice] = React.useState(false);
 
@@ -816,6 +818,7 @@ export default function DashboardClient({
                               title: localNotice.title,
                               content: localNotice.content,
                               important: localNotice.important,
+                              location: localNotice.location || "",
                             });
                             setNoticeEditModal(true);
                           }}
@@ -838,6 +841,35 @@ export default function DashboardClient({
                           {localNotice.content}
                         </p>
                       </div>
+
+                      {localNotice.location && (
+                        <div className="mt-1 rounded-2xl overflow-hidden border border-gray-100 dark:border-white/10">
+                          <iframe
+                            src={`https://maps.google.com/maps?q=${encodeURIComponent(localNotice.location)}&output=embed&hl=ko&z=15`}
+                            className="w-full h-40 border-0"
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                          />
+                          <div className="flex items-center gap-2 px-3 py-2.5 bg-white dark:bg-[#1a1a1a]">
+                            <MapPin className="w-3.5 h-3.5 text-[#FF8FA3] dark:text-[#FFB6C1] shrink-0" />
+                            <span className="flex-1 text-[12px] font-bold text-gray-700 dark:text-gray-300 truncate">{localNotice.location}</span>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(localNotice.location!)}
+                              className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-white/10 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+                            >
+                              복사
+                            </button>
+                            <a
+                              href={`https://map.kakao.com/?q=${encodeURIComponent(localNotice.location)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2.5 py-1 rounded-lg bg-yellow-50 dark:bg-yellow-950/30 text-[11px] font-black text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-950/50 transition-colors"
+                            >
+                              카카오맵
+                            </a>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -2293,6 +2325,30 @@ export default function DashboardClient({
                 rows={5}
                 className="w-full text-[13px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600 resize-none"
               />
+            </div>
+
+            <div>
+              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">
+                장소 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(선택 — 구장 안내 시 지도 표시)</span>
+              </p>
+              <div className="flex items-center gap-2 bg-gray-100 dark:bg-white/10 rounded-xl px-4 py-2.5">
+                <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                <input
+                  type="text"
+                  value={noticeEditForm.location}
+                  onChange={(e) => setNoticeEditForm((p) => ({ ...p, location: e.target.value }))}
+                  placeholder="예: 서울 월드컵 풋살파크"
+                  className="flex-1 text-[13px] font-medium bg-transparent text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600"
+                />
+                {noticeEditForm.location && (
+                  <button
+                    onClick={() => setNoticeEditForm((p) => ({ ...p, location: "" }))}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
