@@ -22,7 +22,7 @@ export async function GET() {
         title: row[2] || "",
         uploadedAt: row[3] || "",
       }))
-      .filter((item) => item.url);
+      .filter((item: { url: string }) => item.url);
     return NextResponse.json(items);
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
