@@ -355,6 +355,50 @@ export async function updateNotice(notice: {
   if (!res.ok) throw new Error("notice 시트 쓰기 실패");
 }
 
+export async function appendMedia(item: {
+  type: string;
+  url: string;
+  title: string;
+}): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const row = [item.type, item.url, item.title, new Date().toISOString()];
+  const range = encodeURIComponent("media!A:D");
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ values: [row] }),
+    }
+  );
+  if (!res.ok) throw new Error("media 시트 쓰기 실패");
+}
+
+export async function deleteMediaByUrl(url: string): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
+
+  const readRes = await fetch(`${base}/values/media!A1:D100`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const readData = await readRes.json();
+  const rows: string[][] = readData.values || [];
+
+  const newRows = rows.filter((row, i) => i === 0 || row[1] !== url);
+  while (newRows.length < rows.length) newRows.push(["", "", "", ""]);
+
+  const range = `media!A1:D${Math.max(newRows.length, rows.length)}`;
+  await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ range, values: newRows }),
+  });
+}
+
 export async function writeLineup({
   matchId,
   quarter,

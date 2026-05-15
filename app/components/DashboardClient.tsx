@@ -28,6 +28,8 @@ import {
   Camera,
   Trash2,
   Pencil,
+  Film,
+  Upload,
 } from "lucide-react";
 import { shareMatchResult } from "../lib/draw-match-result";
 import { MiniFormationField, FORMATION_POSITIONS } from "./FormationField";
@@ -122,12 +124,21 @@ export interface MatchData {
   photos?: string; // M열 - Drive 파일ID (쉼표 구분)
 }
 
+export interface MediaData {
+  id: number;
+  type: "video" | "image";
+  url: string;
+  title: string;
+  uploadedAt: string;
+}
+
 interface DashboardClientProps {
   players: PlayerData[];
   matches: MatchData[];
   notice?: NoticeData;
   lineups: LineupData[];
   rosterMap: Record<string, string>;
+  media?: MediaData[];
 }
 
 export default function DashboardClient({
@@ -136,6 +147,7 @@ export default function DashboardClient({
   notice,
   lineups,
   rosterMap,
+  media = [],
 }: DashboardClientProps) {
   const { theme, setTheme } = useTheme();
   const [matchList, setMatchList] = React.useState<MatchData[]>(matches);
@@ -168,6 +180,68 @@ export default function DashboardClient({
       alert(e instanceof Error ? e.message : "저장 실패");
     } finally {
       setSavingNotice(false);
+    }
+  };
+
+  // 미디어 콘텐츠
+  const [mediaList, setMediaList] = React.useState<MediaData[]>(media);
+  const [mediaUploadModal, setMediaUploadModal] = React.useState(false);
+  const [mediaUploadFile, setMediaUploadFile] = React.useState<File | null>(null);
+  const [mediaUploadTitle, setMediaUploadTitle] = React.useState("");
+  const [mediaUploading, setMediaUploading] = React.useState(false);
+  const mediaFileRef = React.useRef<HTMLInputElement>(null);
+
+  const uploadMedia = async () => {
+    if (!mediaUploadFile) return;
+    setMediaUploading(true);
+    try {
+      const isVideo = mediaUploadFile.type.startsWith("video/");
+      const resourceType = isVideo ? "video" : "image";
+      const signRes = await fetch(`/api/media/sign?type=${resourceType}`);
+      const { timestamp, signature, apiKey, cloudName, folder } = await signRes.json();
+      const fd = new FormData();
+      fd.append("file", mediaUploadFile);
+      fd.append("api_key", apiKey);
+      fd.append("timestamp", String(timestamp));
+      fd.append("signature", signature);
+      fd.append("folder", folder);
+      const uploadRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
+        { method: "POST", body: fd }
+      );
+      const uploadData = await uploadRes.json();
+      if (!uploadData.secure_url) throw new Error("업로드 실패");
+      const saveRes = await fetch("/api/media", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: resourceType, url: uploadData.secure_url, title: mediaUploadTitle }),
+      });
+      if (!saveRes.ok) throw new Error("저장 실패");
+      setMediaList((prev) => [
+        { id: prev.length, type: resourceType as "video" | "image", url: uploadData.secure_url, title: mediaUploadTitle, uploadedAt: new Date().toISOString() },
+        ...prev,
+      ]);
+      setMediaUploadFile(null);
+      setMediaUploadTitle("");
+      setMediaUploadModal(false);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "업로드 실패");
+    } finally {
+      setMediaUploading(false);
+    }
+  };
+
+  const deleteMediaItem = async (url: string) => {
+    if (!confirm("삭제할까요?")) return;
+    try {
+      await fetch("/api/media", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      setMediaList((prev) => prev.filter((item) => item.url !== url));
+    } catch {
+      alert("삭제 실패");
     }
   };
 
@@ -760,31 +834,24 @@ export default function DashboardClient({
         {/* 탭 섹션 */}
         <Tabs defaultValue="matches" className="w-full h-full">
           {/* 💡 탭은 다시 2개로 조정 */}
-          <TabsList className="grid w-full h-full grid-cols-2 bg-gray-200/60 dark:bg-white/5 p-1 mb-6 rounded-2xl border border-gray-200 dark:border-white/5">
+          <TabsList className="grid w-full h-full grid-cols-3 bg-gray-200/60 dark:bg-white/5 p-1 mb-6 rounded-2xl border border-gray-200 dark:border-white/5">
             <TabsTrigger
               value="matches"
-              className="
-      /* 💡 비활성 상태일 때 글자색 명시 (라이트: gray-500, 다크: gray-400) */
-      text-gray-500 dark:text-gray-400 
-      data-[state=active]:bg-white dark:data-[state=active]:bg-[#FFB6C1] 
-      data-[state=active]:text-[#FF8FA3] dark:data-[state=active]:text-black 
-      rounded-xl py-2.5 font-black text-sm transition-all
-    "
+              className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-[#FFB6C1] data-[state=active]:text-[#FF8FA3] dark:data-[state=active]:text-black rounded-xl py-2.5 font-black text-[12px] transition-all"
             >
-              <CalendarDays className="w-4 h-4 mr-1.5" /> 경기 일정
+              <CalendarDays className="w-3.5 h-3.5 mr-1" /> 일정
             </TabsTrigger>
-
             <TabsTrigger
               value="stats"
-              className="
-      /* 💡 비활성 상태일 때 글자색 명시 */
-      text-gray-500 dark:text-gray-400 
-      data-[state=active]:bg-white dark:data-[state=active]:bg-[#FFB6C1] 
-      data-[state=active]:text-[#FF8FA3] dark:data-[state=active]:text-black 
-      rounded-xl py-2.5 font-black text-sm transition-all
-    "
+              className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-[#FFB6C1] data-[state=active]:text-[#FF8FA3] dark:data-[state=active]:text-black rounded-xl py-2.5 font-black text-[12px] transition-all"
             >
-              <Trophy className="w-4 h-4 mr-1.5" /> 선수 스탯
+              <Trophy className="w-3.5 h-3.5 mr-1" /> 스탯
+            </TabsTrigger>
+            <TabsTrigger
+              value="media"
+              className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-[#FFB6C1] data-[state=active]:text-[#FF8FA3] dark:data-[state=active]:text-black rounded-xl py-2.5 font-black text-[12px] transition-all"
+            >
+              <Film className="w-3.5 h-3.5 mr-1" /> 콘텐츠
             </TabsTrigger>
           </TabsList>
 
@@ -2030,6 +2097,125 @@ export default function DashboardClient({
                 </>
               );
             })()}
+          </TabsContent>
+
+          {/* 콘텐츠 탭 */}
+          <TabsContent value="media" className="outline-none pb-10">
+            {/* 업로드 버튼 */}
+            <button
+              onClick={() => setMediaUploadModal(true)}
+              className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-[#FFB6C1]/40 dark:border-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] text-[13px] font-black hover:bg-[#FF8FA3]/5 dark:hover:bg-[#FFB6C1]/5 transition-colors mb-5"
+            >
+              <Upload className="w-4 h-4" /> 업로드
+            </button>
+
+            {mediaList.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-600">
+                <Film className="w-10 h-10 mb-3 opacity-30" />
+                <p className="text-[13px] font-bold">업로드된 콘텐츠가 없습니다</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* 비디오 */}
+                {mediaList.filter((m) => m.type === "video").map((item) => (
+                  <div key={item.url} className="rounded-2xl overflow-hidden bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 shadow-sm">
+                    <video
+                      src={item.url}
+                      controls
+                      className="w-full max-h-64 bg-black"
+                      preload="metadata"
+                    />
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <span className="text-[13px] font-black text-gray-800 dark:text-gray-100 truncate flex-1">
+                        {item.title || "제목 없음"}
+                      </span>
+                      <button
+                        onClick={() => deleteMediaItem(item.url)}
+                        className="ml-3 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {/* 이미지 */}
+                {mediaList.filter((m) => m.type === "image").length > 0 && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {mediaList.filter((m) => m.type === "image").map((item) => (
+                      <div key={item.url} className="rounded-2xl overflow-hidden bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 shadow-sm relative group">
+                        <img src={item.url} alt={item.title} className="w-full h-36 object-cover" />
+                        <div className="px-3 py-2 flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300 truncate flex-1">{item.title || "제목 없음"}</span>
+                          <button
+                            onClick={() => deleteMediaItem(item.url)}
+                            className="ml-1 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 업로드 Drawer */}
+            <Drawer open={mediaUploadModal} onOpenChange={setMediaUploadModal}>
+              <DrawerContent className="bg-white dark:bg-[#1a1a1a] max-h-[80dvh]">
+                <DrawerHeader className="pb-0">
+                  <DrawerTitle className="text-[15px] font-black text-gray-900 dark:text-white">📤 콘텐츠 업로드</DrawerTitle>
+                </DrawerHeader>
+                <div className="overflow-y-auto px-4 py-4 space-y-4">
+                  {/* 파일 선택 */}
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">파일 선택 *</p>
+                    <input
+                      ref={mediaFileRef}
+                      type="file"
+                      accept="image/*,video/*"
+                      className="hidden"
+                      onChange={(e) => setMediaUploadFile(e.target.files?.[0] || null)}
+                    />
+                    <button
+                      onClick={() => mediaFileRef.current?.click()}
+                      className="w-full py-3 rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 text-[13px] font-bold text-gray-500 dark:text-gray-400 hover:border-[#FFB6C1] hover:text-[#FF8FA3] dark:hover:text-[#FFB6C1] transition-colors"
+                    >
+                      {mediaUploadFile ? (
+                        <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">
+                          {mediaUploadFile.type.startsWith("video/") ? "🎬" : "🖼️"} {mediaUploadFile.name}
+                        </span>
+                      ) : (
+                        "사진 또는 동영상 선택"
+                      )}
+                    </button>
+                  </div>
+                  {/* 제목 */}
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">제목 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(선택)</span></p>
+                    <input
+                      type="text"
+                      value={mediaUploadTitle}
+                      onChange={(e) => setMediaUploadTitle(e.target.value)}
+                      placeholder="콘텐츠 제목"
+                      className="w-full text-[13px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600"
+                    />
+                  </div>
+                </div>
+                <DrawerFooter className="pt-2">
+                  <button
+                    onClick={uploadMedia}
+                    disabled={mediaUploading || !mediaUploadFile}
+                    className="w-full py-3 rounded-2xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
+                  >
+                    {mediaUploading ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> 업로드 중...</>
+                    ) : "업로드"}
+                  </button>
+                </DrawerFooter>
+              </DrawerContent>
+            </Drawer>
           </TabsContent>
         </Tabs>
       </main>
