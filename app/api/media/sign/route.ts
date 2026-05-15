@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
+  const pin = req.nextUrl.searchParams.get("pin") || req.headers.get("x-admin-pin");
+  const adminPin = process.env.ADMIN_PIN;
+  if (!adminPin || pin !== adminPin) {
+    return NextResponse.json({ error: "권한 없음" }, { status: 403 });
+  }
+
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;

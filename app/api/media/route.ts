@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendMedia, deleteMediaByUrl } from "@/app/lib/sheets-write";
 import { getSheetData } from "@/app/lib/google-sheets";
 
+function checkPin(req: NextRequest): boolean {
+  const pin = req.headers.get("x-admin-pin");
+  const adminPin = process.env.ADMIN_PIN;
+  return !!adminPin && pin === adminPin;
+}
+
 export async function GET() {
   try {
     const rows = await getSheetData("media!A1:D100");
@@ -22,6 +28,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!checkPin(req)) return NextResponse.json({ error: "권한 없음" }, { status: 403 });
   try {
     const { type, url, title } = await req.json();
     if (!url) return NextResponse.json({ error: "URL 필수" }, { status: 400 });
@@ -33,6 +40,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  if (!checkPin(req)) return NextResponse.json({ error: "권한 없음" }, { status: 403 });
   try {
     const { url } = await req.json();
     if (!url) return NextResponse.json({ error: "URL 필수" }, { status: 400 });

@@ -191,13 +191,47 @@ export default function DashboardClient({
   const [mediaUploading, setMediaUploading] = React.useState(false);
   const mediaFileRef = React.useRef<HTMLInputElement>(null);
 
+  // 어드민 PIN
+  const [isMediaAdmin, setIsMediaAdmin] = React.useState(false);
+  const [showPinInput, setShowPinInput] = React.useState(false);
+  const [pinDraft, setPinDraft] = React.useState("");
+  const [pinError, setPinError] = React.useState(false);
+  const [verifyingPin, setVerifyingPin] = React.useState(false);
+  const adminPinRef = React.useRef("");
+
+  const verifyAdminPin = async () => {
+    if (!pinDraft) return;
+    setVerifyingPin(true);
+    setPinError(false);
+    try {
+      const res = await fetch("/api/admin/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: pinDraft }),
+      });
+      if (res.ok) {
+        adminPinRef.current = pinDraft;
+        setIsMediaAdmin(true);
+        setShowPinInput(false);
+        setPinDraft("");
+      } else {
+        setPinError(true);
+        setPinDraft("");
+      }
+    } finally {
+      setVerifyingPin(false);
+    }
+  };
+
   const uploadMedia = async () => {
     if (!mediaUploadFile) return;
     setMediaUploading(true);
     try {
       const isVideo = mediaUploadFile.type.startsWith("video/");
       const resourceType = isVideo ? "video" : "image";
-      const signRes = await fetch(`/api/media/sign?type=${resourceType}`);
+      const signRes = await fetch(`/api/media/sign?type=${resourceType}`, {
+        headers: { "x-admin-pin": adminPinRef.current },
+      });
       const { timestamp, signature, apiKey, cloudName, folder } = await signRes.json();
       const fd = new FormData();
       fd.append("file", mediaUploadFile);
@@ -213,7 +247,7 @@ export default function DashboardClient({
       if (!uploadData.secure_url) throw new Error("업로드 실패");
       const saveRes = await fetch("/api/media", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-admin-pin": adminPinRef.current },
         body: JSON.stringify({ type: resourceType, url: uploadData.secure_url, title: mediaUploadTitle }),
       });
       if (!saveRes.ok) throw new Error("저장 실패");
@@ -236,7 +270,7 @@ export default function DashboardClient({
     try {
       await fetch("/api/media", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-admin-pin": adminPinRef.current },
         body: JSON.stringify({ url }),
       });
       setMediaList((prev) => prev.filter((item) => item.url !== url));
@@ -2101,13 +2135,59 @@ export default function DashboardClient({
 
           {/* 콘텐츠 탭 */}
           <TabsContent value="media" className="outline-none pb-10">
-            {/* 업로드 버튼 */}
-            <button
-              onClick={() => setMediaUploadModal(true)}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-[#FFB6C1]/40 dark:border-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] text-[13px] font-black hover:bg-[#FF8FA3]/5 dark:hover:bg-[#FFB6C1]/5 transition-colors mb-5"
-            >
-              <Upload className="w-4 h-4" /> 업로드
-            </button>
+            {/* 어드민 잠금/해제 */}
+            <div className="flex items-center justify-end mb-3">
+              {isMediaAdmin ? (
+                <button
+                  onClick={() => { setIsMediaAdmin(false); adminPinRef.current = ""; setShowPinInput(false); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400 text-[11px] font-black"
+                >
+                  🔓 관리자
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setShowPinInput((p) => !p); setPinError(false); setPinDraft(""); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 text-[11px] font-black"
+                >
+                  🔒 관리자
+                </button>
+              )}
+            </div>
+
+            {/* PIN 입력 */}
+            {showPinInput && !isMediaAdmin && (
+              <div className="flex items-center gap-2 mb-4 p-3 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={8}
+                  value={pinDraft}
+                  onChange={(e) => { setPinDraft(e.target.value); setPinError(false); }}
+                  onKeyDown={(e) => e.key === "Enter" && verifyAdminPin()}
+                  placeholder="PIN 입력"
+                  autoFocus
+                  className={`flex-1 text-[13px] font-bold bg-white dark:bg-white/10 rounded-xl px-3 py-2 outline-none border ${pinError ? "border-red-400 text-red-500 placeholder:text-red-300" : "border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400"}`}
+                />
+                <button
+                  onClick={verifyAdminPin}
+                  disabled={verifyingPin || !pinDraft}
+                  className="px-3 py-2 rounded-xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black text-[12px] font-black disabled:opacity-40"
+                >
+                  {verifyingPin ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "확인"}
+                </button>
+              </div>
+            )}
+            {pinError && <p className="text-[11px] text-red-500 font-bold -mt-2 mb-3 px-1">PIN이 올바르지 않습니다</p>}
+
+            {/* 업로드 버튼 (어드민만) */}
+            {isMediaAdmin && (
+              <button
+                onClick={() => setMediaUploadModal(true)}
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-[#FFB6C1]/40 dark:border-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] text-[13px] font-black hover:bg-[#FF8FA3]/5 dark:hover:bg-[#FFB6C1]/5 transition-colors mb-5"
+              >
+                <Upload className="w-4 h-4" /> 업로드
+              </button>
+            )}
 
             {mediaList.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-600">
@@ -2129,12 +2209,14 @@ export default function DashboardClient({
                       <span className="text-[13px] font-black text-gray-800 dark:text-gray-100 truncate flex-1">
                         {item.title || "제목 없음"}
                       </span>
-                      <button
-                        onClick={() => deleteMediaItem(item.url)}
-                        className="ml-3 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-400 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {isMediaAdmin && (
+                        <button
+                          onClick={() => deleteMediaItem(item.url)}
+                          className="ml-3 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -2147,12 +2229,14 @@ export default function DashboardClient({
                         <img src={item.url} alt={item.title} className="w-full h-36 object-cover" />
                         <div className="px-3 py-2 flex items-center justify-between">
                           <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300 truncate flex-1">{item.title || "제목 없음"}</span>
-                          <button
-                            onClick={() => deleteMediaItem(item.url)}
-                            className="ml-1 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-400 hover:text-red-500 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {isMediaAdmin && (
+                            <button
+                              onClick={() => deleteMediaItem(item.url)}
+                              className="ml-1 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-400 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
