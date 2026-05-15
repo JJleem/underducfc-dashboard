@@ -2109,22 +2109,34 @@ export default function DashboardClient({
                 {/* 득점자 */}
                 {editAttendees.size > 0 && (
                   <div>
-                    <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">
-                      득점자 <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{Object.values(editGoalMap).reduce((a, b) => a + b, 0)}골</span>
-                      <span className="ml-1 text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(탭하면 골 추가, 5번 탭하면 초기화)</span>
+                    <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">
+                      ⚽ 득점자 <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">총 {Object.values(editGoalMap).reduce((a, b) => a + b, 0)}골</span>
                     </p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="space-y-2">
                       {Array.from(editAttendees).map((name) => {
                         const count = editGoalMap[name] || 0;
                         return (
-                          <button
-                            key={name}
-                            onClick={() => setEditGoalMap((prev) => ({ ...prev, [name]: count >= 5 ? 0 : count + 1 }))}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-black transition-colors ${count > 0 ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black" : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"}`}
-                          >
-                            {name}
-                            {count > 0 && <span className="bg-white/30 dark:bg-black/20 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-black">{count}</span>}
-                          </button>
+                          <div key={name} className="flex items-center justify-between bg-gray-50 dark:bg-white/5 rounded-xl px-4 py-2.5">
+                            <span className={`text-[13px] font-black ${count > 0 ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}>{name}</span>
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => setEditGoalMap((prev) => ({ ...prev, [name]: Math.max(0, (prev[name] || 0) - 1) }))}
+                                disabled={count === 0}
+                                className="w-8 h-8 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center text-[16px] font-black text-gray-600 dark:text-gray-300 disabled:opacity-25 transition-opacity"
+                              >
+                                −
+                              </button>
+                              <span className={`w-5 text-center text-[16px] font-black tabular-nums ${count > 0 ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : "text-gray-300 dark:text-gray-600"}`}>
+                                {count}
+                              </span>
+                              <button
+                                onClick={() => setEditGoalMap((prev) => ({ ...prev, [name]: (prev[name] || 0) + 1 }))}
+                                className="w-8 h-8 rounded-full bg-[#FF8FA3] dark:bg-[#FFB6C1] flex items-center justify-center text-[16px] font-black text-white dark:text-black"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
                         );
                       })}
                     </div>
@@ -2134,22 +2146,34 @@ export default function DashboardClient({
                 {/* 어시스트 */}
                 {editAttendees.size > 0 && (
                   <div>
-                    <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">
-                      어시스트 <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{Object.values(editAssistMap).reduce((a, b) => a + b, 0)}개</span>
-                      <span className="ml-1 text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(탭하면 추가, 5번 탭하면 초기화)</span>
+                    <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">
+                      🅰️ 어시스트 <span className="text-blue-400">총 {Object.values(editAssistMap).reduce((a, b) => a + b, 0)}개</span>
                     </p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="space-y-2">
                       {Array.from(editAttendees).map((name) => {
                         const count = editAssistMap[name] || 0;
                         return (
-                          <button
-                            key={name}
-                            onClick={() => setEditAssistMap((prev) => ({ ...prev, [name]: count >= 5 ? 0 : count + 1 }))}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-black transition-colors ${count > 0 ? "bg-blue-400 text-white" : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"}`}
-                          >
-                            {name}
-                            {count > 0 && <span className="bg-white/30 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-black">{count}</span>}
-                          </button>
+                          <div key={name} className="flex items-center justify-between bg-gray-50 dark:bg-white/5 rounded-xl px-4 py-2.5">
+                            <span className={`text-[13px] font-black ${count > 0 ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}>{name}</span>
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => setEditAssistMap((prev) => ({ ...prev, [name]: Math.max(0, (prev[name] || 0) - 1) }))}
+                                disabled={count === 0}
+                                className="w-8 h-8 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center text-[16px] font-black text-gray-600 dark:text-gray-300 disabled:opacity-25 transition-opacity"
+                              >
+                                −
+                              </button>
+                              <span className={`w-5 text-center text-[16px] font-black tabular-nums ${count > 0 ? "text-blue-400" : "text-gray-300 dark:text-gray-600"}`}>
+                                {count}
+                              </span>
+                              <button
+                                onClick={() => setEditAssistMap((prev) => ({ ...prev, [name]: (prev[name] || 0) + 1 }))}
+                                className="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center text-[16px] font-black text-white"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
                         );
                       })}
                     </div>
