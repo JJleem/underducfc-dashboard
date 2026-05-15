@@ -2127,9 +2127,15 @@ export default function DashboardClient({
                           <div key={i} className="flex items-center justify-between bg-gray-50 dark:bg-white/5 rounded-xl px-3 py-2.5">
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] font-black text-gray-400 w-4">{i + 1}</span>
-                              <span className="text-[13px] font-black text-gray-900 dark:text-white">⚽ {event.scorer}</span>
-                              {event.assister && (
-                                <span className="text-[11px] font-bold text-blue-400">🅰️ {event.assister}</span>
+                              {event.scorer === "자책골" ? (
+                                <span className="text-[13px] font-black text-orange-500 dark:text-orange-400">⚽ 자책골 (OG)</span>
+                              ) : (
+                                <>
+                                  <span className="text-[13px] font-black text-gray-900 dark:text-white">⚽ {event.scorer}</span>
+                                  {event.assister && (
+                                    <span className="text-[11px] font-bold text-blue-400">🅰️ {event.assister}</span>
+                                  )}
+                                </>
                               )}
                             </div>
                             <button
@@ -2152,14 +2158,21 @@ export default function DashboardClient({
                             {Array.from(editAttendees).map((name) => (
                               <button
                                 key={name}
-                                onClick={() => setGoalPickerScorer(name)}
+                                onClick={() => { setGoalPickerScorer(name); setGoalPickerAssister(""); }}
                                 className={`px-3 py-1.5 rounded-xl text-[12px] font-black transition-colors ${goalPickerScorer === name ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black" : "bg-white dark:bg-white/10 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10"}`}
                               >
                                 {name}
                               </button>
                             ))}
+                            <button
+                              onClick={() => { setGoalPickerScorer("자책골"); setGoalPickerAssister(""); }}
+                              className={`px-3 py-1.5 rounded-xl text-[12px] font-black transition-colors ${goalPickerScorer === "자책골" ? "bg-orange-400 text-white" : "bg-orange-50 dark:bg-orange-950/30 text-orange-500 dark:text-orange-400 border border-orange-200 dark:border-orange-800/50"}`}
+                            >
+                              자책골 (OG)
+                            </button>
                           </div>
                         </div>
+                        {goalPickerScorer !== "자책골" && (
                         <div>
                           <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">🅰️ 어시스트 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(선택)</span></p>
                           <div className="flex flex-wrap gap-1.5">
@@ -2174,6 +2187,7 @@ export default function DashboardClient({
                             ))}
                           </div>
                         </div>
+                        )}
                         <div className="flex gap-2">
                           <button
                             onClick={() => setShowGoalPicker(false)}
