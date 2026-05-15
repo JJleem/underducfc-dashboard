@@ -102,6 +102,15 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
 
         {/* 선수 리스트 카드 */}
         <div className="flex flex-col gap-3">
+          {/* 선수 추가 버튼 */}
+          <button
+            onClick={() => setAddModal(true)}
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-[#FFB6C1]/40 dark:border-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] text-[13px] font-black hover:bg-[#FF8FA3]/5 dark:hover:bg-[#FFB6C1]/5 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            선수 추가하기
+          </button>
+
           {playerList.map((player, index) => {
             const no = player[0] || "-";
             const name = player[1] || "무명";
@@ -178,14 +187,6 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
             );
           })}
 
-          {/* 선수 추가 버튼 */}
-          <button
-            onClick={() => setAddModal(true)}
-            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-[#FFB6C1]/40 dark:border-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] text-[13px] font-black hover:bg-[#FF8FA3]/5 dark:hover:bg-[#FFB6C1]/5 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            선수 추가하기
-          </button>
         </div>
       </main>
 
