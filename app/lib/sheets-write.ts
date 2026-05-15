@@ -250,6 +250,51 @@ export async function writeMatchMom(matchId: number, mom: string): Promise<void>
   );
 }
 
+export async function appendMatch(match: {
+  date: string;
+  time: string;
+  location: string;
+  opponent: string;
+  type: string;
+}): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const row = [match.date, match.time, match.location, match.opponent, "", "", "예정", match.type, "", "", "", "", ""];
+  const range = encodeURIComponent("matches!A:M");
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ values: [row] }),
+    }
+  );
+  if (!res.ok) throw new Error("matches 시트 쓰기 실패");
+}
+
+export async function updateNotice(notice: {
+  date: string;
+  title: string;
+  content: string;
+  important: boolean;
+}): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const range = "notice!A2:D2";
+  const values = [[notice.date, notice.title, notice.content, notice.important ? "Y" : "N"]];
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
+    {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ range, values }),
+    }
+  );
+  if (!res.ok) throw new Error("notice 시트 쓰기 실패");
+}
+
 export async function writeLineup({
   matchId,
   quarter,

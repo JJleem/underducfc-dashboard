@@ -1,0 +1,21 @@
+import { NextRequest, NextResponse } from "next/server";
+import { updateNotice } from "@/app/lib/sheets-write";
+
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { date, title, content, important } = body;
+    if (!title || !content) {
+      return NextResponse.json({ error: "제목과 내용은 필수입니다." }, { status: 400 });
+    }
+    await updateNotice({
+      date: date || new Date().toISOString().slice(0, 10),
+      title,
+      content,
+      important: !!important,
+    });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
+}

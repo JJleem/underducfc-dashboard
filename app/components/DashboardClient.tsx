@@ -25,6 +25,7 @@ import {
   ChevronRight,
   Camera,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { shareMatchResult } from "../lib/draw-match-result";
 import { MiniFormationField, FORMATION_POSITIONS } from "./FormationField";
@@ -136,6 +137,82 @@ export default function DashboardClient({
   const { theme, setTheme } = useTheme();
   const [matchList, setMatchList] = React.useState<MatchData[]>(matches);
   const [showTopBtn, setShowTopBtn] = React.useState(false);
+
+  // 공지사항 로컬 상태
+  const [localNotice, setLocalNotice] = React.useState(notice);
+  const [noticeEditModal, setNoticeEditModal] = React.useState(false);
+  const [noticeEditForm, setNoticeEditForm] = React.useState({
+    date: notice?.date || "",
+    title: notice?.title || "",
+    content: notice?.content || "",
+    important: notice?.important || false,
+  });
+  const [savingNotice, setSavingNotice] = React.useState(false);
+
+  const saveNotice = async () => {
+    setSavingNotice(true);
+    try {
+      const res = await fetch("/api/notice", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(noticeEditForm),
+      });
+      if (!res.ok) throw new Error("저장 실패");
+      setLocalNotice({ id: 0, ...noticeEditForm });
+      setNoticeEditModal(false);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "저장 실패");
+    } finally {
+      setSavingNotice(false);
+    }
+  };
+
+  // 경기 일정 등록
+  const [addMatchModal, setAddMatchModal] = React.useState(false);
+  const [addMatchForm, setAddMatchForm] = React.useState({
+    date: "",
+    time: "",
+    location: "",
+    opponent: "",
+    type: "일반 매칭",
+  });
+  const [addingMatch, setAddingMatch] = React.useState(false);
+
+  const addMatch = async () => {
+    if (!addMatchForm.date || !addMatchForm.opponent) return;
+    setAddingMatch(true);
+    try {
+      const res = await fetch("/api/matches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(addMatchForm),
+      });
+      if (!res.ok) throw new Error("등록 실패");
+      const newMatch: MatchData = {
+        id: matchList.length,
+        date: addMatchForm.date,
+        time: addMatchForm.time || "미정",
+        location: addMatchForm.location || "미정",
+        opponent: addMatchForm.opponent,
+        ourScore: "-",
+        theirScore: "-",
+        result: "예정",
+        type: addMatchForm.type,
+        goals: "",
+        assists: "",
+        mom: "",
+        attendees: "",
+        photos: "",
+      };
+      setMatchList((prev) => [...prev, newMatch]);
+      setAddMatchModal(false);
+      setAddMatchForm({ date: "", time: "", location: "", opponent: "", type: "일반 매칭" });
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "등록 실패");
+    } finally {
+      setAddingMatch(false);
+    }
+  };
 
   React.useEffect(() => {
     const onScroll = () => setShowTopBtn(window.scrollY > 300);
@@ -654,7 +731,7 @@ export default function DashboardClient({
           {/* 💡 경기 일정 탭 내용 */}
           <TabsContent value="matches" className="space-y-6 outline-none">
             {/* 💡 [공지사항 섹션] 고대비 + 왼쪽 포인트 라인 디자인 */}
-            {notice && (
+            {localNotice && (
               <div className="px-1 mb-8">
                 <Card className="relative overflow-hidden border-none shadow-xl bg-white dark:bg-[#1a1a1a]">
                   {/* 💡 왼쪽 강조 라인: 공지사항임을 한눈에 알게 함 */}
@@ -670,20 +747,37 @@ export default function DashboardClient({
                           팀 공지사항
                         </span>
                       </div>
-                      <Badge className="bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-500 border-none font-bold text-[10px] px-2 py-0">
-                        {notice.date}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-500 border-none font-bold text-[10px] px-2 py-0">
+                          {localNotice.date}
+                        </Badge>
+                        <button
+                          onClick={() => {
+                            setNoticeEditForm({
+                              date: localNotice.date,
+                              title: localNotice.title,
+                              content: localNotice.content,
+                              important: localNotice.important,
+                            });
+                            setNoticeEditModal(true);
+                          }}
+                          className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                          aria-label="공지 수정"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="space-y-3">
                       <h3 className="text-[15px] font-black text-gray-900 dark:text-white leading-tight">
-                        {notice.title}
+                        {localNotice.title}
                       </h3>
 
                       <div className="relative">
                         {/* 💡 배경에 아주 연한 핑크색을 깔아 본문 가독성 확보 */}
                         <p className="text-[12px] text-gray-700 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-wrap bg-[#FF8FA3]/5 dark:bg-white/5 p-4 rounded-2xl border border-[#FF8FA3]/10 dark:border-white/5">
-                          {notice.content}
+                          {localNotice.content}
                         </p>
                       </div>
                     </div>
@@ -711,6 +805,14 @@ export default function DashboardClient({
                     <div className="flex items-center gap-1.5">
                       <CalendarDays className="w-3.5 h-3.5 text-[#FF8FA3] dark:text-[#FFB6C1]" />
                       <span className="text-[11px] font-black text-gray-700 dark:text-white tracking-widest">CALENDAR</span>
+                      <button
+                        onClick={() => setAddMatchModal(true)}
+                        className="flex items-center gap-0.5 ml-1 px-2 py-0.5 rounded-lg bg-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10 hover:bg-[#FF8FA3]/20 dark:hover:bg-[#FFB6C1]/20 transition-colors"
+                        aria-label="경기 추가"
+                      >
+                        <Plus className="w-3 h-3 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+                        <span className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">경기 추가</span>
+                      </button>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
                       {[
@@ -1830,6 +1932,159 @@ export default function DashboardClient({
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* 공지사항 수정 모달 */}
+      {noticeEditModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-6"
+          onClick={() => setNoticeEditModal(false)}
+        >
+          <div
+            className="w-full max-w-xs bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[14px] font-black text-gray-900 dark:text-white mb-4">📢 공지사항 수정</p>
+
+            <div className="space-y-3 mb-5">
+              <div>
+                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">날짜</p>
+                <input
+                  type="date"
+                  value={noticeEditForm.date}
+                  onChange={(e) => setNoticeEditForm((p) => ({ ...p, date: e.target.value }))}
+                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none"
+                />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">제목</p>
+                <input
+                  type="text"
+                  value={noticeEditForm.title}
+                  onChange={(e) => setNoticeEditForm((p) => ({ ...p, title: e.target.value }))}
+                  placeholder="공지 제목"
+                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none placeholder:text-gray-400"
+                />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">내용</p>
+                <textarea
+                  value={noticeEditForm.content}
+                  onChange={(e) => setNoticeEditForm((p) => ({ ...p, content: e.target.value }))}
+                  placeholder="공지 내용"
+                  rows={4}
+                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none placeholder:text-gray-400 resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setNoticeEditModal(false)}
+                className="flex-1 py-2.5 rounded-2xl bg-gray-100 dark:bg-white/10 text-[12px] font-black text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={saveNotice}
+                disabled={savingNotice || !noticeEditForm.title || !noticeEditForm.content}
+                className="flex-1 py-2.5 rounded-2xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[12px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1"
+              >
+                {savingNotice ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "저장"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 경기 일정 등록 모달 */}
+      {addMatchModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-6"
+          onClick={() => setAddMatchModal(false)}
+        >
+          <div
+            className="w-full max-w-xs bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[14px] font-black text-gray-900 dark:text-white mb-4">🗓️ 경기 일정 등록</p>
+
+            <div className="space-y-3 mb-5">
+              <div>
+                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">날짜 *</p>
+                <input
+                  type="date"
+                  value={addMatchForm.date}
+                  onChange={(e) => setAddMatchForm((p) => ({ ...p, date: e.target.value }))}
+                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none"
+                />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">시간</p>
+                <input
+                  type="time"
+                  value={addMatchForm.time}
+                  onChange={(e) => setAddMatchForm((p) => ({ ...p, time: e.target.value }))}
+                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none"
+                />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">상대팀 *</p>
+                <input
+                  type="text"
+                  value={addMatchForm.opponent}
+                  onChange={(e) => setAddMatchForm((p) => ({ ...p, opponent: e.target.value }))}
+                  placeholder="상대팀 이름"
+                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none placeholder:text-gray-400"
+                />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">장소</p>
+                <input
+                  type="text"
+                  value={addMatchForm.location}
+                  onChange={(e) => setAddMatchForm((p) => ({ ...p, location: e.target.value }))}
+                  placeholder="경기장 이름"
+                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none placeholder:text-gray-400"
+                />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">경기 유형</p>
+                <div className="flex gap-2">
+                  {["일반 매칭", "자체전"].map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setAddMatchForm((p) => ({ ...p, type: t }))}
+                      className={`flex-1 py-2 rounded-xl text-[11px] font-black transition-colors ${
+                        addMatchForm.type === t
+                          ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black"
+                          : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setAddMatchModal(false)}
+                className="flex-1 py-2.5 rounded-2xl bg-gray-100 dark:bg-white/10 text-[12px] font-black text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={addMatch}
+                disabled={addingMatch || !addMatchForm.date || !addMatchForm.opponent}
+                className="flex-1 py-2.5 rounded-2xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[12px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1"
+              >
+                {addingMatch ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "등록"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MOM 투표 모달 */}
       {momModal && (
