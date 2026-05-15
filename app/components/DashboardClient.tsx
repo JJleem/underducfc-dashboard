@@ -229,6 +229,17 @@ export default function DashboardClient({
   const matchCardRefs = React.useRef<Record<number, HTMLDivElement | null>>({});
   const [calendarMonth, setCalendarMonth] = React.useState<Date>(new Date());
 
+  // 경기 결과 입력
+  const [matchEditModal, setMatchEditModal] = React.useState<number | null>(null);
+  const [editResult, setEditResult] = React.useState("예정");
+  const [editOurScore, setEditOurScore] = React.useState("");
+  const [editTheirScore, setEditTheirScore] = React.useState("");
+  const [editAttendees, setEditAttendees] = React.useState<Set<string>>(new Set());
+  const [editGoalMap, setEditGoalMap] = React.useState<Record<string, number>>({});
+  const [editAssistMap, setEditAssistMap] = React.useState<Record<string, number>>({});
+  const [savingMatchResult, setSavingMatchResult] = React.useState(false);
+  const rosterNames = React.useMemo(() => Object.keys(rosterMap), [rosterMap]);
+
   const scrollToMatch = (id: number) => {
     const anchor = matchCardRefs.current[id];
     if (!anchor) return;
@@ -260,6 +271,53 @@ export default function DashboardClient({
     today.setHours(0, 0, 0, 0);
     d.setHours(0, 0, 0, 0);
     return Math.ceil((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const openMatchEdit = (match: MatchData) => {
+    setEditResult(match.result || "예정");
+    setEditOurScore(!match.ourScore || match.ourScore === "-" ? "" : String(match.ourScore));
+    setEditTheirScore(!match.theirScore || match.theirScore === "-" ? "" : String(match.theirScore));
+    const attendeeArr = match.attendees ? match.attendees.split(",").map((s) => s.trim()).filter(Boolean) : [];
+    setEditAttendees(new Set(attendeeArr));
+    const gMap: Record<string, number> = {};
+    (match.goals ? match.goals.split(",").map((s) => s.trim()).filter(Boolean) : []).forEach((n) => { gMap[n] = (gMap[n] || 0) + 1; });
+    setEditGoalMap(gMap);
+    const aMap: Record<string, number> = {};
+    (match.assists ? match.assists.split(",").map((s) => s.trim()).filter(Boolean) : []).forEach((n) => { aMap[n] = (aMap[n] || 0) + 1; });
+    setEditAssistMap(aMap);
+    setMatchEditModal(match.id);
+  };
+
+  const saveMatchResult = async () => {
+    if (matchEditModal === null) return;
+    setSavingMatchResult(true);
+    try {
+      const goalsStr = Object.entries(editGoalMap)
+        .flatMap(([name, count]) => Array(count).fill(name))
+        .join(",");
+      const assistsStr = Object.entries(editAssistMap)
+        .flatMap(([name, count]) => Array(count).fill(name))
+        .join(",");
+      const attendeesStr = Array.from(editAttendees).join(",");
+      const res = await fetch(`/api/matches/${matchEditModal}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ result: editResult, ourScore: editOurScore, theirScore: editTheirScore, goals: goalsStr, assists: assistsStr, attendees: attendeesStr }),
+      });
+      if (!res.ok) throw new Error("저장 실패");
+      setMatchList((prev) =>
+        prev.map((m) =>
+          m.id === matchEditModal
+            ? { ...m, result: editResult, ourScore: editOurScore || "-", theirScore: editTheirScore || "-", goals: goalsStr, assists: assistsStr, attendees: attendeesStr }
+            : m
+        )
+      );
+      setMatchEditModal(null);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "저장 실패");
+    } finally {
+      setSavingMatchResult(false);
+    }
   };
 
   const nextMatch = [...matchList]
@@ -1042,6 +1100,13 @@ export default function DashboardClient({
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1.5">
+                        <button
+                          onClick={() => openMatchEdit(match)}
+                          className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                          aria-label="결과 입력"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                        </button>
                         {match.mom && (
                           <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-400/10 border border-yellow-300/50 dark:border-yellow-400/30 rounded-md px-2 py-0.5">
                             <span className="text-[10px]">⭐</span>
@@ -1938,6 +2003,173 @@ export default function DashboardClient({
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* 경기 결과 입력 Drawer */}
+      {(() => {
+        const editingMatch = matchEditModal !== null ? matchList.find((m) => m.id === matchEditModal) : null;
+        return (
+          <Drawer open={matchEditModal !== null} onOpenChange={(open) => { if (!open) setMatchEditModal(null); }}>
+            <DrawerContent className="bg-white dark:bg-[#1a1a1a] max-h-[92dvh]">
+              <DrawerHeader className="pb-0">
+                <DrawerTitle className="text-[15px] font-black text-gray-900 dark:text-white">
+                  ⚽ 경기 결과 입력{editingMatch ? ` — vs ${editingMatch.opponent}` : ""}
+                </DrawerTitle>
+              </DrawerHeader>
+
+              <div className="overflow-y-auto px-4 py-4 space-y-6">
+                {/* 결과 */}
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">결과</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {["예정", "승", "무", "패", "자체전"].map((r) => {
+                      const active = editResult === r;
+                      const colorMap: Record<string, string> = {
+                        승: "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black",
+                        패: "bg-gray-500 text-white",
+                        무: "bg-amber-400 text-white",
+                        자체전: "bg-violet-400 text-white",
+                        예정: "bg-gray-200 dark:bg-white/20 text-gray-700 dark:text-white",
+                      };
+                      return (
+                        <button
+                          key={r}
+                          onClick={() => setEditResult(r)}
+                          className={`flex-1 min-w-[56px] py-2.5 rounded-xl text-[12px] font-black transition-colors ${active ? colorMap[r] : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400"}`}
+                        >
+                          {r}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 스코어 */}
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">스코어</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 text-center">
+                      <p className="text-[10px] text-gray-400 mb-1">언더덕</p>
+                      <input
+                        type="number"
+                        min={0}
+                        value={editOurScore}
+                        onChange={(e) => setEditOurScore(e.target.value)}
+                        placeholder="0"
+                        className="w-full text-center text-[20px] font-black bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-3 outline-none"
+                      />
+                    </div>
+                    <span className="text-[20px] font-black text-gray-300 dark:text-gray-600">:</span>
+                    <div className="flex-1 text-center">
+                      <p className="text-[10px] text-gray-400 mb-1">{editingMatch?.opponent || "상대팀"}</p>
+                      <input
+                        type="number"
+                        min={0}
+                        value={editTheirScore}
+                        onChange={(e) => setEditTheirScore(e.target.value)}
+                        placeholder="0"
+                        className="w-full text-center text-[20px] font-black bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-3 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 참석자 */}
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">
+                    참석자 <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{editAttendees.size}명</span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {rosterNames.map((name) => {
+                      const selected = editAttendees.has(name);
+                      return (
+                        <button
+                          key={name}
+                          onClick={() => {
+                            setEditAttendees((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(name)) {
+                                next.delete(name);
+                                setEditGoalMap((g) => { const n = { ...g }; delete n[name]; return n; });
+                                setEditAssistMap((a) => { const n = { ...a }; delete n[name]; return n; });
+                              } else {
+                                next.add(name);
+                              }
+                              return next;
+                            });
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-[12px] font-black transition-colors ${selected ? "bg-gray-800 dark:bg-white text-white dark:text-black" : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"}`}
+                        >
+                          {name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 득점자 */}
+                {editAttendees.size > 0 && (
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">
+                      득점자 <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{Object.values(editGoalMap).reduce((a, b) => a + b, 0)}골</span>
+                      <span className="ml-1 text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(탭하면 골 추가, 5번 탭하면 초기화)</span>
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(editAttendees).map((name) => {
+                        const count = editGoalMap[name] || 0;
+                        return (
+                          <button
+                            key={name}
+                            onClick={() => setEditGoalMap((prev) => ({ ...prev, [name]: count >= 5 ? 0 : count + 1 }))}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-black transition-colors ${count > 0 ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black" : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"}`}
+                          >
+                            {name}
+                            {count > 0 && <span className="bg-white/30 dark:bg-black/20 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-black">{count}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 어시스트 */}
+                {editAttendees.size > 0 && (
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">
+                      어시스트 <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{Object.values(editAssistMap).reduce((a, b) => a + b, 0)}개</span>
+                      <span className="ml-1 text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(탭하면 추가, 5번 탭하면 초기화)</span>
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(editAttendees).map((name) => {
+                        const count = editAssistMap[name] || 0;
+                        return (
+                          <button
+                            key={name}
+                            onClick={() => setEditAssistMap((prev) => ({ ...prev, [name]: count >= 5 ? 0 : count + 1 }))}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-black transition-colors ${count > 0 ? "bg-blue-400 text-white" : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"}`}
+                          >
+                            {name}
+                            {count > 0 && <span className="bg-white/30 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-black">{count}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <DrawerFooter className="pt-2">
+                <button
+                  onClick={saveMatchResult}
+                  disabled={savingMatchResult}
+                  className="w-full py-3 rounded-2xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
+                >
+                  {savingMatchResult ? <Loader2 className="w-4 h-4 animate-spin" /> : "저장하기"}
+                </button>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+        );
+      })()}
 
       {/* 공지사항 수정 Drawer */}
       <Drawer open={noticeEditModal} onOpenChange={setNoticeEditModal}>

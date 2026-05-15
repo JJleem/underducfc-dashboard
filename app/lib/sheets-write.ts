@@ -250,6 +250,43 @@ export async function writeMatchMom(matchId: number, mom: string): Promise<void>
   );
 }
 
+export async function updateMatchResult(
+  matchId: number,
+  data: {
+    result: string;
+    ourScore: string;
+    theirScore: string;
+    goals: string;
+    assists: string;
+    attendees: string;
+  }
+): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const row = matchId + 2;
+
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        valueInputOption: "USER_ENTERED",
+        data: [
+          { range: `matches!E${row}`, values: [[data.ourScore]] },
+          { range: `matches!F${row}`, values: [[data.theirScore]] },
+          { range: `matches!G${row}`, values: [[data.result]] },
+          { range: `matches!I${row}`, values: [[data.goals]] },
+          { range: `matches!J${row}`, values: [[data.assists]] },
+          { range: `matches!L${row}`, values: [[data.attendees]] },
+        ],
+      }),
+    }
+  );
+  if (!res.ok) throw new Error("경기 결과 업데이트 실패");
+}
+
 export async function appendRoster(player: {
   no: string;
   name: string;
