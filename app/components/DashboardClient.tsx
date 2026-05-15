@@ -1939,68 +1939,84 @@ export default function DashboardClient({
         </Tabs>
       </main>
 
-      {/* 공지사항 수정 모달 */}
-      {noticeEditModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-6"
-          onClick={() => setNoticeEditModal(false)}
-        >
-          <div
-            className="w-full max-w-xs bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-[14px] font-black text-gray-900 dark:text-white mb-4">📢 공지사항 수정</p>
+      {/* 공지사항 수정 Drawer */}
+      <Drawer open={noticeEditModal} onOpenChange={setNoticeEditModal}>
+        <DrawerContent className="bg-white dark:bg-[#1a1a1a] max-h-[92dvh]">
+          <DrawerHeader className="pb-0">
+            <DrawerTitle className="text-[15px] font-black text-gray-900 dark:text-white">📢 공지사항 수정</DrawerTitle>
+          </DrawerHeader>
 
-            <div className="space-y-3 mb-5">
-              <div>
-                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">날짜</p>
-                <input
-                  type="date"
-                  value={noticeEditForm.date}
-                  onChange={(e) => setNoticeEditForm((p) => ({ ...p, date: e.target.value }))}
-                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none"
-                />
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">제목</p>
-                <input
-                  type="text"
-                  value={noticeEditForm.title}
-                  onChange={(e) => setNoticeEditForm((p) => ({ ...p, title: e.target.value }))}
-                  placeholder="공지 제목"
-                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none placeholder:text-gray-400"
-                />
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-gray-400 mb-1 tracking-widest">내용</p>
-                <textarea
-                  value={noticeEditForm.content}
-                  onChange={(e) => setNoticeEditForm((p) => ({ ...p, content: e.target.value }))}
-                  placeholder="공지 내용"
-                  rows={4}
-                  className="w-full text-[12px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-3 py-2 outline-none placeholder:text-gray-400 resize-none"
-                />
-              </div>
+          <div className="overflow-y-auto px-4 py-4 space-y-4">
+            <div>
+              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">날짜</p>
+              <Calendar
+                mode="single"
+                selected={noticeEditForm.date ? new Date(noticeEditForm.date + "T12:00:00") : undefined}
+                onSelect={(date) => {
+                  if (date) setNoticeEditForm((p) => ({ ...p, date: toMatchDateStr(date) }));
+                }}
+                className="rounded-2xl border border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 w-full p-3"
+                classNames={{
+                  months: "w-full",
+                  month: "w-full space-y-2",
+                  caption: "flex justify-center relative items-center mb-1",
+                  caption_label: "text-[13px] font-black text-gray-800 dark:text-white",
+                  nav: "flex items-center gap-1",
+                  nav_button: "h-7 w-7 flex items-center justify-center rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 transition-colors",
+                  nav_button_previous: "absolute left-0",
+                  nav_button_next: "absolute right-0",
+                  table: "w-full border-collapse",
+                  head_row: "flex w-full",
+                  head_cell: "flex-1 text-center text-[11px] font-black text-gray-400 dark:text-gray-500 pb-1",
+                  row: "flex w-full mt-0.5",
+                  cell: "flex-1 p-0.5 [&:has([aria-selected])]:bg-transparent",
+                  day: "w-full h-9 text-[12px] font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-white/10 transition-colors",
+                  day_selected: "!bg-[#FF8FA3] dark:!bg-[#FFB6C1] !text-white dark:!text-black font-black hover:!bg-[#FF8FA3] dark:hover:!bg-[#FFB6C1]",
+                  day_today: "border-2 border-[#FF8FA3] dark:border-[#FFB6C1] text-[#FF8FA3] dark:text-[#FFB6C1] font-black",
+                  day_outside: "text-gray-300 dark:text-gray-700 opacity-50",
+                  day_disabled: "text-gray-200 dark:text-gray-800",
+                  day_hidden: "invisible",
+                }}
+              />
+              {noticeEditForm.date && (
+                <p className="text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] mt-1.5 text-center">{noticeEditForm.date} 선택됨</p>
+              )}
             </div>
 
-            <div className="flex gap-2">
-              <button
-                onClick={() => setNoticeEditModal(false)}
-                className="flex-1 py-2.5 rounded-2xl bg-gray-100 dark:bg-white/10 text-[12px] font-black text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
-              >
-                취소
-              </button>
-              <button
-                onClick={saveNotice}
-                disabled={savingNotice || !noticeEditForm.title || !noticeEditForm.content}
-                className="flex-1 py-2.5 rounded-2xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[12px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1"
-              >
-                {savingNotice ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "저장"}
-              </button>
+            <div>
+              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">제목</p>
+              <input
+                type="text"
+                value={noticeEditForm.title}
+                onChange={(e) => setNoticeEditForm((p) => ({ ...p, title: e.target.value }))}
+                placeholder="공지 제목"
+                className="w-full text-[13px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600"
+              />
+            </div>
+
+            <div>
+              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">내용</p>
+              <textarea
+                value={noticeEditForm.content}
+                onChange={(e) => setNoticeEditForm((p) => ({ ...p, content: e.target.value }))}
+                placeholder="공지 내용"
+                rows={5}
+                className="w-full text-[13px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600 resize-none"
+              />
             </div>
           </div>
-        </div>
-      )}
+
+          <DrawerFooter className="pt-2">
+            <button
+              onClick={saveNotice}
+              disabled={savingNotice || !noticeEditForm.title || !noticeEditForm.content}
+              className="w-full py-3 rounded-2xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
+            >
+              {savingNotice ? <Loader2 className="w-4 h-4 animate-spin" /> : "저장하기"}
+            </button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       {/* 경기 일정 등록 Drawer */}
       <Drawer open={addMatchModal} onOpenChange={setAddMatchModal}>
