@@ -250,6 +250,28 @@ export async function writeMatchMom(matchId: number, mom: string): Promise<void>
   );
 }
 
+export async function appendRoster(player: {
+  no: string;
+  name: string;
+  pos: string;
+  status: string;
+}): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const row = [player.no, player.name, player.pos, player.status, "", ""];
+  const range = encodeURIComponent("roster!A:F");
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ values: [row] }),
+    }
+  );
+  if (!res.ok) throw new Error("roster 시트 쓰기 실패");
+}
+
 export async function appendMatch(match: {
   date: string;
   time: string;

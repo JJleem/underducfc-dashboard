@@ -1,0 +1,21 @@
+import { NextRequest, NextResponse } from "next/server";
+import { appendRoster } from "@/app/lib/sheets-write";
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { no, name, pos, status } = body;
+    if (!name) {
+      return NextResponse.json({ error: "이름은 필수입니다." }, { status: 400 });
+    }
+    await appendRoster({
+      no: no || "-",
+      name,
+      pos: pos || "MF",
+      status: status || "활동",
+    });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
+}
