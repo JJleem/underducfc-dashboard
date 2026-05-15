@@ -2204,6 +2204,7 @@ export default function DashboardClient({
                       controls
                       className="w-full max-h-64 bg-black"
                       preload="metadata"
+                      poster={item.url.replace("/video/upload/", "/video/upload/so_0/").replace(/\.[^.]+$/, ".jpg")}
                     />
                     <div className="flex items-center justify-between px-4 py-3">
                       <span className="text-[13px] font-black text-gray-800 dark:text-gray-100 truncate flex-1">
