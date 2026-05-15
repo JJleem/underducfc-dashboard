@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const pin = req.nextUrl.searchParams.get("pin") || req.headers.get("x-admin-pin");
   const adminPin = process.env.ADMIN_PIN;

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendMedia, deleteMediaByUrl } from "@/app/lib/sheets-write";
 import { getSheetData } from "@/app/lib/google-sheets";
 
+export const dynamic = "force-dynamic";
+
 function checkPin(req: NextRequest): boolean {
   const pin = req.headers.get("x-admin-pin");
   const adminPin = process.env.ADMIN_PIN;
