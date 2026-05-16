@@ -111,8 +111,19 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
             선수 추가하기
           </button>
 
-          {playerList.map((player, index) => {
-            const no = player[0] || "-";
+          {[...playerList].sort((a, b) => {
+            const nA = parseInt(a[0]);
+            const nB = parseInt(b[0]);
+            const hasA = !isNaN(nA) && a[0]?.trim() !== "" && a[0] !== "-";
+            const hasB = !isNaN(nB) && b[0]?.trim() !== "" && b[0] !== "-";
+            if (hasA && hasB) return nA - nB;
+            if (hasA) return -1;
+            if (hasB) return 1;
+            return 0;
+          }).map((player, index) => {
+            const rawNo = player[0]?.trim();
+            const hasNo = rawNo && rawNo !== "-" && !isNaN(parseInt(rawNo));
+            const no = hasNo ? rawNo : "미정";
             const name = player[1] || "무명";
             const pos = player[2] || "SUB";
             const status = player[3] || "활동";
@@ -137,14 +148,15 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
                     className="object-cover object-center opacity-95 scale-125 translate-y-1"
                   />
                   <span
-                    className="absolute z-10 text-[28px] font-black italic tracking-tighter top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pr-1.5 pb-1"
+                    className="absolute z-10 font-black italic tracking-tighter top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pr-1.5 pb-1"
                     style={{
+                      fontSize: hasNo ? "28px" : "18px",
                       color: "#111111",
                       WebkitTextStroke: "2px #FFB6C1",
                       textShadow: "2px 2px 4px rgba(0, 0, 0, 0.8), 0px 0px 8px rgba(255, 182, 193, 0.3)",
                     }}
                   >
-                    {no !== "-" ? no : "?"}
+                    {hasNo ? rawNo : "?"}
                   </span>
                 </div>
 
@@ -168,7 +180,7 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
                         </span>
                       </div>
                       <Badge className="bg-[#FFB6C1]/20 dark:bg-white/5 text-[#FF8FA3] dark:text-[#FFB6C1] border-none px-2 py-0 text-[11px] font-black italic w-fit">
-                        No.{no}
+                        {hasNo ? `No.${rawNo}` : "미정"}
                       </Badge>
                     </div>
                     <Badge className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded ${getPosBadgeStyle(pos)}`}>
