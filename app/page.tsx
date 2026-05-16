@@ -49,7 +49,8 @@ export default async function TeamDashboardPage() {
   // 💡 3. Map의 Key와 Value 타입 명시
   const rosterMap = new Map<string, { no: string; pos: string }>();
   rawRoster.slice(1).forEach((row: string[]) => {
-    rosterMap.set(row[0], { no: row[1] || "-", pos: row[2] || "-" });
+    const name = row[1]?.trim();
+    if (name) rosterMap.set(name, { no: row[0] || "-", pos: row[2] || "-" });
   });
 
   // 라인업용 이름 → 등번호 맵 (A=등번호, B=이름)
