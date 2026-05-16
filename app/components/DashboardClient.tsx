@@ -550,17 +550,16 @@ export default function DashboardClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ matchId, voterName: voterName.trim(), votedFor, voteType }),
       });
-      if (res.ok) {
-        setMomVoteMap((prev) => {
-          const filtered = (prev[matchId] || []).filter(
-            (v) => !(v.voterName === voterName.trim() && v.voteType === voteType)
-          );
-          return {
-            ...prev,
-            [matchId]: [...filtered, { matchId, voterName: voterName.trim(), votedFor, voteType, timestamp: new Date().toISOString() }],
-          };
-        });
-      }
+      if (!res.ok) throw new Error("투표 저장 실패");
+      setMomVoteMap((prev) => {
+        const filtered = (prev[matchId] || []).filter(
+          (v) => !(v.voterName === voterName.trim() && v.voteType === voteType)
+        );
+        return {
+          ...prev,
+          [matchId]: [...filtered, { matchId, voterName: voterName.trim(), votedFor, voteType, timestamp: new Date().toISOString() }],
+        };
+      });
     } finally {
       setSubmittingVote(null);
     }
@@ -2836,11 +2835,14 @@ export default function DashboardClient({
               <button
                 disabled={!momModalVoter || (!momModalAtk && !momModalDef) || submittingVote === momModal.matchId}
                 onClick={async () => {
-                  setMomVoterName((prev) => ({ ...prev, [momModal.matchId]: momModalVoter }));
-                  if (momModalAtk) await submitMomVote(momModal.matchId, momModalVoter, momModalAtk, "공격");
-                  if (momModalDef) await submitMomVote(momModal.matchId, momModalVoter, momModalDef, "수비");
-                  setMomVoterName((prev) => ({ ...prev, [momModal.matchId]: momModalVoter }));
-                  setMomModal(null);
+                  try {
+                    if (momModalAtk) await submitMomVote(momModal.matchId, momModalVoter, momModalAtk, "공격");
+                    if (momModalDef) await submitMomVote(momModal.matchId, momModalVoter, momModalDef, "수비");
+                    setMomVoterName((prev) => ({ ...prev, [momModal.matchId]: momModalVoter }));
+                    setMomModal(null);
+                  } catch {
+                    alert("투표 저장에 실패했습니다. 다시 시도해주세요.");
+                  }
                 }}
                 className="flex-1 py-2.5 rounded-2xl bg-[#FF8FA3] text-[12px] font-black text-white disabled:opacity-40 transition-opacity"
               >
