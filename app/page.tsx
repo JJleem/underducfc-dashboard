@@ -57,7 +57,7 @@ export default async function TeamDashboardPage() {
   rawRoster.slice(1).forEach((row: string[]) => {
     const no = row[0]?.trim();
     const name = row[1]?.trim();
-    if (name && no) lineupRosterMap[name] = no;
+    if (name) lineupRosterMap[name] = no || "?";
   });
 
   // 💡 4. PlayerData 타입에 맞춰서 가공

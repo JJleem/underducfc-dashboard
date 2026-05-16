@@ -1392,7 +1392,7 @@ export default function DashboardClient({
                           {isOpen && (
                             <div className="flex flex-wrap gap-1.5 mt-2.5">
                               {attendees.map((name) => {
-                                const no = rosterMap[name] || "G";
+                                const no = rosterMap[name] || "?";
                                 return (
                                   <span
                                     key={name}
