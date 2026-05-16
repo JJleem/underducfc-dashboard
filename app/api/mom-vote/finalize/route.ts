@@ -50,16 +50,22 @@ export async function POST() {
         votes
           .filter((v) => v.voteType === type && v.votedFor)
           .forEach((v) => { t[v.votedFor] = (t[v.votedFor] || 0) + 1; });
-        return Object.entries(t).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
+        const entries = Object.entries(t).sort((a, b) => b[1] - a[1]);
+        if (entries.length === 0) return [];
+        const maxVotes = entries[0][1];
+        return entries.filter(([, cnt]) => cnt === maxVotes).map(([name]) => name);
       };
 
       const topAtk = tally("공격");
       const topDef = tally("수비");
 
+      const atkSet = new Set(topAtk);
+      const defOnly = topDef.filter((n) => !atkSet.has(n));
+
       let momStr = "";
-      if (topAtk && topDef && topAtk !== topDef) momStr = `${topAtk} / ${topDef}`;
-      else if (topAtk) momStr = topAtk;
-      else if (topDef) momStr = topDef;
+      if (topAtk.length > 0 && defOnly.length > 0) momStr = `${topAtk.join(",")} / ${defOnly.join(",")}`;
+      else if (topAtk.length > 0) momStr = topAtk.join(",");
+      else if (topDef.length > 0) momStr = topDef.join(",");
 
       if (!momStr) continue;
 
