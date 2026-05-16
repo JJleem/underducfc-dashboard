@@ -392,7 +392,7 @@ export default function DashboardClient({
     const attendeeArr = match.attendees ? match.attendees.split(",").map((s) => s.trim()).filter(Boolean) : [];
     setEditAttendees(new Set(attendeeArr));
     const goalArr = match.goals ? match.goals.split(",").map((s) => s.trim()).filter(Boolean) : [];
-    const assistArr = match.assists ? match.assists.split(",").map((s) => s.trim()).filter(Boolean) : [];
+    const assistArr = match.assists ? match.assists.split(",").map((s) => s.trim()) : [];
     setEditGoalEvents(goalArr.map((scorer, i) => ({ scorer, assister: assistArr[i] || "" })));
     setShowGoalPicker(false);
     setGoalPickerScorer("");
@@ -405,7 +405,7 @@ export default function DashboardClient({
     setSavingMatchResult(true);
     try {
       const goalsStr = editGoalEvents.map((e) => e.scorer).join(",");
-      const assistsStr = editGoalEvents.filter((e) => e.assister).map((e) => e.assister).join(",");
+      const assistsStr = editGoalEvents.map((e) => e.assister || "").join(",");
       const attendeesStr = Array.from(editAttendees).join(",");
       const res = await fetch(`/api/matches/${matchEditModal}`, {
         method: "PUT",
