@@ -1623,14 +1623,6 @@ export default function DashboardClient({
                       todayDay.setHours(0, 0, 0, 0);
                       const votingClosed = matchDay < todayDay;
 
-                      // 포지션으로 공격/수비 분류
-                      const posMap: Record<string, string> = {};
-                      players.forEach((p) => { posMap[p.name] = p.pos?.toUpperCase() || ""; });
-                      const atkPos = new Set(["FW", "MF"]);
-                      const defPos = new Set(["GK", "DF"]);
-                      const atkCandidates = attendees.filter((n) => atkPos.has(posMap[n]) || (!atkPos.has(posMap[n]) && !defPos.has(posMap[n])));
-                      const defCandidates = attendees.filter((n) => defPos.has(posMap[n]) || (!atkPos.has(posMap[n]) && !defPos.has(posMap[n])));
-
                       // 득표 집계 (타입별)
                       const makeTally = (type: string) => {
                         const tally: Record<string, number> = {};
@@ -1639,6 +1631,14 @@ export default function DashboardClient({
                       };
                       const atkTally = makeTally("공격");
                       const defTally = makeTally("수비");
+
+                      // 포지션으로 공격/수비 분류 (실제 득표가 있으면 포지션 무관하게 포함)
+                      const posMap: Record<string, string> = {};
+                      players.forEach((p) => { posMap[p.name] = p.pos?.toUpperCase() || ""; });
+                      const atkPos = new Set(["FW", "MF"]);
+                      const defPos = new Set(["GK", "DF"]);
+                      const atkCandidates = attendees.filter((n) => atkPos.has(posMap[n]) || (!atkPos.has(posMap[n]) && !defPos.has(posMap[n])) || (atkTally[n] > 0));
+                      const defCandidates = attendees.filter((n) => defPos.has(posMap[n]) || (!atkPos.has(posMap[n]) && !defPos.has(posMap[n])) || (defTally[n] > 0));
 
                       const myAtkVote = votes.find((v) => v.voterName === voterName && v.voteType === "공격")?.votedFor;
                       const myDefVote = votes.find((v) => v.voterName === voterName && v.voteType === "수비")?.votedFor;
