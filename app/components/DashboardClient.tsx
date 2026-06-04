@@ -1204,6 +1204,230 @@ export default function DashboardClient({
             {/* 경기 일정 리스트 */}
             {[...matchList].reverse().map((match) => {
               const isInternal = match.opponent === "자체전";
+
+              // 야유회 포스터 카드
+              if (match.type === "야유회") {
+                const deleted = deletedPhotos[match.id] || [];
+                const propPhotos = (match.photos ? match.photos.split(",").filter(Boolean) : []).filter((u) => !deleted.includes(u));
+                const localPhotos = localPhotoMap[match.id] || [];
+                const allPhotos = [...propPhotos, ...localPhotos];
+                const posterImg = allPhotos[0] ?? null;
+
+                const feedbacks = feedbackMap[match.id] || [];
+                const isFbOpen = openFeedbacks.has(match.id);
+                const fbForm = feedbackForms[match.id] || { name: "", message: "" };
+                const firstFb = feedbacks[feedbacks.length - 1];
+
+                const FbAvatar = ({ name }: { name: string }) => {
+                  const no = rosterMap[name.trim()];
+                  return no ? (
+                    <div className="w-7 h-7 rounded-full bg-[#FFB6C1]/20 border border-[#FFB6C1]/40 flex items-center justify-center shrink-0">
+                      <span className="text-[9px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">#{no}</span>
+                    </div>
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0 text-sm">🦆</div>
+                  );
+                };
+
+                return (
+                  <React.Fragment key={match.id}>
+                    <div ref={(el) => { matchCardRefs.current[match.id] = el; }} />
+                    <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-md">
+                      {/* 포스터 이미지 영역 */}
+                      <div className="relative w-full aspect-[3/4] overflow-hidden bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100 dark:from-emerald-900/40 dark:via-teal-900/30 dark:to-cyan-900/40">
+                        {posterImg ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={posterImg.replace("/upload/", "/upload/c_fill,w_800,q_auto,f_auto/")}
+                            alt="야유회 포스터"
+                            className="w-full h-full object-cover cursor-pointer"
+                            onClick={() => setLightbox({ ids: allPhotos, index: 0 })}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                            <span className="text-7xl">🏕️</span>
+                            <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">포스터 준비중</p>
+                          </div>
+                        )}
+                        {/* 하단 그라데이션 오버레이 */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
+                        {/* 오버레이 텍스트 */}
+                        <div className="absolute bottom-0 left-0 right-0 p-5 pointer-events-none">
+                          <div className="inline-flex items-center gap-1 bg-emerald-400/90 text-white text-[10px] font-black px-2.5 py-1 rounded-full mb-2">
+                            🏕️ 야유회
+                          </div>
+                          <div className="text-white font-black text-xl leading-tight drop-shadow">
+                            {match.opponent || "UNDERDUCK 야유회"}
+                          </div>
+                          <div className="text-white/80 text-xs mt-1 flex items-center gap-2">
+                            <span>{match.date}</span>
+                            {match.location && <><span>·</span><span>{match.location}</span></>}
+                          </div>
+                        </div>
+                        {/* 사진 추가 버튼 */}
+                        {allPhotos.length < 10 && (
+                          <button
+                            onClick={() => fileInputRefs.current[match.id]?.click()}
+                            disabled={uploadingPhoto === match.id}
+                            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors"
+                          >
+                            {uploadingPhoto === match.id
+                              ? <Loader2 className="w-4 h-4 text-white animate-spin" />
+                              : <Camera className="w-4 h-4 text-white" />
+                            }
+                          </button>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          ref={(el) => { fileInputRefs.current[match.id] = el; }}
+                          onChange={(e) => { if (e.target.files?.length) handlePhotoUpload(match.id, e.target.files); e.target.value = ""; }}
+                        />
+                      </div>
+
+                      <CardContent className="p-5 space-y-4">
+                        {/* 프로그램 */}
+                        {match.goals && (
+                          <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-3.5">
+                            <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 mb-1">📋 프로그램</p>
+                            <p className="text-[12px] text-gray-600 dark:text-gray-300 leading-relaxed">{match.goals}</p>
+                          </div>
+                        )}
+
+                        {/* 참석자 */}
+                        {match.attendees && (() => {
+                          const names = match.attendees.split(",").map((n) => n.trim()).filter(Boolean);
+                          return (
+                            <div>
+                              <p className="text-[10px] font-black text-gray-400 mb-2 flex items-center gap-1">
+                                <Users className="w-3 h-3" /> 참석자 {names.length}명
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {names.map((name, i) => (
+                                  <span key={i} className="text-[10px] bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/40 px-2 py-0.5 rounded-full font-medium">
+                                    {name}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* 사진 갤러리 (포스터 외 추가 사진) */}
+                        {allPhotos.length > 1 && (
+                          <div>
+                            <p className="text-[10px] font-black text-gray-400 mb-2 flex items-center gap-1">
+                              <Camera className="w-3 h-3 text-[#FFB6C1]" /> 사진 {allPhotos.length}
+                            </p>
+                            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                              {allPhotos.slice(1).map((url, i) => (
+                                <div key={url} className="relative shrink-0 group/photo">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={url.replace("/upload/", "/upload/c_fill,w_200,h_200,q_auto,f_auto/")}
+                                    alt={`야유회 사진 ${i + 2}`}
+                                    onClick={() => setLightbox({ ids: allPhotos, index: i + 1 })}
+                                    className="h-24 w-24 object-cover rounded-2xl cursor-pointer"
+                                  />
+                                  <button
+                                    onClick={() => deletePhoto(match.id, url)}
+                                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-red-500/80 transition-all opacity-0 group-hover/photo:opacity-100"
+                                  >
+                                    <X className="w-3 h-3 text-white" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 피드백 */}
+                        <div className="border-t border-gray-100 dark:border-white/5 pt-3">
+                          <button
+                            onClick={() => toggleFeedback(match.id)}
+                            className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors w-full"
+                          >
+                            <span className="text-sm">💬</span>
+                            후기
+                            {feedbacks.length > 0 && <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{feedbacks.length}</span>}
+                            <span className="ml-auto">
+                              {isFbOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            </span>
+                          </button>
+                          {!isFbOpen && firstFb && (
+                            <div className="flex items-center gap-2 mt-2 px-1">
+                              <FbAvatar name={firstFb.name} />
+                              <p className="flex-1 min-w-0 text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                                <span className="font-black text-gray-700 dark:text-gray-300 mr-1.5">{firstFb.name}</span>
+                                {firstFb.message}
+                              </p>
+                            </div>
+                          )}
+                          {isFbOpen && (
+                            <div className="mt-2 space-y-3">
+                              {feedbacks.length === 0 && (
+                                <p className="text-[10px] text-gray-400 text-center py-2">아직 후기가 없어요 🦆</p>
+                              )}
+                              {feedbacks.map((fb, i) => (
+                                <div key={i} className="flex gap-2 group">
+                                  <FbAvatar name={fb.name} />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                      <span className="text-[10px] font-black text-gray-800 dark:text-gray-200">{fb.name}</span>
+                                      <span className="text-[9px] text-gray-400">{formatFeedbackTime(fb.timestamp)}</span>
+                                      <button onClick={() => setDeleteTarget({ matchId: match.id, fb })} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-400">
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                    <p className="text-[11px] text-gray-600 dark:text-gray-300 break-words leading-relaxed">{fb.message}</p>
+                                  </div>
+                                </div>
+                              ))}
+                              <div className="pt-3 border-t border-gray-100 dark:border-white/5">
+                                <div className="flex items-center gap-1.5 mb-2">
+                                  <span className="text-[10px] text-gray-400 shrink-0">닉네임</span>
+                                  <input
+                                    type="text"
+                                    placeholder="이름 입력"
+                                    value={fbForm.name}
+                                    maxLength={20}
+                                    onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...fbForm, name: e.target.value } }))}
+                                    className="w-28 text-[11px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-2.5 py-1.5 outline-none focus:border-[#FFB6C1]/60 dark:focus:border-[#FFB6C1]/60 placeholder:text-gray-400 text-gray-800 dark:text-gray-200"
+                                  />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <FbAvatar name={fbForm.name} />
+                                  <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-[#FFB6C1]/60 dark:focus-within:border-[#FFB6C1]/60 transition-colors">
+                                    <input
+                                      type="text"
+                                      placeholder="후기 남기기 🦆"
+                                      value={fbForm.message}
+                                      maxLength={200}
+                                      onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...fbForm, message: e.target.value } }))}
+                                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitFeedback(match.id); } }}
+                                      className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-gray-400 text-gray-800 dark:text-gray-200 min-w-0"
+                                    />
+                                    <button
+                                      onClick={() => submitFeedback(match.id)}
+                                      disabled={submittingFeedback === match.id || !fbForm.name?.trim() || !fbForm.message?.trim()}
+                                      className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1] disabled:opacity-30 hover:opacity-70 transition-opacity"
+                                    >
+                                      <SendHorizonal className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </React.Fragment>
+                );
+              }
+
               return (
                 <React.Fragment key={match.id}>
                 <div ref={(el) => { matchCardRefs.current[match.id] = el; }} />
