@@ -429,7 +429,7 @@ export default function DashboardClient({
   };
 
   const nextMatch = [...matchList]
-    .filter((m) => m.result === "예정")
+    .filter((m) => m.result === "예정" && m.type !== "야유회")
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
   const dDay = nextMatch ? getDDay(nextMatch.date) : null;
 
@@ -1083,6 +1083,7 @@ export default function DashboardClient({
                     const monthMatches = matchList
                       .filter((m) => {
                         if (!m.date) return false;
+                        if (m.type === "야유회") return false;
                         const d = new Date(m.date);
                         return (
                           d.getFullYear() === calendarMonth.getFullYear() &&
@@ -1149,7 +1150,7 @@ export default function DashboardClient({
                                   </span>
                                   <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getMatchDotStyle(m.result)}`} />
                                   <span className="flex-1 min-w-0 text-[12px] font-bold text-gray-700 dark:text-gray-200 truncate">
-                                    {m.type === "야유회" ? "🏕️ 야유회" : `vs ${m.opponent}`}
+                                    vs {m.opponent}
                                   </span>
                                   {m.result !== "예정" && m.ourScore && m.ourScore !== "-" && (
                                     <span className="text-[11px] font-black text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">
