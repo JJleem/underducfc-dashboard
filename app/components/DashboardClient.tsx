@@ -363,7 +363,7 @@ export default function DashboardClient({
 
   const matchesByDate = React.useMemo(() => {
     const map: Record<string, MatchData[]> = {};
-    matchList.forEach((m) => {
+    matchList.filter((m) => m.type !== "야유회").forEach((m) => {
       const key = m.date.slice(0, 10);
       if (!map[key]) map[key] = [];
       map[key].push(m);
