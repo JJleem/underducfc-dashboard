@@ -1265,27 +1265,6 @@ export default function DashboardClient({
                             {match.location && <><span>·</span><span>{match.location}</span></>}
                           </div>
                         </div>
-                        {/* 사진 추가 버튼 */}
-                        {allPhotos.length < 10 && (
-                          <button
-                            onClick={() => fileInputRefs.current[match.id]?.click()}
-                            disabled={uploadingPhoto === match.id}
-                            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors"
-                          >
-                            {uploadingPhoto === match.id
-                              ? <Loader2 className="w-4 h-4 text-white animate-spin" />
-                              : <Camera className="w-4 h-4 text-white" />
-                            }
-                          </button>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          className="hidden"
-                          ref={(el) => { fileInputRefs.current[match.id] = el; }}
-                          onChange={(e) => { if (e.target.files?.length) handlePhotoUpload(match.id, e.target.files); e.target.value = ""; }}
-                        />
                       </div>
 
                       <CardContent className="p-5 space-y-4">
@@ -1316,13 +1295,35 @@ export default function DashboardClient({
                           );
                         })()}
 
-                        {/* 사진 갤러리 (포스터 외 추가 사진) */}
-                        {allPhotos.length > 1 && (
-                          <div>
-                            <p className="text-[10px] font-black text-gray-400 mb-2 flex items-center gap-1">
-                              <Camera className="w-3 h-3 text-[#FFB6C1]" /> 사진 {allPhotos.length}
-                            </p>
-                            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                        {/* 사진 섹션 */}
+                        <div className="border-t border-gray-100 dark:border-white/5 pt-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400">
+                              <Camera className="w-3.5 h-3.5 text-[#FFB6C1]" />
+                              {allPhotos.length > 1 ? `사진 ${allPhotos.length - 1}` : "사진 없음"}
+                            </div>
+                            {allPhotos.length < 10 && (
+                              <>
+                                <button
+                                  onClick={() => fileInputRefs.current[match.id]?.click()}
+                                  disabled={uploadingPhoto === match.id}
+                                  className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] hover:opacity-70 transition-opacity disabled:opacity-40"
+                                >
+                                  {uploadingPhoto === match.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "+ 추가"}
+                                </button>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  className="hidden"
+                                  ref={(el) => { fileInputRefs.current[match.id] = el; }}
+                                  onChange={(e) => { if (e.target.files?.length) handlePhotoUpload(match.id, e.target.files); e.target.value = ""; }}
+                                />
+                              </>
+                            )}
+                          </div>
+                          {allPhotos.length > 1 && (
+                            <div className="flex gap-2 overflow-x-auto pb-1 mt-2 scrollbar-none">
                               {allPhotos.slice(1).map((url, i) => (
                                 <div key={url} className="relative shrink-0 group/photo">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1341,8 +1342,8 @@ export default function DashboardClient({
                                 </div>
                               ))}
                             </div>
-                          </div>
-                        )}
+                          )}
+                        </div>
 
                         {/* 피드백 */}
                         <div className="border-t border-gray-100 dark:border-white/5 pt-3">
@@ -1351,7 +1352,7 @@ export default function DashboardClient({
                             className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors w-full"
                           >
                             <span className="text-sm">💬</span>
-                            후기
+                            댓글
                             {feedbacks.length > 0 && <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{feedbacks.length}</span>}
                             <span className="ml-auto">
                               {isFbOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -1369,7 +1370,7 @@ export default function DashboardClient({
                           {isFbOpen && (
                             <div className="mt-2 space-y-3">
                               {feedbacks.length === 0 && (
-                                <p className="text-[10px] text-gray-400 text-center py-2">아직 후기가 없어요 🦆</p>
+                                <p className="text-[10px] text-gray-400 text-center py-2">아직 댓글이 없어요 🦆</p>
                               )}
                               {feedbacks.map((fb, i) => (
                                 <div key={i} className="flex gap-2 group">
@@ -1403,7 +1404,7 @@ export default function DashboardClient({
                                   <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-[#FFB6C1]/60 dark:focus-within:border-[#FFB6C1]/60 transition-colors">
                                     <input
                                       type="text"
-                                      placeholder="후기 남기기 🦆"
+                                      placeholder="댓글 달기 🦆"
                                       value={fbForm.message}
                                       maxLength={200}
                                       onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...fbForm, message: e.target.value } }))}
