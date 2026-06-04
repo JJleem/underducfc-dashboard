@@ -1235,7 +1235,7 @@ export default function DashboardClient({
                     <div ref={(el) => { matchCardRefs.current[match.id] = el; }} />
                     <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-md">
                       {/* 포스터 이미지 영역 */}
-                      <div className="relative w-full aspect-[3/4] overflow-hidden bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100 dark:from-emerald-900/40 dark:via-teal-900/30 dark:to-cyan-900/40">
+                      <div className="relative w-full aspect-[1/1] overflow-hidden bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100 dark:from-emerald-900/40 dark:via-teal-900/30 dark:to-cyan-900/40">
                         {posterImg ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img
