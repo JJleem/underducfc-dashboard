@@ -2290,16 +2290,18 @@ export default function DashboardClient({
                 <p className="py-6 text-center text-[12px] text-gray-400">아직 2회 이상 합작한 듀오가 없어요</p>
               ) : (
                 <div className="divide-y divide-gray-100 dark:divide-white/5">
-                  {duoStats.map((d, i) => {
+                  {duoStats.map((d) => {
+                    // 동률은 공동 순위 (예: 1, 1, 3)
+                    const rank = duoStats.filter((x) => x.count > d.count).length + 1;
                     const rankStyle = [
                       "bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300",
                       "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-300",
                       "bg-orange-100 text-orange-700 dark:bg-orange-400/15 dark:text-orange-300",
-                    ][i];
+                    ][rank - 1];
                     return (
                       <div key={`${d.a}|${d.b}`} className="flex items-center gap-3 px-4 py-2.5">
                         <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black shrink-0 ${rankStyle}`}>
-                          {i + 1}
+                          {rank}
                         </span>
                         <div className="flex-1 min-w-0 flex items-center gap-1.5 text-[13px] font-bold text-gray-900 dark:text-white">
                           <span className="truncate">{d.a}</span>
