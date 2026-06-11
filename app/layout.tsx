@@ -46,7 +46,19 @@ export default function RootLayout({
   return (
     // suppressHydrationWarning은 테마 깜빡임 방지용 필수 속성입니다
     <html lang="ko" suppressHydrationWarning>
-      <body className="antialiased bg-gray-200 dark:bg-black">
+      <head>
+        {/* Pretendard: 한글 가독성 + 고급스러운 타이포 (동적 서브셋) */}
+        <link
+          rel="preconnect"
+          href="https://cdn.jsdelivr.net"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+        />
+      </head>
+      <body className="antialiased bg-zinc-100 dark:bg-black">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -54,7 +66,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {/* 📱 모바일 앱 프레임 래퍼 */}
-          <div className="max-w-md mx-auto min-h-[100dvh] flex flex-col bg-gray-50 dark:bg-[#0a0a0a] shadow-2xl relative overflow-hidden transition-colors duration-300">
+          <div className="max-w-md mx-auto min-h-[100dvh] flex flex-col bg-gray-50 dark:bg-[#09090b] shadow-2xl relative overflow-hidden transition-colors duration-300">
             {/* 메인 컨텐츠 (Dashboard, Roster 등) */}
             <div className="flex-1">{children}</div>
 

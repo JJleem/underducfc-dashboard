@@ -83,13 +83,13 @@ export function FormationField({
   const totalLayers = lineup.formation.split("-").length;
 
   return (
-    <div className="w-full rounded-2xl overflow-hidden shadow-xl">
+    <div className="w-full rounded-2xl overflow-hidden shadow-sm ring-1 ring-black/5 dark:ring-white/10">
       <div
         className="relative w-full"
         style={{
           paddingBottom: "145%",
           background:
-            "linear-gradient(180deg,#1a5c1a 0%,#236b23 12.5%,#1a5c1a 25%,#236b23 37.5%,#1a5c1a 50%,#236b23 62.5%,#1a5c1a 75%,#236b23 87.5%,#1a5c1a 100%)",
+            "linear-gradient(180deg,#1c6a36 0%,#185e2f 25%,#1c6a36 50%,#185e2f 75%,#1c6a36 100%)",
         }}
       >
         <svg
@@ -163,7 +163,7 @@ export function FormationField({
         })}
       </div>
 
-      <div className="flex items-center justify-center gap-3 py-2.5 bg-[#0f3d0f]">
+      <div className="flex items-center justify-center gap-3 py-2.5 bg-[#15512b]">
         {[
           { label: "GK", color: "#F59E0B" },
           { label: "DF", color: "#3B82F6" },
@@ -199,7 +199,7 @@ export function MiniFormationField({
         style={{
           paddingBottom: "62%",
           background:
-            "linear-gradient(180deg,#1a5c1a 0%,#236b23 20%,#1a5c1a 40%,#236b23 60%,#1a5c1a 80%,#236b23 100%)",
+            "linear-gradient(180deg,#1c6a36 0%,#185e2f 33%,#1c6a36 66%,#185e2f 100%)",
         }}
       >
         {/* 간소화된 필드 라인 */}

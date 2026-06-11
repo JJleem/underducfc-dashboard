@@ -214,12 +214,12 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
   const positions = FORMATION_POSITIONS[formation] || [];
 
   return (
-    <div className="min-h-dvh bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-[#F5F5DC] font-sans max-w-md mx-auto shadow-2xl overflow-hidden">
+    <div className="min-h-dvh bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto shadow-2xl overflow-hidden">
       {/* 헤더 */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-md border-b border-gray-200 dark:border-white/10">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-3.5 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
         <Link href={`/matches/${match.id}`} className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
           <ArrowLeft className="w-4 h-4" />
-          <span className="font-black text-sm italic uppercase">라인업 편집</span>
+          <span className="font-extrabold text-sm uppercase tracking-tight">라인업 편집</span>
         </Link>
         <div className="flex items-center gap-2">
           <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/10">
@@ -314,7 +314,7 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
             className="relative w-full rounded-xl overflow-hidden"
             style={{
               paddingBottom: "138%",
-              background: "linear-gradient(180deg,#1a5c1a 0%,#236b23 20%,#1a5c1a 40%,#236b23 60%,#1a5c1a 80%,#236b23 100%)",
+              background: "linear-gradient(180deg,#1c6a36 0%,#185e2f 33%,#1c6a36 66%,#185e2f 100%)",
             }}
           >
             <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 138" preserveAspectRatio="none" fill="none">
@@ -482,7 +482,7 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
                       }`}
                     >
                       {isGuest && <span className="mr-1 text-[8px] text-gray-400">G</span>}
-                      {used && !isGuest && <span className="mr-1 text-[8px]">✓</span>}
+                      {used && !isGuest && <Check className="mr-1 w-2.5 h-2.5 inline-block align-middle" />}
                       {name}
                     </button>
                     {isGuest && (

@@ -30,6 +30,14 @@ import {
   Pencil,
   Film,
   Upload,
+  MessageCircle,
+  Star,
+  Tent,
+  User,
+  Shield,
+  Lock,
+  LockOpen,
+  Check,
 } from "lucide-react";
 import { shareMatchResult } from "../lib/draw-match-result";
 import { MiniFormationField, FORMATION_POSITIONS } from "./FormationField";
@@ -60,8 +68,8 @@ function toMatchDateStr(date: Date): string {
 }
 
 const SPECIAL_EVENTS: { date: string; label: string }[] = [
-  { date: "2026-06-06", label: "야유회 🦆" },
-  { date: "2026-06-07", label: "야유회 🦆" },
+  { date: "2026-06-06", label: "야유회" },
+  { date: "2026-06-07", label: "야유회" },
 ];
 
 // --- 타입 정의 ---
@@ -766,10 +774,11 @@ export default function DashboardClient({
     return "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400";
   };
   return (
-    <div className="min-h-dvh bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-[#F5F5DC] font-sans max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors duration-300">
+    <div className="min-h-dvh bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors duration-300">
       {/* 📱 앱 헤더 */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10">
-        <span className="font-black italic text-lg tracking-tighter text-gray-900 dark:text-white uppercase">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-3.5 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
+        <span className="flex items-center gap-2 text-[15px] font-extrabold tracking-tight text-gray-900 dark:text-white uppercase">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#FF8FA3]" />
           UNDERDUCK
         </span>
         <button
@@ -783,9 +792,8 @@ export default function DashboardClient({
 
       <main className="p-5 pb-10">
         {/* 🦆 히어로 섹션 (복구 완료!) */}
-        <div className="relative py-6 flex flex-col items-center border-b border-gray-100 dark:border-white/5 mb-4">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-[#FFB6C1]/30 dark:bg-[#FFB6C1]/10 blur-[80px] rounded-full -z-10" />
-          <div className="relative w-20 h-20 rounded-full bg-white dark:bg-black border-[3px] border-[#FFB6C1] shadow-[0_0_20px_rgba(255,182,193,0.4)] flex items-center justify-center overflow-hidden mb-4">
+        <div className="relative py-7 flex flex-col items-center border-b border-gray-200/70 dark:border-white/[0.06] mb-5">
+          <div className="relative w-[72px] h-[72px] rounded-full bg-white dark:bg-[#141416] ring-1 ring-gray-200 dark:ring-white/10 shadow-sm flex items-center justify-center overflow-hidden mb-4">
             <Image
               src="/underducklogo.png"
               alt="Underduck Logo"
@@ -794,15 +802,15 @@ export default function DashboardClient({
               className="object-cover"
             />
           </div>
-          <h1 className="text-4xl w-full text-center font-black text-transparent bg-clip-text bg-gradient-to-r from-[#FF8FA3] to-gray-800 dark:from-[#FFB6C1] dark:to-[#F5F5DC] tracking-tighter italic">
-            UNDERDUCK FC
+          <h1 className="text-[34px] leading-none w-full text-center font-extrabold tracking-tight text-gray-900 dark:text-white">
+            UNDERDUCK <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">FC</span>
           </h1>
           <div className="flex flex-col gap-2 mt-3 max-w-[400px] items-center text-center">
             <div className="flex items-center gap-2">
               <Badge className="bg-[#FFB6C1]/20 dark:bg-white/5 text-[#FF8FA3] dark:text-[#FFB6C1] border-none text-[10px]">
                 EST 2025
               </Badge>
-              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-widest uppercase italic">
+              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold tracking-[0.14em] uppercase">
                 Not &apos;Because of&apos;, but &apos;Thanks to&apos;
               </span>
             </div>
@@ -831,7 +839,7 @@ export default function DashboardClient({
                 target="_blank"
                 rel="noopener noreferrer"
                 // 💡 overflow-hidden 추가: 혹시 모를 이미지 삐져나옴 방지
-                className="flex items-center justify-center w-[36px] h-[36px] bg-white dark:bg-[#1a1a1a] rounded-full hover:scale-110 transition-transform shadow-md border border-gray-100 dark:border-white/10 overflow-hidden"
+                className="flex items-center justify-center w-[36px] h-[36px] bg-white dark:bg-[#161618] rounded-full hover:scale-110 transition-transform shadow-md border border-gray-100 dark:border-white/10 overflow-hidden"
                 aria-label="Instagram"
               >
                 <Image
@@ -849,7 +857,7 @@ export default function DashboardClient({
                 href="https://docs.google.com/spreadsheets/d/1e2w3S5zeiryWlXE3BfhkOoraXCZZays5BPiI5UsKhQs/edit?gid=0#gid=0"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center w-[36px] h-[36px] bg-white dark:bg-[#1a1a1a] rounded-full hover:scale-110 transition-transform shadow-md border border-gray-100 dark:border-white/10 overflow-hidden"
+                className="flex items-center justify-center w-[36px] h-[36px] bg-white dark:bg-[#161618] rounded-full hover:scale-110 transition-transform shadow-md border border-gray-100 dark:border-white/10 overflow-hidden"
                 aria-label="Google Sheets"
               >
                 <Image
@@ -867,22 +875,22 @@ export default function DashboardClient({
         {/* 탭 섹션 */}
         <Tabs defaultValue="matches" className="w-full h-full">
           {/* 💡 탭은 다시 2개로 조정 */}
-          <TabsList className="grid w-full h-full grid-cols-3 bg-gray-200/60 dark:bg-white/5 p-1 mb-6 rounded-2xl border border-gray-200 dark:border-white/5">
+          <TabsList className="grid w-full h-full grid-cols-3 bg-gray-100 dark:bg-white/[0.04] p-1 mb-6 rounded-2xl border border-gray-200/70 dark:border-white/[0.06]">
             <TabsTrigger
               value="matches"
-              className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-[#FFB6C1] data-[state=active]:text-[#FF8FA3] dark:data-[state=active]:text-black rounded-xl py-2.5 font-black text-[12px] transition-all"
+              className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:text-gray-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm rounded-xl py-2.5 font-semibold text-[12px] transition-all"
             >
               <CalendarDays className="w-3.5 h-3.5 mr-1" /> 일정
             </TabsTrigger>
             <TabsTrigger
               value="stats"
-              className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-[#FFB6C1] data-[state=active]:text-[#FF8FA3] dark:data-[state=active]:text-black rounded-xl py-2.5 font-black text-[12px] transition-all"
+              className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:text-gray-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm rounded-xl py-2.5 font-semibold text-[12px] transition-all"
             >
               <Trophy className="w-3.5 h-3.5 mr-1" /> 스탯
             </TabsTrigger>
             <TabsTrigger
               value="media"
-              className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-[#FFB6C1] data-[state=active]:text-[#FF8FA3] dark:data-[state=active]:text-black rounded-xl py-2.5 font-black text-[12px] transition-all"
+              className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:text-gray-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm rounded-xl py-2.5 font-semibold text-[12px] transition-all"
             >
               <Film className="w-3.5 h-3.5 mr-1" /> 콘텐츠
             </TabsTrigger>
@@ -893,7 +901,7 @@ export default function DashboardClient({
             {/* 💡 [공지사항 섹션] 고대비 + 왼쪽 포인트 라인 디자인 */}
             {localNotice && (
               <div className="px-1 mb-8">
-                <Card className="relative overflow-hidden border-none shadow-xl bg-white dark:bg-[#1a1a1a]">
+                <Card className="relative overflow-hidden border-none shadow-xl bg-white dark:bg-[#161618]">
                   {/* 💡 왼쪽 강조 라인: 공지사항임을 한눈에 알게 함 */}
                   <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#FF8FA3] dark:bg-[#FFB6C1]" />
 
@@ -950,7 +958,7 @@ export default function DashboardClient({
                             loading="lazy"
                             referrerPolicy="no-referrer-when-downgrade"
                           />
-                          <div className="flex items-center gap-2 px-3 py-2.5 bg-white dark:bg-[#1a1a1a]">
+                          <div className="flex items-center gap-2 px-3 py-2.5 bg-white dark:bg-[#161618]">
                             <MapPin className="w-3.5 h-3.5 text-[#FF8FA3] dark:text-[#FFB6C1] shrink-0" />
                             <span className="flex-1 text-[12px] font-bold text-gray-700 dark:text-gray-300 truncate">{localNotice.location}</span>
                             <button
@@ -976,9 +984,9 @@ export default function DashboardClient({
 
                 {/* 💡 섹션 구분선 (영문 제거 및 한국어 변경) */}
                 <div className="mt-8 mb-4 border-b border-gray-200 dark:border-white/10 relative">
-                  <div className="absolute left-1/2 -translate-x-1/2 -top-2.5 px-4 bg-gray-50 dark:bg-[#0a0a0a] flex items-center gap-1.5">
+                  <div className="absolute left-1/2 -translate-x-1/2 -top-2.5 px-4 bg-gray-50 dark:bg-[#09090b] flex items-center gap-1.5">
                     <CalendarDays className="w-3 h-3 text-gray-400" />
-                    <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                    <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                       다가오는 경기 일정
                     </span>
                   </div>
@@ -988,7 +996,7 @@ export default function DashboardClient({
 
             {/* 매치 캘린더 */}
             <div className="px-1 mb-6">
-              <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-md">
+              <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-md">
                 <CardContent className="p-4">
                   {/* 헤더 */}
                   <div className="flex items-center justify-between mb-3">
@@ -1057,14 +1065,14 @@ export default function DashboardClient({
                         if (dayMatches.length > 0) {
                           const circleStyle = getMatchCircleStyle(dayMatches[0].result);
                           return (
-                            <div className={`w-8 h-8 flex items-center justify-center rounded-full text-[12px] font-black ${circleStyle} ${isToday ? "ring-2 ring-offset-1 ring-[#FF8FA3] dark:ring-offset-[#111]" : ""}`}>
+                            <div className={`w-8 h-8 flex items-center justify-center rounded-full text-[12px] font-black ${circleStyle} ${isToday ? "ring-2 ring-offset-1 ring-[#FF8FA3] dark:ring-offset-[#161618]" : ""}`}>
                               {date.getDate()}
                             </div>
                           );
                         }
                         if (isEvent) {
                           return (
-                            <div className={`w-8 h-8 flex items-center justify-center rounded-full text-[12px] font-black bg-sky-400 text-white ${isToday ? "ring-2 ring-offset-1 ring-sky-400 dark:ring-offset-[#111]" : ""}`}>
+                            <div className={`w-8 h-8 flex items-center justify-center rounded-full text-[12px] font-black bg-sky-400 text-white ${isToday ? "ring-2 ring-offset-1 ring-sky-400 dark:ring-offset-[#161618]" : ""}`}>
                               {date.getDate()}
                             </div>
                           );
@@ -1118,7 +1126,7 @@ export default function DashboardClient({
                     return (
                       <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5">
                         {isEmpty ? (
-                          <p className="text-[11px] text-gray-400 dark:text-gray-600 text-center py-2">이달의 경기가 없어요 🦆</p>
+                          <p className="text-[11px] text-gray-400 dark:text-gray-600 text-center py-2">이달의 경기가 없어요</p>
                         ) : (
                           <div className="space-y-0.5">
                             {items.map((item, idx) => {
@@ -1174,16 +1182,16 @@ export default function DashboardClient({
 
             {/* D-Day 배너 */}
             {nextMatch && dDay !== null && (
-              <div className="mb-4 rounded-3xl bg-gradient-to-r from-[#FFB6C1]/15 to-[#FF8FA3]/5 border border-[#FFB6C1]/25 p-4 flex items-center justify-between">
+              <div className="mb-4 rounded-2xl bg-white dark:bg-[#141416] border border-gray-200/70 dark:border-white/[0.06] shadow-sm p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] mb-1 tracking-widest">NEXT MATCH</p>
-                  <p className="text-sm font-black text-gray-800 dark:text-white">vs {nextMatch.opponent}</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">
+                  <p className="text-[10px] font-bold text-[#FF8FA3] dark:text-[#FFB6C1] mb-1 tracking-[0.14em]">NEXT MATCH</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">vs {nextMatch.opponent}</p>
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
                     {nextMatch.date} · {nextMatch.time} · {nextMatch.location}
                   </p>
                 </div>
                 <div className="text-right shrink-0 ml-4">
-                  <div className="text-3xl font-black text-[#FF8FA3] dark:text-[#FFB6C1] leading-none">
+                  <div className="text-[32px] font-extrabold tracking-tight text-[#FF8FA3] dark:text-[#FFB6C1] leading-none tabular-nums">
                     {dDay === 0 ? "D-DAY" : dDay < 0 ? `D+${Math.abs(dDay)}` : `D-${dDay}`}
                   </div>
                 </div>
@@ -1226,16 +1234,18 @@ export default function DashboardClient({
                       <span className="text-[9px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">#{no}</span>
                     </div>
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0 text-sm">🦆</div>
+                    <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0">
+                      <User className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                    </div>
                   );
                 };
 
                 return (
                   <React.Fragment key={match.id}>
                     <div ref={(el) => { matchCardRefs.current[match.id] = el; }} />
-                    <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-md">
+                    <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-md">
                       {/* 포스터 이미지 영역 */}
-                      <div className="relative w-full aspect-[1/1] overflow-hidden bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100 dark:from-emerald-900/40 dark:via-teal-900/30 dark:to-cyan-900/40">
+                      <div className="relative w-full aspect-[1/1] overflow-hidden bg-gray-100 dark:bg-white/[0.04]">
                         {posterImg ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img
@@ -1245,17 +1255,17 @@ export default function DashboardClient({
                             onClick={() => setLightbox({ ids: allPhotos, index: 0 })}
                           />
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                            <span className="text-7xl">🏕️</span>
-                            <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">포스터 준비중</p>
+                          <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-gray-400 dark:text-gray-500">
+                            <Tent className="w-12 h-12" strokeWidth={1.5} />
+                            <p className="text-sm font-semibold">포스터 준비중</p>
                           </div>
                         )}
                         {/* 하단 그라데이션 오버레이 */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
                         {/* 오버레이 텍스트 */}
                         <div className="absolute bottom-0 left-0 right-0 p-5 pointer-events-none">
-                          <div className="inline-flex items-center gap-1 bg-emerald-400/90 text-white text-[10px] font-black px-2.5 py-1 rounded-full mb-2">
-                            🏕️ 야유회
+                          <div className="inline-flex items-center gap-1.5 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full mb-2">
+                            <Tent className="w-3 h-3" /> 야유회
                           </div>
                           <div className="text-white font-black text-xl leading-tight drop-shadow">
                             {match.opponent || "UNDERDUCK 야유회"}
@@ -1271,7 +1281,7 @@ export default function DashboardClient({
                         {/* 프로그램 */}
                         {match.goals && (
                           <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-3.5">
-                            <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 mb-1">📋 프로그램</p>
+                            <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1">프로그램</p>
                             <p className="text-[12px] text-gray-600 dark:text-gray-300 leading-relaxed">{match.goals}</p>
                           </div>
                         )}
@@ -1281,7 +1291,7 @@ export default function DashboardClient({
                           const names = match.attendees.split(",").map((n) => n.trim()).filter(Boolean);
                           return (
                             <div>
-                              <p className="text-[10px] font-black text-gray-400 mb-2 flex items-center gap-1">
+                              <p className="text-[10px] font-semibold text-gray-400 mb-2 flex items-center gap-1">
                                 <Users className="w-3 h-3" /> 참석자 {names.length}명
                               </p>
                               <div className="flex flex-wrap gap-1.5">
@@ -1351,7 +1361,7 @@ export default function DashboardClient({
                             onClick={() => toggleFeedback(match.id)}
                             className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors w-full"
                           >
-                            <span className="text-sm">💬</span>
+                            <MessageCircle className="w-3.5 h-3.5 text-[#FFB6C1]" />
                             댓글
                             {feedbacks.length > 0 && <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{feedbacks.length}</span>}
                             <span className="ml-auto">
@@ -1370,7 +1380,7 @@ export default function DashboardClient({
                           {isFbOpen && (
                             <div className="mt-2 space-y-3">
                               {feedbacks.length === 0 && (
-                                <p className="text-[10px] text-gray-400 text-center py-2">아직 댓글이 없어요 🦆</p>
+                                <p className="text-[10px] text-gray-400 text-center py-2">아직 댓글이 없어요</p>
                               )}
                               {feedbacks.map((fb, i) => (
                                 <div key={i} className="flex gap-2 group">
@@ -1404,7 +1414,7 @@ export default function DashboardClient({
                                   <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-[#FFB6C1]/60 dark:focus-within:border-[#FFB6C1]/60 transition-colors">
                                     <input
                                       type="text"
-                                      placeholder="댓글 달기 🦆"
+                                      placeholder="댓글 달기"
                                       value={fbForm.message}
                                       maxLength={200}
                                       onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...fbForm, message: e.target.value } }))}
@@ -1434,7 +1444,7 @@ export default function DashboardClient({
                 <React.Fragment key={match.id}>
                 <div ref={(el) => { matchCardRefs.current[match.id] = el; }} />
                 <Card
-                  className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-md"
+                  className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-md"
                 >
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-6">
@@ -1465,8 +1475,8 @@ export default function DashboardClient({
                         </button>
                         {match.mom && (
                           <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-400/10 border border-yellow-300/50 dark:border-yellow-400/30 rounded-md px-2 py-0.5">
-                            <span className="text-[10px]">⭐</span>
-                            <span className="text-[10px] font-black text-yellow-600 dark:text-yellow-400">
+                            <Star className="w-2.5 h-2.5 text-yellow-500 dark:text-yellow-400 fill-yellow-500 dark:fill-yellow-400" />
+                            <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400">
                               {match.mom.trim()}
                             </span>
                           </div>
@@ -1526,12 +1536,12 @@ export default function DashboardClient({
                         {match.result === "예정" ||
                         match.ourScore === "-" ||
                         !match.ourScore ? (
-                          <div className="text-2xl font-black italic text-gray-300">
+                          <div className="text-2xl font-extrabold tracking-tight text-gray-300 dark:text-gray-600">
                             VS
                           </div>
                         ) : (
                           <div className="flex flex-col items-center gap-2 w-full">
-                            <div className="flex items-center gap-3 text-3xl font-black italic">
+                            <div className="flex items-center gap-3 text-[32px] font-extrabold tracking-tight tabular-nums">
                               <span
                                 className={
                                   match.result === "승"
@@ -1558,10 +1568,10 @@ export default function DashboardClient({
                                       className="flex flex-col items-center w-full border-b border-gray-100 dark:border-white/5 pb-1 last:border-0"
                                     >
                                       <div className="text-[10px] font-bold">
-                                        ⚽ {scorer.trim()}
+                                        {scorer.trim()}
                                       </div>
                                       {assistant && (
-                                        <div className="text-[9px] text-[#FF8FA3] dark:text-[#FFB6C1] italic">
+                                        <div className="text-[9px] text-[#FF8FA3] dark:text-[#FFB6C1]">
                                           assist by {assistant}
                                         </div>
                                       )}
@@ -1586,7 +1596,7 @@ export default function DashboardClient({
                           </div>
                         ) : (
                           // 💡 2. 외부 경기일 때: 상대팀 로고 대신 플레이스홀더 표시
-                          <div className="w-14 h-14 bg-gray-100 dark:bg-white/5 rounded-full mb-2 flex items-center justify-center border border-gray-200 dark:border-white/10 text-[11px] font-black text-gray-400 italic shrink-0 shadow-inner">
+                          <div className="w-14 h-14 bg-gray-100 dark:bg-white/5 rounded-full mb-2 flex items-center justify-center border border-gray-200 dark:border-white/10 text-[11px] font-bold text-gray-400 shrink-0">
                             상대팀
                           </div>
                         )}
@@ -1876,15 +1886,16 @@ export default function DashboardClient({
                         const isLeader = count > 0 && count === (tally[sorted[0]] || 0);
                         return (
                           <div className="flex items-center gap-2">
-                            <span className={`text-[10px] font-black w-14 shrink-0 truncate ${isLeader ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : "text-gray-600 dark:text-gray-400"}`}>
-                              {isLeader ? "⭐ " : ""}{name}
+                            <span className={`flex items-center gap-0.5 text-[10px] font-bold w-14 shrink-0 ${isLeader ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : "text-gray-600 dark:text-gray-400"}`}>
+                              {isLeader && <Star className="w-2.5 h-2.5 shrink-0 fill-current" />}
+                              <span className="truncate">{name}</span>
                             </span>
                             <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
                               <div className={`h-full rounded-full transition-all duration-500 ${isLeader ? "bg-[#FF8FA3] dark:bg-[#FFB6C1]" : "bg-gray-300 dark:bg-white/20"}`}
                                 style={{ width: count > 0 ? `${pct}%` : "0%" }} />
                             </div>
                             <span className="text-[10px] text-gray-400 w-4 text-right shrink-0">{count}</span>
-                            {myVote === name && <span className="text-[9px] text-[#FF8FA3] dark:text-[#FFB6C1] font-black shrink-0">✓</span>}
+                            {myVote === name && <Check className="w-3 h-3 text-[#FF8FA3] dark:text-[#FFB6C1] shrink-0" />}
                           </div>
                         );
                       };
@@ -1899,12 +1910,12 @@ export default function DashboardClient({
                             onClick={() => setOpenVotes((prev) => { const next = new Set(prev); next.has(match.id) ? next.delete(match.id) : next.add(match.id); return next; })}
                             className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors w-full"
                           >
-                            <span className="text-sm">⭐</span>
+                            <Star className="w-3.5 h-3.5 text-[#FFB6C1]" />
                             MOM 투표
                             {votes.length > 0 && <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{votes.length}</span>}
                             {!isOpen && (leaderAtk || leaderDef) && (
                               <span className="text-[10px] text-gray-400 font-medium truncate">
-                                {leaderAtk ? `⚽${leaderAtk}` : ""}{leaderAtk && leaderDef ? " · " : ""}{leaderDef ? `🛡️${leaderDef}` : ""}
+                                {leaderAtk || ""}{leaderAtk && leaderDef ? " · " : ""}{leaderDef || ""}
                               </span>
                             )}
                             <span className="ml-auto shrink-0">
@@ -1916,7 +1927,7 @@ export default function DashboardClient({
                             <div className="mt-3 space-y-4">
                               {/* 공격 MOM */}
                               <div>
-                                <p className="text-[10px] font-black text-blue-400 mb-1.5">⚽ 공격 MOM</p>
+                                <p className="text-[10px] font-bold text-blue-400 mb-1.5 flex items-center gap-1"><Target className="w-3 h-3" /> 공격 MOM</p>
                                 <div className="space-y-1.5">
                                   {atkCandidates.map((name) => (
                                     <VoteBar key={name} name={name} tally={atkTally} myVote={myAtkVote} />
@@ -1926,7 +1937,7 @@ export default function DashboardClient({
 
                               {/* 수비 MOM */}
                               <div>
-                                <p className="text-[10px] font-black text-green-500 mb-1.5">🛡️ 수비 MOM</p>
+                                <p className="text-[10px] font-bold text-green-500 mb-1.5 flex items-center gap-1"><Shield className="w-3 h-3" /> 수비 MOM</p>
                                 <div className="space-y-1.5">
                                   {defCandidates.map((name) => (
                                     <VoteBar key={name} name={name} tally={defTally} myVote={myDefVote} />
@@ -1937,11 +1948,11 @@ export default function DashboardClient({
                               {/* 투표하기 버튼 - 경기 당일까지만 표시 */}
                               <div className="pt-2 border-t border-gray-100 dark:border-white/5">
                                 {votingClosed ? (
-                                  <p className="text-[10px] text-gray-400 text-center py-0.5">🔒 투표가 마감되었습니다</p>
+                                  <p className="flex items-center justify-center gap-1 text-[10px] text-gray-400 py-0.5"><Lock className="w-2.5 h-2.5" /> 투표가 마감되었습니다</p>
                                 ) : (
                                   <>
                                     <p className="text-[10px] text-gray-400 mb-2">
-                                      📢 투표는 경기 당일까지만 가능합니다
+                                      투표는 경기 당일까지만 가능합니다
                                     </p>
                                     <div className="flex items-center justify-between">
                                       <button
@@ -1990,8 +2001,8 @@ export default function DashboardClient({
                             <span className="text-[9px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">#{no}</span>
                           </div>
                         ) : (
-                          <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0 text-sm">
-                            🦆
+                          <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0">
+                            <User className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
                           </div>
                         );
                       };
@@ -2002,7 +2013,7 @@ export default function DashboardClient({
                             onClick={() => toggleFeedback(match.id)}
                             className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors w-full"
                           >
-                            <span className="text-sm">💬</span>
+                            <MessageCircle className="w-3.5 h-3.5 text-[#FFB6C1]" />
                             피드백
                             {feedbacks.length > 0 && (
                               <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{feedbacks.length}</span>
@@ -2027,7 +2038,7 @@ export default function DashboardClient({
                           {isOpen && (
                             <div className="mt-2 space-y-3">
                               {feedbacks.length === 0 && (
-                                <p className="text-[10px] text-gray-400 text-center py-2">아직 피드백이 없어요 🦆</p>
+                                <p className="text-[10px] text-gray-400 text-center py-2">아직 피드백이 없어요</p>
                               )}
                               {feedbacks.map((fb, i) => (
                                 <div key={i} className="flex gap-2 group">
@@ -2068,7 +2079,7 @@ export default function DashboardClient({
                                   <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-[#FFB6C1]/60 dark:focus-within:border-[#FFB6C1]/60 transition-colors">
                                     <input
                                       type="text"
-                                      placeholder="댓글 달기 🦆"
+                                      placeholder="댓글 달기"
                                       value={form.message}
                                       maxLength={200}
                                       onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, message: e.target.value } }))}
@@ -2154,7 +2165,7 @@ export default function DashboardClient({
           {/* 선수 스탯 탭 */}
           <TabsContent value="stats" className="outline-none">
             {/* 💡 하나의 통합된 전광판 스타일 카드 (모바일 화면 깨짐 완벽 방지) */}
-            <Card className="mb-6 bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+            <Card className="mb-6 bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl shadow-sm overflow-hidden flex flex-col">
               {/* 상단 섹션: 전적 및 승률 (배경색을 살짝 다르게 주어 분리감 형성) */}
               <div className="p-4 sm:p-5 bg-gray-50 dark:bg-white/[0.02] flex items-center justify-between border-b border-gray-100 dark:border-white/5">
                 <div>
@@ -2205,8 +2216,7 @@ export default function DashboardClient({
                 {/* 1. 총 득점 영역 */}
                 <div className="p-3 sm:p-5 flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
                   <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 mb-1.5">
-                    <span className="text-[12px] opacity-80">⚽</span>
-                    <p className="text-[9px] sm:text-[11px] font-bold text-gray-500 whitespace-nowrap">
+                    <p className="text-[9px] sm:text-[11px] font-semibold text-gray-500 whitespace-nowrap">
                       총 득점
                     </p>
                   </div>
@@ -2221,8 +2231,7 @@ export default function DashboardClient({
                 {/* 2. 총 실점 영역 */}
                 <div className="p-3 sm:p-5 flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
                   <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 mb-1.5">
-                    <span className="text-[12px] opacity-80">🥅</span>
-                    <p className="text-[9px] sm:text-[11px] font-bold text-gray-500 whitespace-nowrap">
+                    <p className="text-[9px] sm:text-[11px] font-semibold text-gray-500 whitespace-nowrap">
                       총 실점
                     </p>
                   </div>
@@ -2237,8 +2246,7 @@ export default function DashboardClient({
                 {/* 3. 평균 득점 영역 */}
                 <div className="p-3 sm:p-5 flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
                   <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 mb-1.5">
-                    <span className="text-[12px] opacity-80">🎯</span>
-                    <p className="text-[9px] sm:text-[11px] font-bold text-gray-500 whitespace-nowrap">
+                    <p className="text-[9px] sm:text-[11px] font-semibold text-gray-500 whitespace-nowrap">
                       평균 득점
                     </p>
                   </div>
@@ -2253,8 +2261,7 @@ export default function DashboardClient({
                 {/* 4. 평균 실점 영역 */}
                 <div className="p-3 sm:p-5 flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
                   <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 mb-1.5">
-                    <span className="text-[12px] opacity-80">🧤</span>
-                    <p className="text-[9px] sm:text-[11px] font-bold text-gray-500 whitespace-nowrap">
+                    <p className="text-[9px] sm:text-[11px] font-semibold text-gray-500 whitespace-nowrap">
                       평균 실점
                     </p>
                   </div>
@@ -2269,11 +2276,11 @@ export default function DashboardClient({
             </Card>
             {/* 필터 버튼 */}
             {(() => {
-              const filters: { key: "apps" | "goals" | "assists" | "mom"; label: string; emoji: string }[] = [
-                { key: "apps", label: "출전", emoji: "🏃" },
-                { key: "goals", label: "골", emoji: "⚽" },
-                { key: "assists", label: "도움", emoji: "🎯" },
-                { key: "mom", label: "MOM", emoji: "⭐" },
+              const filters: { key: "apps" | "goals" | "assists" | "mom"; label: string }[] = [
+                { key: "apps", label: "출전" },
+                { key: "goals", label: "골" },
+                { key: "assists", label: "도움" },
+                { key: "mom", label: "MOM" },
               ];
               const POS_ORDER: Record<string, number> = { FW: 0, MF: 1, DF: 2, GK: 3 };
               const sortedPlayers = [...players].sort((a, b) => {
@@ -2291,22 +2298,22 @@ export default function DashboardClient({
               return (
                 <>
                   <div className="flex gap-2 mb-3">
-                    {filters.map(({ key, label, emoji }) => (
+                    {filters.map(({ key, label }) => (
                       <button
                         key={key}
                         onClick={() => setStatSort(statSort === key ? "pos" : key)}
-                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-2xl text-[11px] font-black transition-all ${
+                        className={`flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl text-[12px] font-semibold transition-all ${
                           statSort === key
-                            ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black shadow-md"
-                            : "bg-white dark:bg-[#111] border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400"
+                            ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black shadow-sm"
+                            : "bg-white dark:bg-[#141416] border border-gray-200/70 dark:border-white/[0.06] text-gray-500 dark:text-gray-400"
                         }`}
                       >
-                        <span>{emoji}</span>{label}
+                        {label}
                       </button>
                     ))}
                   </div>
 
-                  <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-lg dark:shadow-2xl">
+                  <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-lg dark:shadow-2xl">
                     <table className="w-full text-left table-fixed border-collapse">
                       <thead>
                         <tr className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10 text-[9px] font-black text-gray-500 uppercase tracking-tighter">
@@ -2342,7 +2349,7 @@ export default function DashboardClient({
                             <td className="py-4 text-center text-[13px] font-bold text-gray-700 dark:text-gray-300">
                               {Number(player.mom) > 0 ? (
                                 <span className={`flex items-center justify-center gap-0.5 ${statSort === "mom" ? "text-[#FF8FA3] dark:text-[#FFB6C1] font-black" : ""}`}>
-                                  {player.mom}<span className="text-[10px] text-yellow-500">⭐</span>
+                                  {player.mom}<Star className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />
                                 </span>
                               ) : (
                                 <span className="text-gray-200 dark:text-gray-800">-</span>
@@ -2365,16 +2372,16 @@ export default function DashboardClient({
               {isMediaAdmin ? (
                 <button
                   onClick={() => { setIsMediaAdmin(false); adminPinRef.current = ""; setShowPinInput(false); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400 text-[11px] font-black"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400 text-[11px] font-bold"
                 >
-                  🔓 관리자
+                  <LockOpen className="w-3 h-3" /> 관리자
                 </button>
               ) : (
                 <button
                   onClick={() => { setShowPinInput((p) => !p); setPinError(false); setPinDraft(""); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 text-[11px] font-black"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 text-[11px] font-bold"
                 >
-                  🔒 관리자
+                  <Lock className="w-3 h-3" /> 관리자
                 </button>
               )}
             </div>
@@ -2423,7 +2430,7 @@ export default function DashboardClient({
               <div className="space-y-4">
                 {/* 비디오 */}
                 {mediaList.filter((m) => m.type === "video").map((item) => (
-                  <div key={item.url} className="rounded-2xl overflow-hidden bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 shadow-sm">
+                  <div key={item.url} className="rounded-2xl overflow-hidden bg-white dark:bg-[#161618] border border-gray-200 dark:border-white/10 shadow-sm">
                     <video
                       src={item.url}
                       controls
@@ -2451,7 +2458,7 @@ export default function DashboardClient({
                 {mediaList.filter((m) => m.type === "image").length > 0 && (
                   <div className="grid grid-cols-2 gap-3">
                     {mediaList.filter((m) => m.type === "image").map((item) => (
-                      <div key={item.url} className="rounded-2xl overflow-hidden bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 shadow-sm relative group">
+                      <div key={item.url} className="rounded-2xl overflow-hidden bg-white dark:bg-[#161618] border border-gray-200 dark:border-white/10 shadow-sm relative group">
                         <img src={item.url} alt={item.title} className="w-full h-36 object-cover" />
                         <div className="px-3 py-2 flex items-center justify-between">
                           <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300 truncate flex-1">{item.title || "제목 없음"}</span>
@@ -2473,14 +2480,14 @@ export default function DashboardClient({
 
             {/* 업로드 Drawer */}
             <Drawer open={mediaUploadModal} onOpenChange={setMediaUploadModal}>
-              <DrawerContent className="bg-white dark:bg-[#1a1a1a] max-h-[80dvh]">
+              <DrawerContent className="bg-white dark:bg-[#161618] max-h-[80dvh]">
                 <DrawerHeader className="pb-0">
-                  <DrawerTitle className="text-[15px] font-black text-gray-900 dark:text-white">📤 콘텐츠 업로드</DrawerTitle>
+                  <DrawerTitle className="text-[15px] font-bold text-gray-900 dark:text-white">콘텐츠 업로드</DrawerTitle>
                 </DrawerHeader>
                 <div className="overflow-y-auto px-4 py-4 space-y-4">
                   {/* 파일 선택 */}
                   <div>
-                    <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">파일 선택 *</p>
+                    <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">파일 선택 *</p>
                     <input
                       ref={mediaFileRef}
                       type="file"
@@ -2493,8 +2500,8 @@ export default function DashboardClient({
                       className="w-full py-3 rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 text-[13px] font-bold text-gray-500 dark:text-gray-400 hover:border-[#FFB6C1] hover:text-[#FF8FA3] dark:hover:text-[#FFB6C1] transition-colors"
                     >
                       {mediaUploadFile ? (
-                        <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">
-                          {mediaUploadFile.type.startsWith("video/") ? "🎬" : "🖼️"} {mediaUploadFile.name}
+                        <span className="inline-flex items-center gap-1.5 text-[#FF8FA3] dark:text-[#FFB6C1]">
+                          {mediaUploadFile.type.startsWith("video/") ? <Film className="w-3.5 h-3.5" /> : <Camera className="w-3.5 h-3.5" />} {mediaUploadFile.name}
                         </span>
                       ) : (
                         "사진 또는 동영상 선택"
@@ -2503,7 +2510,7 @@ export default function DashboardClient({
                   </div>
                   {/* 제목 */}
                   <div>
-                    <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">제목 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(선택)</span></p>
+                    <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">제목 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(선택)</span></p>
                     <input
                       type="text"
                       value={mediaUploadTitle}
@@ -2535,17 +2542,17 @@ export default function DashboardClient({
         const editingMatch = matchEditModal !== null ? matchList.find((m) => m.id === matchEditModal) : null;
         return (
           <Drawer open={matchEditModal !== null} onOpenChange={(open) => { if (!open) setMatchEditModal(null); }}>
-            <DrawerContent className="bg-white dark:bg-[#1a1a1a] max-h-[92dvh]">
+            <DrawerContent className="bg-white dark:bg-[#161618] max-h-[92dvh]">
               <DrawerHeader className="pb-0">
-                <DrawerTitle className="text-[15px] font-black text-gray-900 dark:text-white">
-                  ⚽ 경기 결과 입력{editingMatch ? ` — vs ${editingMatch.opponent}` : ""}
+                <DrawerTitle className="text-[15px] font-bold text-gray-900 dark:text-white">
+                  경기 결과 입력{editingMatch ? ` — vs ${editingMatch.opponent}` : ""}
                 </DrawerTitle>
               </DrawerHeader>
 
               <div className="overflow-y-auto px-4 py-4 space-y-6">
                 {/* 결과 */}
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">결과</p>
+                  <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">결과</p>
                   <div className="flex gap-2 flex-wrap">
                     {["예정", "승", "무", "패", "자체전"].map((r) => {
                       const active = editResult === r;
@@ -2571,7 +2578,7 @@ export default function DashboardClient({
 
                 {/* 스코어 */}
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">스코어</p>
+                  <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">스코어</p>
                   <div className="flex items-center gap-3">
                     <div className="flex-1 text-center">
                       <p className="text-[10px] text-gray-400 mb-1">언더덕</p>
@@ -2601,7 +2608,7 @@ export default function DashboardClient({
 
                 {/* 참석자 */}
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">
+                  <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">
                     참석자 <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{editAttendees.size}명</span>
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -2635,7 +2642,7 @@ export default function DashboardClient({
                 {editAttendees.size > 0 && (
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[10px] font-black text-gray-400 tracking-widest">
+                      <p className="text-[10px] font-semibold text-gray-400 tracking-widest">
                         골 기록 <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{editGoalEvents.length}골</span>
                       </p>
                       {!showGoalPicker && (
@@ -2654,14 +2661,14 @@ export default function DashboardClient({
                         {editGoalEvents.map((event, i) => (
                           <div key={i} className="flex items-center justify-between bg-gray-50 dark:bg-white/5 rounded-xl px-3 py-2.5">
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-black text-gray-400 w-4">{i + 1}</span>
+                              <span className="text-[10px] font-semibold text-gray-400 w-4">{i + 1}</span>
                               {event.scorer === "자책골" ? (
-                                <span className="text-[13px] font-black text-orange-500 dark:text-orange-400">⚽ 자책골 (OG)</span>
+                                <span className="text-[13px] font-bold text-orange-500 dark:text-orange-400">자책골 (OG)</span>
                               ) : (
                                 <>
-                                  <span className="text-[13px] font-black text-gray-900 dark:text-white">⚽ {event.scorer}</span>
+                                  <span className="text-[13px] font-bold text-gray-900 dark:text-white">{event.scorer}</span>
                                   {event.assister && (
-                                    <span className="text-[11px] font-bold text-blue-400">🅰️ {event.assister}</span>
+                                    <span className="text-[11px] font-bold text-blue-400">A. {event.assister}</span>
                                   )}
                                 </>
                               )}
@@ -2681,7 +2688,7 @@ export default function DashboardClient({
                     {showGoalPicker && (
                       <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 space-y-4">
                         <div>
-                          <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">⚽ 득점자</p>
+                          <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">득점자</p>
                           <div className="flex flex-wrap gap-1.5">
                             {Array.from(editAttendees).map((name) => (
                               <button
@@ -2702,7 +2709,7 @@ export default function DashboardClient({
                         </div>
                         {goalPickerScorer !== "자책골" && (
                         <div>
-                          <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">🅰️ 어시스트 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(선택)</span></p>
+                          <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">어시스트 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(선택)</span></p>
                           <div className="flex flex-wrap gap-1.5">
                             {Array.from(editAttendees).filter((n) => n !== goalPickerScorer).map((name) => (
                               <button
@@ -2759,14 +2766,14 @@ export default function DashboardClient({
 
       {/* 공지사항 수정 Drawer */}
       <Drawer open={noticeEditModal} onOpenChange={setNoticeEditModal}>
-        <DrawerContent className="bg-white dark:bg-[#1a1a1a] max-h-[92dvh]">
+        <DrawerContent className="bg-white dark:bg-[#161618] max-h-[92dvh]">
           <DrawerHeader className="pb-0">
-            <DrawerTitle className="text-[15px] font-black text-gray-900 dark:text-white">📢 공지사항 수정</DrawerTitle>
+            <DrawerTitle className="text-[15px] font-bold text-gray-900 dark:text-white">공지사항 수정</DrawerTitle>
           </DrawerHeader>
 
           <div className="overflow-y-auto px-4 py-4 space-y-4">
             <div>
-              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">날짜</p>
+              <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">날짜</p>
               <Calendar
                 mode="single"
                 selected={noticeEditForm.date ? new Date(noticeEditForm.date + "T12:00:00") : undefined}
@@ -2802,7 +2809,7 @@ export default function DashboardClient({
             </div>
 
             <div>
-              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">제목</p>
+              <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">제목</p>
               <input
                 type="text"
                 value={noticeEditForm.title}
@@ -2813,7 +2820,7 @@ export default function DashboardClient({
             </div>
 
             <div>
-              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">내용</p>
+              <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">내용</p>
               <textarea
                 value={noticeEditForm.content}
                 onChange={(e) => setNoticeEditForm((p) => ({ ...p, content: e.target.value }))}
@@ -2824,7 +2831,7 @@ export default function DashboardClient({
             </div>
 
             <div>
-              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">
+              <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">
                 장소 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(선택 — 구장 안내 시 지도 표시)</span>
               </p>
               <div className="flex items-center gap-2 bg-gray-100 dark:bg-white/10 rounded-xl px-4 py-2.5">
@@ -2862,15 +2869,15 @@ export default function DashboardClient({
 
       {/* 경기 일정 등록 Drawer */}
       <Drawer open={addMatchModal} onOpenChange={setAddMatchModal}>
-        <DrawerContent className="bg-white dark:bg-[#1a1a1a] max-h-[92dvh]">
+        <DrawerContent className="bg-white dark:bg-[#161618] max-h-[92dvh]">
           <DrawerHeader className="pb-0">
-            <DrawerTitle className="text-[15px] font-black text-gray-900 dark:text-white">🗓️ 경기 일정 등록</DrawerTitle>
+            <DrawerTitle className="text-[15px] font-bold text-gray-900 dark:text-white">경기 일정 등록</DrawerTitle>
           </DrawerHeader>
 
           <div className="overflow-y-auto px-4 py-4 space-y-5">
             {/* 날짜 */}
             <div>
-              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">날짜 *</p>
+              <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">날짜 *</p>
               <Calendar
                 mode="single"
                 selected={addMatchForm.date ? new Date(addMatchForm.date + "T12:00:00") : undefined}
@@ -2907,7 +2914,7 @@ export default function DashboardClient({
 
             {/* 시간 */}
             <div>
-              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">시간</p>
+              <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">시간</p>
               <div className="flex flex-wrap gap-1.5">
                 {["미정", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "24:00"].map((t) => (
                   <button
@@ -2927,7 +2934,7 @@ export default function DashboardClient({
 
             {/* 상대팀 */}
             <div>
-              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">상대팀 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(미입력 시 미정)</span></p>
+              <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">상대팀 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(미입력 시 미정)</span></p>
               <input
                 type="text"
                 value={addMatchForm.opponent}
@@ -2939,7 +2946,7 @@ export default function DashboardClient({
 
             {/* 장소 */}
             <div>
-              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">장소 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(미입력 시 미정)</span></p>
+              <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">장소 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(미입력 시 미정)</span></p>
               <input
                 type="text"
                 value={addMatchForm.location}
@@ -2951,7 +2958,7 @@ export default function DashboardClient({
 
             {/* 경기 유형 */}
             <div>
-              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">경기 유형</p>
+              <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">경기 유형</p>
               <div className="flex gap-2">
                 {["일반 매칭", "자체전"].map((t) => (
                   <button
@@ -2989,14 +2996,14 @@ export default function DashboardClient({
           onClick={() => setMomModal(null)}
         >
           <div
-            className="w-full max-w-xs bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto"
+            className="w-full max-w-xs bg-white dark:bg-[#161618] rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-[14px] font-black text-gray-900 dark:text-white mb-4">⭐ MOM 투표</p>
+            <p className="text-[14px] font-bold text-gray-900 dark:text-white mb-4">MOM 투표</p>
 
             {/* 투표자(나) 선택 */}
             <div className="mb-4">
-              <p className="text-[10px] font-black text-gray-400 mb-1.5 tracking-widest">나는</p>
+              <p className="text-[10px] font-semibold text-gray-400 mb-1.5 tracking-widest">나는</p>
               <div className="flex flex-wrap gap-1.5">
                 {momModal.attendees.map((n) => (
                   <button
@@ -3014,7 +3021,7 @@ export default function DashboardClient({
 
             {/* 공격 MOM */}
             <div className="mb-4">
-              <p className="text-[10px] font-black text-blue-400 mb-1.5">⚽ 공격 MOM</p>
+              <p className="text-[10px] font-bold text-blue-400 mb-1.5 flex items-center gap-1"><Target className="w-3 h-3" /> 공격 MOM</p>
               <div className="flex flex-wrap gap-1.5">
                 {momModal.attendees.filter((n) => n !== momModalVoter).map((n) => (
                   <button
@@ -3032,7 +3039,7 @@ export default function DashboardClient({
 
             {/* 수비 MOM */}
             <div className="mb-5">
-              <p className="text-[10px] font-black text-green-500 mb-1.5">🛡️ 수비 MOM</p>
+              <p className="text-[10px] font-bold text-green-500 mb-1.5 flex items-center gap-1"><Shield className="w-3 h-3" /> 수비 MOM</p>
               <div className="flex flex-wrap gap-1.5">
                 {momModal.attendees.filter((n) => n !== momModalVoter).map((n) => (
                   <button
@@ -3086,7 +3093,7 @@ export default function DashboardClient({
           onClick={() => setDeleteTarget(null)}
         >
           <div
-            className="w-full max-w-xs bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 shadow-2xl"
+            className="w-full max-w-xs bg-white dark:bg-[#161618] rounded-3xl p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-[13px] font-black text-gray-900 dark:text-white mb-1">댓글을 삭제할까요?</p>
@@ -3118,7 +3125,7 @@ export default function DashboardClient({
       {showTopBtn && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+          className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-white dark:bg-[#161618] border border-gray-200 dark:border-white/10 shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
           aria-label="맨 위로"
         >
           <ChevronUp className="w-5 h-5 text-[#FF8FA3] dark:text-[#FFB6C1]" />

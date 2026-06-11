@@ -63,16 +63,16 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
   };
 
   return (
-    <div className="min-h-[100dvh] bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-[#F5F5DC] font-sans max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors duration-300">
+    <div className="min-h-[100dvh] bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors duration-300">
       {/* 📱 App Header */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-3.5 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
         <Link
           href="/"
           className="p-1 -ml-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
         >
           <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-gray-300" />
         </Link>
-        <span className="font-black italic text-lg tracking-tighter text-gray-900 dark:text-white">
+        <span className="text-[15px] font-extrabold tracking-tight text-gray-900 dark:text-white uppercase">
           SQUAD
         </span>
         <button
@@ -87,11 +87,11 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
       <main className="p-5 pb-10">
         {/* 타이틀 영역 */}
         <div className="flex items-center gap-3 mb-6 px-1">
-          <div className="relative w-10 h-10 rounded-full bg-white dark:bg-black border-[2px] border-[#FFB6C1] shadow-[0_0_15px_rgba(255,182,193,0.3)] flex items-center justify-center overflow-hidden">
+          <div className="relative w-10 h-10 rounded-full bg-white dark:bg-[#161618] ring-1 ring-gray-200 dark:ring-white/10 shadow-sm flex items-center justify-center overflow-hidden">
             <Image src="/underducklogo.png" alt="Logo" fill className="object-contain" />
           </div>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-gray-900 dark:text-white italic">
+            <h1 className="text-xl font-extrabold tracking-tight text-gray-900 dark:text-white">
               UNDERDUCK ROSTER
             </h1>
             <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
@@ -105,7 +105,7 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
           {/* 선수 추가 버튼 */}
           <button
             onClick={() => setAddModal(true)}
-            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-[#FFB6C1]/40 dark:border-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] text-[13px] font-black hover:bg-[#FF8FA3]/5 dark:hover:bg-[#FFB6C1]/5 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-dashed border-gray-300 dark:border-white/15 text-gray-500 dark:text-gray-400 text-[13px] font-semibold hover:border-[#FFB6C1] hover:text-[#FF8FA3] dark:hover:text-[#FFB6C1] transition-colors"
           >
             <Plus className="w-4 h-4" />
             선수 추가하기
@@ -137,10 +137,10 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
             return (
               <div
                 key={index}
-                className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#111] border border-gray-200 dark:border-white/10 shadow-sm dark:shadow-xl hover:scale-[1.02] transition-transform duration-200"
+                className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-[#161618] border border-gray-200/70 dark:border-white/[0.06] shadow-sm hover:border-gray-300 dark:hover:border-white/15 transition-colors"
               >
                 {/* 유니폼 등번호 아바타 */}
-                <div className="relative flex items-center justify-center w-14 h-16 rounded-xl overflow-hidden shadow-lg border border-[#FFB6C1]/30 shrink-0 bg-[#fff]">
+                <div className="relative flex items-center justify-center w-14 h-16 rounded-xl overflow-hidden shadow-sm ring-1 ring-gray-200 dark:ring-white/10 shrink-0 bg-white">
                   <Image
                     src="/uniform.png"
                     alt="Uniform"
@@ -148,12 +148,11 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
                     className="object-cover object-center opacity-95 scale-125 translate-y-1"
                   />
                   <span
-                    className="absolute z-10 font-black italic tracking-tighter top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pr-1.5 pb-1"
+                    className="absolute z-10 font-extrabold tracking-tight top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pr-1.5 pb-1"
                     style={{
-                      fontSize: hasNo ? "28px" : "18px",
-                      color: "#111111",
-                      WebkitTextStroke: "2px #FFB6C1",
-                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.8), 0px 0px 8px rgba(255, 182, 193, 0.3)",
+                      fontSize: hasNo ? "26px" : "16px",
+                      color: "#18181b",
+                      textShadow: "0 1px 2px rgba(255,255,255,0.65)",
                     }}
                   >
                     {hasNo ? rawNo : "?"}
@@ -165,7 +164,7 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-black text-xl text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                        <span className="font-bold text-xl text-gray-900 dark:text-gray-100 flex items-center gap-2">
                           {name}
                           {isC && (
                             <Badge className="bg-green-100 text-green-700 dark:bg-green-950/70 dark:text-green-200 border-none px-1.5 py-0 rounded text-[9px] font-black h-4">
@@ -179,7 +178,7 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
                           )}
                         </span>
                       </div>
-                      <Badge className="bg-[#FFB6C1]/20 dark:bg-white/5 text-[#FF8FA3] dark:text-[#FFB6C1] border-none px-2 py-0 text-[11px] font-black italic w-fit">
+                      <Badge className="bg-[#FFB6C1]/15 dark:bg-white/5 text-[#FF8FA3] dark:text-[#FFB6C1] border-none px-2 py-0 text-[11px] font-bold tabular-nums w-fit">
                         {hasNo ? `No.${rawNo}` : "미정"}
                       </Badge>
                     </div>
@@ -189,7 +188,7 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
                   </div>
 
                   <div className="flex items-center gap-1.5 mt-2">
-                    <span className={`w-1.5 h-1.5 rounded-full ${isInjured || disabled ? "bg-red-500" : "bg-[#FF8FA3] dark:bg-[#FFB6C1] shadow-[0_0_5px_rgba(255,182,193,0.5)]"}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full ${isInjured || disabled ? "bg-red-500" : "bg-emerald-500"}`} />
                     <span className={`text-xs font-bold ${isInjured || disabled ? "text-red-500" : "text-gray-500 dark:text-gray-400"}`}>
                       {status}
                     </span>
@@ -204,15 +203,15 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
 
       {/* 선수 추가 Drawer */}
       <Drawer open={addModal} onOpenChange={setAddModal}>
-        <DrawerContent className="bg-white dark:bg-[#1a1a1a] max-h-[85dvh]">
+        <DrawerContent className="bg-white dark:bg-[#161618] max-h-[85dvh]">
           <DrawerHeader className="pb-0">
-            <DrawerTitle className="text-[15px] font-black text-gray-900 dark:text-white">👤 선수 추가</DrawerTitle>
+            <DrawerTitle className="text-[15px] font-bold text-gray-900 dark:text-white">선수 추가</DrawerTitle>
           </DrawerHeader>
 
           <div className="overflow-y-auto px-4 py-4 space-y-4">
             {/* 이름 */}
             <div>
-              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">이름 *</p>
+              <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">이름 *</p>
               <input
                 type="text"
                 value={form.name}
@@ -224,7 +223,7 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
 
             {/* 등번호 */}
             <div>
-              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">등번호 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(미입력 시 -)</span></p>
+              <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">등번호 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(미입력 시 -)</span></p>
               <input
                 type="number"
                 value={form.no}
@@ -238,7 +237,7 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
 
             {/* 포지션 */}
             <div>
-              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">포지션</p>
+              <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">포지션</p>
               <div className="grid grid-cols-4 gap-2">
                 {["GK", "DF", "MF", "FW"].map((p) => {
                   const styles: Record<string, string> = {
@@ -268,7 +267,7 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
 
             {/* 상태 */}
             <div>
-              <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">상태</p>
+              <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">상태</p>
               <div className="flex gap-2">
                 {["활동", "부상", "비활동"].map((s) => (
                   <button

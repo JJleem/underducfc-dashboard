@@ -51,11 +51,11 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
   };
 
   return (
-    <div className="min-h-dvh bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-[#F5F5DC] font-sans max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors duration-300">
-      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10">
+    <div className="min-h-dvh bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors duration-300">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-3.5 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
         <Link href="/" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" />
-          <span className="font-black italic text-sm uppercase tracking-tight">UNDERDUCK</span>
+          <span className="font-extrabold text-sm uppercase tracking-tight">UNDERDUCK</span>
         </Link>
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -68,7 +68,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
 
       <main className="p-5 pb-10 space-y-5">
         {/* 경기 정보 카드 */}
-        <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-md">
+        <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-md">
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-5">
               <div className="flex flex-col gap-1.5">
@@ -104,9 +104,9 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
               </div>
               <div className="flex flex-col items-center flex-1 px-2">
                 {match.result === "예정" || !match.ourScore || match.ourScore === "-" ? (
-                  <div className="text-2xl font-black italic text-gray-300">VS</div>
+                  <div className="text-2xl font-extrabold tracking-tight text-gray-300 dark:text-gray-600">VS</div>
                 ) : (
-                  <div className="flex items-center gap-3 text-3xl font-black italic">
+                  <div className="flex items-center gap-3 text-[32px] font-extrabold tracking-tight tabular-nums">
                     <span className={match.result === "승" ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : ""}>{match.ourScore}</span>
                     <span className="text-gray-300 text-xl">:</span>
                     <span className="text-gray-400">{match.theirScore}</span>
@@ -119,7 +119,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
                     <Image src="/underducklogo.png" alt="언더덕 B" fill className="object-cover" />
                   </div>
                 ) : (
-                  <div className="w-14 h-14 bg-gray-100 dark:bg-white/5 rounded-full mb-2 flex items-center justify-center border border-gray-200 dark:border-white/10 text-[11px] font-black text-gray-400 italic shrink-0">
+                  <div className="w-14 h-14 bg-gray-100 dark:bg-white/5 rounded-full mb-2 flex items-center justify-center border border-gray-200 dark:border-white/10 text-[11px] font-bold text-gray-400 shrink-0">
                     상대팀
                   </div>
                 )}
@@ -196,7 +196,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
                     </button>
                   </div>
                 ) : (
-                  <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 rounded-2xl">
+                  <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-2xl">
                     <CardContent className="p-4">
                       <div className="flex flex-wrap gap-2">
                         {activeLineup.players.map((p, i) => (
@@ -210,7 +210,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
                 )}
 
                 {activeLineup.subs.length > 0 && (
-                  <Card className="bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 rounded-2xl">
+                  <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-2xl">
                     <CardContent className="p-4">
                       <p className="text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest">교체 선수</p>
                       <div className="flex flex-wrap gap-2">

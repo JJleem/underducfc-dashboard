@@ -64,11 +64,11 @@ const UnderduckSpinner = ({}: SpinnerProps) => {
             y2="0%"
           >
             <stop offset="0%" stopColor="#FF8FA3" />
-            <stop offset="100%" stopColor="#1f2937" />
+            <stop offset="100%" stopColor="#FFD7DE" />
           </linearGradient>
           <linearGradient id="underduck-dark" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#FFB6C1" />
-            <stop offset="100%" stopColor="#F5F5DC" />
+            <stop offset="100%" stopColor="#FFE4E9" />
           </linearGradient>
         </defs>
 
@@ -76,7 +76,7 @@ const UnderduckSpinner = ({}: SpinnerProps) => {
       </svg>
 
       {/* 💡 2. p-0.5로 패딩 최소화, bg-transparent로 로고 본연의 크기 강조 */}
-      <div className="absolute z-10 flex items-center justify-center rounded-full overflow-hidden udk-center-icon shadow-sm bg-white dark:bg-black w-[80%] h-[80%]">
+      <div className="absolute z-10 flex items-center justify-center rounded-full overflow-hidden udk-center-icon shadow-sm bg-white dark:bg-[#161618] w-[80%] h-[80%]">
         <Image
           src="/underducklogo.png"
           alt="Loading..."
