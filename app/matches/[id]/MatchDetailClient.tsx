@@ -44,7 +44,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
   const isInternal = match.opponent === "자체전";
 
   const getResultBadgeStyle = (result: string) => {
-    if (result === "승") return "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black";
+    if (result === "승") return "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black";
     if (result === "패") return "bg-gray-400 dark:bg-gray-700 text-white";
     if (result === "무") return "bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white";
     return "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10";

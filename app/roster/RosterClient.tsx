@@ -137,7 +137,8 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
             return (
               <div
                 key={index}
-                className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-[#161618] border border-gray-200/70 dark:border-white/[0.06] shadow-sm hover:border-gray-300 dark:hover:border-white/15 transition-colors"
+                style={{ animationDelay: `${Math.min(index, 10) * 50}ms` }}
+                className="animate-rise flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-[#161618] border border-gray-200/70 dark:border-white/[0.06] shadow-soft hover:border-gray-300 dark:hover:border-white/15 transition-colors"
               >
                 {/* 유니폼 등번호 아바타 */}
                 <div className="relative flex items-center justify-center w-14 h-16 rounded-xl overflow-hidden shadow-sm ring-1 ring-gray-200 dark:ring-white/10 shrink-0 bg-white">
@@ -276,7 +277,7 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
                     className={`flex-1 py-2.5 rounded-xl text-[12px] font-black transition-colors ${
                       form.status === s
                         ? s === "활동"
-                          ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black"
+                          ? "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black"
                           : "bg-red-500 text-white"
                         : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
                     }`}
@@ -292,7 +293,7 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
             <button
               onClick={addPlayer}
               disabled={adding || !form.name.trim()}
-              className="w-full py-3 rounded-2xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
+              className="w-full py-3 rounded-2xl bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
             >
               {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : "추가하기"}
             </button>

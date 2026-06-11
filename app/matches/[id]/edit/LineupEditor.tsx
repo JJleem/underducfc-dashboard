@@ -241,7 +241,7 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
         </div>
       </header>
 
-      <main className="p-4 space-y-4 pb-10">
+      <main className="p-4 space-y-4 pb-10 animate-fade">
         {/* 경기 정보 */}
         <div className="text-center py-2">
           <p className="text-[11px] font-bold text-gray-400">{match.date} · {match.location}</p>
@@ -311,12 +311,17 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
 
           {/* 필드 */}
           <div
-            className="relative w-full rounded-xl overflow-hidden"
+            className="relative w-full rounded-2xl overflow-hidden shadow-soft ring-1 ring-black/10 dark:ring-white/10"
             style={{
               paddingBottom: "138%",
               background: "linear-gradient(180deg,#1c6a36 0%,#185e2f 33%,#1c6a36 66%,#185e2f 100%)",
             }}
           >
+            {/* 비네팅: 가장자리를 살짝 어둡게 해 입체감 */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "radial-gradient(125% 80% at 50% 38%, transparent 58%, rgba(0,0,0,0.28) 100%)", zIndex: 6 }}
+            />
             <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 138" preserveAspectRatio="none" fill="none">
               <rect x="3" y="3" width="94" height="132" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
               <line x1="3" y1="69" x2="97" y2="69" stroke="rgba(255,255,255,0.5)" strokeWidth="0.6" />
@@ -353,7 +358,7 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
                   onClick={() => handleSlotClick("player", i)}
                 >
                   <div
-                    className="flex items-center justify-center rounded-full font-black transition-all"
+                    className={`flex items-center justify-center rounded-full font-black transition-all ${isActive ? "pulse-ring" : ""}`}
                     style={{
                       width: 36, height: 36,
                       fontSize: hasPlayer ? (displayLabel.length > 2 ? 9 : 13) : 11,

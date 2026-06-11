@@ -83,7 +83,7 @@ export function FormationField({
   const totalLayers = lineup.formation.split("-").length;
 
   return (
-    <div className="w-full rounded-2xl overflow-hidden shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+    <div className="w-full rounded-2xl overflow-hidden shadow-soft ring-1 ring-black/5 dark:ring-white/10">
       <div
         className="relative w-full"
         style={{
@@ -115,6 +115,12 @@ export function FormationField({
           <path d="M4,137 A4,4 0 0,1 8,141" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
           <path d="M92,137 A4,4 0 0,0 96,141" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
         </svg>
+
+        {/* 비네팅: 가장자리를 살짝 어둡게 해 입체감 */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(125% 80% at 50% 38%, transparent 58%, rgba(0,0,0,0.28) 100%)", zIndex: 6 }}
+        />
 
         {/* 중앙 로고 */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 5 }}>

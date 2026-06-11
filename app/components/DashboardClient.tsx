@@ -754,7 +754,7 @@ export default function DashboardClient({
     totalMatchesCount > 0 ? Math.round((wins / totalMatchesCount) * 100) : 0;
   const getResultBadgeStyle = (result: string) => {
     if (result === "승")
-      return "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black shadow-[0_0_10px_rgba(255,182,193,0.3)]";
+      return "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black shadow-[0_0_10px_rgba(255,182,193,0.3)]";
     if (result === "패") return "bg-gray-400 dark:bg-gray-700 text-white";
     if (result === "무")
       return "bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white";
@@ -792,8 +792,10 @@ export default function DashboardClient({
 
       <main className="p-5 pb-10">
         {/* 🦆 히어로 섹션 (복구 완료!) */}
-        <div className="relative py-7 flex flex-col items-center border-b border-gray-200/70 dark:border-white/[0.06] mb-5">
-          <div className="relative w-[72px] h-[72px] rounded-full bg-white dark:bg-[#141416] ring-1 ring-gray-200 dark:ring-white/10 shadow-sm flex items-center justify-center overflow-hidden mb-4">
+        <div className="animate-rise relative py-7 flex flex-col items-center border-b border-gray-200/70 dark:border-white/[0.06] mb-5">
+          {/* 은은한 앰비언트 라이팅 (네온 아님, 깊이감용) */}
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-52 h-28 bg-[#FFB6C1]/20 dark:bg-[#FF8FA3]/10 blur-[64px] rounded-full -z-10 pointer-events-none" />
+          <div className="relative w-[72px] h-[72px] rounded-full bg-white dark:bg-[#141416] ring-1 ring-gray-200 dark:ring-white/10 shadow-soft flex items-center justify-center overflow-hidden mb-4">
             <Image
               src="/underducklogo.png"
               alt="Underduck Logo"
@@ -897,13 +899,13 @@ export default function DashboardClient({
           </TabsList>
 
           {/* 💡 경기 일정 탭 내용 */}
-          <TabsContent value="matches" className="space-y-6 outline-none">
+          <TabsContent value="matches" className="space-y-6 outline-none animate-fade">
             {/* 💡 [공지사항 섹션] 고대비 + 왼쪽 포인트 라인 디자인 */}
             {localNotice && (
               <div className="px-1 mb-8">
-                <Card className="relative overflow-hidden border-none shadow-xl bg-white dark:bg-[#161618]">
+                <Card className="relative overflow-hidden border-none shadow-soft bg-white dark:bg-[#161618]">
                   {/* 💡 왼쪽 강조 라인: 공지사항임을 한눈에 알게 함 */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#FF8FA3] dark:bg-[#FFB6C1]" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1]" />
 
                   <CardContent className="p-5">
                     <div className="flex justify-between items-start mb-4">
@@ -996,7 +998,7 @@ export default function DashboardClient({
 
             {/* 매치 캘린더 */}
             <div className="px-1 mb-6">
-              <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-md">
+              <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-soft">
                 <CardContent className="p-4">
                   {/* 헤더 */}
                   <div className="flex items-center justify-between mb-3">
@@ -1211,8 +1213,9 @@ export default function DashboardClient({
             </button>
 
             {/* 경기 일정 리스트 */}
-            {[...matchList].reverse().map((match) => {
+            {[...matchList].reverse().map((match, mi) => {
               const isInternal = match.opponent === "자체전";
+              const riseDelay = `${Math.min(mi, 8) * 60}ms`;
 
               // 야유회 포스터 카드
               if (match.type === "야유회") {
@@ -1243,7 +1246,7 @@ export default function DashboardClient({
                 return (
                   <React.Fragment key={match.id}>
                     <div ref={(el) => { matchCardRefs.current[match.id] = el; }} />
-                    <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-md">
+                    <Card style={{ animationDelay: riseDelay }} className="animate-rise bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-soft">
                       {/* 포스터 이미지 영역 */}
                       <div className="relative w-full aspect-[1/1] overflow-hidden bg-gray-100 dark:bg-white/[0.04]">
                         {posterImg ? (
@@ -1444,7 +1447,8 @@ export default function DashboardClient({
                 <React.Fragment key={match.id}>
                 <div ref={(el) => { matchCardRefs.current[match.id] = el; }} />
                 <Card
-                  className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-md"
+                  style={{ animationDelay: riseDelay }}
+                  className="animate-rise bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-soft"
                 >
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-6">
@@ -1891,7 +1895,7 @@ export default function DashboardClient({
                               <span className="truncate">{name}</span>
                             </span>
                             <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full transition-all duration-500 ${isLeader ? "bg-[#FF8FA3] dark:bg-[#FFB6C1]" : "bg-gray-300 dark:bg-white/20"}`}
+                              <div className={`h-full rounded-full transition-all duration-500 ${isLeader ? "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1]" : "bg-gray-300 dark:bg-white/20"}`}
                                 style={{ width: count > 0 ? `${pct}%` : "0%" }} />
                             </div>
                             <span className="text-[10px] text-gray-400 w-4 text-right shrink-0">{count}</span>
@@ -2163,9 +2167,9 @@ export default function DashboardClient({
           )}
 
           {/* 선수 스탯 탭 */}
-          <TabsContent value="stats" className="outline-none">
+          <TabsContent value="stats" className="outline-none animate-fade">
             {/* 💡 하나의 통합된 전광판 스타일 카드 (모바일 화면 깨짐 완벽 방지) */}
-            <Card className="mb-6 bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+            <Card className="mb-6 bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl shadow-soft overflow-hidden flex flex-col">
               {/* 상단 섹션: 전적 및 승률 (배경색을 살짝 다르게 주어 분리감 형성) */}
               <div className="p-4 sm:p-5 bg-gray-50 dark:bg-white/[0.02] flex items-center justify-between border-b border-gray-100 dark:border-white/5">
                 <div>
@@ -2304,7 +2308,7 @@ export default function DashboardClient({
                         onClick={() => setStatSort(statSort === key ? "pos" : key)}
                         className={`flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl text-[12px] font-semibold transition-all ${
                           statSort === key
-                            ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black shadow-sm"
+                            ? "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black shadow-sm"
                             : "bg-white dark:bg-[#141416] border border-gray-200/70 dark:border-white/[0.06] text-gray-500 dark:text-gray-400"
                         }`}
                       >
@@ -2313,7 +2317,7 @@ export default function DashboardClient({
                     ))}
                   </div>
 
-                  <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-lg dark:shadow-2xl">
+                  <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-soft">
                     <table className="w-full text-left table-fixed border-collapse">
                       <thead>
                         <tr className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10 text-[9px] font-black text-gray-500 uppercase tracking-tighter">
@@ -2366,7 +2370,7 @@ export default function DashboardClient({
           </TabsContent>
 
           {/* 콘텐츠 탭 */}
-          <TabsContent value="media" className="outline-none pb-10">
+          <TabsContent value="media" className="outline-none pb-10 animate-fade">
             {/* 어드민 잠금/해제 */}
             <div className="flex items-center justify-end mb-3">
               {isMediaAdmin ? (
@@ -2403,7 +2407,7 @@ export default function DashboardClient({
                 <button
                   onClick={verifyAdminPin}
                   disabled={verifyingPin || !pinDraft}
-                  className="px-3 py-2 rounded-xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black text-[12px] font-black disabled:opacity-40"
+                  className="px-3 py-2 rounded-xl bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black text-[12px] font-black disabled:opacity-40"
                 >
                   {verifyingPin ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "확인"}
                 </button>
@@ -2524,7 +2528,7 @@ export default function DashboardClient({
                   <button
                     onClick={uploadMedia}
                     disabled={mediaUploading || !mediaUploadFile}
-                    className="w-full py-3 rounded-2xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
+                    className="w-full py-3 rounded-2xl bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
                   >
                     {mediaUploading ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> 업로드 중...</>
@@ -2557,7 +2561,7 @@ export default function DashboardClient({
                     {["예정", "승", "무", "패", "자체전"].map((r) => {
                       const active = editResult === r;
                       const colorMap: Record<string, string> = {
-                        승: "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black",
+                        승: "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black",
                         패: "bg-gray-500 text-white",
                         무: "bg-amber-400 text-white",
                         자체전: "bg-violet-400 text-white",
@@ -2694,7 +2698,7 @@ export default function DashboardClient({
                               <button
                                 key={name}
                                 onClick={() => { setGoalPickerScorer(name); setGoalPickerAssister(""); }}
-                                className={`px-3 py-1.5 rounded-xl text-[12px] font-black transition-colors ${goalPickerScorer === name ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black" : "bg-white dark:bg-white/10 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10"}`}
+                                className={`px-3 py-1.5 rounded-xl text-[12px] font-black transition-colors ${goalPickerScorer === name ? "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black" : "bg-white dark:bg-white/10 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10"}`}
                               >
                                 {name}
                               </button>
@@ -2739,7 +2743,7 @@ export default function DashboardClient({
                               setShowGoalPicker(false);
                             }}
                             disabled={!goalPickerScorer}
-                            className="flex-1 py-2.5 rounded-xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[12px] font-black text-white dark:text-black disabled:opacity-40"
+                            className="flex-1 py-2.5 rounded-xl bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-[12px] font-black text-white dark:text-black disabled:opacity-40"
                           >
                             확인
                           </button>
@@ -2754,7 +2758,7 @@ export default function DashboardClient({
                 <button
                   onClick={saveMatchResult}
                   disabled={savingMatchResult}
-                  className="w-full py-3 rounded-2xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
                 >
                   {savingMatchResult ? <Loader2 className="w-4 h-4 animate-spin" /> : "저장하기"}
                 </button>
@@ -2859,7 +2863,7 @@ export default function DashboardClient({
             <button
               onClick={saveNotice}
               disabled={savingNotice || !noticeEditForm.title || !noticeEditForm.content}
-              className="w-full py-3 rounded-2xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
+              className="w-full py-3 rounded-2xl bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
             >
               {savingNotice ? <Loader2 className="w-4 h-4 animate-spin" /> : "저장하기"}
             </button>
@@ -2922,7 +2926,7 @@ export default function DashboardClient({
                     onClick={() => setAddMatchForm((p) => ({ ...p, time: t === "미정" ? "" : t }))}
                     className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-colors ${
                       (t === "미정" && !addMatchForm.time) || addMatchForm.time === t
-                        ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black"
+                        ? "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black"
                         : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
                     }`}
                   >
@@ -2966,7 +2970,7 @@ export default function DashboardClient({
                     onClick={() => setAddMatchForm((p) => ({ ...p, type: t }))}
                     className={`flex-1 py-2.5 rounded-xl text-[12px] font-black transition-colors ${
                       addMatchForm.type === t
-                        ? "bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black"
+                        ? "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black"
                         : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
                     }`}
                   >
@@ -2981,7 +2985,7 @@ export default function DashboardClient({
             <button
               onClick={addMatch}
               disabled={addingMatch || !addMatchForm.date}
-              className="w-full py-3 rounded-2xl bg-[#FF8FA3] dark:bg-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
+              className="w-full py-3 rounded-2xl bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
             >
               {addingMatch ? <Loader2 className="w-4 h-4 animate-spin" /> : "등록하기"}
             </button>
