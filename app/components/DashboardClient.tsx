@@ -737,7 +737,13 @@ export default function DashboardClient({
       });
     });
     return Object.values(map)
-      .sort((x, y) => y.count - x.count)
+      .filter((d) => d.count >= 2) // 2회 이상 합작한 조합만 '듀오'로 인정
+      .sort(
+        (x, y) =>
+          y.count - x.count ||
+          x.a.localeCompare(y.a, "ko") ||
+          x.b.localeCompare(y.b, "ko"),
+      )
       .slice(0, 3);
   })();
 
@@ -2281,7 +2287,7 @@ export default function DashboardClient({
                 <span className="text-[10px] text-gray-400 ml-1">골+어시 합작</span>
               </div>
               {duoStats.length === 0 ? (
-                <p className="py-6 text-center text-[12px] text-gray-400">합작 기록이 없어요</p>
+                <p className="py-6 text-center text-[12px] text-gray-400">아직 2회 이상 합작한 듀오가 없어요</p>
               ) : (
                 <div className="divide-y divide-gray-100 dark:divide-white/5">
                   {duoStats.map((d, i) => {
