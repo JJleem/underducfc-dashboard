@@ -29,15 +29,14 @@ import {
   Trash2,
   Pencil,
   Film,
-  Upload,
   MessageCircle,
   Star,
   Tent,
   User,
   Shield,
   Lock,
-  LockOpen,
   Check,
+  Swords,
 } from "lucide-react";
 import { shareMatchResult } from "../lib/draw-match-result";
 import { MiniFormationField, FORMATION_POSITIONS } from "./FormationField";
@@ -181,7 +180,6 @@ interface DashboardClientProps {
   notice?: NoticeData;
   lineups: LineupData[];
   rosterMap: Record<string, string>;
-  media?: MediaData[];
 }
 
 export default function DashboardClient({
@@ -190,7 +188,6 @@ export default function DashboardClient({
   notice,
   lineups,
   rosterMap,
-  media = [],
 }: DashboardClientProps) {
   const { theme, setTheme } = useTheme();
   const [matchList, setMatchList] = React.useState<MatchData[]>(matches);
@@ -223,102 +220,6 @@ export default function DashboardClient({
       alert(e instanceof Error ? e.message : "저장 실패");
     } finally {
       setSavingNotice(false);
-    }
-  };
-
-  // 미디어 콘텐츠
-  const [mediaList, setMediaList] = React.useState<MediaData[]>(media);
-  const [mediaUploadModal, setMediaUploadModal] = React.useState(false);
-  const [mediaUploadFile, setMediaUploadFile] = React.useState<File | null>(null);
-  const [mediaUploadTitle, setMediaUploadTitle] = React.useState("");
-  const [mediaUploading, setMediaUploading] = React.useState(false);
-  const mediaFileRef = React.useRef<HTMLInputElement>(null);
-
-  // 어드민 PIN
-  const [isMediaAdmin, setIsMediaAdmin] = React.useState(false);
-  const [showPinInput, setShowPinInput] = React.useState(false);
-  const [pinDraft, setPinDraft] = React.useState("");
-  const [pinError, setPinError] = React.useState(false);
-  const [verifyingPin, setVerifyingPin] = React.useState(false);
-  const adminPinRef = React.useRef("");
-
-  const verifyAdminPin = async () => {
-    if (!pinDraft) return;
-    setVerifyingPin(true);
-    setPinError(false);
-    try {
-      const res = await fetch("/api/admin/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: pinDraft }),
-      });
-      if (res.ok) {
-        adminPinRef.current = pinDraft;
-        setIsMediaAdmin(true);
-        setShowPinInput(false);
-        setPinDraft("");
-      } else {
-        setPinError(true);
-        setPinDraft("");
-      }
-    } finally {
-      setVerifyingPin(false);
-    }
-  };
-
-  const uploadMedia = async () => {
-    if (!mediaUploadFile) return;
-    setMediaUploading(true);
-    try {
-      const isVideo = mediaUploadFile.type.startsWith("video/");
-      const resourceType = isVideo ? "video" : "image";
-      const signRes = await fetch(`/api/media/sign?type=${resourceType}`, {
-        headers: { "x-admin-pin": adminPinRef.current },
-      });
-      const { timestamp, signature, apiKey, cloudName, folder } = await signRes.json();
-      const fd = new FormData();
-      fd.append("file", mediaUploadFile);
-      fd.append("api_key", apiKey);
-      fd.append("timestamp", String(timestamp));
-      fd.append("signature", signature);
-      fd.append("folder", folder);
-      const uploadRes = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
-        { method: "POST", body: fd }
-      );
-      const uploadData = await uploadRes.json();
-      if (!uploadData.secure_url) throw new Error("업로드 실패");
-      const saveRes = await fetch("/api/media", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-pin": adminPinRef.current },
-        body: JSON.stringify({ type: resourceType, url: uploadData.secure_url, title: mediaUploadTitle }),
-      });
-      if (!saveRes.ok) throw new Error("저장 실패");
-      setMediaList((prev) => [
-        { id: prev.length, type: resourceType as "video" | "image", url: uploadData.secure_url, title: mediaUploadTitle, uploadedAt: new Date().toISOString() },
-        ...prev,
-      ]);
-      setMediaUploadFile(null);
-      setMediaUploadTitle("");
-      setMediaUploadModal(false);
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "업로드 실패");
-    } finally {
-      setMediaUploading(false);
-    }
-  };
-
-  const deleteMediaItem = async (url: string) => {
-    if (!confirm("삭제할까요?")) return;
-    try {
-      await fetch("/api/media", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json", "x-admin-pin": adminPinRef.current },
-        body: JSON.stringify({ url }),
-      });
-      setMediaList((prev) => prev.filter((item) => item.url !== url));
-    } catch {
-      alert("삭제 실패");
     }
   };
 
@@ -787,6 +688,39 @@ export default function DashboardClient({
       : "0.0";
   const winRate =
     totalMatchesCount > 0 ? Math.round((wins / totalMatchesCount) * 100) : 0;
+
+  // 💡 상대팀별 / 장소별 전적 (자체전·내전 제외, completedMatches 기반)
+  type AggRow = { played: number; w: number; d: number; l: number; gf: number; ga: number };
+  const buildAgg = (keyOf: (m: MatchData) => string) => {
+    const map: Record<string, AggRow> = {};
+    completedMatches.forEach((m) => {
+      if ((m.opponent || "").trim() === "자체전") return; // 내전 제외
+      if ((m.type || "").replace(/\s/g, "") !== "일반매칭") return; // 일반 매칭만
+      const key = keyOf(m).trim();
+      if (!key) return;
+      const gf = Number(m.ourScore) || 0;
+      const ga = Number(m.theirScore) || 0;
+      const s = (map[key] ||= { played: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0 });
+      s.played++;
+      s.gf += gf;
+      s.ga += ga;
+      if (gf > ga) s.w++;
+      else if (gf === ga) s.d++;
+      else s.l++;
+    });
+    return Object.entries(map).map(([key, s]) => ({
+      key,
+      ...s,
+      winRate: Math.round((s.w / s.played) * 100),
+    }));
+  };
+  const opponentStats = buildAgg((m) => m.opponent || "").sort(
+    (a, b) => b.played - a.played || b.winRate - a.winRate,
+  );
+  const venueStats = buildAgg((m) => m.location || "").sort(
+    (a, b) => b.winRate - a.winRate || b.played - a.played,
+  );
+
   const getResultBadgeStyle = (result: string) => {
     if (result === "승")
       return "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black shadow-[0_0_10px_rgba(255,182,193,0.3)]";
@@ -862,12 +796,20 @@ export default function DashboardClient({
               란 말을 추구하며, <br /> 서로를 존중하는 축구 동호회입니다.
             </p>
 
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
               <Link
                 href="/roster"
-                className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 dark:bg-white/10 hover:bg-gray-800 dark:hover:bg-white/20 text-white dark:text-[#FFB6C1] rounded-full text-xs font-bold transition-all shadow-md"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 dark:bg-white/10 hover:bg-gray-800 dark:hover:bg-white/20 text-white dark:text-[#FFB6C1] rounded-full text-xs font-bold transition-all shadow-md"
               >
-                <Menu className="w-4 h-4" />팀 로스터 보기
+                <Menu className="w-4 h-4" />로스터
+              </Link>
+
+              {/* 💡 콘텐츠(미디어) 진입 버튼 */}
+              <Link
+                href="/media"
+                className="flex items-center gap-1.5 px-5 py-2.5 bg-white dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 rounded-full text-xs font-bold transition-all border border-gray-200 dark:border-white/10"
+              >
+                <Film className="w-4 h-4" />콘텐츠
               </Link>
 
               {/* 💡 인스타그램 버튼 */}
@@ -926,10 +868,10 @@ export default function DashboardClient({
               <Trophy className="w-3.5 h-3.5 mr-1" /> 스탯
             </TabsTrigger>
             <TabsTrigger
-              value="media"
+              value="record"
               className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:text-gray-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm rounded-xl py-2.5 font-semibold text-[12px] transition-all"
             >
-              <Film className="w-3.5 h-3.5 mr-1" /> 콘텐츠
+              <Swords className="w-3.5 h-3.5 mr-1" /> 전적
             </TabsTrigger>
           </TabsList>
 
@@ -2401,174 +2343,90 @@ export default function DashboardClient({
             })()}
           </TabsContent>
 
-          {/* 콘텐츠 탭 */}
-          <TabsContent value="media" className="outline-none pb-10 animate-fade">
-            {/* 어드민 잠금/해제 */}
-            <div className="flex items-center justify-end mb-3">
-              {isMediaAdmin ? (
-                <button
-                  onClick={() => { setIsMediaAdmin(false); adminPinRef.current = ""; setShowPinInput(false); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400 text-[11px] font-bold"
-                >
-                  <LockOpen className="w-3 h-3" /> 관리자
-                </button>
-              ) : (
-                <button
-                  onClick={() => { setShowPinInput((p) => !p); setPinError(false); setPinDraft(""); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 text-[11px] font-bold"
-                >
-                  <Lock className="w-3 h-3" /> 관리자
-                </button>
-              )}
-            </div>
-
-            {/* PIN 입력 */}
-            {showPinInput && !isMediaAdmin && (
-              <div className="flex items-center gap-2 mb-4 p-3 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={8}
-                  value={pinDraft}
-                  onChange={(e) => { setPinDraft(e.target.value); setPinError(false); }}
-                  onKeyDown={(e) => e.key === "Enter" && verifyAdminPin()}
-                  placeholder="PIN 입력"
-                  autoFocus
-                  className={`flex-1 text-[13px] font-bold bg-white dark:bg-white/10 rounded-xl px-3 py-2 outline-none border ${pinError ? "border-red-400 text-red-500 placeholder:text-red-300" : "border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400"}`}
-                />
-                <button
-                  onClick={verifyAdminPin}
-                  disabled={verifyingPin || !pinDraft}
-                  className="px-3 py-2 rounded-xl bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black text-[12px] font-black disabled:opacity-40"
-                >
-                  {verifyingPin ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "확인"}
-                </button>
+          {/* 전적 탭 */}
+          <TabsContent value="record" className="outline-none pb-10 animate-fade space-y-6">
+            {/* 상대팀별 전적 */}
+            <div>
+              <div className="flex items-center gap-1.5 mb-3 px-1">
+                <Swords className="w-3.5 h-3.5 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+                <span className="text-[11px] font-bold text-gray-700 dark:text-white tracking-widest">상대팀별 전적</span>
+                <span className="text-[10px] text-gray-400 ml-1">일반 매칭 기준</span>
               </div>
-            )}
-            {pinError && <p className="text-[11px] text-red-500 font-bold -mt-2 mb-3 px-1">PIN이 올바르지 않습니다</p>}
-
-            {/* 업로드 버튼 (어드민만) */}
-            {isMediaAdmin && (
-              <button
-                onClick={() => setMediaUploadModal(true)}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-[#FFB6C1]/40 dark:border-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] text-[13px] font-black hover:bg-[#FF8FA3]/5 dark:hover:bg-[#FFB6C1]/5 transition-colors mb-5"
-              >
-                <Upload className="w-4 h-4" /> 업로드
-              </button>
-            )}
-
-            {mediaList.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-600">
-                <Film className="w-10 h-10 mb-3 opacity-30" />
-                <p className="text-[13px] font-bold">업로드된 콘텐츠가 없습니다</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* 비디오 */}
-                {mediaList.filter((m) => m.type === "video").map((item) => (
-                  <div key={item.url} className="rounded-2xl overflow-hidden bg-white dark:bg-[#161618] border border-gray-200 dark:border-white/10 shadow-sm">
-                    <video
-                      src={item.url}
-                      controls
-                      className="w-full max-h-64 bg-black"
-                      preload="metadata"
-                      poster={item.url.replace("/video/upload/", "/video/upload/so_0/").replace(/\.[^.]+$/, ".jpg")}
-                    />
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-[13px] font-black text-gray-800 dark:text-gray-100 truncate flex-1">
-                        {item.title || "제목 없음"}
-                      </span>
-                      {isMediaAdmin && (
-                        <button
-                          onClick={() => deleteMediaItem(item.url)}
-                          className="ml-3 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {/* 이미지 */}
-                {mediaList.filter((m) => m.type === "image").length > 0 && (
-                  <div className="grid grid-cols-2 gap-3">
-                    {mediaList.filter((m) => m.type === "image").map((item) => (
-                      <div key={item.url} className="rounded-2xl overflow-hidden bg-white dark:bg-[#161618] border border-gray-200 dark:border-white/10 shadow-sm relative group">
-                        <img src={item.url} alt={item.title} className="w-full h-36 object-cover" />
-                        <div className="px-3 py-2 flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300 truncate flex-1">{item.title || "제목 없음"}</span>
-                          {isMediaAdmin && (
-                            <button
-                              onClick={() => deleteMediaItem(item.url)}
-                              className="ml-1 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-400 hover:text-red-500 transition-colors"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
+              <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-soft">
+                {opponentStats.length === 0 ? (
+                  <CardContent className="py-10 text-center text-[12px] text-gray-400">
+                    기록된 경기가 없어요
+                  </CardContent>
+                ) : (
+                  <div className="divide-y divide-gray-100 dark:divide-white/5">
+                    {opponentStats.map((o) => {
+                      const wrColor = o.winRate >= 60 ? "text-emerald-500" : o.winRate <= 30 ? "text-rose-400" : "text-gray-500 dark:text-gray-300";
+                      return (
+                        <div key={o.key} className="flex items-center gap-3 px-4 py-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-bold text-gray-900 dark:text-white truncate">vs {o.key}</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5 tabular-nums">
+                              {o.played}경기 · {o.w}승 {o.d}무 {o.l}패 · {o.gf}<span className="text-gray-300 dark:text-gray-600">득</span> {o.ga}<span className="text-gray-300 dark:text-gray-600">실</span>
+                            </p>
+                          </div>
+                          <div className="shrink-0 w-16 text-right">
+                            <p className={`text-[15px] font-extrabold tabular-nums ${wrColor}`}>{o.winRate}%</p>
+                            <div className="w-full h-1 bg-gray-100 dark:bg-white/10 rounded-full mt-1 overflow-hidden">
+                              <div className="h-full rounded-full bg-gradient-to-r from-[#FFB6C1] to-[#FF8FA3]" style={{ width: `${o.winRate}%` }} />
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
-              </div>
-            )}
+              </Card>
+            </div>
 
-            {/* 업로드 Drawer */}
-            <Drawer open={mediaUploadModal} onOpenChange={setMediaUploadModal}>
-              <DrawerContent className="bg-white dark:bg-[#161618] max-h-[80dvh]">
-                <DrawerHeader className="pb-0">
-                  <DrawerTitle className="text-[15px] font-bold text-gray-900 dark:text-white">콘텐츠 업로드</DrawerTitle>
-                </DrawerHeader>
-                <div className="overflow-y-auto px-4 py-4 space-y-4">
-                  {/* 파일 선택 */}
-                  <div>
-                    <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">파일 선택 *</p>
-                    <input
-                      ref={mediaFileRef}
-                      type="file"
-                      accept="image/*,video/*"
-                      className="hidden"
-                      onChange={(e) => setMediaUploadFile(e.target.files?.[0] || null)}
-                    />
-                    <button
-                      onClick={() => mediaFileRef.current?.click()}
-                      className="w-full py-3 rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 text-[13px] font-bold text-gray-500 dark:text-gray-400 hover:border-[#FFB6C1] hover:text-[#FF8FA3] dark:hover:text-[#FFB6C1] transition-colors"
-                    >
-                      {mediaUploadFile ? (
-                        <span className="inline-flex items-center gap-1.5 text-[#FF8FA3] dark:text-[#FFB6C1]">
-                          {mediaUploadFile.type.startsWith("video/") ? <Film className="w-3.5 h-3.5" /> : <Camera className="w-3.5 h-3.5" />} {mediaUploadFile.name}
-                        </span>
-                      ) : (
-                        "사진 또는 동영상 선택"
-                      )}
-                    </button>
+            {/* 장소별 승률 */}
+            <div>
+              <div className="flex items-center gap-1.5 mb-3 px-1">
+                <MapPin className="w-3.5 h-3.5 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+                <span className="text-[11px] font-bold text-gray-700 dark:text-white tracking-widest">장소별 승률</span>
+                <span className="text-[10px] text-gray-400 ml-1">일반 매칭 기준</span>
+              </div>
+              <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-soft">
+                {venueStats.length === 0 ? (
+                  <CardContent className="py-10 text-center text-[12px] text-gray-400">
+                    기록된 경기가 없어요
+                  </CardContent>
+                ) : (
+                  <div className="divide-y divide-gray-100 dark:divide-white/5">
+                    {venueStats.map((v, i) => {
+                      const wrColor = v.winRate >= 60 ? "text-emerald-500" : v.winRate <= 30 ? "text-rose-400" : "text-gray-500 dark:text-gray-300";
+                      return (
+                        <div key={v.key} className="flex items-center gap-3 px-4 py-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-[13px] font-bold text-gray-900 dark:text-white truncate">{v.key}</p>
+                              {i === 0 && (
+                                <span className="shrink-0 inline-flex items-center gap-0.5 text-[9px] font-bold text-amber-500 bg-amber-50 dark:bg-amber-400/10 px-1.5 py-0.5 rounded-full">
+                                  <Star className="w-2.5 h-2.5 fill-amber-500" /> 최고
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-0.5 tabular-nums">
+                              {v.played}경기 · {v.w}승 {v.d}무 {v.l}패
+                            </p>
+                          </div>
+                          <div className="shrink-0 w-16 text-right">
+                            <p className={`text-[15px] font-extrabold tabular-nums ${wrColor}`}>{v.winRate}%</p>
+                            <div className="w-full h-1 bg-gray-100 dark:bg-white/10 rounded-full mt-1 overflow-hidden">
+                              <div className="h-full rounded-full bg-gradient-to-r from-[#FFB6C1] to-[#FF8FA3]" style={{ width: `${v.winRate}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  {/* 제목 */}
-                  <div>
-                    <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">제목 <span className="text-gray-300 dark:text-gray-600 font-medium normal-case tracking-normal">(선택)</span></p>
-                    <input
-                      type="text"
-                      value={mediaUploadTitle}
-                      onChange={(e) => setMediaUploadTitle(e.target.value)}
-                      placeholder="콘텐츠 제목"
-                      className="w-full text-[13px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600"
-                    />
-                  </div>
-                </div>
-                <DrawerFooter className="pt-2">
-                  <button
-                    onClick={uploadMedia}
-                    disabled={mediaUploading || !mediaUploadFile}
-                    className="w-full py-3 rounded-2xl bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
-                  >
-                    {mediaUploading ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> 업로드 중...</>
-                    ) : "업로드"}
-                  </button>
-                </DrawerFooter>
-              </DrawerContent>
-            </Drawer>
+                )}
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </main>

@@ -3,7 +3,6 @@ import { getSheetData } from "./lib/google-sheets";
 import DashboardClient, {
   LineupData,
   MatchData,
-  MediaData,
   NoticeData,
   PlayerData,
 } from "./components/DashboardClient";
@@ -19,12 +18,6 @@ export default async function TeamDashboardPage() {
     rawLineups = await getSheetData("lineup!A1:S100");
   } catch {
     rawLineups = [];
-  }
-  let rawMedia: string[][] = [];
-  try {
-    rawMedia = await getSheetData("media!A1:D100");
-  } catch {
-    rawMedia = [];
   }
   // 💡 2. MatchData 타입에 맞춰서 가공 (row: string[] 명시)
   const matches: MatchData[] = rawMatches
@@ -119,17 +112,6 @@ export default async function TeamDashboardPage() {
         location: firstNoticeRow[4] || "",
       }
     : undefined;
-  const mediaItems: MediaData[] = rawMedia
-    .slice(1)
-    .map((row: string[], i: number) => ({
-      id: i,
-      type: (row[0] || "image") as "video" | "image",
-      url: row[1] || "",
-      title: row[2] || "",
-      uploadedAt: row[3] || "",
-    }))
-    .filter((item) => item.url);
-
   return (
     <DashboardClient
       matches={matches}
@@ -137,7 +119,6 @@ export default async function TeamDashboardPage() {
       notice={latestNotice}
       lineups={lineups}
       rosterMap={lineupRosterMap}
-      media={mediaItems}
     />
   );
 }
