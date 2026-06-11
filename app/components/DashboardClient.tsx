@@ -47,6 +47,41 @@ import Image from "next/image";
 import Link from "next/link";
 import { DayPicker } from "react-day-picker";
 
+// 숫자가 0에서 목표값까지 부드럽게 올라가는 카운트업 (전광판 느낌)
+function CountUp({
+  value,
+  decimals = 0,
+  duration = 1000,
+}: {
+  value: number;
+  decimals?: number;
+  duration?: number;
+}) {
+  const [display, setDisplay] = React.useState(0);
+  React.useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setDisplay(value);
+      return;
+    }
+    let raf = 0;
+    let startTs = 0;
+    const tick = (ts: number) => {
+      if (!startTs) startTs = ts;
+      const t = Math.min((ts - startTs) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      setDisplay(value * eased);
+      if (t < 1) raf = requestAnimationFrame(tick);
+      else setDisplay(value);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+  return <>{display.toFixed(decimals)}</>;
+}
+
 function getMatchDotStyle(result: string): string {
   if (result === "승") return "bg-[#FF8FA3]";
   if (result === "패") return "bg-gray-400";
@@ -904,9 +939,6 @@ export default function DashboardClient({
             {localNotice && (
               <div className="px-1 mb-8">
                 <Card className="relative overflow-hidden border-none shadow-soft bg-white dark:bg-[#161618]">
-                  {/* 💡 왼쪽 강조 라인: 공지사항임을 한눈에 알게 함 */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1]" />
-
                   <CardContent className="p-5">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-2">
@@ -2178,26 +2210,26 @@ export default function DashboardClient({
                   </p>
                   {/* flex-wrap을 주어 만약 화면이 극단적으로 좁아져도 자연스럽게 떨어지도록 처리 */}
                   <div className="flex items-baseline flex-wrap gap-x-2 gap-y-1">
-                    <span className="text-lg sm:text-xl font-black text-gray-900 dark:text-white">
-                      {totalMatchesCount}
+                    <span className="text-lg sm:text-xl font-black text-gray-900 dark:text-white tabular-nums">
+                      <CountUp value={totalMatchesCount} />
                       <span className="text-[10px] sm:text-[11px] font-medium text-gray-400 ml-0.5">
                         전
                       </span>
                     </span>
-                    <span className="text-lg sm:text-xl font-black text-blue-500 ml-1">
-                      {wins}
+                    <span className="text-lg sm:text-xl font-black text-blue-500 ml-1 tabular-nums">
+                      <CountUp value={wins} />
                       <span className="text-[10px] sm:text-[11px] font-medium text-blue-500/70 ml-0.5">
                         승
                       </span>
                     </span>
-                    <span className="text-lg sm:text-xl font-black text-gray-500 ml-1">
-                      {draws}
+                    <span className="text-lg sm:text-xl font-black text-gray-500 ml-1 tabular-nums">
+                      <CountUp value={draws} />
                       <span className="text-[10px] sm:text-[11px] font-medium text-gray-400 ml-0.5">
                         무
                       </span>
                     </span>
-                    <span className="text-lg sm:text-xl font-black text-[#FF8FA3] ml-1">
-                      {losses}
+                    <span className="text-lg sm:text-xl font-black text-[#FF8FA3] ml-1 tabular-nums">
+                      <CountUp value={losses} />
                       <span className="text-[10px] sm:text-[11px] font-medium text-[#FF8FA3]/70 ml-0.5">
                         패
                       </span>
@@ -2209,8 +2241,8 @@ export default function DashboardClient({
                   <p className="text-[10px] sm:text-[11px] font-bold text-gray-500 mb-1.5">
                     승률
                   </p>
-                  <p className="text-lg sm:text-xl font-black text-gray-900 dark:text-white">
-                    {winRate}%
+                  <p className="text-lg sm:text-xl font-black text-gray-900 dark:text-white tabular-nums">
+                    <CountUp value={winRate} />%
                   </p>
                 </div>
               </div>
@@ -2224,8 +2256,8 @@ export default function DashboardClient({
                       총 득점
                     </p>
                   </div>
-                  <p className="text-lg sm:text-2xl font-black text-blue-500">
-                    {totalGoalsFor}
+                  <p className="text-lg sm:text-2xl font-black text-blue-500 tabular-nums">
+                    <CountUp value={totalGoalsFor} />
                     <span className="text-[9px] sm:text-[11px] font-medium text-gray-400 ml-0.5 sm:ml-1">
                       골
                     </span>
@@ -2239,8 +2271,8 @@ export default function DashboardClient({
                       총 실점
                     </p>
                   </div>
-                  <p className="text-lg sm:text-2xl font-black text-[#FF8FA3]">
-                    {totalGoalsAgainst}
+                  <p className="text-lg sm:text-2xl font-black text-[#FF8FA3] tabular-nums">
+                    <CountUp value={totalGoalsAgainst} />
                     <span className="text-[9px] sm:text-[11px] font-medium text-gray-400 ml-0.5 sm:ml-1">
                       골
                     </span>
@@ -2254,8 +2286,8 @@ export default function DashboardClient({
                       평균 득점
                     </p>
                   </div>
-                  <p className="text-lg sm:text-2xl font-black text-blue-500">
-                    {avgGoalsFor}
+                  <p className="text-lg sm:text-2xl font-black text-blue-500 tabular-nums">
+                    <CountUp value={Number(avgGoalsFor)} decimals={1} />
                     <span className="text-[9px] sm:text-[11px] font-medium text-gray-400 ml-0.5 sm:ml-1">
                       골
                     </span>
@@ -2269,8 +2301,8 @@ export default function DashboardClient({
                       평균 실점
                     </p>
                   </div>
-                  <p className="text-lg sm:text-2xl font-black text-[#FF8FA3]">
-                    {avgGoalsAgainst}
+                  <p className="text-lg sm:text-2xl font-black text-[#FF8FA3] tabular-nums">
+                    <CountUp value={Number(avgGoalsAgainst)} decimals={1} />
                     <span className="text-[9px] sm:text-[11px] font-medium text-gray-400 ml-0.5 sm:ml-1">
                       골
                     </span>
