@@ -721,6 +721,26 @@ export default function DashboardClient({
     (a, b) => b.winRate - a.winRate || b.played - a.played,
   );
 
+  // 💡 최고의 듀오: (득점자 + 어시스트) 조합을 순서 무관하게 합산
+  const duoStats = (() => {
+    const map: Record<string, { a: string; b: string; count: number }> = {};
+    completedMatches.forEach((m) => {
+      const scorers = (m.goals || "").split(",").map((s) => s.trim());
+      const assisters = (m.assists || "").split(",").map((s) => s.trim());
+      scorers.forEach((scorer, i) => {
+        const assister = assisters[i] || "";
+        if (!scorer || !assister || scorer === assister) return;
+        if (scorer === "자책골" || assister === "자책골") return;
+        const [a, b] = [scorer, assister].sort((x, y) => x.localeCompare(y, "ko"));
+        const e = (map[`${a}|${b}`] ||= { a, b, count: 0 });
+        e.count++;
+      });
+    });
+    return Object.values(map)
+      .sort((x, y) => y.count - x.count)
+      .slice(0, 3);
+  })();
+
   const getResultBadgeStyle = (result: string) => {
     if (result === "승")
       return "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black shadow-[0_0_10px_rgba(255,182,193,0.3)]";
@@ -2251,6 +2271,44 @@ export default function DashboardClient({
                   </p>
                 </div>
               </div>
+            </Card>
+
+            {/* 💡 최고의 듀오 Top 3 */}
+            <Card className="mb-6 bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl shadow-soft overflow-hidden">
+              <div className="flex items-center gap-1.5 px-4 py-3 border-b border-gray-100 dark:border-white/5">
+                <Users className="w-3.5 h-3.5 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+                <span className="text-[11px] font-bold text-gray-700 dark:text-white tracking-widest">최고의 듀오</span>
+                <span className="text-[10px] text-gray-400 ml-1">골+어시 합작</span>
+              </div>
+              {duoStats.length === 0 ? (
+                <p className="py-6 text-center text-[12px] text-gray-400">합작 기록이 없어요</p>
+              ) : (
+                <div className="divide-y divide-gray-100 dark:divide-white/5">
+                  {duoStats.map((d, i) => {
+                    const rankStyle = [
+                      "bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300",
+                      "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-300",
+                      "bg-orange-100 text-orange-700 dark:bg-orange-400/15 dark:text-orange-300",
+                    ][i];
+                    return (
+                      <div key={`${d.a}|${d.b}`} className="flex items-center gap-3 px-4 py-2.5">
+                        <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black shrink-0 ${rankStyle}`}>
+                          {i + 1}
+                        </span>
+                        <div className="flex-1 min-w-0 flex items-center gap-1.5 text-[13px] font-bold text-gray-900 dark:text-white">
+                          <span className="truncate">{d.a}</span>
+                          <span className="text-gray-300 dark:text-gray-600 shrink-0">×</span>
+                          <span className="truncate">{d.b}</span>
+                        </div>
+                        <span className="shrink-0 text-[13px] font-extrabold text-[#FF8FA3] dark:text-[#FFB6C1] tabular-nums">
+                          {d.count}
+                          <span className="text-[10px] font-medium text-gray-400 ml-0.5">회</span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </Card>
             {/* 필터 버튼 */}
             {(() => {
