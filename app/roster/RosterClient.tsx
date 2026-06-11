@@ -151,8 +151,8 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
                     className="absolute z-10 font-extrabold tracking-tight top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pr-1.5 pb-1"
                     style={{
                       fontSize: hasNo ? "26px" : "16px",
-                      color: "#18181b",
-                      textShadow: "0 1px 2px rgba(255,255,255,0.65)",
+                      color: "#FF8FA3",
+                      textShadow: "0 1px 2px rgba(0,0,0,0.35)",
                     }}
                   >
                     {hasNo ? rawNo : "?"}

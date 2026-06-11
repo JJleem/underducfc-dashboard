@@ -802,8 +802,8 @@ export default function DashboardClient({
               className="object-cover"
             />
           </div>
-          <h1 className="text-[34px] leading-none w-full text-center font-extrabold tracking-tight text-gray-900 dark:text-white">
-            UNDERDUCK <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">FC</span>
+          <h1 className="text-[34px] leading-none w-full text-center font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#FF8FA3] to-gray-900 dark:from-[#FFB6C1] dark:to-zinc-100">
+            UNDERDUCK FC
           </h1>
           <div className="flex flex-col gap-2 mt-3 max-w-[400px] items-center text-center">
             <div className="flex items-center gap-2">
