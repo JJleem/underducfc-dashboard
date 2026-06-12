@@ -39,7 +39,6 @@ import {
   Swords,
   Sparkles,
 } from "lucide-react";
-import { shareMatchResult } from "../lib/draw-match-result";
 import { shareStoryCard } from "../lib/draw-story-card";
 import { FormationField, FORMATION_POSITIONS } from "./FormationField";
 import { shareFormation } from "../lib/draw-formation";
@@ -346,9 +345,6 @@ export default function DashboardClient({
     });
     return map;
   }, [matchList]);
-
-  // 결과 공유
-  const [sharingResult, setSharingResult] = React.useState<number | null>(null);
 
   // D-Day 계산
   const getDDay = (dateStr: string): number | null => {
@@ -1563,21 +1559,6 @@ export default function DashboardClient({
                             >
                               {match.result}
                             </Badge>
-                            <button
-                              onClick={async () => {
-                                setSharingResult(match.id);
-                                try { await shareMatchResult(match); }
-                                catch (e) { if (e instanceof Error && e.name !== "AbortError") alert("공유 실패"); }
-                                finally { setSharingResult(null); }
-                              }}
-                              disabled={sharingResult === match.id}
-                              className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors disabled:opacity-40"
-                            >
-                              {sharingResult === match.id
-                                ? <Loader2 className="w-3 h-3 animate-spin text-gray-500" />
-                                : <Share2 className="w-3 h-3 text-gray-500 dark:text-gray-400" />
-                              }
-                            </button>
                             <button
                               onClick={async () => {
                                 buzz();
