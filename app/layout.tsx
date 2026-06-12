@@ -1,5 +1,5 @@
 // app/layout.tsx
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "./components/theme-provider";
 import Image from "next/image"; // 👈 추가!
 import "./globals.css";
@@ -37,6 +37,21 @@ export const metadata: Metadata = {
     icon: "/underducklogo.png",
     apple: "/underducklogo.png",
   },
+
+  // 💡 PWA: 홈 화면에 추가 시 standalone 앱으로 실행
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "UNDERDUCK FC",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f9fafb" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+  ],
 };
 export default function RootLayout({
   children,

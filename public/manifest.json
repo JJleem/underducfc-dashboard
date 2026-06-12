@@ -1,0 +1,24 @@
+{
+  "name": "UNDERDUCK FC",
+  "short_name": "UNDERDUCK",
+  "description": "언더덕 FC 팀 대시보드 - Not 'Because of', but 'Thanks to'",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/underducklogo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/underducklogo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
