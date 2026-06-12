@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "./components/theme-provider";
+import PullToRefresh from "./components/PullToRefresh";
 import Image from "next/image"; // 👈 추가!
 import "./globals.css";
 import Link from "next/link";
@@ -82,6 +83,7 @@ export default function RootLayout({
         >
           {/* 📱 모바일 앱 프레임 래퍼 */}
           <div className="max-w-md mx-auto min-h-[100dvh] flex flex-col bg-gray-50 dark:bg-[#09090b] shadow-2xl relative overflow-hidden transition-colors duration-300">
+            <PullToRefresh>
             {/* 메인 컨텐츠 (Dashboard, Roster 등) */}
             <div className="flex-1">{children}</div>
 
@@ -120,6 +122,7 @@ export default function RootLayout({
                 </div>
               </div>
             </footer>
+            </PullToRefresh>
           </div>
         </ThemeProvider>
       </body>
