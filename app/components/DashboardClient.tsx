@@ -2936,9 +2936,12 @@ export default function DashboardClient({
               ? Math.round((attendCount / matchesWithAttendees.length) * 100)
               : null;
             const partners = duoAll.filter((d) => d.a === pName || d.b === pName).slice(0, 3);
-            const scoredMatches = completedMatches
-              .filter((m) => (m.goals || "").split(",").map((s) => s.trim()).includes(pName))
-              .slice(-4)
+            const contributedMatches = completedMatches
+              .filter((m) =>
+                (m.goals || "").split(",").map((s) => s.trim()).includes(pName) ||
+                (m.assists || "").split(",").map((s) => s.trim()).includes(pName)
+              )
+              .slice(-5)
               .reverse();
             return (
               <>
@@ -3019,24 +3022,40 @@ export default function DashboardClient({
                     </div>
                   )}
 
-                  {/* 득점 경기 */}
-                  {scoredMatches.length > 0 && (
+                  {/* 활약한 경기 (골/어시) */}
+                  {contributedMatches.length > 0 && (
                     <div>
                       <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-widest mb-2">
-                        최근 득점 경기
+                        최근 활약한 경기
                       </p>
                       <div className="space-y-1.5">
-                        {scoredMatches.map((m) => {
-                          const cnt = (m.goals || "").split(",").map((s) => s.trim()).filter((s) => s === pName).length;
+                        {contributedMatches.map((m) => {
+                          const goalCnt = (m.goals || "").split(",").map((s) => s.trim()).filter((s) => s === pName).length;
+                          const assistCnt = (m.assists || "").split(",").map((s) => s.trim()).filter((s) => s === pName).length;
                           return (
-                            <div key={m.id} className="flex items-center justify-between rounded-xl bg-gray-50 dark:bg-white/[0.03] px-3 py-2">
+                            <Link
+                              key={m.id}
+                              href={`/matches/${m.id}`}
+                              onClick={() => setProfilePlayer(null)}
+                              className="flex items-center justify-between rounded-xl bg-gray-50 dark:bg-white/[0.03] px-3 py-2 hover:bg-gray-100 dark:hover:bg-white/[0.06] active:scale-[0.98] transition-all"
+                            >
                               <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300 truncate">
                                 vs {m.opponent} <span className="text-gray-400 font-medium ml-1">{m.date}</span>
                               </span>
-                              <span className="shrink-0 text-[11px] font-black text-gray-800 dark:text-gray-200 ml-2">
-                                ⚽{cnt > 1 ? ` ×${cnt}` : ""}
+                              <span className="shrink-0 flex items-center gap-1.5 ml-2">
+                                {goalCnt > 0 && (
+                                  <span className="text-[11px] font-black text-gray-800 dark:text-gray-200">
+                                    ⚽{goalCnt > 1 ? ` ×${goalCnt}` : ""}
+                                  </span>
+                                )}
+                                {assistCnt > 0 && (
+                                  <span className="text-[11px] font-black text-emerald-500">
+                                    🅰️{assistCnt > 1 ? ` ×${assistCnt}` : ""}
+                                  </span>
+                                )}
+                                <ChevronRight className="w-3 h-3 text-gray-300 dark:text-gray-600" />
                               </span>
-                            </div>
+                            </Link>
                           );
                         })}
                       </div>
