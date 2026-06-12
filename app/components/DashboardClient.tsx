@@ -1984,8 +1984,15 @@ export default function DashboardClient({
                       };
 
                       const hasVoted = myAtkVote || myDefVote;
-                      const leaderAtk = Object.entries(atkTally).sort((a, b) => b[1] - a[1])[0]?.[0];
-                      const leaderDef = Object.entries(defTally).sort((a, b) => b[1] - a[1])[0]?.[0];
+                      // 동률 공동 1위는 전원 표시
+                      const topNames = (tally: Record<string, number>) => {
+                        const entries = Object.entries(tally).sort((a, b) => b[1] - a[1]);
+                        if (entries.length === 0 || entries[0][1] === 0) return "";
+                        const max = entries[0][1];
+                        return entries.filter(([, c]) => c === max).map(([n]) => n).join(", ");
+                      };
+                      const leaderAtk = topNames(atkTally);
+                      const leaderDef = topNames(defTally);
 
                       return (
                         <div className="mt-3 border-t border-gray-100 dark:border-white/5 pt-3">
