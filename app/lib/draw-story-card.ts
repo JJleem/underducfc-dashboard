@@ -1,24 +1,5 @@
-// 인스타 스토리 사이즈(1080x1920) 공유 카드: 결과 + 골 기록 + MOM + 포메이션 합본
-import type { MatchData, LineupData } from "../components/DashboardClient";
-import { FORMATION_POSITIONS } from "../components/FormationField";
-
-function getLayerIndex(playerIndex: number, formation: string): number {
-  if (playerIndex === 0) return 0;
-  const layers = formation.split("-").map(Number);
-  let count = 1;
-  for (let i = 0; i < layers.length; i++) {
-    if (playerIndex < count + layers[i]) return i + 1;
-    count += layers[i];
-  }
-  return layers.length;
-}
-
-function getPlayerColor(layerIndex: number, totalLayers: number) {
-  if (layerIndex === 0) return { bg: "#F59E0B", border: "#FDE68A" };
-  if (layerIndex === 1) return { bg: "#3B82F6", border: "#93C5FD" };
-  if (layerIndex === totalLayers) return { bg: "#FF8FA3", border: "#FFB6C1" };
-  return { bg: "#10B981", border: "#6EE7B7" };
-}
+// 인스타 스토리 사이즈(1080x1920) 공유 카드: 나이트 매치 테마 결과 카드
+import type { MatchData } from "../components/DashboardClient";
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -30,20 +11,37 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-const FONT = "-apple-system, 'Apple SD Gothic Neo', Arial, sans-serif";
+const FONT = "-apple-system, 'Apple SD Gothic Neo', Pretendard, Arial, sans-serif";
 
-async function drawStoryCanvas(
-  match: MatchData,
-  lineup: LineupData | null,
-  rosterMap: Record<string, string>
-): Promise<HTMLCanvasElement> {
+function setLetterSpacing(ctx: CanvasRenderingContext2D, px: number) {
+  try {
+    (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${px}px`;
+  } catch { /* 미지원 브라우저 무시 */ }
+}
+
+// 패널 공통: 유리질감 라운드 박스
+function glassPanel(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, w: number, h: number,
+  fill: string, stroke: string
+) {
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, 28);
+  ctx.fill();
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+export async function drawStoryCanvas(match: MatchData): Promise<HTMLCanvasElement> {
   const W = 1080, H = 1920;
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
 
-  // ── 배경: 다크 네이비 + 핑크 글로우 + 별 ─────────────────────
+  // ── 배경: 다크 네이비 그라데이션 ─────────────────────────────
   const bg = ctx.createLinearGradient(0, 0, 0, H);
   bg.addColorStop(0, "#070d20");
   bg.addColorStop(0.5, "#0d1733");
@@ -51,213 +49,249 @@ async function drawStoryCanvas(
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  const glow = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, 600);
-  glow.addColorStop(0, "rgba(255,182,193,0.16)");
+  // 스타디움 스포트라이트 (좌우 대각 빔)
+  const beamL = ctx.createLinearGradient(0, 0, W * 0.55, H * 0.5);
+  beamL.addColorStop(0, "rgba(255,182,193,0.13)");
+  beamL.addColorStop(0.4, "rgba(255,255,255,0.04)");
+  beamL.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = beamL;
+  ctx.fillRect(0, 0, W, H * 0.6);
+
+  const beamR = ctx.createLinearGradient(W, 0, W * 0.45, H * 0.5);
+  beamR.addColorStop(0, "rgba(147,197,253,0.11)");
+  beamR.addColorStop(0.4, "rgba(255,255,255,0.04)");
+  beamR.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = beamR;
+  ctx.fillRect(0, 0, W, H * 0.6);
+
+  // 핑크 글로우 (상단 중앙)
+  const glow = ctx.createRadialGradient(W / 2, 120, 0, W / 2, 120, 700);
+  glow.addColorStop(0, "rgba(255,182,193,0.15)");
   glow.addColorStop(1, "rgba(255,182,193,0)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.fillStyle = "rgba(255,255,255,0.6)";
-  [[130, 90], [310, 50], [480, 120], [660, 40], [840, 100], [970, 160], [200, 200], [900, 250]].forEach(([x, y]) => {
+  // 밤하늘 별
+  const stars: [number, number, number, number][] = [
+    [110, 140, 2.2, 0.7], [260, 80, 1.5, 0.5], [420, 180, 2, 0.6], [560, 70, 1.4, 0.45],
+    [700, 150, 2.4, 0.75], [850, 90, 1.6, 0.5], [970, 200, 2, 0.6], [180, 320, 1.4, 0.4],
+    [920, 380, 1.6, 0.45], [80, 520, 1.4, 0.35], [1000, 620, 1.5, 0.4], [150, 1700, 1.6, 0.4],
+    [930, 1760, 1.8, 0.45], [520, 1820, 1.3, 0.35],
+  ];
+  stars.forEach(([x, y, r, a]) => {
+    ctx.fillStyle = `rgba(255,255,255,${a})`;
     ctx.beginPath();
-    ctx.arc(x, y, 1.6, 0, Math.PI * 2);
+    ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   });
 
+  // 대형 로고 워터마크 (중앙)
+  try {
+    const logo = await loadImage("/underducklogo.png");
+    ctx.save();
+    ctx.globalAlpha = 0.05;
+    ctx.beginPath();
+    ctx.arc(W / 2, 1010, 290, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(logo, W / 2 - 290, 1010 - 290, 580, 580);
+    ctx.restore();
+  } catch { /* 무시 */ }
+
   // ── 상단 브랜드 ──────────────────────────────────────────────
   ctx.textAlign = "center";
-  ctx.fillStyle = "#FFB6C1";
-  ctx.font = `900 38px ${FONT}`;
-  ctx.fillText("UNDERDUCK FC", W / 2, 130);
+  setLetterSpacing(ctx, 10);
+  ctx.fillStyle = "rgba(255,255,255,0.4)";
+  ctx.font = `700 26px ${FONT}`;
+  ctx.fillText("MATCH RESULT", W / 2, 218);
+  setLetterSpacing(ctx, 0);
+
+  const brand = ctx.createLinearGradient(W / 2 - 260, 0, W / 2 + 260, 0);
+  brand.addColorStop(0, "#FFB6C1");
+  brand.addColorStop(1, "#FF8FA3");
+  ctx.fillStyle = brand;
+  ctx.font = `900 66px ${FONT}`;
+  ctx.fillText("UNDERDUCK FC", W / 2, 298);
 
   ctx.fillStyle = "rgba(255,255,255,0.45)";
-  ctx.font = `600 26px ${FONT}`;
-  const subtitle = [match.date, match.time !== "미정" ? match.time : "", match.location !== "미정" ? match.location : ""]
-    .filter(Boolean).join("  ·  ");
-  ctx.fillText(subtitle, W / 2, 182);
+  ctx.font = `600 30px ${FONT}`;
+  const subtitle = [
+    match.date,
+    match.time !== "미정" ? match.time : "",
+    match.location !== "미정" ? match.location : "",
+  ].filter(Boolean).join("  ·  ");
+  ctx.fillText(subtitle, W / 2, 360);
 
-  ctx.strokeStyle = "rgba(255,182,193,0.25)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(120, 220);
-  ctx.lineTo(W - 120, 220);
-  ctx.stroke();
+  // 구분선 (양끝 페이드)
+  const divider = ctx.createLinearGradient(140, 0, W - 140, 0);
+  divider.addColorStop(0, "rgba(255,182,193,0)");
+  divider.addColorStop(0.5, "rgba(255,182,193,0.45)");
+  divider.addColorStop(1, "rgba(255,182,193,0)");
+  ctx.fillStyle = divider;
+  ctx.fillRect(140, 420, W - 280, 2);
 
   // ── 팀명 + 스코어 ────────────────────────────────────────────
   const isInternal = match.opponent === "자체전";
-  ctx.fillStyle = "rgba(255,255,255,0.9)";
-  ctx.font = `900 40px ${FONT}`;
-  ctx.textAlign = "left";
-  ctx.fillText(isInternal ? "언더덕 A" : "언더덕", 110, 330);
-  ctx.textAlign = "right";
-  ctx.fillText(isInternal ? "언더덕 B" : (match.opponent || "상대팀"), W - 110, 330);
+  const ourName = isInternal ? "언더덕 A" : "언더덕";
+  const theirName = isInternal ? "언더덕 B" : (match.opponent || "상대팀");
 
-  const resultColor = match.result === "승" ? "#FFB6C1" : match.result === "무" ? "#9ca3af" : "#6b7280";
-  ctx.textAlign = "center";
-  ctx.font = `900 150px ${FONT}`;
+  // 팀명: 좌우 절반 중앙 정렬, 길면 자동 축소
+  const teamY = 600;
+  ctx.fillStyle = "rgba(255,255,255,0.92)";
+  const fitFont = (text: string, maxW: number, base: number) => {
+    let size = base;
+    do {
+      ctx.font = `900 ${size}px ${FONT}`;
+      if (ctx.measureText(text).width <= maxW) break;
+      size -= 2;
+    } while (size > 24);
+    return size;
+  };
+  fitFont(ourName, 360, 46);
+  ctx.fillText(ourName, W * 0.25, teamY);
+  fitFont(theirName, 360, 46);
+  ctx.fillText(theirName, W * 0.75, teamY);
+
+  setLetterSpacing(ctx, 4);
+  ctx.fillStyle = "rgba(255,255,255,0.3)";
+  ctx.font = `700 22px ${FONT}`;
+  ctx.fillText("HOME", W * 0.25, teamY + 44);
+  ctx.fillText("AWAY", W * 0.75, teamY + 44);
+  setLetterSpacing(ctx, 0);
+
+  const resultColor =
+    match.result === "승" ? "#FFB6C1" : match.result === "무" ? "#cbd5e1" : "#94a3b8";
+
+  const scoreY = 832;
+  ctx.font = `900 190px ${FONT}`;
   ctx.fillStyle = resultColor;
-  ctx.fillText(String(match.ourScore ?? "-"), W / 2 - 130, 370);
-  ctx.fillStyle = "rgba(255,255,255,0.2)";
-  ctx.font = `900 90px ${FONT}`;
-  ctx.fillText(":", W / 2, 355);
-  ctx.fillStyle = "rgba(255,255,255,0.45)";
-  ctx.font = `900 150px ${FONT}`;
-  ctx.fillText(String(match.theirScore ?? "-"), W / 2 + 130, 370);
+  ctx.fillText(String(match.ourScore ?? "-"), W / 2 - 165, scoreY);
+  ctx.fillStyle = "rgba(255,255,255,0.18)";
+  ctx.font = `900 120px ${FONT}`;
+  ctx.fillText(":", W / 2, scoreY - 18);
+  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  ctx.font = `900 190px ${FONT}`;
+  ctx.fillText(String(match.theirScore ?? "-"), W / 2 + 165, scoreY);
 
-  // 결과 뱃지
+  // 결과 뱃지 (필 형태)
   if (match.result && match.result !== "예정") {
-    const bw = 120, bh = 56, bx = W / 2 - bw / 2, by = 410;
-    ctx.fillStyle = match.result === "승" ? "rgba(255,182,193,0.25)" : "rgba(255,255,255,0.08)";
+    const bw = 170, bh = 72, bx = W / 2 - bw / 2, by = 894;
+    if (match.result === "승") {
+      const pill = ctx.createLinearGradient(bx, by, bx, by + bh);
+      pill.addColorStop(0, "#FF9FB0");
+      pill.addColorStop(1, "#FF8FA3");
+      ctx.fillStyle = pill;
+      ctx.shadowColor = "rgba(255,143,163,0.5)";
+      ctx.shadowBlur = 36;
+    } else {
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+    }
     ctx.beginPath();
-    ctx.roundRect(bx, by, bw, bh, 28);
+    ctx.roundRect(bx, by, bw, bh, 36);
     ctx.fill();
-    ctx.fillStyle = resultColor;
-    ctx.font = `900 30px ${FONT}`;
-    ctx.fillText(match.result, W / 2, by + 39);
-  }
-
-  // ── 골 기록 + MOM ────────────────────────────────────────────
-  let curY = 560;
-  if (match.goals) {
-    const scorers = match.goals.split(",");
-    const assists = match.assists?.split(",") || [];
-    for (let i = 0; i < scorers.length && i < 7; i++) {
-      const scorer = scorers[i]?.trim();
-      if (!scorer) continue;
-      const assistant = assists[i]?.trim();
-      ctx.fillStyle = "rgba(255,255,255,0.9)";
-      ctx.font = `800 30px ${FONT}`;
-      ctx.fillText(`⚽ ${scorer}${assistant ? `   ·   assist ${assistant}` : ""}`, W / 2, curY);
-      curY += 50;
-    }
-  }
-  if (match.mom) {
-    curY += 10;
-    ctx.fillStyle = "#fbbf24";
-    ctx.font = `900 32px ${FONT}`;
-    ctx.fillText(`⭐ MOM  ${match.mom.trim()}`, W / 2, curY);
-    curY += 50;
-  }
-
-  // ── 포메이션 필드 ────────────────────────────────────────────
-  const positions = lineup ? FORMATION_POSITIONS[lineup.formation] : null;
-  if (lineup && positions) {
-    const FX = 150, FW_ = W - 300; // 필드 영역
-    const FY = Math.max(curY + 30, 760);
-    const FH = 1800 - FY;
-
-    // 잔디 스트라이프
-    ctx.save();
-    ctx.beginPath();
-    ctx.roundRect(FX, FY, FW_, FH, 24);
-    ctx.clip();
-    const stripes = 8;
-    for (let i = 0; i < stripes; i++) {
-      ctx.fillStyle = i % 2 === 0 ? "#15592e" : "#0f4a25";
-      ctx.fillRect(FX, FY + (i * FH) / stripes, FW_, FH / stripes);
-    }
-    // 필드 라인
-    const pad = 24;
-    ctx.strokeStyle = "rgba(255,255,255,0.5)";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(FX + pad, FY + pad, FW_ - pad * 2, FH - pad * 2);
-    ctx.beginPath();
-    ctx.moveTo(FX + pad, FY + FH / 2);
-    ctx.lineTo(FX + FW_ - pad, FY + FH / 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(FX + FW_ / 2, FY + FH / 2, 90, 0, Math.PI * 2);
-    ctx.stroke();
-    // 페널티 박스 (위/아래)
-    ctx.strokeStyle = "rgba(255,255,255,0.4)";
-    const pbW = FW_ * 0.5, pbH = FH * 0.13;
-    ctx.strokeRect(FX + (FW_ - pbW) / 2, FY + pad, pbW, pbH);
-    ctx.strokeRect(FX + (FW_ - pbW) / 2, FY + FH - pad - pbH, pbW, pbH);
-
-    // 중앙 로고
-    try {
-      const img = await loadImage("/underducklogo.png");
-      ctx.globalAlpha = 0.12;
-      ctx.beginPath();
-      ctx.arc(FX + FW_ / 2, FY + FH / 2, 80, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.drawImage(img, FX + FW_ / 2 - 80, FY + FH / 2 - 80, 160, 160);
-      ctx.globalAlpha = 1;
-    } catch { /* 무시 */ }
-    ctx.restore();
-
-    // 선수 마커
-    const totalLayers = lineup.formation.split("-").length;
-    const momNames = (match.mom || "").split(",").map((s) => s.trim());
-    for (let i = 0; i < lineup.players.length; i++) {
-      const player = lineup.players[i];
-      const pos = positions[i];
-      if (!pos || !player) continue;
-      const x = FX + (pos.x / 100) * FW_;
-      const y = FY + (pos.y / 100) * FH;
-      const R = 34;
-      const isTbd = player.trim() === "미정";
-      const jerseyNo = rosterMap[player.trim()];
-      const color = isTbd ? { bg: "#374151", border: "#9CA3AF" } : getPlayerColor(getLayerIndex(i, lineup.formation), totalLayers);
-
-      ctx.shadowColor = "rgba(0,0,0,0.5)";
-      ctx.shadowBlur = 14;
-      ctx.beginPath();
-      ctx.arc(x, y, R, 0, Math.PI * 2);
-      ctx.fillStyle = color.bg;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = color.border;
-      ctx.lineWidth = 4;
+    ctx.shadowBlur = 0;
+    if (match.result !== "승") {
+      ctx.strokeStyle = "rgba(255,255,255,0.18)";
+      ctx.lineWidth = 2;
       ctx.stroke();
-
-      const label = isTbd ? "?" : jerseyNo || "G";
-      ctx.fillStyle = "#fff";
-      ctx.font = `900 ${label.length > 2 ? 20 : 26}px ${FONT}`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(label, x, y);
-
-      const name = isTbd ? "미정" : player.trim().slice(0, 4);
-      ctx.font = `800 18px ${FONT}`;
-      const nameW = ctx.measureText(name).width + 16;
-      ctx.fillStyle = "rgba(0,0,0,0.65)";
-      ctx.beginPath();
-      ctx.roundRect(x - nameW / 2, y + R + 6, nameW, 26, 6);
-      ctx.fill();
-      ctx.fillStyle = "#fff";
-      ctx.fillText(name, x, y + R + 19);
-
-      // MOM 왕관
-      if (!isTbd && momNames.includes(player.trim())) {
-        ctx.font = "26px serif";
-        ctx.fillText("👑", x, y - R - 16);
-      }
-      ctx.textBaseline = "alphabetic";
     }
+    ctx.fillStyle = match.result === "승" ? "#ffffff" : resultColor;
+    ctx.font = `900 38px ${FONT}`;
+    ctx.fillText(match.result, W / 2, by + 50);
+  }
 
-    // 포메이션 라벨
-    ctx.fillStyle = "rgba(255,255,255,0.5)";
-    ctx.font = `900 24px ${FONT}`;
-    ctx.textAlign = "center";
-    ctx.fillText(`${lineup.formation}  ·  ${lineup.quarter}`, W / 2, FY - 18);
+  // ── 골 기록 패널 ─────────────────────────────────────────────
+  let curY = 1060;
+  const scorers = (match.goals || "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (scorers.length > 0) {
+    const assists = match.assists?.split(",") || [];
+    const lineH = 62;
+    const shown = scorers.slice(0, 7);
+    const panelH = 96 + shown.length * lineH;
+    glassPanel(ctx, 110, curY, W - 220, panelH, "rgba(255,255,255,0.045)", "rgba(255,255,255,0.09)");
+
+    setLetterSpacing(ctx, 8);
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    ctx.font = `800 24px ${FONT}`;
+    ctx.fillText("GOALS", W / 2, curY + 58);
+    setLetterSpacing(ctx, 0);
+
+    let gy = curY + 122;
+    for (let i = 0; i < shown.length; i++) {
+      const scorer = shown[i];
+      const assistant = assists[i]?.trim();
+      const goalText = `⚽ ${scorer}`;
+      const assistText = assistant ? `  ·  A ${assistant}` : "";
+      ctx.font = `800 34px ${FONT}`;
+      const gw = ctx.measureText(goalText).width;
+      ctx.font = `700 30px ${FONT}`;
+      const aw = assistant ? ctx.measureText(assistText).width : 0;
+      const startX = W / 2 - (gw + aw) / 2;
+
+      ctx.textAlign = "left";
+      ctx.font = `800 34px ${FONT}`;
+      ctx.fillStyle = "rgba(255,255,255,0.92)";
+      ctx.fillText(goalText, startX, gy);
+      if (assistant) {
+        ctx.font = `700 30px ${FONT}`;
+        ctx.fillStyle = "#FFB6C1";
+        ctx.fillText(assistText, startX + gw, gy);
+      }
+      ctx.textAlign = "center";
+      gy += lineH;
+    }
+    if (scorers.length > 7) {
+      ctx.fillStyle = "rgba(255,255,255,0.35)";
+      ctx.font = `700 26px ${FONT}`;
+      ctx.fillText(`외 ${scorers.length - 7}골`, W / 2, gy);
+    }
+    curY += panelH + 44;
+  }
+
+  // ── MOM 패널 ─────────────────────────────────────────────────
+  if (match.mom) {
+    const panelH = 190;
+    glassPanel(ctx, 110, curY, W - 220, panelH, "rgba(251,191,36,0.07)", "rgba(251,191,36,0.3)");
+
+    setLetterSpacing(ctx, 8);
+    ctx.fillStyle = "rgba(251,191,36,0.65)";
+    ctx.font = `800 24px ${FONT}`;
+    ctx.fillText("MAN OF THE MATCH", W / 2, curY + 64);
+    setLetterSpacing(ctx, 0);
+
+    ctx.fillStyle = "#fbbf24";
+    ctx.font = `900 52px ${FONT}`;
+    ctx.shadowColor = "rgba(251,191,36,0.45)";
+    ctx.shadowBlur = 28;
+    ctx.fillText(`👑 ${match.mom.trim()}`, W / 2, curY + 140);
+    ctx.shadowBlur = 0;
   }
 
   // ── 푸터 ─────────────────────────────────────────────────────
-  ctx.fillStyle = "rgba(255,255,255,0.25)";
-  ctx.font = `700 22px ${FONT}`;
-  ctx.textAlign = "center";
-  ctx.fillText("UNDERDUCK FC  ·  @underduck_fc", W / 2, H - 50);
+  const accent = ctx.createLinearGradient(W / 2 - 90, 0, W / 2 + 90, 0);
+  accent.addColorStop(0, "rgba(255,182,193,0)");
+  accent.addColorStop(0.5, "#FF8FA3");
+  accent.addColorStop(1, "rgba(255,182,193,0)");
+  ctx.fillStyle = accent;
+  ctx.fillRect(W / 2 - 90, H - 158, 180, 3);
+
+  setLetterSpacing(ctx, 4);
+  ctx.fillStyle = "rgba(255,255,255,0.3)";
+  ctx.font = `700 26px ${FONT}`;
+  ctx.fillText("@underduck_fc", W / 2, H - 100);
+  setLetterSpacing(ctx, 0);
+
+  // 가장자리 비네팅
+  const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.75);
+  vig.addColorStop(0, "rgba(0,0,0,0)");
+  vig.addColorStop(1, "rgba(0,0,0,0.32)");
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, W, H);
 
   return canvas;
 }
 
-export async function shareStoryCard(
-  match: MatchData,
-  lineup: LineupData | null,
-  rosterMap: Record<string, string>
-) {
-  const canvas = await drawStoryCanvas(match, lineup, rosterMap);
+export async function shareStoryCard(match: MatchData) {
+  const canvas = await drawStoryCanvas(match);
   const fileName = `언더덕_${match.opponent}_${match.date}_스토리.png`;
 
   return new Promise<void>((resolve, reject) => {

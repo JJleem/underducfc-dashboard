@@ -1583,12 +1583,7 @@ export default function DashboardClient({
                                 buzz();
                                 setSharingStory(match.id);
                                 try {
-                                  const mls = getMatchLineups(match.id);
-                                  const storyLineup =
-                                    QUARTER_ORDER.filter((q) => q !== "예상")
-                                      .map((q) => mls.find((l) => l.quarter === q))
-                                      .find(Boolean) || mls[0] || null;
-                                  await shareStoryCard(match, storyLineup, rosterMap);
+                                  await shareStoryCard(match);
                                 } catch (e) {
                                   if (e instanceof Error && e.name !== "AbortError") alert("공유 실패");
                                 } finally {
