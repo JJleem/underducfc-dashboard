@@ -39,7 +39,7 @@ import {
   Swords,
 } from "lucide-react";
 import { shareMatchResult } from "../lib/draw-match-result";
-import { MiniFormationField, FORMATION_POSITIONS } from "./FormationField";
+import { FormationField, FORMATION_POSITIONS } from "./FormationField";
 import { shareFormation } from "../lib/draw-formation";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -1747,7 +1747,7 @@ export default function DashboardClient({
                                     )}
                                   </div>
                                   {FORMATION_POSITIONS[activeLineup.formation] ? (
-                                    <MiniFormationField lineup={activeLineup} rosterMap={rosterMap} />
+                                    <FormationField lineup={activeLineup} rosterMap={rosterMap} />
                                   ) : (
                                     <div className="flex flex-wrap gap-1.5">
                                       {activeLineup.players.map((p, i) => (
