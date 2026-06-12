@@ -94,7 +94,7 @@ export default function PullToRefresh({
     <>
       {/* 당김 인디케이터 */}
       <div
-        className="fixed left-1/2 z-[60] -translate-x-1/2 pointer-events-none"
+        className="fixed left-1/2 z-[60] pointer-events-none"
         style={{
           top: 0,
           transform: `translate(-50%, ${pull - 44}px)`,
