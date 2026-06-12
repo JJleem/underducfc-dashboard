@@ -180,6 +180,7 @@ interface DashboardClientProps {
   notice?: NoticeData;
   lineups: LineupData[];
   rosterMap: Record<string, string>;
+  captainRoles?: Record<string, string>;
 }
 
 export default function DashboardClient({
@@ -188,6 +189,7 @@ export default function DashboardClient({
   notice,
   lineups,
   rosterMap,
+  captainRoles,
 }: DashboardClientProps) {
   const { theme, setTheme } = useTheme();
   const [matchList, setMatchList] = React.useState<MatchData[]>(matches);
@@ -1747,7 +1749,7 @@ export default function DashboardClient({
                                     )}
                                   </div>
                                   {FORMATION_POSITIONS[activeLineup.formation] ? (
-                                    <FormationField lineup={activeLineup} rosterMap={rosterMap} />
+                                    <FormationField lineup={activeLineup} rosterMap={rosterMap} captainRoles={captainRoles} />
                                   ) : (
                                     <div className="flex flex-wrap gap-1.5">
                                       {activeLineup.players.map((p, i) => (

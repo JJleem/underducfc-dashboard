@@ -76,15 +76,29 @@ function getPlayerColor(layerIndex: number, totalLayers: number) {
 // 중계 카메라 틸트 각도 — 필드는 이 각도로 눕고, 선수 카드는 역회전해 일어선다
 const TILT = 30;
 
+// 틸트 뷰에서는 상단(원정 골대 쪽)이 원근으로 압축돼 보여서
+// 위쪽일수록 더 많이 끌어내린다 (FW +10, GK +3 수준)
+const adjustY = (y: number) => y * 0.9 + 12;
+
 export function FormationField({
   lineup,
   rosterMap,
+  captainRoles = {},
 }: {
   lineup: LineupForField;
   rosterMap: Record<string, string>;
+  captainRoles?: Record<string, string>;
 }) {
   const positions = FORMATION_POSITIONS[lineup.formation];
   const totalLayers = lineup.formation.split("-").length;
+
+  // 출전 명단 기준 주장 완장: C → (C 결장 시) VC, VC 둘 다 출전이면 문승환 우선
+  const fieldNames = lineup.players.map((p) => p.trim());
+  let actingCaptain = fieldNames.find((n) => captainRoles[n] === "C");
+  if (!actingCaptain) {
+    const vcs = fieldNames.filter((n) => captainRoles[n] === "VC");
+    actingCaptain = vcs.find((n) => n === "문승환") || vcs[0];
+  }
   const [selected, setSelected] = useState<number | null>(null);
   // 등장 스태거는 마운트 직후 한 번만 — 이후 탭 인터랙션엔 딜레이 없음
   const [entered, setEntered] = useState(false);
@@ -202,6 +216,7 @@ export function FormationField({
               const isGuest = !jerseyNo && !isTbd;
               const isSel = selected === i;
               const name = isTbd ? "미정" : player.trim();
+              const isCaptain = !isTbd && name === actingCaptain;
 
               return (
                 <div
@@ -209,7 +224,7 @@ export function FormationField({
                   className="absolute"
                   style={{
                     left: `${pos.x}%`,
-                    top: `${pos.y}%`,
+                    top: `${adjustY(pos.y)}%`,
                     transformStyle: "preserve-3d",
                     zIndex: isSel ? 30 : 10,
                   }}
@@ -247,20 +262,39 @@ export function FormationField({
                       className="flex flex-col items-center cursor-pointer"
                       style={{ transformOrigin: "50% 100%" }}
                     >
-                      <div
-                        className="flex items-center justify-center rounded-full font-black"
-                        style={{
-                          width: 34, height: 34,
-                          fontSize: isTbd ? 10 : 13,
-                          backgroundColor: isTbd ? "#374151" : color.bg,
-                          border: `2.5px solid ${isTbd ? "#6B7280" : color.border}`,
-                          color: "#fff",
-                          boxShadow: isSel
-                            ? `0 0 18px ${color.bg}, 0 4px 10px rgba(0,0,0,0.55)`
-                            : "0 4px 10px rgba(0,0,0,0.55)",
-                        }}
-                      >
-                        {isTbd ? "?" : isGuest ? "G" : jerseyNo}
+                      <div className="relative">
+                        <div
+                          className="flex items-center justify-center rounded-full font-black"
+                          style={{
+                            width: 34, height: 34,
+                            fontSize: isTbd ? 10 : 13,
+                            backgroundColor: isTbd ? "#374151" : color.bg,
+                            border: `2.5px solid ${isTbd ? "#6B7280" : color.border}`,
+                            color: "#fff",
+                            boxShadow: isSel
+                              ? `0 0 18px ${color.bg}, 0 4px 10px rgba(0,0,0,0.55)`
+                              : "0 4px 10px rgba(0,0,0,0.55)",
+                          }}
+                        >
+                          {isTbd ? "?" : isGuest ? "G" : jerseyNo}
+                        </div>
+                        {isCaptain && (
+                          <div
+                            className="absolute flex items-center justify-center font-black"
+                            style={{
+                              top: -6, left: -8,
+                              width: 16, height: 16,
+                              borderRadius: 5,
+                              fontSize: 10,
+                              color: "#3b2300",
+                              background: "linear-gradient(135deg,#FDE68A 0%,#F59E0B 55%,#D97706 100%)",
+                              border: "1px solid rgba(255,255,255,0.75)",
+                              boxShadow: "0 2px 6px rgba(0,0,0,0.5), 0 0 10px rgba(245,158,11,0.55)",
+                            }}
+                          >
+                            C
+                          </div>
+                        )}
                       </div>
                       <div
                         className="mt-1 px-1.5 rounded-md text-[9px] font-black text-white text-center leading-tight overflow-hidden text-ellipsis whitespace-nowrap"

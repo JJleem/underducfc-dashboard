@@ -29,6 +29,14 @@ export default async function MatchDetailPage({
     if (name && no) rosterMap[name] = no;
   });
 
+  // 이름 → 주장 역할 맵 (F=비고: C / VC)
+  const captainRoles: Record<string, string> = {};
+  rawRoster.slice(1).forEach((row: string[]) => {
+    const name = row[1]?.trim();
+    const role = row[5]?.trim().toUpperCase();
+    if (name && (role === "C" || role === "VC")) captainRoles[name] = role;
+  });
+
   const matches: MatchData[] = rawMatches.slice(1).map((row: string[], index: number) => ({
     id: index,
     date: row[0] || "",
@@ -63,5 +71,5 @@ export default async function MatchDetailPage({
     }))
     .filter((l: LineupData) => l.matchId === matchId);
 
-  return <MatchDetailClient match={match} lineups={lineups} rosterMap={rosterMap} />;
+  return <MatchDetailClient match={match} lineups={lineups} rosterMap={rosterMap} captainRoles={captainRoles} />;
 }

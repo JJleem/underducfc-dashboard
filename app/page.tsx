@@ -54,6 +54,14 @@ export default async function TeamDashboardPage() {
     if (name) lineupRosterMap[name] = no || "?";
   });
 
+  // 이름 → 주장 역할 맵 (F=비고: C / VC)
+  const captainRoles: Record<string, string> = {};
+  rawRoster.slice(1).forEach((row: string[]) => {
+    const name = row[1]?.trim();
+    const role = row[5]?.trim().toUpperCase();
+    if (name && (role === "C" || role === "VC")) captainRoles[name] = role;
+  });
+
   // 💡 4. PlayerData 타입에 맞춰서 가공
   const players: PlayerData[] = rawStats.slice(1).map((row: string[]) => {
     const name = row[1];
@@ -119,6 +127,7 @@ export default async function TeamDashboardPage() {
       notice={latestNotice}
       lineups={lineups}
       rosterMap={lineupRosterMap}
+      captainRoles={captainRoles}
     />
   );
 }

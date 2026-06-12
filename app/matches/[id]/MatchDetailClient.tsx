@@ -17,9 +17,10 @@ interface MatchDetailClientProps {
   match: MatchData;
   lineups: LineupData[];
   rosterMap: Record<string, string>;
+  captainRoles?: Record<string, string>;
 }
 
-export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDetailClientProps) {
+export default function MatchDetailClient({ match, lineups, rosterMap, captainRoles }: MatchDetailClientProps) {
   const { theme, setTheme } = useTheme();
   const sortedQuarters = QUARTER_ORDER.filter((q) => lineups.some((l) => l.quarter === q));
   const [activeQ, setActiveQ] = useState(sortedQuarters[0] || "");
@@ -182,7 +183,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap }: MatchDe
                 {FORMATION_POSITIONS[activeLineup.formation] ? (
                   <div className="relative">
                     <div>
-                      <FormationField lineup={activeLineup} rosterMap={rosterMap} />
+                      <FormationField lineup={activeLineup} rosterMap={rosterMap} captainRoles={captainRoles} />
                     </div>
                     <button
                       onClick={handleShare}
