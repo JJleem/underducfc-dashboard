@@ -130,7 +130,8 @@ export function FormationField({
     actingCaptain = vcs.find((n) => n === "문승환") || vcs[0];
   }
 
-  const momNames = (matchInfo?.mom || "").split(",").map((s) => s.trim()).filter(Boolean);
+  // MOM은 "이름1,이름2" 또는 공격/수비 구분 시 "이름1 / 이름2" 형식으로 저장됨
+  const momNames = (matchInfo?.mom || "").split(/[,/]/).map((s) => s.trim()).filter(Boolean);
   const selectedName = selected && fieldNames.includes(selected) ? selected : null;
   const selectedStat = selectedName ? playerStats?.[selectedName] : undefined;
 
