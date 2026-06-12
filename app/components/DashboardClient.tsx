@@ -2003,6 +2003,11 @@ export default function DashboardClient({
                             <Star className="w-3.5 h-3.5 text-[#FFB6C1]" />
                             MOM 투표
                             {votes.length > 0 && <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{votes.length}</span>}
+                            {matchDay.getTime() === todayDay.getTime() && (
+                              <span className="shrink-0 text-[9px] font-black px-1.5 py-0.5 rounded-full bg-[#FF8FA3]/10 dark:bg-[#FFB6C1]/15 text-[#FF8FA3] dark:text-[#FFB6C1] animate-pulse">
+                                오늘 마감
+                              </span>
+                            )}
                             {!isOpen && (leaderAtk || leaderDef) && (
                               <span className="text-[10px] text-gray-400 font-medium truncate">
                                 {leaderAtk || ""}{leaderAtk && leaderDef ? " · " : ""}{leaderDef || ""}
