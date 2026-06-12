@@ -11,15 +11,17 @@ export default async function MatchDetailPage({
   const { id } = await params;
   const matchId = Number(id);
 
-  const [rawMatchesResult, rawLineupsResult, rawRosterResult] = await Promise.allSettled([
+  const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult] = await Promise.allSettled([
     getSheetData("matches!A1:M50"),
     getSheetData("lineup!A1:S100"),
     getSheetData("roster!A1:J50"),
+    getSheetData("stats!A1:G50"),
   ]);
 
   const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
   const rawLineups = rawLineupsResult.status === "fulfilled" ? rawLineupsResult.value : [];
   const rawRoster = rawRosterResult.status === "fulfilled" ? rawRosterResult.value : [];
+  const rawStats = rawStatsResult.status === "fulfilled" ? rawStatsResult.value : [];
 
   // 이름 → 등번호 맵 (A=등번호, B=이름)
   const rosterMap: Record<string, string> = {};
@@ -37,6 +39,20 @@ export default async function MatchDetailPage({
     if (name && (role === "C" || role === "VC")) captainRoles[name] = role;
   });
 
+  // 이름 → 시즌 스탯 맵 (필드 선수 탭 시 표시)
+  const playerStats: Record<string, { apps: number; goals: number; assists: number; mom: number; pos?: string }> = {};
+  rawStats.slice(1).forEach((row: string[]) => {
+    const name = row[1]?.trim();
+    if (!name) return;
+    playerStats[name] = {
+      apps: Number(row[3]) || 0,
+      goals: Number(row[4]) || 0,
+      assists: Number(row[5]) || 0,
+      mom: Number(row[6]) || 0,
+      pos: row[2] || "-",
+    };
+  });
+
   const matches: MatchData[] = rawMatches.slice(1).map((row: string[], index: number) => ({
     id: index,
     date: row[0] || "",
@@ -49,6 +65,7 @@ export default async function MatchDetailPage({
     type: row[7] || "일반 매칭",
     goals: row[8] || "",
     assists: row[9] || "",
+    mom: row[10] || "",
     attendees: row[11] || "",
   }));
 
@@ -71,5 +88,5 @@ export default async function MatchDetailPage({
     }))
     .filter((l: LineupData) => l.matchId === matchId);
 
-  return <MatchDetailClient match={match} lineups={lineups} rosterMap={rosterMap} captainRoles={captainRoles} />;
+  return <MatchDetailClient match={match} lineups={lineups} rosterMap={rosterMap} captainRoles={captainRoles} playerStats={playerStats} />;
 }

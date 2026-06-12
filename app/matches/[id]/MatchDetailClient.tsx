@@ -18,9 +18,10 @@ interface MatchDetailClientProps {
   lineups: LineupData[];
   rosterMap: Record<string, string>;
   captainRoles?: Record<string, string>;
+  playerStats?: Record<string, { apps: number; goals: number; assists: number; mom: number; pos?: string }>;
 }
 
-export default function MatchDetailClient({ match, lineups, rosterMap, captainRoles }: MatchDetailClientProps) {
+export default function MatchDetailClient({ match, lineups, rosterMap, captainRoles, playerStats }: MatchDetailClientProps) {
   const { theme, setTheme } = useTheme();
   const sortedQuarters = QUARTER_ORDER.filter((q) => lineups.some((l) => l.quarter === q));
   const [activeQ, setActiveQ] = useState(sortedQuarters[0] || "");
@@ -183,7 +184,13 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
                 {FORMATION_POSITIONS[activeLineup.formation] ? (
                   <div className="relative">
                     <div>
-                      <FormationField lineup={activeLineup} rosterMap={rosterMap} captainRoles={captainRoles} />
+                      <FormationField
+                        lineup={activeLineup}
+                        rosterMap={rosterMap}
+                        captainRoles={captainRoles}
+                        matchInfo={{ goals: match.goals, assists: match.assists, mom: match.mom }}
+                        playerStats={playerStats}
+                      />
                     </div>
                     <button
                       onClick={handleShare}

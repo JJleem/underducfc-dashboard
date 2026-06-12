@@ -37,8 +37,10 @@ import {
   Lock,
   Check,
   Swords,
+  Sparkles,
 } from "lucide-react";
 import { shareMatchResult } from "../lib/draw-match-result";
+import { shareStoryCard } from "../lib/draw-story-card";
 import { FormationField, FORMATION_POSITIONS } from "./FormationField";
 import { shareFormation } from "../lib/draw-formation";
 import { useTheme } from "next-themes";
@@ -80,6 +82,13 @@ function CountUp({
   }, [value, duration]);
   return <>{display.toFixed(decimals)}</>;
 }
+
+// 모바일 햅틱: 지원 기기에서만 짧게 진동
+const buzz = () => {
+  try {
+    navigator.vibrate?.(8);
+  } catch { /* 미지원 무시 */ }
+};
 
 function getMatchDotStyle(result: string): string {
   if (result === "승") return "bg-[#FF8FA3]";
@@ -297,6 +306,27 @@ export default function DashboardClient({
   const [goalPickerAssister, setGoalPickerAssister] = React.useState("");
   const [savingMatchResult, setSavingMatchResult] = React.useState(false);
   const rosterNames = React.useMemo(() => Object.keys(rosterMap), [rosterMap]);
+
+  // 라인업 필드/프로필용 이름 → 시즌 스탯 맵
+  const playerStatsMap = React.useMemo(() => {
+    const m: Record<string, { apps: number; goals: number; assists: number; mom: number; pos?: string }> = {};
+    players.forEach((p) => {
+      m[p.name.trim()] = {
+        apps: Number(p.apps) || 0,
+        goals: Number(p.goals) || 0,
+        assists: Number(p.assists) || 0,
+        mom: Number(p.mom) || 0,
+        pos: p.pos,
+      };
+    });
+    return m;
+  }, [players]);
+
+  // 선수 프로필 바텀시트
+  const [profilePlayer, setProfilePlayer] = React.useState<PlayerData | null>(null);
+
+  // 스토리 카드 공유
+  const [sharingStory, setSharingStory] = React.useState<number | null>(null);
 
   const scrollToMatch = (id: number) => {
     const anchor = matchCardRefs.current[id];
@@ -531,6 +561,7 @@ export default function DashboardClient({
   // 엔트리 상태
   const [openEntries, setOpenEntries] = React.useState<Set<number>>(new Set());
   const toggleEntry = (matchId: number) => {
+    buzz();
     setOpenEntries((prev) => {
       const next = new Set(prev);
       if (next.has(matchId)) next.delete(matchId); else next.add(matchId);
@@ -642,6 +673,7 @@ export default function DashboardClient({
   };
 
   const toggleLineup = (matchId: number) => {
+    buzz();
     setOpenLineups((prev) => {
       const next = new Set(prev);
       if (next.has(matchId)) next.delete(matchId);
@@ -724,7 +756,7 @@ export default function DashboardClient({
   );
 
   // 💡 최고의 듀오: (득점자 + 어시스트) 조합을 순서 무관하게 합산
-  const duoStats = (() => {
+  const duoAll = (() => {
     const map: Record<string, { a: string; b: string; count: number }> = {};
     completedMatches.forEach((m) => {
       const scorers = (m.goals || "").split(",").map((s) => s.trim());
@@ -738,16 +770,15 @@ export default function DashboardClient({
         e.count++;
       });
     });
-    return Object.values(map)
-      .filter((d) => d.count >= 2) // 2회 이상 합작한 조합만 '듀오'로 인정
-      .sort(
-        (x, y) =>
-          y.count - x.count ||
-          x.a.localeCompare(y.a, "ko") ||
-          x.b.localeCompare(y.b, "ko"),
-      )
-      .slice(0, 3);
+    return Object.values(map).sort(
+      (x, y) =>
+        y.count - x.count ||
+        x.a.localeCompare(y.a, "ko") ||
+        x.b.localeCompare(y.b, "ko"),
+    );
   })();
+  // 2회 이상 합작한 조합만 '듀오'로 인정
+  const duoStats = duoAll.filter((d) => d.count >= 2).slice(0, 3);
 
   const getResultBadgeStyle = (result: string) => {
     if (result === "승")
@@ -882,7 +913,10 @@ export default function DashboardClient({
         {/* 탭 섹션 */}
         <Tabs defaultValue="matches" className="w-full h-full">
           {/* 💡 탭은 다시 2개로 조정 */}
-          <TabsList className="grid w-full h-full grid-cols-3 bg-gray-100 dark:bg-white/[0.04] p-1 mb-6 rounded-2xl border border-gray-200/70 dark:border-white/[0.06]">
+          <TabsList
+            onClick={buzz}
+            className="grid w-full h-full grid-cols-3 bg-gray-100 dark:bg-white/[0.04] p-1 mb-6 rounded-2xl border border-gray-200/70 dark:border-white/[0.06]"
+          >
             <TabsTrigger
               value="matches"
               className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.08] data-[state=active]:text-gray-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm rounded-xl py-2.5 font-semibold text-[12px] transition-all"
@@ -904,7 +938,7 @@ export default function DashboardClient({
           </TabsList>
 
           {/* 💡 경기 일정 탭 내용 */}
-          <TabsContent value="matches" className="space-y-6 outline-none animate-fade">
+          <TabsContent value="matches" className="space-y-6 outline-none animate-tab">
             {/* 💡 [공지사항 섹션] 고대비 + 왼쪽 포인트 라인 디자인 */}
             {localNotice && (
               <div className="px-1 mb-8">
@@ -1202,6 +1236,28 @@ export default function DashboardClient({
               </div>
             )}
 
+            {/* 최근 5경기 폼 */}
+            {completedMatches.length > 0 && (
+              <div className="mb-4 rounded-2xl bg-white dark:bg-[#141416] border border-gray-200/70 dark:border-white/[0.06] shadow-sm px-4 py-3 flex items-center justify-between">
+                <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-[0.14em]">
+                  최근 5경기
+                </p>
+                <div className="flex items-center gap-1.5">
+                  {completedMatches.slice(-5).map((m, i) => (
+                    <button
+                      key={m.id}
+                      onClick={() => { buzz(); scrollToMatch(m.id); }}
+                      style={{ animationDelay: `${i * 70}ms` }}
+                      className={`animate-rise flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-black ${getMatchCircleStyle(m.result)}`}
+                      aria-label={`vs ${m.opponent} ${m.result}`}
+                    >
+                      {m.result}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* 경기 일정 등록 버튼 */}
             <button
               onClick={() => {
@@ -1470,6 +1526,19 @@ export default function DashboardClient({
                             </Badge>
                           )}
                         </div>
+                        {/* 상대전적 미리보기 */}
+                        {!isInternal && (match.type || "").replace(/\s/g, "") === "일반매칭" && (() => {
+                          const h2h = opponentStats.find((o) => o.key === (match.opponent || "").trim());
+                          if (!h2h) return null;
+                          return (
+                            <span className="flex items-center gap-1 w-fit text-[9px] font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-white/[0.04] border border-gray-200/70 dark:border-white/[0.06] rounded-md px-1.5 py-0.5 ml-1">
+                              <Swords className="w-2.5 h-2.5 text-[#FFB6C1]" />
+                              상대전적 {h2h.played}전 <span className="text-blue-500">{h2h.w}승</span>
+                              {h2h.d > 0 && <span>{h2h.d}무</span>}
+                              <span className="text-[#FF8FA3]">{h2h.l}패</span>
+                            </span>
+                          );
+                        })()}
                       </div>
                       <div className="flex flex-col items-end gap-1.5">
                         <button
@@ -1507,6 +1576,32 @@ export default function DashboardClient({
                               {sharingResult === match.id
                                 ? <Loader2 className="w-3 h-3 animate-spin text-gray-500" />
                                 : <Share2 className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                              }
+                            </button>
+                            <button
+                              onClick={async () => {
+                                buzz();
+                                setSharingStory(match.id);
+                                try {
+                                  const mls = getMatchLineups(match.id);
+                                  const storyLineup =
+                                    QUARTER_ORDER.filter((q) => q !== "예상")
+                                      .map((q) => mls.find((l) => l.quarter === q))
+                                      .find(Boolean) || mls[0] || null;
+                                  await shareStoryCard(match, storyLineup, rosterMap);
+                                } catch (e) {
+                                  if (e instanceof Error && e.name !== "AbortError") alert("공유 실패");
+                                } finally {
+                                  setSharingStory(null);
+                                }
+                              }}
+                              disabled={sharingStory === match.id}
+                              className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FFB6C1]/20 hover:bg-[#FFB6C1]/35 transition-colors disabled:opacity-40"
+                              aria-label="스토리 카드 공유"
+                            >
+                              {sharingStory === match.id
+                                ? <Loader2 className="w-3 h-3 animate-spin text-[#FF8FA3]" />
+                                : <Sparkles className="w-3 h-3 text-[#FF8FA3] dark:text-[#FFB6C1]" />
                               }
                             </button>
                           </div>
@@ -1749,7 +1844,13 @@ export default function DashboardClient({
                                     )}
                                   </div>
                                   {FORMATION_POSITIONS[activeLineup.formation] ? (
-                                    <FormationField lineup={activeLineup} rosterMap={rosterMap} captainRoles={captainRoles} />
+                                    <FormationField
+                                      lineup={activeLineup}
+                                      rosterMap={rosterMap}
+                                      captainRoles={captainRoles}
+                                      matchInfo={{ goals: match.goals, assists: match.assists, mom: match.mom }}
+                                      playerStats={playerStatsMap}
+                                    />
                                   ) : (
                                     <div className="flex flex-wrap gap-1.5">
                                       {activeLineup.players.map((p, i) => (
@@ -2169,7 +2270,7 @@ export default function DashboardClient({
           )}
 
           {/* 선수 스탯 탭 */}
-          <TabsContent value="stats" className="outline-none animate-fade">
+          <TabsContent value="stats" className="outline-none animate-tab">
             {/* 💡 하나의 통합된 전광판 스타일 카드 (모바일 화면 깨짐 완벽 방지) */}
             <Card className="mb-6 bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl shadow-soft overflow-hidden flex flex-col">
               {/* 상단 섹션: 전적 및 승률 (배경색을 살짝 다르게 주어 분리감 형성) */}
@@ -2372,7 +2473,11 @@ export default function DashboardClient({
                       </thead>
                       <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                         {sortedPlayers.map((player, idx) => (
-                          <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                          <tr
+                            key={idx}
+                            onClick={() => { buzz(); setProfilePlayer(player); }}
+                            className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
+                          >
                             <td className="py-4 pl-4 overflow-hidden">
                               <div className="flex items-center gap-1.5">
                                 <p className="font-black text-[13px] text-gray-800 dark:text-gray-200 truncate shrink-0">
@@ -2412,7 +2517,7 @@ export default function DashboardClient({
           </TabsContent>
 
           {/* 전적 탭 */}
-          <TabsContent value="record" className="outline-none pb-10 animate-fade space-y-6">
+          <TabsContent value="record" className="outline-none pb-10 animate-tab space-y-6">
             {/* 상대팀별 전적 */}
             <div>
               <div className="flex items-center gap-1.5 mb-3 px-1">
@@ -2826,6 +2931,133 @@ export default function DashboardClient({
               {savingNotice ? <Loader2 className="w-4 h-4 animate-spin" /> : "저장하기"}
             </button>
           </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* 선수 프로필 Drawer */}
+      <Drawer open={profilePlayer !== null} onOpenChange={(open) => { if (!open) setProfilePlayer(null); }}>
+        <DrawerContent className="bg-white dark:bg-[#161618] max-h-[92dvh]">
+          {profilePlayer && (() => {
+            const pName = profilePlayer.name.trim();
+            const role = captainRoles?.[pName];
+            const matchesWithAttendees = completedMatches.filter((m) => (m.attendees || "").trim());
+            const attendCount = matchesWithAttendees.filter((m) =>
+              m.attendees!.split(",").map((s) => s.trim()).includes(pName)
+            ).length;
+            const attendRate = matchesWithAttendees.length > 0
+              ? Math.round((attendCount / matchesWithAttendees.length) * 100)
+              : null;
+            const partners = duoAll.filter((d) => d.a === pName || d.b === pName).slice(0, 3);
+            const scoredMatches = completedMatches
+              .filter((m) => (m.goals || "").split(",").map((s) => s.trim()).includes(pName))
+              .slice(-4)
+              .reverse();
+            return (
+              <>
+                <DrawerHeader className="pb-0">
+                  <DrawerTitle className="flex items-center gap-2 text-[15px] font-bold text-gray-900 dark:text-white">
+                    <span className="flex items-center justify-center w-9 h-9 rounded-full bg-[#FFB6C1]/20 border border-[#FFB6C1]/40 text-[12px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] shrink-0">
+                      {profilePlayer.no !== "-" ? `#${profilePlayer.no}` : "?"}
+                    </span>
+                    {pName}
+                    <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm ${getPosBadgeStyle(profilePlayer.pos)}`}>
+                      {profilePlayer.pos !== "-" ? profilePlayer.pos : "SUB"}
+                    </span>
+                    {role && (
+                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-gradient-to-br from-amber-200 to-amber-500 text-amber-950">
+                        {role}
+                      </span>
+                    )}
+                  </DrawerTitle>
+                </DrawerHeader>
+
+                <div className="overflow-y-auto px-5 py-4 space-y-5 pb-8">
+                  {/* 시즌 스탯 4분할 */}
+                  <div className="grid grid-cols-4 rounded-2xl border border-gray-200/70 dark:border-white/[0.06] divide-x divide-gray-100 dark:divide-white/5 overflow-hidden bg-gray-50 dark:bg-white/[0.02]">
+                    {[
+                      { label: "출전", value: Number(profilePlayer.apps) || 0, color: "text-gray-900 dark:text-white" },
+                      { label: "골", value: Number(profilePlayer.goals) || 0, color: "text-blue-500" },
+                      { label: "도움", value: Number(profilePlayer.assists) || 0, color: "text-emerald-500" },
+                      { label: "MOM", value: Number(profilePlayer.mom) || 0, color: "text-amber-500" },
+                    ].map((s) => (
+                      <div key={s.label} className="flex flex-col items-center justify-center py-3.5">
+                        <span className={`text-xl font-black tabular-nums ${s.color}`}>
+                          <CountUp value={s.value} duration={700} />
+                        </span>
+                        <span className="text-[9px] font-bold text-gray-400 mt-0.5">{s.label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 출석률 */}
+                  {attendRate !== null && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-widest">
+                          출석률 <span className="text-gray-400 font-medium">({attendCount}/{matchesWithAttendees.length}경기)</span>
+                        </p>
+                        <span className="text-[13px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] tabular-nums">
+                          <CountUp value={attendRate} duration={700} />%
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#FFB6C1] to-[#FF8FA3] transition-[width] duration-700 ease-out"
+                          style={{ width: `${attendRate}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 듀오 파트너 */}
+                  {partners.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-widest mb-2">
+                        호흡 잘 맞는 파트너
+                      </p>
+                      <div className="space-y-1.5">
+                        {partners.map((d) => {
+                          const partner = d.a === pName ? d.b : d.a;
+                          return (
+                            <div key={`${d.a}|${d.b}`} className="flex items-center justify-between rounded-xl bg-gray-50 dark:bg-white/[0.03] px-3 py-2">
+                              <span className="text-[12px] font-bold text-gray-800 dark:text-gray-200">{partner}</span>
+                              <span className="text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] tabular-nums">
+                                {d.count}회 합작
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 득점 경기 */}
+                  {scoredMatches.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-widest mb-2">
+                        최근 득점 경기
+                      </p>
+                      <div className="space-y-1.5">
+                        {scoredMatches.map((m) => {
+                          const cnt = (m.goals || "").split(",").map((s) => s.trim()).filter((s) => s === pName).length;
+                          return (
+                            <div key={m.id} className="flex items-center justify-between rounded-xl bg-gray-50 dark:bg-white/[0.03] px-3 py-2">
+                              <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300 truncate">
+                                vs {m.opponent} <span className="text-gray-400 font-medium ml-1">{m.date}</span>
+                              </span>
+                              <span className="shrink-0 text-[11px] font-black text-gray-800 dark:text-gray-200 ml-2">
+                                ⚽{cnt > 1 ? ` ×${cnt}` : ""}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
         </DrawerContent>
       </Drawer>
 

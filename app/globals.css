@@ -82,11 +82,25 @@ body {
   }
 }
 
+@keyframes udk-tab {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .animate-rise {
   animation: udk-rise 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .animate-fade {
   animation: udk-fade 0.4s ease both;
+}
+.animate-tab {
+  animation: udk-tab 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .pulse-ring {
   animation: udk-pulse-ring 1.5s ease-out infinite;
@@ -114,6 +128,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-rise,
   .animate-fade,
+  .animate-tab,
   .pulse-ring {
     animation: none;
   }
