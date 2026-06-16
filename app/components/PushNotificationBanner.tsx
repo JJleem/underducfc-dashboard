@@ -78,7 +78,7 @@ export default function PushNotificationBanner() {
   if (!show) return null;
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm z-50 animate-rise">
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm z-[60] animate-rise">
       <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl p-4 flex items-start gap-3">
         <div className="w-9 h-9 rounded-xl bg-[#FF8FA3]/15 dark:bg-[#FFB6C1]/15 flex items-center justify-center shrink-0 mt-0.5">
           <Bell className="w-4 h-4 text-[#FF8FA3] dark:text-[#FFB6C1]" />
