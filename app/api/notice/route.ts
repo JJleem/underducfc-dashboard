@@ -16,11 +16,15 @@ export async function PUT(req: NextRequest) {
       important: !!important,
       location: location || "",
     });
-    sendPushToAll({
-      title: important ? "📢 [중요] 새 공지사항이 등록됐어요" : "📢 새 공지사항이 등록됐어요",
-      body: title,
-      url: "/",
-    }).catch((e) => console.error("[push] notice 알림 실패:", e));
+    try {
+      await sendPushToAll({
+        title: important ? "📢 [중요] 새 공지사항이 등록됐어요" : "📢 새 공지사항이 등록됐어요",
+        body: title,
+        url: "/",
+      });
+    } catch (e) {
+      console.error("[push] notice 알림 실패:", e);
+    }
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
