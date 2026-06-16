@@ -2606,7 +2606,7 @@ export default function DashboardClient({
       {(() => {
         const editingMatch = matchEditModal !== null ? matchList.find((m) => m.id === matchEditModal) : null;
         return (
-          <Drawer open={matchEditModal !== null} onOpenChange={(open) => { if (!open) setMatchEditModal(null); }}>
+          <Drawer open={matchEditModal !== null} onOpenChange={(open) => { if (!open) setMatchEditModal(null); }} handleOnly>
             <DrawerContent className="bg-white dark:bg-[#161618] max-h-[92dvh]">
               <DrawerHeader className="pb-0">
                 <DrawerTitle className="text-[15px] font-bold text-gray-900 dark:text-white">
@@ -2929,7 +2929,7 @@ export default function DashboardClient({
       })()}
 
       {/* 공지사항 수정 Drawer */}
-      <Drawer open={noticeEditModal} onOpenChange={setNoticeEditModal}>
+      <Drawer open={noticeEditModal} onOpenChange={setNoticeEditModal} handleOnly>
         <DrawerContent className="bg-white dark:bg-[#161618] max-h-[92dvh]">
           <DrawerHeader className="pb-0">
             <DrawerTitle className="text-[15px] font-bold text-gray-900 dark:text-white">공지사항 수정</DrawerTitle>
@@ -3178,7 +3178,7 @@ export default function DashboardClient({
       </Drawer>
 
       {/* 경기 일정 등록 Drawer */}
-      <Drawer open={addMatchModal} onOpenChange={setAddMatchModal}>
+      <Drawer open={addMatchModal} onOpenChange={setAddMatchModal} handleOnly>
         <DrawerContent className="bg-white dark:bg-[#161618] max-h-[92dvh]">
           <DrawerHeader className="pb-0">
             <DrawerTitle className="text-[15px] font-bold text-gray-900 dark:text-white">경기 일정 등록</DrawerTitle>
