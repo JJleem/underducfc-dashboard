@@ -18,11 +18,15 @@ export async function POST(req: NextRequest) {
     });
     const opponentLabel = opponent || "미정";
     const timeLabel = time || "미정";
-    sendPushToAll({
-      title: "📅 새 경기 일정이 등록됐어요",
-      body: `${date} ${timeLabel} vs ${opponentLabel}`,
-      url: "/",
-    }).catch(() => {});
+    try {
+      await sendPushToAll({
+        title: "📅 새 경기 일정이 등록됐어요",
+        body: `${date} ${timeLabel} vs ${opponentLabel}`,
+        url: "/",
+      });
+    } catch (e) {
+      console.error("[push] match 등록 알림 실패:", e);
+    }
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

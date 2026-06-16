@@ -28,11 +28,15 @@ export async function PUT(
       attendees: attendees ?? "",
     });
     if (result && result !== "예정") {
-      sendPushToAll({
-        title: "경기가 종료되었어요. 모두 고생하셨습니다!",
-        body: "MOM투표 부탁드립니다! 🗳️",
-        url: "/",
-      }).catch(() => {});
+      try {
+        await sendPushToAll({
+          title: "경기가 종료되었어요. 모두 고생하셨습니다!",
+          body: "MOM투표 부탁드립니다! 🗳️",
+          url: "/",
+        });
+      } catch (e) {
+        console.error("[push] match 알림 실패:", e);
+      }
     }
     return NextResponse.json({ ok: true });
   } catch (e) {
