@@ -253,6 +253,11 @@ export async function writeMatchMom(matchId: number, mom: string): Promise<void>
 export async function updateMatchResult(
   matchId: number,
   data: {
+    date: string;
+    time: string;
+    location: string;
+    opponent: string;
+    type: string;
     result: string;
     ourScore: string;
     theirScore: string;
@@ -274,9 +279,14 @@ export async function updateMatchResult(
       body: JSON.stringify({
         valueInputOption: "USER_ENTERED",
         data: [
+          { range: `matches!A${row}`, values: [[data.date]] },
+          { range: `matches!B${row}`, values: [[data.time]] },
+          { range: `matches!C${row}`, values: [[data.location]] },
+          { range: `matches!D${row}`, values: [[data.opponent]] },
           { range: `matches!E${row}`, values: [[data.ourScore]] },
           { range: `matches!F${row}`, values: [[data.theirScore]] },
           { range: `matches!G${row}`, values: [[data.result]] },
+          { range: `matches!H${row}`, values: [[data.type]] },
           { range: `matches!I${row}`, values: [[data.goals]] },
           { range: `matches!J${row}`, values: [[data.assists]] },
           { range: `matches!L${row}`, values: [[data.attendees]] },

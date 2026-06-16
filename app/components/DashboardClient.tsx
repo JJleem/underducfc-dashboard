@@ -295,6 +295,11 @@ export default function DashboardClient({
 
   // 경기 결과 입력
   const [matchEditModal, setMatchEditModal] = React.useState<number | null>(null);
+  const [editDate, setEditDate] = React.useState("");
+  const [editTime, setEditTime] = React.useState("");
+  const [editLocation, setEditLocation] = React.useState("");
+  const [editOpponent, setEditOpponent] = React.useState("");
+  const [editType, setEditType] = React.useState("일반 매칭");
   const [editResult, setEditResult] = React.useState("예정");
   const [editOurScore, setEditOurScore] = React.useState("");
   const [editTheirScore, setEditTheirScore] = React.useState("");
@@ -358,6 +363,11 @@ export default function DashboardClient({
   };
 
   const openMatchEdit = (match: MatchData) => {
+    setEditDate(match.date || "");
+    setEditTime(match.time || "");
+    setEditLocation(match.location || "");
+    setEditOpponent(match.opponent || "");
+    setEditType(match.type || "일반 매칭");
     setEditResult(match.result || "예정");
     setEditOurScore(!match.ourScore || match.ourScore === "-" ? "" : String(match.ourScore));
     setEditTheirScore(!match.theirScore || match.theirScore === "-" ? "" : String(match.theirScore));
@@ -382,13 +392,13 @@ export default function DashboardClient({
       const res = await fetch(`/api/matches/${matchEditModal}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ result: editResult, ourScore: editOurScore, theirScore: editTheirScore, goals: goalsStr, assists: assistsStr, attendees: attendeesStr }),
+        body: JSON.stringify({ date: editDate, time: editTime, location: editLocation, opponent: editOpponent, type: editType, result: editResult, ourScore: editOurScore, theirScore: editTheirScore, goals: goalsStr, assists: assistsStr, attendees: attendeesStr }),
       });
       if (!res.ok) throw new Error("저장 실패");
       setMatchList((prev) =>
         prev.map((m) =>
           m.id === matchEditModal
-            ? { ...m, result: editResult, ourScore: editOurScore || "-", theirScore: editTheirScore || "-", goals: goalsStr, assists: assistsStr, attendees: attendeesStr }
+            ? { ...m, date: editDate, time: editTime, location: editLocation, opponent: editOpponent, type: editType, result: editResult, ourScore: editOurScore || "-", theirScore: editTheirScore || "-", goals: goalsStr, assists: assistsStr, attendees: attendeesStr }
             : m
         )
       );
@@ -2605,6 +2615,105 @@ export default function DashboardClient({
               </DrawerHeader>
 
               <div className="overflow-y-auto px-4 py-4 space-y-6">
+                {/* 날짜 */}
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">날짜</p>
+                  <Calendar
+                    mode="single"
+                    selected={editDate ? new Date(editDate + "T12:00:00") : undefined}
+                    onSelect={(date) => { if (date) setEditDate(toMatchDateStr(date)); }}
+                    className="rounded-2xl border border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 w-full p-3"
+                    classNames={{
+                      months: "w-full",
+                      month: "w-full space-y-2",
+                      caption: "flex justify-center relative items-center mb-1",
+                      caption_label: "text-[13px] font-black text-gray-800 dark:text-white",
+                      nav: "flex items-center gap-1",
+                      nav_button: "h-7 w-7 flex items-center justify-center rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 transition-colors",
+                      nav_button_previous: "absolute left-0",
+                      nav_button_next: "absolute right-0",
+                      table: "w-full border-collapse",
+                      head_row: "flex w-full",
+                      head_cell: "flex-1 text-center text-[11px] font-black text-gray-400 dark:text-gray-500 pb-1",
+                      row: "flex w-full mt-0.5",
+                      cell: "flex-1 p-0.5 [&:has([aria-selected])]:bg-transparent",
+                      day: "w-full h-9 text-[12px] font-bold text-gray-800 dark:text-gray-200 rounded-xl hover:bg-gray-200 dark:hover:bg-white/10 transition-colors",
+                      day_selected: "!bg-[#FF8FA3] dark:!bg-[#FFB6C1] !text-white dark:!text-black font-black hover:!bg-[#FF8FA3] dark:hover:!bg-[#FFB6C1]",
+                      day_today: "border-2 border-[#FF8FA3] dark:border-[#FFB6C1] text-[#FF8FA3] dark:text-[#FFB6C1] font-black",
+                      day_outside: "text-gray-300 dark:text-gray-700 opacity-50",
+                      day_disabled: "text-gray-200 dark:text-gray-800",
+                      day_hidden: "invisible",
+                    }}
+                  />
+                  {editDate && (
+                    <p className="text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] mt-1.5 text-center">{editDate} 선택됨</p>
+                  )}
+                </div>
+
+                {/* 시간 */}
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">시간</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {["미정", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "24:00"].map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setEditTime(t === "미정" ? "" : t)}
+                        className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-colors ${
+                          (t === "미정" && !editTime) || editTime === t
+                            ? "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black"
+                            : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 상대팀 */}
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">상대팀</p>
+                  <input
+                    type="text"
+                    value={editOpponent}
+                    onChange={(e) => setEditOpponent(e.target.value)}
+                    placeholder="상대팀 이름"
+                    className="w-full text-[13px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600"
+                  />
+                </div>
+
+                {/* 장소 */}
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">장소</p>
+                  <input
+                    type="text"
+                    value={editLocation}
+                    onChange={(e) => setEditLocation(e.target.value)}
+                    placeholder="경기장 이름"
+                    className="w-full text-[13px] font-medium bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600"
+                  />
+                </div>
+
+                {/* 경기 유형 */}
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">경기 유형</p>
+                  <div className="flex gap-2">
+                    {["일반 매칭", "자체전"].map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setEditType(t)}
+                        className={`flex-1 py-2.5 rounded-xl text-[12px] font-black transition-colors ${
+                          editType === t
+                            ? "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black"
+                            : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* 결과 */}
                 <div>
                   <p className="text-[10px] font-semibold text-gray-400 mb-2 tracking-widest">결과</p>

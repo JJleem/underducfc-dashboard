@@ -12,8 +12,13 @@ export async function PUT(
       return NextResponse.json({ error: "잘못된 경기 ID" }, { status: 400 });
     }
     const body = await req.json();
-    const { result, ourScore, theirScore, goals, assists, attendees } = body;
+    const { date, time, location, opponent, type, result, ourScore, theirScore, goals, assists, attendees } = body;
     await updateMatchResult(matchId, {
+      date: date ?? "",
+      time: time ?? "",
+      location: location ?? "",
+      opponent: opponent ?? "",
+      type: type ?? "",
       result: result || "예정",
       ourScore: ourScore ?? "",
       theirScore: theirScore ?? "",
