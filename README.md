@@ -1,114 +1,83 @@
-# 🦆 UNDERDUCK FC Dashboard
+# UNDERDUCK FC Dashboard
 
-> **"때문에"라는 말보다 "덕분에"라는 말을 지향하는 팀, 언더덕 FC.**
->
-> 우리 팀의 모든 경기 일정과 선수들의 찬란한 기록을 한눈에 확인하고 관리하기 위한 전용 대시보드입니다.
+> 실제 풋살팀의 운영 문제를 해결하기 위해 만든 팀 전용 대시보드.  
+> 경기 일정·결과 관리, 선수 통계, 라인업 편성, 사진 공유, MOM 투표까지 팀 운영에 필요한 기능을 하나의 앱으로 통합했습니다.
 
----
-
-## ✨ 주요 기능
-
-### 📱 PWA (Progressive Web App)
-- 홈 화면에 추가하면 앱처럼 설치·실행 (standalone 모드)
-- iOS 16.4+ / Android Chrome 지원
-- 당겨서 새로고침 (Pull-to-Refresh) 지원
-
-### 🔔 푸시 알림
-- 새 경기 일정 등록 시 알림
-- 경기 결과 입력 시 알림 ("경기가 종료되었어요. MOM투표 부탁드립니다!")
-- 공지사항 업데이트 시 알림
-- iOS / Android 모두 지원 (VAPID + Web Push API)
-
-### 📅 경기 관리
-- 경기 일정 등록 (날짜, 시간, 장소, 상대팀, 경기 유형)
-- 경기 정보 수정 (기본 정보 + 결과 입력)
-- 결과 입력: 스코어, 득점자, 도움, MOM, 참석자
-
-### 🗂 라인업 에디터
-- 쿼터별 (예상 / 1Q ~ 6Q) 독립 라인업 편성
-- 7가지 포메이션 지원 (2-3-1, 3-2-1, 2-2-2, 3-1-2, 2-1-3, 1-2-3, 1-3-2)
-- 드래그앤드롭으로 선수 배치
-- 라인업 이미지 PNG 저장 / SNS 공유
-
-### 📊 경기 상세 페이지
-- 쿼터별 라인업 확인
-- 포메이션 이미지 공유 (인스타그램 스토리 포맷 포함)
-- 경기 정보 및 결과 요약
-
-### 🏆 선수 랭킹
-- 랭킹 점수 = 골 + 도움 + MOM + 출전 합산
-- 실시간 순위 (카운트업 애니메이션)
-- 동점 시 이름 가나다순 정렬
-
-### 👤 로스터
-- 선수 프로필 (등번호, 포지션, 시즌 기록)
-- 최근 활약 경기 목록 (골 / 도움 기록 + 경기 상세 링크)
-
-### 🗳 MOM 투표
-- 경기 종료 후 선수 투표
-- 오늘 마감 경기 강조 뱃지
-- 중복 투표 방지
-
-### 💬 경기 피드백
-- 경기별 댓글 피드백 남기기
-
-### 🖼 미디어 갤러리
-- 경기별 사진 업로드 (Cloudinary, 경기당 최대 5장)
-- 별도 미디어 페이지에서 영상 / 사진 통합 관리
-- 관리자 PIN 인증 후 업로드 / 삭제
-
-### 📢 공지사항
-- 대시보드 최상단 상시 노출
-- 운영진이 앱에서 직접 수정 가능
-
-### 🎨 UI / UX
-- 다크 모드 지원 (next-themes)
-- 모바일 최적화 (max-w-md, 모든 조작 터치 친화적)
-- iOS 입력 자동 확대 방지
+**배포** → [underduckfc.vercel.app](https://underduckfc.vercel.app)
 
 ---
 
-## 📊 구글 시트 데이터 관리 가이드 (운영진 필독)
+## 왜 Google Sheets를 데이터베이스로?
 
-본 대시보드는 구글 시트와 실시간으로 연동됩니다. 데이터가 깨지지 않도록 아래 **입력 규칙**을 반드시 지켜주세요.
+팀원 대부분이 비개발자입니다. 경기 결과나 선수 명단을 운영진이 직접 수정해야 하는데, 별도 어드민 패널을 만들면 "앱을 써야 수정할 수 있다"는 진입 장벽이 생깁니다.
 
-### 1️⃣ [matches] 시트 (경기 일정 및 결과)
+Google Sheets는 팀원 누구나 이미 익숙하고, 스프레드시트 자체가 어드민 패널 역할을 합니다. 추가 인프라 없이 비개발자 친화적인 데이터 관리가 가능한 유일한 선택이었습니다.
 
-- **득점자 & 도움 매칭**: 득점자와 도움은 적힌 순서대로 짝이 맺어집니다.
-  - **입력 예시**: 득점자: `홍길동,임재준` / 도움: `,홍길동`
-  - **결과**: 1번 골(홍길동-도움 없음), 2번 골(임재준-홍길동 도움)
-- **참석자 기록**: 참석자 칸에 이름을 적으면 `stats` 시트의 출전 횟수가 자동으로 올라갑니다.
-  - **규칙**: 이름 사이에는 **쉼표(,)**를 찍고 **띄어쓰기 없이** 붙여 써주세요.
-- **자체전 표시**: 상대팀 칸에 `자체전`이라고 적으면 대시보드에서 전용 UI가 적용됩니다.
-
-### 2️⃣ [stats] 시트 (선수 명단 및 기록)
-
-- **자동화 구역**: **'출전, 득점, 도움, MOM, 포인트'** 칸은 수식이 들어있으므로 **절대 직접 수정하지 마세요.**
-- **신규 선수 등록**: 새로운 선수가 오면 **'등번호'**와 **'이름'**만 추가하고, 윗줄의 수식을 아래로 드래그해서 채워주세요.
-
-### 3️⃣ [notice] 시트 (공지사항)
-
-- **단일 공지 원칙**: 대시보드에는 항상 **두 번째 줄(2행)**의 내용만 표시됩니다.
-- **업데이트**: 새로운 공지가 있을 때는 기존 내용을 지우고 그 자리에 덮어씌워 작성해 주세요.
-
-### 4️⃣ [push_subscriptions] 시트 (푸시 알림 구독)
-
-- 앱에서 알림을 허용한 기기의 구독 정보가 자동으로 저장됩니다.
-- 직접 수정하지 마세요.
+**구현상 고려한 점:**
+- 읽기는 public API key (Google Sheets API v4), 쓰기는 Service Account JWT — 권한을 목적에 따라 분리
+- googleapis SDK 없이 Node.js 내장 `crypto`로 RS256 서명을 직접 구현 — 서버리스 환경에서 번들 크기와 cold start 최소화
 
 ---
 
-## 🛠 기술 스택
+## 풀어낸 기술 챌린지
 
-| 영역 | 기술 |
-|------|------|
-| Frontend | Next.js 15 (App Router), TypeScript |
-| Styling | Tailwind CSS v4, Shadcn UI, Lucide React |
-| Database | Google Sheets API v4 |
-| Media Storage | Cloudinary |
-| Push Notifications | Web Push API (VAPID), web-push |
-| Deployment | Vercel |
+**Vercel 서버리스와 비동기 작업**
+
+경기 결과 저장 후 푸시 알림을 보내는 로직을 fire-and-forget으로 짰더니, Vercel이 응답 반환 직후 함수를 종료해 알림이 전송되지 않는 문제가 있었습니다. `await`로 직렬화해 응답 전에 완료를 보장하는 방식으로 해결했습니다.
+
+같은 맥락에서, `web-push` VAPID 초기화를 모듈 최상단에 두면 Vercel 빌드 시점에 env var가 없어 빌드 자체가 실패하는 문제도 있었습니다. 초기화 코드를 함수 내부로 이동해 런타임에만 실행되도록 수정했습니다.
+
+**PWA에서의 UX 제약**
+
+iOS standalone 모드에서는 브라우저 기본 당겨서 새로고침이 비활성화됩니다. `touchstart` / `touchmove` 이벤트로 직접 Pull-to-Refresh를 구현했습니다.
+
+vaul Drawer 라이브러리가 모바일 키보드 등장 시 visual viewport 기준으로 Drawer를 리사이즈하면서 입력 불가 상태가 되는 문제는 `repositionInputs={false}` prop으로 해결했습니다.
+
+**무료 푸시 알림 인프라**
+
+별도 푸시 서버 없이 Web Push API(VAPID)만으로 iOS / Android 모두 지원합니다. 구독 정보도 Google Sheets에 저장해 추가 데이터베이스 없이 운영합니다.
 
 ---
 
-© 2026 UNDERDUCK FC. Built with passion by **molt**
+## 아키텍처 개요
+
+```
+Next.js App Router (Vercel)
+│
+├── app/page.tsx              # Server Component — Sheets에서 전체 데이터 병렬 fetch
+├── app/components/           # DashboardClient — 모든 UI 상태 관리
+├── app/matches/[id]/edit/    # 드래그앤드롭 라인업 에디터
+├── app/media/                # 미디어 갤러리
+│
+├── app/lib/google-sheets.ts  # 읽기 (public API key)
+├── app/lib/sheets-write.ts   # 쓰기 (Service Account JWT, RS256 자체 서명)
+├── app/lib/send-push.ts      # Web Push 발송
+│
+└── app/api/                  # 뮤테이션 엔드포인트
+    ├── matches/              # 경기 CRUD
+    ├── notice/               # 공지 수정
+    ├── lineup/               # 라인업 저장
+    ├── mom-vote/             # MOM 투표
+    ├── photos/               # Cloudinary 서명 URL 발급
+    └── push/subscribe/       # 푸시 구독 등록·해제
+
+Google Sheets ──────── 모든 영구 데이터 (경기, 선수, 통계, 공지, 구독)
+Cloudinary ─────────── 사진·영상 스토리지
+```
+
+---
+
+## 기술 스택
+
+| | 선택 이유 |
+|---|---|
+| **Next.js 15** App Router | Server Component로 초기 데이터 fetch, 페이지별 API route |
+| **Google Sheets** API v4 | 비개발자 팀원이 직접 데이터 편집 가능한 유일한 DB |
+| **Cloudinary** | 서버리스에서 파일 시스템 없이 미디어 처리, 서명 URL로 클라이언트 직접 업로드 |
+| **Web Push** (VAPID) | 추가 서비스 없이 iOS/Android 네이티브 푸시 알림 |
+| **Tailwind CSS v4** + Shadcn UI | 빠른 모바일 UI 구성 |
+| **Vercel** | Next.js 최적화 배포, 서버리스 API route |
+
+---
+
+© 2026 UNDERDUCK FC · Built by **molt**
