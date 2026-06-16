@@ -1,17 +1,16 @@
 import webpush from "web-push";
 import { getAllPushSubscriptions } from "./sheets-write";
 
-webpush.setVapidDetails(
-  `mailto:${process.env.VAPID_EMAIL}`,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 export async function sendPushToAll(payload: {
   title: string;
   body: string;
   url?: string;
 }): Promise<void> {
+  webpush.setVapidDetails(
+    `mailto:${process.env.VAPID_EMAIL}`,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  );
   const subs = await getAllPushSubscriptions();
   console.log(`[push] 구독자 수: ${subs.length}`);
   if (subs.length === 0) return;
