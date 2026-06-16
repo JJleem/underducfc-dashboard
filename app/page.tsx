@@ -19,13 +19,21 @@ export default async function TeamDashboardPage() {
   } catch {
     rawLineups = [];
   }
+  // Google Sheets가 "08:00"을 시간 포맷으로 인식해 "08:00:00"으로 반환하는 경우를 정규화
+  const normalizeTime = (raw: string): string => {
+    if (!raw) return "미정";
+    const m = raw.match(/(\d{1,2}):(\d{2})/);
+    if (!m) return "미정";
+    return `${m[1].padStart(2, "0")}:${m[2]}`;
+  };
+
   // 💡 2. MatchData 타입에 맞춰서 가공 (row: string[] 명시)
   const matches: MatchData[] = rawMatches
     .slice(1)
     .map((row: string[], index: number) => ({
       id: index,
       date: row[0] || "",
-      time: row[1] || "미정",
+      time: normalizeTime(row[1]),
       location: row[2] || "미정",
       opponent: row[3] || "미정",
       ourScore: row[4] || "-",

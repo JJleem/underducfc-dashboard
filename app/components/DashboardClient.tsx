@@ -364,8 +364,8 @@ export default function DashboardClient({
 
   const openMatchEdit = (match: MatchData) => {
     setEditDate(match.date || "");
-    setEditTime(match.time || "");
-    setEditLocation(match.location || "");
+    setEditTime(match.time === "미정" ? "" : (match.time || ""));
+    setEditLocation(match.location === "미정" ? "" : (match.location || ""));
     setEditOpponent(match.opponent || "");
     setEditType(match.type || "일반 매칭");
     setEditResult(match.result || "예정");
