@@ -482,3 +482,88 @@ export async function writeLineup({
     body: JSON.stringify({ range: writeRange, values: allRows }),
   });
 }
+
+// ── Push 구독 관리 ────────────────────────────────────────────
+// push_subscriptions 시트: A=endpoint, B=p256dh, C=auth
+
+export async function addPushSubscription(sub: {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const range = encodeURIComponent("push_subscriptions!A:C");
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ values: [[sub.endpoint, sub.p256dh, sub.auth]] }),
+    }
+  );
+  if (!res.ok) throw new Error("구독 저장 실패");
+}
+
+export async function removePushSubscription(endpoint: string): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+
+  // 전체 읽어서 해당 endpoint 행 번호 찾기
+  const range = encodeURIComponent("push_subscriptions!A:A");
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) return;
+  const data = await res.json();
+  const rows: string[][] = data.values || [];
+  const rowIndex = rows.findIndex((r) => r[0] === endpoint);
+  if (rowIndex === -1) return;
+
+  // 해당 행 삭제 (batchUpdate deleteDimension)
+  const sheetInfoRes = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  const sheetInfo = await sheetInfoRes.json();
+  const sheet = sheetInfo.sheets?.find(
+    (s: { properties: { title: string; sheetId: number } }) => s.properties.title === "push_subscriptions"
+  );
+  if (!sheet) return;
+
+  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      requests: [{
+        deleteDimension: {
+          range: { sheetId: sheet.properties.sheetId, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 },
+        },
+      }],
+    }),
+  });
+}
+
+export async function getAllPushSubscriptions(): Promise<{ endpoint: string; p256dh: string; auth: string }[]> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const range = encodeURIComponent("push_subscriptions!A:C");
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  const rows: string[][] = data.values || [];
+  // 헤더 행 건너뜀 (A1이 "endpoint"인 경우)
+  const start = rows[0]?.[0] === "endpoint" ? 1 : 0;
+  return rows.slice(start).filter((r) => r[0]).map((r) => ({
+    endpoint: r[0],
+    p256dh: r[1] || "",
+    auth: r[2] || "",
+  }));
+}

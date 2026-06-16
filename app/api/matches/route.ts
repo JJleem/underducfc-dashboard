@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendMatch } from "@/app/lib/sheets-write";
+import { sendPushToAll } from "@/app/lib/send-push";
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,6 +16,13 @@ export async function POST(req: NextRequest) {
       opponent: opponent || "미정",
       type: type || "일반 매칭",
     });
+    const opponentLabel = opponent || "미정";
+    const timeLabel = time || "미정";
+    sendPushToAll({
+      title: "📅 새 경기 일정이 등록됐어요",
+      body: `${date} ${timeLabel} vs ${opponentLabel}`,
+      url: "/",
+    }).catch(() => {});
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

@@ -2,7 +2,9 @@
 import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "./components/theme-provider";
 import PullToRefresh from "./components/PullToRefresh";
-import Image from "next/image"; // 👈 추가!
+import ServiceWorkerRegister from "./components/ServiceWorkerRegister";
+import PushNotificationBanner from "./components/PushNotificationBanner";
+import Image from "next/image";
 import "./globals.css";
 import Link from "next/link";
 
@@ -83,6 +85,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <ServiceWorkerRegister />
+          <PushNotificationBanner />
           {/* 📱 모바일 앱 프레임 래퍼 */}
           <div className="max-w-md mx-auto min-h-[100dvh] flex flex-col bg-gray-50 dark:bg-[#09090b] shadow-2xl relative overflow-hidden transition-colors duration-300">
             <PullToRefresh>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateMatchResult } from "@/app/lib/sheets-write";
+import { sendPushToAll } from "@/app/lib/send-push";
 
 export async function PUT(
   req: NextRequest,
@@ -26,6 +27,15 @@ export async function PUT(
       assists: assists ?? "",
       attendees: attendees ?? "",
     });
+    if (result && result !== "예정") {
+      const resultEmoji: Record<string, string> = { 승: "🏆", 무: "🤝", 패: "😓", 자체전: "⚽" };
+      const emoji = resultEmoji[result] || "⚽";
+      sendPushToAll({
+        title: `${emoji} 경기 결과가 입력됐어요`,
+        body: `vs ${opponent || "상대팀"} ${ourScore ?? ""} : ${theirScore ?? ""} (${result})`,
+        url: "/",
+      }).catch(() => {});
+    }
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

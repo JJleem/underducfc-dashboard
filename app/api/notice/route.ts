@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateNotice } from "@/app/lib/sheets-write";
+import { sendPushToAll } from "@/app/lib/send-push";
 
 export async function PUT(req: NextRequest) {
   try {
@@ -15,6 +16,11 @@ export async function PUT(req: NextRequest) {
       important: !!important,
       location: location || "",
     });
+    sendPushToAll({
+      title: important ? "📢 [중요] 새 공지사항이 등록됐어요" : "📢 새 공지사항이 등록됐어요",
+      body: title,
+      url: "/",
+    }).catch(() => {});
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
