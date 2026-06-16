@@ -28,11 +28,9 @@ export async function PUT(
       attendees: attendees ?? "",
     });
     if (result && result !== "예정") {
-      const resultEmoji: Record<string, string> = { 승: "🏆", 무: "🤝", 패: "😓", 자체전: "⚽" };
-      const emoji = resultEmoji[result] || "⚽";
       sendPushToAll({
-        title: `${emoji} 경기 결과가 입력됐어요`,
-        body: `vs ${opponent || "상대팀"} ${ourScore ?? ""} : ${theirScore ?? ""} (${result})`,
+        title: "경기가 종료되었어요. 모두 고생하셨습니다!",
+        body: "MOM투표 부탁드립니다! 🗳️",
         url: "/",
       }).catch(() => {});
     }
