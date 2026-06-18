@@ -38,7 +38,9 @@ import {
   Check,
   Swords,
   Sparkles,
+  LogIn,
 } from "lucide-react";
+import { signIn, signOut } from "next-auth/react";
 import { shareStoryCard } from "../lib/draw-story-card";
 import { FormationField, FORMATION_POSITIONS } from "./FormationField";
 import { shareFormation } from "../lib/draw-formation";
@@ -189,6 +191,7 @@ interface DashboardClientProps {
   lineups: LineupData[];
   rosterMap: Record<string, string>;
   captainRoles?: Record<string, string>;
+  currentUser?: { kakaoId: string; name: string; image: string } | null;
 }
 
 export default function DashboardClient({
@@ -198,6 +201,7 @@ export default function DashboardClient({
   lineups,
   rosterMap,
   captainRoles,
+  currentUser,
 }: DashboardClientProps) {
   const { theme, setTheme } = useTheme();
   const [matchList, setMatchList] = React.useState<MatchData[]>(matches);
@@ -815,13 +819,46 @@ export default function DashboardClient({
           <span className="w-1.5 h-1.5 rounded-full bg-[#FF8FA3]" />
           UNDERDUCK
         </span>
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 transition-all"
-        >
-          <Moon className="block dark:hidden w-4 h-4 text-gray-700" />
-          <Sun className="hidden dark:block w-4 h-4 text-[#FFB6C1]" />
-        </button>
+        <div className="flex items-center gap-2">
+          {currentUser ? (
+            <button
+              onClick={() => signOut()}
+              title="로그아웃"
+              className="flex items-center gap-1.5 h-8 pl-1 pr-2.5 rounded-full bg-gray-100 dark:bg-white/10 transition-all"
+            >
+              {currentUser.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={currentUser.image}
+                  alt={currentUser.name}
+                  className="w-6 h-6 rounded-full object-cover"
+                />
+              ) : (
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FF8FA3] text-white text-[10px] font-bold">
+                  {currentUser.name.slice(0, 1) || "U"}
+                </span>
+              )}
+              <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 max-w-[72px] truncate">
+                {currentUser.name || "회원"}
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={() => signIn("kakao")}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-[#FEE500] text-black text-xs font-bold transition-all hover:brightness-95"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              카카오 로그인
+            </button>
+          )}
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 transition-all"
+          >
+            <Moon className="block dark:hidden w-4 h-4 text-gray-700" />
+            <Sun className="hidden dark:block w-4 h-4 text-[#FFB6C1]" />
+          </button>
+        </div>
       </header>
 
       <main className="p-5 pb-10">

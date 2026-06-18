@@ -1,4 +1,5 @@
 // app/page.tsx
+import { auth } from "@/auth";
 import { getSheetData } from "./lib/google-sheets";
 import DashboardClient, {
   LineupData,
@@ -8,6 +9,16 @@ import DashboardClient, {
 } from "./components/DashboardClient";
 
 export default async function TeamDashboardPage() {
+  // 로그인 세션 (카카오) — 로그인 안 했으면 null
+  const session = await auth();
+  const currentUser = session?.user
+    ? {
+        kakaoId: (session.user as { kakaoId?: string }).kakaoId ?? "",
+        name: session.user.name ?? "",
+        image: session.user.image ?? "",
+      }
+    : null;
+
   // 💡 1. 가져오는 데이터가 2차원 문자열 배열(string[][])임을 명시합니다.
   const rawMatches: string[][] = await getSheetData("matches!A1:M50");
   const rawRoster: string[][] = await getSheetData("roster!A1:J50");
@@ -136,6 +147,7 @@ export default async function TeamDashboardPage() {
       lineups={lineups}
       rosterMap={lineupRosterMap}
       captainRoles={captainRoles}
+      currentUser={currentUser}
     />
   );
 }

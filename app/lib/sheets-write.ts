@@ -547,6 +547,53 @@ export async function removePushSubscription(endpoint: string): Promise<void> {
   });
 }
 
+// ── 유저 관리 (카카오 로그인) ──────────────────────────────────
+// users 시트: A=kakaoId, B=nickname, C=profileImage, D=joinedAt, E=lastLogin
+export async function upsertUser(user: {
+  kakaoId: string;
+  nickname: string;
+  profileImage: string;
+}): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
+
+  const readRes = await fetch(`${base}/values/users!A1:E1000`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const readData = await readRes.json();
+  const rows: string[][] = readData.values || [];
+  const now = new Date().toISOString();
+
+  // 헤더(0행) 제외하고 kakaoId 일치 행 찾기
+  const idx = rows.findIndex((r, i) => i > 0 && String(r[0]) === String(user.kakaoId));
+
+  if (idx === -1) {
+    // 신규 유저 → append
+    const range = encodeURIComponent("users!A:E");
+    const res = await fetch(
+      `${base}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ values: [[user.kakaoId, user.nickname, user.profileImage, now, now]] }),
+      }
+    );
+    if (!res.ok) throw new Error("users 시트 쓰기 실패");
+  } else {
+    // 기존 유저 → 닉네임/이미지/lastLogin 갱신 (joinedAt은 보존)
+    const rowNum = idx + 1; // 배열 인덱스 → 시트 행 번호
+    const joinedAt = rows[idx][3] || now;
+    const range = `users!B${rowNum}:E${rowNum}`;
+    await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ range, values: [[user.nickname, user.profileImage, joinedAt, now]] }),
+    });
+  }
+}
+
 export async function getAllPushSubscriptions(): Promise<{ endpoint: string; p256dh: string; auth: string }[]> {
   const sheetId = process.env.GOOGLE_SHEET_ID;
   if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
