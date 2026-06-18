@@ -1,5 +1,6 @@
 // app/page.tsx
 import { auth } from "@/auth";
+import { isAdmin } from "./lib/admin";
 import { getSheetData } from "./lib/google-sheets";
 import DashboardClient, {
   LineupData,
@@ -18,6 +19,7 @@ export default async function TeamDashboardPage() {
         image: session.user.image ?? "",
       }
     : null;
+  const admin = isAdmin(currentUser?.kakaoId);
 
   // 💡 1. 가져오는 데이터가 2차원 문자열 배열(string[][])임을 명시합니다.
   const rawMatches: string[][] = await getSheetData("matches!A1:M50");
@@ -148,6 +150,7 @@ export default async function TeamDashboardPage() {
       rosterMap={lineupRosterMap}
       captainRoles={captainRoles}
       currentUser={currentUser}
+      isAdmin={admin}
     />
   );
 }

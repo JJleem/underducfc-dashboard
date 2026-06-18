@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { addPhotosToMatch, removePhotoFromMatch } from "../../lib/sheets-write";
+import { requireAdmin } from "@/app/lib/admin";
 
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     const { matchId, urls } = await request.json();
 
@@ -20,6 +23,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     const { matchId, url } = await request.json();
     if (matchId === undefined || !url) {

@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { getSheetData } from "../../../lib/google-sheets";
 import { writeMatchMom } from "../../../lib/sheets-write";
+import { requireAdmin } from "@/app/lib/admin";
 
 export async function POST() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     // matches 읽기 (날짜 + 현재 MOM 확인용)
     const rawMatches = await getSheetData("matches!A1:M50");

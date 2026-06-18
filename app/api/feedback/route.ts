@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSheetData } from "../../lib/google-sheets";
 import { appendFeedback, deleteFeedback } from "../../lib/sheets-write";
+import { requireUser } from "@/app/lib/admin";
 
 export async function GET() {
   try {
@@ -19,6 +20,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await requireUser();
+  if (denied) return denied;
   try {
     const body = await request.json();
     const { matchId, name, message } = body;
@@ -36,6 +39,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const denied = await requireUser();
+  if (denied) return denied;
   try {
     const { matchId, timestamp, name, message } = await request.json();
     if (matchId === undefined || !timestamp || !name || !message) {

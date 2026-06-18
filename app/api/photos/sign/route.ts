@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/app/lib/admin";
 
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;

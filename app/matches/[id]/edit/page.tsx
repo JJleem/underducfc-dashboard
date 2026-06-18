@@ -1,13 +1,17 @@
 import { getSheetData } from "../../../lib/google-sheets";
 import { LineupData, MatchData } from "../../../components/DashboardClient";
 import LineupEditor from "./LineupEditor";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { currentKakaoId, isAdmin } from "../../../lib/admin";
 
 export default async function LineupEditPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // 라인업 편집은 관리자 전용
+  if (!isAdmin(await currentKakaoId())) redirect("/");
+
   const { id } = await params;
   const matchId = Number(id);
 

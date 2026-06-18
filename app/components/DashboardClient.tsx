@@ -192,6 +192,7 @@ interface DashboardClientProps {
   rosterMap: Record<string, string>;
   captainRoles?: Record<string, string>;
   currentUser?: { kakaoId: string; name: string; image: string } | null;
+  isAdmin?: boolean;
 }
 
 export default function DashboardClient({
@@ -202,6 +203,7 @@ export default function DashboardClient({
   rosterMap,
   captainRoles,
   currentUser,
+  isAdmin = false,
 }: DashboardClientProps) {
   const { theme, setTheme } = useTheme();
   const [matchList, setMatchList] = React.useState<MatchData[]>(matches);
@@ -488,7 +490,6 @@ export default function DashboardClient({
 
   // MOM 투표 상태
   const [momVoteMap, setMomVoteMap] = React.useState<Record<number, MomVoteData[]>>({});
-  const [momVoterName, setMomVoterName] = React.useState<Record<number, string>>({});
   const [submittingVote, setSubmittingVote] = React.useState<number | null>(null);
   const [openVotes, setOpenVotes] = React.useState<Set<number>>(new Set());
   const [momModal, setMomModal] = React.useState<{ matchId: number; attendees: string[] } | null>(null);
@@ -496,8 +497,9 @@ export default function DashboardClient({
   const [momModalAtk, setMomModalAtk] = React.useState("");
   const [momModalDef, setMomModalDef] = React.useState("");
 
-  // 페이지 로드 시 마감된 경기 MOM 자동 확정 후 카드에 반영
+  // 페이지 로드 시 마감된 경기 MOM 자동 확정 후 카드에 반영 (관리자 방문 시에만 실행)
   React.useEffect(() => {
+    if (!isAdmin) return;
     fetch("/api/mom-vote/finalize", { method: "POST" })
       .then((r) => r.json())
       .then((data: { finalized?: { matchId: number; mom: string }[] }) => {
@@ -511,7 +513,7 @@ export default function DashboardClient({
         }
       })
       .catch(() => {});
-  }, []);
+  }, [isAdmin]);
 
   React.useEffect(() => {
     fetch("/api/mom-vote")
@@ -643,26 +645,27 @@ export default function DashboardClient({
 
   const submitFeedback = async (matchId: number) => {
     const form = feedbackForms[matchId];
-    if (!form?.name?.trim() || !form?.message?.trim()) return;
+    const name = currentUser?.name?.trim();
+    if (!name || !form?.message?.trim()) return;
     setSubmittingFeedback(matchId);
     try {
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchId, name: form.name, message: form.message }),
+        body: JSON.stringify({ matchId, name, message: form.message }),
       });
       if (res.ok) {
         const newFb: FeedbackData = {
           matchId,
           timestamp: new Date().toISOString(),
-          name: form.name.trim(),
+          name,
           message: form.message.trim(),
         };
         setFeedbackMap((prev) => ({
           ...prev,
           [matchId]: [...(prev[matchId] || []), newFb],
         }));
-        setFeedbackForms((prev) => ({ ...prev, [matchId]: { name: form.name, message: "" } }));
+        setFeedbackForms((prev) => ({ ...prev, [matchId]: { name: "", message: "" } }));
       }
     } finally {
       setSubmittingFeedback(null);
@@ -1000,22 +1003,24 @@ export default function DashboardClient({
                         <Badge className="bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-500 border-none font-bold text-[10px] px-2 py-0">
                           {localNotice.date}
                         </Badge>
-                        <button
-                          onClick={() => {
-                            setNoticeEditForm({
-                              date: localNotice.date,
-                              title: localNotice.title,
-                              content: localNotice.content,
-                              important: localNotice.important,
-                              location: localNotice.location || "",
-                            });
-                            setNoticeEditModal(true);
-                          }}
-                          className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
-                          aria-label="공지 수정"
-                        >
-                          <Pencil className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => {
+                              setNoticeEditForm({
+                                date: localNotice.date,
+                                title: localNotice.title,
+                                content: localNotice.content,
+                                important: localNotice.important,
+                                location: localNotice.location || "",
+                              });
+                              setNoticeEditModal(true);
+                            }}
+                            className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                            aria-label="공지 수정"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -1301,17 +1306,19 @@ export default function DashboardClient({
               </div>
             )}
 
-            {/* 경기 일정 등록 버튼 */}
-            <button
-              onClick={() => {
-                setAddMatchForm({ date: "", time: "", location: "", opponent: "", type: "일반 매칭" });
-                setAddMatchModal(true);
-              }}
-              className="w-full mb-2 flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-[#FFB6C1]/40 dark:border-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] text-[12px] font-black hover:bg-[#FF8FA3]/5 dark:hover:bg-[#FFB6C1]/5 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              경기 일정 등록
-            </button>
+            {/* 경기 일정 등록 버튼 (관리자 전용) */}
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setAddMatchForm({ date: "", time: "", location: "", opponent: "", type: "일반 매칭" });
+                  setAddMatchModal(true);
+                }}
+                className="w-full mb-2 flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-[#FFB6C1]/40 dark:border-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] text-[12px] font-black hover:bg-[#FF8FA3]/5 dark:hover:bg-[#FFB6C1]/5 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                경기 일정 등록
+              </button>
+            )}
 
             {/* 경기 일정 리스트 */}
             {[...matchList].reverse().map((match, mi) => {
@@ -1416,7 +1423,7 @@ export default function DashboardClient({
                               <Camera className="w-3.5 h-3.5 text-[#FFB6C1]" />
                               {allPhotos.length > 1 ? `사진 ${allPhotos.length - 1}` : "사진 없음"}
                             </div>
-                            {allPhotos.length < 10 && (
+                            {isAdmin && allPhotos.length < 10 && (
                               <>
                                 <button
                                   onClick={() => fileInputRefs.current[match.id]?.click()}
@@ -1447,12 +1454,14 @@ export default function DashboardClient({
                                     onClick={() => setLightbox({ ids: allPhotos, index: i + 1 })}
                                     className="h-24 w-24 object-cover rounded-2xl cursor-pointer"
                                   />
-                                  <button
-                                    onClick={() => deletePhoto(match.id, url)}
-                                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-red-500/80 transition-all opacity-0 group-hover/photo:opacity-100"
-                                  >
-                                    <X className="w-3 h-3 text-white" />
-                                  </button>
+                                  {isAdmin && (
+                                    <button
+                                      onClick={() => deletePhoto(match.id, url)}
+                                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-red-500/80 transition-all opacity-0 group-hover/photo:opacity-100"
+                                    >
+                                      <X className="w-3 h-3 text-white" />
+                                    </button>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -1584,13 +1593,15 @@ export default function DashboardClient({
                         })()}
                       </div>
                       <div className="flex flex-col items-end gap-1.5">
-                        <button
-                          onClick={() => openMatchEdit(match)}
-                          className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
-                          aria-label="결과 입력"
-                        >
-                          <Pencil className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => openMatchEdit(match)}
+                            className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                            aria-label="결과 입력"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                          </button>
+                        )}
                         {match.mom && (
                           <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-400/10 border border-yellow-300/50 dark:border-yellow-400/30 rounded-md px-2 py-0.5">
                             <Star className="w-2.5 h-2.5 text-yellow-500 dark:text-yellow-400 fill-yellow-500 dark:fill-yellow-400" />
@@ -1795,12 +1806,14 @@ export default function DashboardClient({
                                 isOpen ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />
                               )}
                             </button>
-                            <Link
-                              href={`/matches/${match.id}/edit`}
-                              className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] hover:opacity-70 transition-opacity"
-                            >
-                              {matchLineups.length > 0 ? "편집" : "+ 추가"}
-                            </Link>
+                            {isAdmin && (
+                              <Link
+                                href={`/matches/${match.id}/edit`}
+                                className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] hover:opacity-70 transition-opacity"
+                              >
+                                {matchLineups.length > 0 ? "편집" : "+ 추가"}
+                              </Link>
+                            )}
                           </div>
                           {isOpen && matchLineups.length > 0 && (
                             <div className="mt-3 space-y-3">
@@ -1923,7 +1936,7 @@ export default function DashboardClient({
                               <Camera className="w-3.5 h-3.5 text-[#FFB6C1]" />
                               {hasPhotos ? `경기 사진 ${photos.length}` : "경기 사진 없음"}
                             </div>
-                            {photos.length < 5 && (
+                            {isAdmin && photos.length < 5 && (
                               <>
                                 <button
                                   onClick={() => fileInputRefs.current[match.id]?.click()}
@@ -1960,12 +1973,14 @@ export default function DashboardClient({
                                     onClick={() => setLightbox({ ids: photos, index: i })}
                                     className="h-24 w-24 object-cover rounded-2xl cursor-pointer transition-opacity"
                                   />
-                                  <button
-                                    onClick={() => deletePhoto(match.id, id)}
-                                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-red-500/80 transition-all opacity-0 group-hover/photo:opacity-100"
-                                  >
-                                    <X className="w-3 h-3 text-white" />
-                                  </button>
+                                  {isAdmin && (
+                                    <button
+                                      onClick={() => deletePhoto(match.id, id)}
+                                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-red-500/80 transition-all opacity-0 group-hover/photo:opacity-100"
+                                    >
+                                      <X className="w-3 h-3 text-white" />
+                                    </button>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -1979,7 +1994,8 @@ export default function DashboardClient({
                       const attendees = match.attendees!.split(",").map((n) => n.trim()).filter(Boolean);
                       const votes = momVoteMap[match.id] || [];
                       const isOpen = openVotes.has(match.id);
-                      const voterName = momVoterName[match.id] || "";
+                      // 투표자 신원 = 로그인한 카카오 이름 (자동)
+                      const voterName = currentUser?.name || "";
 
                       // 경기 당일까지만 투표 가능, 다음날부터 잠금
                       const matchDay = new Date(match.date);
@@ -2096,30 +2112,39 @@ export default function DashboardClient({
                                     <p className="text-[10px] text-gray-400 mb-2">
                                       투표는 경기 당일까지만 가능합니다
                                     </p>
-                                    <div className="flex items-center justify-between">
-                                      <button
-                                        onClick={() => {
-                                          setMomModalVoter(voterName);
-                                          setMomModalAtk(myAtkVote || "");
-                                          setMomModalDef(myDefVote || "");
-                                          setMomModal({ matchId: match.id, attendees });
-                                        }}
-                                        className="text-[11px] font-black px-4 py-1.5 rounded-2xl bg-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10 text-[#FF8FA3] dark:text-[#FFB6C1] hover:bg-[#FF8FA3]/20 transition-colors"
-                                      >
-                                        {hasVoted ? "투표 변경" : "투표하기"}
-                                      </button>
-                                      {hasVoted && (
+                                    {currentUser ? (
+                                      <div className="flex items-center justify-between">
                                         <button
-                                          onClick={async () => {
-                                            if (myAtkVote) await cancelMomVote(match.id, voterName, "공격");
-                                            if (myDefVote) await cancelMomVote(match.id, voterName, "수비");
+                                          onClick={() => {
+                                            setMomModalVoter(voterName);
+                                            setMomModalAtk(myAtkVote || "");
+                                            setMomModalDef(myDefVote || "");
+                                            setMomModal({ matchId: match.id, attendees });
                                           }}
-                                          className="text-[10px] text-gray-400 hover:text-red-400 transition-colors"
+                                          className="text-[11px] font-black px-4 py-1.5 rounded-2xl bg-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10 text-[#FF8FA3] dark:text-[#FFB6C1] hover:bg-[#FF8FA3]/20 transition-colors"
                                         >
-                                          투표 취소
+                                          {hasVoted ? "투표 변경" : "투표하기"}
                                         </button>
-                                      )}
-                                    </div>
+                                        {hasVoted && (
+                                          <button
+                                            onClick={async () => {
+                                              if (myAtkVote) await cancelMomVote(match.id, voterName, "공격");
+                                              if (myDefVote) await cancelMomVote(match.id, voterName, "수비");
+                                            }}
+                                            className="text-[10px] text-gray-400 hover:text-red-400 transition-colors"
+                                          >
+                                            투표 취소
+                                          </button>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={() => signIn("kakao")}
+                                        className="w-full flex items-center justify-center gap-1.5 text-[11px] font-black py-2 rounded-2xl bg-[#FEE500] text-black/85 hover:opacity-90 transition-opacity"
+                                      >
+                                        <Lock className="w-3 h-3" /> 로그인하고 투표하기
+                                      </button>
+                                    )}
                                   </>
                                 )}
                               </div>
@@ -2189,54 +2214,52 @@ export default function DashboardClient({
                                     <div className="flex items-center gap-1.5 mb-0.5">
                                       <span className="text-[10px] font-black text-gray-800 dark:text-gray-200">{fb.name}</span>
                                       <span className="text-[9px] text-gray-400">{formatFeedbackTime(fb.timestamp)}</span>
-                                      <button
-                                        onClick={() => setDeleteTarget({ matchId: match.id, fb })}
-                                        className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-400"
-                                      >
-                                        <Trash2 className="w-3 h-3" />
-                                      </button>
+                                      {(isAdmin || (currentUser && fb.name === currentUser.name)) && (
+                                        <button
+                                          onClick={() => setDeleteTarget({ matchId: match.id, fb })}
+                                          className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-400"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </button>
+                                      )}
                                     </div>
                                     <p className="text-[11px] text-gray-600 dark:text-gray-300 break-words leading-relaxed">{fb.message}</p>
                                   </div>
                                 </div>
                               ))}
 
-                              {/* 입력 폼 */}
+                              {/* 입력 폼 (로그인 회원만) */}
                               <div className="pt-3 border-t border-gray-100 dark:border-white/5">
-                                {/* 이름 입력 (컴팩트) */}
-                                <div className="flex items-center gap-1.5 mb-2">
-                                  <span className="text-[10px] text-gray-400 shrink-0">닉네임</span>
-                                  <input
-                                    type="text"
-                                    placeholder="이름 입력"
-                                    value={form.name}
-                                    maxLength={20}
-                                    onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, name: e.target.value } }))}
-                                    className="w-28 text-[11px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-2.5 py-1.5 outline-none focus:border-[#FFB6C1]/60 dark:focus:border-[#FFB6C1]/60 placeholder:text-gray-400 text-gray-800 dark:text-gray-200"
-                                  />
-                                </div>
-                                {/* 메시지 입력 + 전송 */}
-                                <div className="flex items-center gap-2">
-                                  <FeedbackAvatar name={form.name} />
-                                  <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-[#FFB6C1]/60 dark:focus-within:border-[#FFB6C1]/60 transition-colors">
-                                    <input
-                                      type="text"
-                                      placeholder="댓글 달기"
-                                      value={form.message}
-                                      maxLength={200}
-                                      onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, message: e.target.value } }))}
-                                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitFeedback(match.id); } }}
-                                      className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-gray-400 text-gray-800 dark:text-gray-200 min-w-0"
-                                    />
-                                    <button
-                                      onClick={() => submitFeedback(match.id)}
-                                      disabled={submittingFeedback === match.id || !form.name?.trim() || !form.message?.trim()}
-                                      className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1] disabled:opacity-30 hover:opacity-70 transition-opacity"
-                                    >
-                                      <SendHorizonal className="w-4 h-4" />
-                                    </button>
+                                {currentUser ? (
+                                  <div className="flex items-center gap-2">
+                                    <FeedbackAvatar name={currentUser.name} />
+                                    <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-[#FFB6C1]/60 dark:focus-within:border-[#FFB6C1]/60 transition-colors">
+                                      <input
+                                        type="text"
+                                        placeholder={`${currentUser.name}(으)로 댓글 달기`}
+                                        value={form.message}
+                                        maxLength={200}
+                                        onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, message: e.target.value } }))}
+                                        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitFeedback(match.id); } }}
+                                        className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-gray-400 text-gray-800 dark:text-gray-200 min-w-0"
+                                      />
+                                      <button
+                                        onClick={() => submitFeedback(match.id)}
+                                        disabled={submittingFeedback === match.id || !form.message?.trim()}
+                                        className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1] disabled:opacity-30 hover:opacity-70 transition-opacity"
+                                      >
+                                        <SendHorizonal className="w-4 h-4" />
+                                      </button>
+                                    </div>
                                   </div>
-                                </div>
+                                ) : (
+                                  <button
+                                    onClick={() => signIn("kakao")}
+                                    className="w-full flex items-center justify-center gap-1.5 text-[11px] font-black py-2.5 rounded-2xl bg-[#FEE500] text-black/85 hover:opacity-90 transition-opacity"
+                                  >
+                                    <Lock className="w-3 h-3" /> 로그인하고 댓글 쓰기
+                                  </button>
+                                )}
                               </div>
                             </div>
                           )}
@@ -3346,25 +3369,10 @@ export default function DashboardClient({
             className="w-full max-w-xs bg-white dark:bg-[#161618] rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-[14px] font-bold text-gray-900 dark:text-white mb-4">MOM 투표</p>
-
-            {/* 투표자(나) 선택 */}
-            <div className="mb-4">
-              <p className="text-[10px] font-semibold text-gray-400 mb-1.5 tracking-widest">나는</p>
-              <div className="flex flex-wrap gap-1.5">
-                {momModal.attendees.map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => { setMomModalVoter(n); if (momModalAtk === n) setMomModalAtk(""); if (momModalDef === n) setMomModalDef(""); }}
-                    className={`text-[11px] font-black px-2.5 py-1 rounded-xl transition-all ${
-                      momModalVoter === n ? "bg-gray-800 dark:bg-white text-white dark:text-black" : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
-                    }`}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <p className="text-[14px] font-bold text-gray-900 dark:text-white mb-1">MOM 투표</p>
+            <p className="text-[11px] text-gray-400 mb-4">
+              <span className="font-black text-gray-700 dark:text-gray-300">{momModalVoter}</span> 님으로 투표합니다
+            </p>
 
             {/* 공격 MOM */}
             <div className="mb-4">
@@ -3400,9 +3408,6 @@ export default function DashboardClient({
                   </button>
                 ))}
               </div>
-              {!momModalVoter && (
-                <p className="text-[10px] text-gray-400 mt-2">먼저 본인 이름을 선택해주세요</p>
-              )}
             </div>
 
             <div className="flex gap-2">
@@ -3418,7 +3423,6 @@ export default function DashboardClient({
                   try {
                     if (momModalAtk) await submitMomVote(momModal.matchId, momModalVoter, momModalAtk, "공격");
                     if (momModalDef) await submitMomVote(momModal.matchId, momModalVoter, momModalDef, "수비");
-                    setMomVoterName((prev) => ({ ...prev, [momModal.matchId]: momModalVoter }));
                     setMomModal(null);
                   } catch {
                     alert("투표 저장에 실패했습니다. 다시 시도해주세요.");

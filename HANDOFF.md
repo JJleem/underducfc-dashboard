@@ -24,6 +24,25 @@
   - `app/components/DashboardClient.tsx` — 헤더에 카카오 로그인/프로필·로그아웃 버튼
 - **`users` 시트 스키마**: `A=kakaoId  B=nickname  C=profileImage  D=joinedAt  E=lastLogin`
 
+## ✅ 완료: 4단계 관리자/회원 게이팅 (2026-06-18)
+
+- **`app/lib/admin.ts`** 신규: `isAdmin(kakaoId)`, `currentKakaoId()`, `requireAdmin()`(401/403), `requireUser()`(401)
+- **서버 가드** — 모든 쓰기 라우트에 `const denied = await requireAdmin()/requireUser(); if (denied) return denied;`
+  - **관리자 전용**: `matches`(POST), `matches/[id]`(PUT), `notice`(PUT), `roster`(POST), `lineup`(POST), `photos`(POST/DELETE), `photos/sign`(GET), `mom-vote/finalize`(POST)
+  - **로그인 회원**: `mom-vote`(POST/DELETE), `feedback`(POST/DELETE)
+  - GET(읽기)·`/`는 공개. 비로그인 호출 시 401 — 스모크 테스트로 확인 완료.
+- **클라이언트 게이팅**: `page.tsx`·`roster/page.tsx`가 서버에서 `isAdmin` 계산 → prop 전달
+  - 관리자 UI(`isAdmin`일 때만): 공지 수정, 경기 등록, 경기 결과 수정, 사진 추가/삭제, 라인업 편집 링크, 선수 추가
+  - `/matches/[id]/edit`는 서버에서 비관리자 `redirect("/")`
+  - MOM 자동 확정 effect도 `isAdmin`일 때만 실행
+- **회원 UX (3단계 분리)**:
+  - 비로그인 → 투표/피드백 폼 대신 **"로그인하고 투표하기/댓글 쓰기"** 카카오 CTA
+  - 로그인 → 투표자/작성자 이름 **`currentUser.name` 자동 채움** (투표 모달의 "나는" 선택 단계 제거)
+  - 댓글 삭제는 **작성자 본인 또는 관리자**만 노출
+- **⚠️ media/media/sign은 의도적으로 미변경**: 기존 `ADMIN_PIN`(x-admin-pin) 방식으로 잘 작동 중이고 이미 보호됨(보안 구멍 아님). `/media` 페이지(`MediaClient.tsx`)가 PIN UI를 씀. 카카오 관리자로 통합하려면 미디어 페이지 UI까지 같이 고쳐야 함 → 별도 작업.
+- **⚠️ 투표자 신원 = 카카오 닉네임**: 닉네임이 로스터 실명과 다르면 본인 후보 자동제외가 어긋날 수 있음. 닉네임=실명 권장, 또는 추후 users 시트에 실명 매핑.
+- `ADMIN_KAKAO_IDS=4950539589`(임재준) — `.env.local`만 설정. **배포 시 Vercel에도 추가 필요.**
+
 ## 🔑 환경 세팅 (체크리스트)
 
 `.env.local`(깃 제외) + **Vercel 환경변수** 양쪽에 동일하게:
@@ -61,13 +80,17 @@
 
 ## 📋 다음 할 일 (순서대로)
 
-1. **로컬 살리기**: (윈도우에서) `npm install` → `npm run dev` 정상 확인
-2. **로그인 테스트**: 본인 카카오 로그인 1회 → `users` 시트에서 본인 `kakaoId` 확인
-3. **`ADMIN_KAKAO_IDS`** = 본인 ID 세팅 (`.env.local` + Vercel) → 재배포
-   - ⚠️ 이거 먼저 안 하고 게이팅 켜면 본인도 잠김
-4. **관리자 게이팅** (로그인 확인된 다음):
-   - `isAdmin(kakaoId)` 헬퍼 추가
-   - **관리자만** 서버 검증: `matches`, `matches/[id]`, `notice`, `lineup`, `roster`, `photos`, `photos/sign`, `media`, `mom-vote/finalize`
-   - **로그인 회원만**: `mom-vote`(투표), `feedback`(작성)
-   - 클라이언트: 관리자 UI는 `currentUser`가 admin일 때만 노출
-5. **2단계 투표 기능** 구현 (위 설계대로)
+1. ✅ **로컬 살리기** — `npm run dev` 정상 (`.env.local` 파일명 이슈 해결: `env.local`→`.env.local`)
+2. ✅ **로그인 테스트** — 카카오 로그인 1회 완료, `users` 시트에 `4950539589`(임재준) 확인
+3. ✅ **`ADMIN_KAKAO_IDS`** = `4950539589` 세팅 (`.env.local`). ⚠️ 배포 시 Vercel에도 추가
+4. ✅ **관리자/회원 게이팅** 완료 (위 "✅ 완료: 4단계" 참고)
+5. ⬜ **2단계 투표 기능** 구현 (아래 설계대로) ← **다음 작업**
+   - 매주 토요일 경기, 토요일 저녁 Vercel Cron으로 다음 주 투표 자동 생성 + 푸시
+   - `appendMatch()`로 `result="예정"` 생성, 시간·장소는 관리자가 추후 기입
+   - 출석 투표는 `(matchId, kakaoId)` upsert(append), 마감 시 `matches!L`(attendees) 기록
+   - ⚠️ 투표 생성/마감 라우트는 `requireAdmin`, 출석 투표는 `requireUser`로 보호할 것
+
+### (선택) 추후 정리거리
+- media/media/sign을 카카오 관리자로 통합 (현재 ADMIN_PIN 유지 중)
+- `push/test`(전체 푸시)에 `requireAdmin` 적용 (현재 무방비)
+- 투표자 닉네임↔로스터 실명 매핑

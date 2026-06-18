@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendRoster } from "@/app/lib/sheets-write";
+import { requireAdmin } from "@/app/lib/admin";
 
 export async function POST(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { no, name, pos, status } = body;

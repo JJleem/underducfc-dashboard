@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateMatchResult } from "@/app/lib/sheets-write";
 import { sendPushToAll } from "@/app/lib/send-push";
+import { requireAdmin } from "@/app/lib/admin";
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     const { id } = await params;
     const matchId = Number(id);

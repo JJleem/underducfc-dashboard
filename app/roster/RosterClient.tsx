@@ -19,9 +19,10 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "
 
 interface RosterClientProps {
   players: string[][];
+  isAdmin?: boolean;
 }
 
-export default function RosterClient({ players: initialPlayers }: RosterClientProps) {
+export default function RosterClient({ players: initialPlayers, isAdmin = false }: RosterClientProps) {
   const { theme, setTheme } = useTheme();
   const [playerList, setPlayerList] = React.useState<string[][]>(initialPlayers);
 
@@ -102,14 +103,16 @@ export default function RosterClient({ players: initialPlayers }: RosterClientPr
 
         {/* 선수 리스트 카드 */}
         <div className="flex flex-col gap-3">
-          {/* 선수 추가 버튼 */}
-          <button
-            onClick={() => setAddModal(true)}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-dashed border-gray-300 dark:border-white/15 text-gray-500 dark:text-gray-400 text-[13px] font-semibold hover:border-[#FFB6C1] hover:text-[#FF8FA3] dark:hover:text-[#FFB6C1] transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            선수 추가하기
-          </button>
+          {/* 선수 추가 버튼 (관리자 전용) */}
+          {isAdmin && (
+            <button
+              onClick={() => setAddModal(true)}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-dashed border-gray-300 dark:border-white/15 text-gray-500 dark:text-gray-400 text-[13px] font-semibold hover:border-[#FFB6C1] hover:text-[#FF8FA3] dark:hover:text-[#FFB6C1] transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              선수 추가하기
+            </button>
+          )}
 
           {[...playerList].sort((a, b) => {
             const nA = parseInt(a[0]);

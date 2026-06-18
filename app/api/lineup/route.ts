@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { writeLineup } from "../../lib/sheets-write";
+import { requireAdmin } from "@/app/lib/admin";
 
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     const body = await request.json();
     const { matchId, quarter, formation, players, subs } = body;
