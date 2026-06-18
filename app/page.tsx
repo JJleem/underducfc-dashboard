@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { isAdmin } from "./lib/admin";
 import { getSheetData } from "./lib/google-sheets";
 import DashboardClient, {
+  AttendanceVoteData,
   LineupData,
   MatchData,
   NoticeData,
@@ -22,7 +23,7 @@ export default async function TeamDashboardPage() {
   const admin = isAdmin(currentUser?.kakaoId);
 
   // 💡 1. 가져오는 데이터가 2차원 문자열 배열(string[][])임을 명시합니다.
-  const rawMatches: string[][] = await getSheetData("matches!A1:M50");
+  const rawMatches: string[][] = await getSheetData("matches!A1:N50");
   const rawRoster: string[][] = await getSheetData("roster!A1:J50");
   const rawStats: string[][] = await getSheetData("stats!A1:G50");
   const rawNotices: string[][] = await getSheetData("notice!A1:E20");
@@ -31,6 +32,12 @@ export default async function TeamDashboardPage() {
     rawLineups = await getSheetData("lineup!A1:S100");
   } catch {
     rawLineups = [];
+  }
+  let rawAttendanceVotes: string[][] = [];
+  try {
+    rawAttendanceVotes = await getSheetData("attendance_vote!A1:E500");
+  } catch {
+    rawAttendanceVotes = [];
   }
   // Google Sheets가 "08:00"을 시간 포맷으로 인식해 "08:00:00"으로 반환하는 경우를 정규화
   const normalizeTime = (raw: string): string => {
@@ -58,6 +65,7 @@ export default async function TeamDashboardPage() {
       mom: row[10] || "", // K열 MOM
       attendees: row[11] || "", // L열 참석자
       photos: row[12] || "", // M열 Drive 파일ID (쉼표 구분)
+      weather: row[13] || "", // N열 날씨
     }));
 
   // 💡 3. Map의 Key와 Value 타입 명시
@@ -128,6 +136,17 @@ export default async function TeamDashboardPage() {
     ].filter(Boolean),
   }));
 
+  const attendanceVotes: AttendanceVoteData[] = rawAttendanceVotes
+    .slice(1)
+    .filter((row: string[]) => row[0])
+    .map((row: string[]) => ({
+      matchId: Number(row[0]) || 0,
+      kakaoId: row[1] || "",
+      nickname: row[2] || "",
+      response: row[3] || "",
+      timestamp: row[4] || "",
+    }));
+
   const firstNoticeRow = rawNotices[1]; // index 1이 실제 첫 번째 데이터 줄
 
   // 2. 데이터가 있을 때만 객체로 만들고, 없으면 undefined 처리를 합니다.
@@ -151,6 +170,7 @@ export default async function TeamDashboardPage() {
       captainRoles={captainRoles}
       currentUser={currentUser}
       isAdmin={admin}
+      attendanceVotes={attendanceVotes}
     />
   );
 }

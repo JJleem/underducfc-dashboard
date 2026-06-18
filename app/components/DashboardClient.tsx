@@ -48,6 +48,7 @@ import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
 import { DayPicker } from "react-day-picker";
+import { parseWeather, weatherEmoji } from "../lib/weather";
 
 // 숫자가 0에서 목표값까지 부드럽게 올라가는 카운트업 (전광판 느낌)
 function CountUp({
@@ -174,6 +175,7 @@ export interface MatchData {
   mom?: string; // K열 - MOM
   attendees?: string; // L열 - 참석자 (쉼표 구분)
   photos?: string; // M열 - Drive 파일ID (쉼표 구분)
+  weather?: string; // N열 - "28°C,맑음,01d,10"
 }
 
 export interface MediaData {
@@ -182,6 +184,14 @@ export interface MediaData {
   url: string;
   title: string;
   uploadedAt: string;
+}
+
+export interface AttendanceVoteData {
+  matchId: number;
+  kakaoId: string;
+  nickname: string;
+  response: string; // "참석" | "불참" | "미정"
+  timestamp: string;
 }
 
 interface DashboardClientProps {
@@ -193,6 +203,7 @@ interface DashboardClientProps {
   captainRoles?: Record<string, string>;
   currentUser?: { kakaoId: string; name: string; image: string } | null;
   isAdmin?: boolean;
+  attendanceVotes?: AttendanceVoteData[];
 }
 
 export default function DashboardClient({
@@ -204,10 +215,21 @@ export default function DashboardClient({
   captainRoles,
   currentUser,
   isAdmin = false,
+  attendanceVotes: initialAttendanceVotes = [],
 }: DashboardClientProps) {
   const { theme, setTheme } = useTheme();
   const [matchList, setMatchList] = React.useState<MatchData[]>(matches);
   const [showTopBtn, setShowTopBtn] = React.useState(false);
+
+  // 출석 투표 (요약 카드용, 읽기 전용)
+  const attendanceVoteMap = React.useMemo(() => {
+    const map: Record<number, AttendanceVoteData[]> = {};
+    initialAttendanceVotes.forEach((v) => {
+      if (!map[v.matchId]) map[v.matchId] = [];
+      map[v.matchId].push(v);
+    });
+    return map;
+  }, [initialAttendanceVotes]);
 
   // 공지사항 로컬 상태
   const [localNotice, setLocalNotice] = React.useState(notice);
@@ -1267,22 +1289,89 @@ export default function DashboardClient({
             </div>
 
             {/* D-Day 배너 */}
-            {nextMatch && dDay !== null && (
-              <div className="mb-4 rounded-2xl bg-white dark:bg-[#141416] border border-gray-200/70 dark:border-white/[0.06] shadow-sm p-4 flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] font-bold text-[#FF8FA3] dark:text-[#FFB6C1] mb-1 tracking-[0.14em]">NEXT MATCH</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">vs {nextMatch.opponent}</p>
-                  <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
-                    {nextMatch.date} · {nextMatch.time} · {nextMatch.location}
-                  </p>
-                </div>
-                <div className="text-right shrink-0 ml-4">
-                  <div className="text-[32px] font-extrabold tracking-tight text-[#FF8FA3] dark:text-[#FFB6C1] leading-none tabular-nums">
-                    {dDay === 0 ? "D-DAY" : dDay < 0 ? `D+${Math.abs(dDay)}` : `D-${dDay}`}
+            {nextMatch && dDay !== null && (() => {
+              const w = parseWeather(nextMatch.weather || "");
+              return (
+                <div className="mb-4 rounded-2xl bg-white dark:bg-[#141416] border border-gray-200/70 dark:border-white/[0.06] shadow-sm p-4 flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-[#FF8FA3] dark:text-[#FFB6C1] mb-1 tracking-[0.14em]">NEXT MATCH</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">vs {nextMatch.opponent}</p>
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
+                      {nextMatch.date} · {nextMatch.time} · {nextMatch.location}
+                    </p>
+                    {w.available && (
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                        <span>{weatherEmoji(w.icon)}</span>
+                        <span>{w.temp}°C {w.description}</span>
+                        <span className="text-blue-400">💧{w.pop}%</span>
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0 ml-4">
+                    <div className="text-[32px] font-extrabold tracking-tight text-[#FF8FA3] dark:text-[#FFB6C1] leading-none tabular-nums">
+                      {dDay === 0 ? "D-DAY" : dDay < 0 ? `D+${Math.abs(dDay)}` : `D-${dDay}`}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
+
+            {/* 출석 투표 요약 */}
+            {nextMatch && (() => {
+              const votes = attendanceVoteMap[nextMatch.id] || [];
+              const myVote = currentUser
+                ? votes.find((v) => v.kakaoId === currentUser.kakaoId)?.response
+                : undefined;
+              const attending = votes.filter((v) => v.response === "참석").length;
+              const absent = votes.filter((v) => v.response === "불참").length;
+              const maybe = votes.filter((v) => v.response === "미정").length;
+              const total = attending + absent + maybe;
+
+              return (
+                <Link href="/vote" className="block mb-4">
+                  <div className="rounded-2xl bg-white dark:bg-[#141416] border border-gray-200/70 dark:border-white/[0.06] shadow-sm p-4 hover:border-[#FF8FA3]/30 dark:hover:border-[#FFB6C1]/20 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-[0.14em] flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        출석 투표
+                      </p>
+                      <span className="text-[10px] font-bold text-[#FF8FA3] dark:text-[#FFB6C1]">
+                        상세 보기 →
+                      </span>
+                    </div>
+
+                    {/* 참석 바 그래프 */}
+                    {total > 0 ? (
+                      <>
+                        <div className="flex h-2 rounded-full overflow-hidden bg-gray-100 dark:bg-white/5 mb-2">
+                          {attending > 0 && (
+                            <div className="bg-[#FF8FA3] dark:bg-[#FFB6C1] transition-all" style={{ width: `${(attending / total) * 100}%` }} />
+                          )}
+                          {maybe > 0 && (
+                            <div className="bg-amber-400 transition-all" style={{ width: `${(maybe / total) * 100}%` }} />
+                          )}
+                          {absent > 0 && (
+                            <div className="bg-gray-400 transition-all" style={{ width: `${(absent / total) * 100}%` }} />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] font-bold">
+                          <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">참석 {attending}</span>
+                          <span className="text-amber-400">미정 {maybe}</span>
+                          <span className="text-gray-400">불참 {absent}</span>
+                          {myVote && (
+                            <span className="ml-auto text-gray-500 dark:text-gray-400">
+                              내 투표: <span className={myVote === "참석" ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : myVote === "미정" ? "text-amber-400" : "text-gray-400"}>{myVote}</span>
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500">아직 투표가 없습니다. 눌러서 투표하기</p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })()}
 
             {/* 최근 5경기 폼 */}
             {completedMatches.length > 0 && (
@@ -1578,6 +1667,16 @@ export default function DashboardClient({
                             </Badge>
                           )}
                         </div>
+                        {/* 날씨 */}
+                        {match.weather && (() => {
+                          const w = parseWeather(match.weather);
+                          if (!w.available) return null;
+                          return (
+                            <span className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                              {weatherEmoji(w.icon)} {w.temp}°C {w.description} <span className="text-blue-400">💧{w.pop}%</span>
+                            </span>
+                          );
+                        })()}
                         {/* 상대전적 미리보기 */}
                         {!isInternal && (match.type || "").replace(/\s/g, "") === "일반매칭" && (() => {
                           const h2h = opponentStats.find((o) => o.key === (match.opponent || "").trim());

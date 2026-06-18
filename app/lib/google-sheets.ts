@@ -3,6 +3,7 @@
 type SheetRange =
   | "roster!A1:J50"
   | "matches!A1:M50"
+  | "matches!A1:N50"
   | "stats!A1:G50"
   | "notice!A1:E20"
   | "lineup!A1:S100"
@@ -10,7 +11,10 @@ type SheetRange =
   | "mom_vote!A1:E500"
   | "media!A1:D100"
   | "push_subscriptions!A:C"
-  | "push_subscriptions!A:A";
+  | "push_subscriptions!A:A"
+  | "attendance_vote!A1:E500"
+  | "vote_comment!A1:E500"
+  | "users!A1:E1000";
 
 export async function getSheetData(range: SheetRange) {
   const sheetId = process.env.GOOGLE_SHEET_ID;

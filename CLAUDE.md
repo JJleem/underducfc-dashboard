@@ -39,6 +39,7 @@ CLOUDINARY_API_SECRET=
 | `lineup`   | A1:S100 | Formation + 11 players + 5 subs per match/quarter     |
 | `feedback` | A1:D500 | Match feedback comments                               |
 | `mom_vote` | A1:E500 | Man-of-the-match votes                                |
+| `attendance_vote` | A1:E500 | Attendance votes (matchId, kakaoId, nickname, response, timestamp) |
 
 **Two separate auth paths for Sheets:**
 

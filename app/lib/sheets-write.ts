@@ -297,6 +297,24 @@ export async function updateMatchResult(
   if (!res.ok) throw new Error("경기 결과 업데이트 실패");
 }
 
+// matches!N열에 날씨 기록 (업적/통계용)
+// 형식: "28°C,맑음,01d,10"
+export async function writeMatchWeather(matchId: number, weatherStr: string): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const rowNum = matchId + 2;
+  const range = `matches!N${rowNum}`;
+  await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
+    {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ range, values: [[weatherStr]] }),
+    }
+  );
+}
+
 export async function appendRoster(player: {
   no: string;
   name: string;
@@ -325,12 +343,14 @@ export async function appendMatch(match: {
   location: string;
   opponent: string;
   type: string;
+  weather?: string; // N열: "28°C,맑음,01d,10"
 }): Promise<void> {
   const sheetId = process.env.GOOGLE_SHEET_ID;
   if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
   const token = await getAccessToken();
-  const row = [match.date, match.time, match.location, match.opponent, "", "", "예정", match.type, "", "", "", "", ""];
-  const range = encodeURIComponent("matches!A:M");
+  // A~N열 (14컬럼): date,time,location,opponent,ourScore,theirScore,result,type,goals,assists,MOM,attendees,photos,weather
+  const row = [match.date, match.time, match.location, match.opponent, "", "", "예정", match.type, "", "", "", "", "", match.weather || ""];
+  const range = encodeURIComponent("matches!A:N");
   const res = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
     {
@@ -592,6 +612,163 @@ export async function upsertUser(user: {
       body: JSON.stringify({ range, values: [[user.nickname, user.profileImage, joinedAt, now]] }),
     });
   }
+}
+
+// ── 출석 투표 관리 ────────────────────────────────────────────
+// attendance_vote 시트: A=matchId, B=kakaoId, C=nickname, D=response(참석/불참/미정), E=timestamp
+
+export async function upsertAttendanceVote({
+  matchId,
+  kakaoId,
+  nickname,
+  response,
+}: {
+  matchId: number;
+  kakaoId: string;
+  nickname: string;
+  response: string; // "참석" | "불참" | "미정"
+}): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
+
+  // 기존 투표 읽기
+  const readRes = await fetch(`${base}/values/attendance_vote!A1:E500`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const readData = await readRes.json();
+  const rows: string[][] = readData.values || [];
+
+  const timestamp = new Date().toISOString();
+  const newRow = [String(matchId), kakaoId, nickname.trim(), response, timestamp];
+
+  // 같은 matchId + kakaoId 행 찾기
+  const idx = rows.findIndex(
+    (r, i) => i > 0 && String(r[0]) === String(matchId) && r[1] === kakaoId
+  );
+
+  if (idx === -1) {
+    // 신규 → append
+    const range = encodeURIComponent("attendance_vote!A:E");
+    const res = await fetch(
+      `${base}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ values: [newRow] }),
+      }
+    );
+    if (!res.ok) throw new Error("attendance_vote 시트 쓰기 실패");
+  } else {
+    // 기존 → 업데이트
+    const rowNum = idx + 1;
+    const range = `attendance_vote!A${rowNum}:E${rowNum}`;
+    await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ range, values: [newRow] }),
+    });
+  }
+}
+
+export async function finalizeAttendance(matchId: number): Promise<string> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
+
+  // 해당 matchId의 "참석" 투표만 수집
+  const readRes = await fetch(`${base}/values/attendance_vote!A1:E500`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const readData = await readRes.json();
+  const rows: string[][] = readData.values || [];
+
+  const attendees = rows
+    .filter((r, i) => i > 0 && String(r[0]) === String(matchId) && r[3] === "참석")
+    .map((r) => r[2]?.trim())
+    .filter(Boolean);
+
+  const attendeeStr = attendees.join(",");
+
+  // matches!L{row}에 기록
+  const rowNum = matchId + 2;
+  const range = `matches!L${rowNum}`;
+  await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ range, values: [[attendeeStr]] }),
+  });
+
+  return attendeeStr;
+}
+
+// ── 투표 댓글 관리 ────────────────────────────────────────────
+// vote_comment 시트: A=matchId, B=kakaoId, C=nickname, D=message, E=timestamp
+
+export async function appendVoteComment({
+  matchId,
+  kakaoId,
+  nickname,
+  message,
+}: {
+  matchId: number;
+  kakaoId: string;
+  nickname: string;
+  message: string;
+}): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const timestamp = new Date().toISOString();
+  const row = [String(matchId), kakaoId, nickname.trim(), message.trim(), timestamp];
+  const range = encodeURIComponent("vote_comment!A:E");
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ values: [row] }),
+    }
+  );
+  if (!res.ok) throw new Error("vote_comment 시트 쓰기 실패");
+}
+
+export async function deleteVoteComment(
+  matchId: number,
+  kakaoId: string,
+  timestamp: string
+): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
+
+  const readRes = await fetch(`${base}/values/vote_comment!A1:E500`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const readData = await readRes.json();
+  const rows: string[][] = readData.values || [];
+
+  let deleted = false;
+  const newRows = rows.filter((row, i) => {
+    if (i === 0) return true;
+    if (!deleted && String(row[0]) === String(matchId) && row[1] === kakaoId && row[4] === timestamp) {
+      deleted = true;
+      return false;
+    }
+    return true;
+  });
+
+  while (newRows.length < rows.length) newRows.push(["", "", "", "", ""]);
+
+  const range = `vote_comment!A1:E${Math.max(newRows.length, rows.length)}`;
+  await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ range, values: newRows }),
+  });
 }
 
 export async function getAllPushSubscriptions(): Promise<{ endpoint: string; p256dh: string; auth: string }[]> {

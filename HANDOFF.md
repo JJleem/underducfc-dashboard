@@ -78,17 +78,35 @@
   - 마감 시 참석자 → `matches!L`(attendees) 기록. `mom-vote/finalize` 패턴 재사용
   - 신원 = 카카오 로그인(kakaoId), 출석 투표는 `(matchId, kakaoId)` upsert(append라 동시성 안전)
 
+## ✅ 완료: 2단계 출석 투표 기능 (2026-06-18)
+
+- **`attendance_vote` 시트 스키마**: `A=matchId  B=kakaoId  C=nickname  D=response(참석/불참/미정)  E=timestamp`
+  - ⚠️ **구글 시트에 `attendance_vote` 탭을 수동으로 생성해야 함** (헤더: matchId, kakaoId, nickname, response, timestamp)
+- **`app/lib/sheets-write.ts`**: `upsertAttendanceVote()` — (matchId, kakaoId) 기준 upsert, `finalizeAttendance()` — 참석자 → matches!L 기록
+- **`app/lib/google-sheets.ts`**: SheetRange에 `attendance_vote!A1:E500` 추가
+- **API 라우트**:
+  - `app/api/attendance/route.ts` — GET(모든 투표 조회), POST(투표 등록) — `requireUser`로 보호. 세션에서 kakaoId/nickname 자동 추출
+  - `app/api/attendance/finalize/route.ts` — POST(투표 마감 → matches!L 기록) — `requireAdmin`
+- **서버 데이터**: `page.tsx`에서 `attendance_vote` 시트 fetch → `AttendanceVoteData[]`로 변환 → DashboardClient prop
+- **UI (DashboardClient.tsx)**:
+  - D-Day 배너 아래에 출석 투표 카드 표시 (예정 경기 대상)
+  - 로그인 사용자: 참석/미정/불참 3버튼 (낙관적 업데이트)
+  - 비로그인: "로그인하고 투표하기" 카카오 CTA
+  - 투표 현황: 참석/미정/불참별 닉네임 뱃지 목록
+  - 관리자: "투표 마감" 버튼 (confirm 후 finalize API 호출)
+- **Vercel Cron**: `app/api/cron/create-match/route.ts`
+  - `vercel.json` → `0 12 * * 6` (매주 토요일 21:00 KST)
+  - `CRON_SECRET` 환경변수로 보호 (Authorization: Bearer)
+  - 다음 주 토요일 날짜 계산 → `appendMatch(result="예정")` → 푸시 알림
+  - ⚠️ **배포 시 Vercel 환경변수에 `CRON_SECRET` 추가 필요**
+
 ## 📋 다음 할 일 (순서대로)
 
 1. ✅ **로컬 살리기** — `npm run dev` 정상 (`.env.local` 파일명 이슈 해결: `env.local`→`.env.local`)
 2. ✅ **로그인 테스트** — 카카오 로그인 1회 완료, `users` 시트에 `4950539589`(임재준) 확인
 3. ✅ **`ADMIN_KAKAO_IDS`** = `4950539589` 세팅 (`.env.local`). ⚠️ 배포 시 Vercel에도 추가
 4. ✅ **관리자/회원 게이팅** 완료 (위 "✅ 완료: 4단계" 참고)
-5. ⬜ **2단계 투표 기능** 구현 (아래 설계대로) ← **다음 작업**
-   - 매주 토요일 경기, 토요일 저녁 Vercel Cron으로 다음 주 투표 자동 생성 + 푸시
-   - `appendMatch()`로 `result="예정"` 생성, 시간·장소는 관리자가 추후 기입
-   - 출석 투표는 `(matchId, kakaoId)` upsert(append), 마감 시 `matches!L`(attendees) 기록
-   - ⚠️ 투표 생성/마감 라우트는 `requireAdmin`, 출석 투표는 `requireUser`로 보호할 것
+5. ✅ **2단계 투표 기능** 완료 (아래 "완료: 2단계" 참고)
 
 ### (선택) 추후 정리거리
 - media/media/sign을 카카오 관리자로 통합 (현재 ADMIN_PIN 유지 중)
