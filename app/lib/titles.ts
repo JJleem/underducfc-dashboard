@@ -31,6 +31,8 @@ export interface PlayerContext {
   posSlotTotal: number; // GK+DF+MF+FW 출전 슬롯 합 (비율 계산용)
   posGroupsPlayed: number; // DF/MF/FW 중 실제로 뛴 그룹 수
   allFourPositions: boolean;
+  fullbackGames: number; // 4백의 좌·우 풀백(p2/p5) 출전 경기 수
+  centerbackGames: number; // 3·4·5백의 중앙 수비 출전 경기 수
 
   hatTricks: number; // 한 경기 3골+ 횟수
   multiGoalGames: number; // 한 경기 2골+ 경기 수
@@ -359,6 +361,31 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     const outfieldGroups = (["DF", "MF", "FW"] as PosGroup[]).filter((g) => posCounts[g] > 0);
     const allFourPositions =
       posCounts.GK > 0 && posCounts.DF > 0 && posCounts.MF > 0 && posCounts.FW > 0;
+    const fullbackMatchIds = new Set<number>();
+    lineupRows.forEach((r) => {
+      const matchId = Number(r[0]);
+      const firstLayer = Number((r[2] || "").split("-")[0]);
+      if (isNaN(matchId) || firstLayer !== 4) return;
+      if ((r[4] || "").trim() === name || (r[7] || "").trim() === name) {
+        fullbackMatchIds.add(matchId);
+      }
+    });
+    const fullbackGames = fullbackMatchIds.size;
+    const centerbackMatchIds = new Set<number>();
+    lineupRows.forEach((r) => {
+      const matchId = Number(r[0]);
+      const firstLayer = Number((r[2] || "").split("-")[0]);
+      if (isNaN(matchId)) return;
+      const centerbackSlots =
+        firstLayer === 3 ? [1, 2, 3]
+        : firstLayer === 4 ? [2, 3]
+        : firstLayer === 5 ? [2, 3, 4]
+        : [];
+      if (centerbackSlots.some((slot) => (r[3 + slot] || "").trim() === name)) {
+        centerbackMatchIds.add(matchId);
+      }
+    });
+    const centerbackGames = centerbackMatchIds.size;
 
     // 매치 순회 집계
     let hatTricks = 0;
@@ -516,6 +543,8 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       posSlotTotal,
       posGroupsPlayed: outfieldGroups.length,
       allFourPositions,
+      fullbackGames,
+      centerbackGames,
       hatTricks,
       multiGoalGames,
       multiAssistGames,
@@ -585,6 +614,8 @@ export const TITLES: TitleDef[] = [
   { id: "box2box", name: "박스 투 박스", icon: "footprints", category: "포지션 특성", state: "live", flat: true, desc: "출전 80%+ MF", check: (c) => c.posSlotTotal >= 5 && ratio(c.posCounts.MF, c.posSlotTotal) >= 0.8 },
   { id: "lastman", name: "라스트맨", icon: "hand", category: "포지션 특성", state: "live", flat: true, desc: "GK 1경기+", check: (c) => c.playedGK },
   { id: "sweeperkeeper", name: "스위퍼 키퍼", icon: "hand-metal", category: "포지션 특성", state: "live", flat: true, desc: "GK 경험 & 도움 보유", check: (c) => c.playedGK && c.assists >= 1 },
+  { id: "attacking_fullback", name: "공격적인 윙백", icon: "trending-up", category: "포지션 특성", state: "live", flat: true, desc: "좌·우 풀백 10경기+ & 공격P 10+", check: (c) => c.fullbackGames >= 10 && c.points >= 10 },
+  { id: "attacking_centerback", name: "공격적인 센터백", icon: "shield-check", category: "포지션 특성", state: "live", flat: true, desc: "센터백 10경기+ & 공격P 8+", check: (c) => c.centerbackGames >= 10 && c.points >= 8 },
 
   // ── 근성 · 출석
   { id: "streak", name: "연속출석", icon: "flame", category: "근성 · 출석", state: "live", flagship: true, desc: "최대 연속 참석", tiers: [3, 5, 10], unit: "연속", value: (c) => c.maxAttendStreak },
@@ -624,7 +655,14 @@ export const TITLES: TitleDef[] = [
   { id: "firstblood", name: "퍼스트 블러드", icon: "sword", category: "히든", state: "live", hidden: true, flat: true, desc: "데뷔전 득점자", check: (c) => c.isFirstBlood },
   { id: "laser", name: "레이저", icon: "crosshair", category: "히든", state: "live", hidden: true, flat: true, desc: "경기당 1골 이상 (최소 5경기)", check: (c) => c.apps >= 5 && c.goalPerGame >= 1 },
   { id: "duo", name: "찰떡궁합", icon: "heart-handshake", category: "히든", state: "live", hidden: true, flat: true, desc: "같은 선수에게 3회+ 어시스트", check: (c) => c.bestDuoAssists >= 3 },
-  { id: "shapeshifter", name: "변신의 귀재", icon: "shuffle", category: "히든", state: "live", hidden: true, flat: true, desc: "3개+ 포지션 각 3경기 이상", check: (c) => c.posGroupsWithMin3 >= 3 },
+  { id: "overlap_machine", name: "오버래핑 머신", icon: "rocket", category: "히든", state: "live", hidden: true, flat: true, desc: "풀백 20경기+ & 도움 7+", check: (c) => c.fullbackGames >= 20 && c.assists >= 7 },
+  { id: "setpiece_nightmare", name: "세트피스의 악몽", icon: "crosshair", category: "히든", state: "live", hidden: true, flat: true, desc: "센터백 20경기+ & 득점 5+", check: (c) => c.centerbackGames >= 20 && c.goals >= 5 },
+  { id: "false_nine", name: "가짜 9번", icon: "shuffle", category: "히든", state: "live", hidden: true, flat: true, desc: "FW·MF 각 20경기+ & 도움 5+", check: (c) => c.posCounts.FW >= 20 && c.posCounts.MF >= 20 && c.assists >= 5 },
+  { id: "libero", name: "리베로", icon: "spline", category: "히든", state: "live", hidden: true, flat: true, desc: "센터백·MF 각 15경기+ & 공격P 8+", check: (c) => c.centerbackGames >= 15 && c.posCounts.MF >= 15 && c.points >= 8 },
+  { id: "shapeshifter", name: "포지션 파괴자", icon: "boxes", category: "히든", state: "live", hidden: true, flat: true, desc: "GK·DF·MF·FW 각 3경기+", check: (c) => c.posGroupsWithMin3 >= 4 },
+  { id: "underduck_cafu", name: "언더덕의 카푸", icon: "zap", category: "히든", state: "live", hidden: true, flat: true, desc: "풀백 20경기+ & 공격P 15+", check: (c) => c.fullbackGames >= 20 && c.points >= 15 },
+  { id: "scoring_wall", name: "벽이 골도 넣네", icon: "brick-wall", category: "히든", state: "live", hidden: true, flat: true, desc: "센터백 15경기+ & 공격P 10+", check: (c) => c.centerbackGames >= 15 && c.points >= 10 },
+  { id: "football_master", name: "축구 도사", icon: "sparkles", category: "히든", state: "live", hidden: true, flat: true, desc: "3개 포지션 각 10경기+ & 공격P 20+", check: (c) => Object.values(c.posCounts).filter((count) => count >= 10).length >= 3 && c.points >= 20 },
 ];
 
 // ───────────────────────── 평가 ─────────────────────────

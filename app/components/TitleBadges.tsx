@@ -20,8 +20,8 @@ const TIER_VIS: Record<TierIndex, TierVis> = {
   3: { grad: ["#FF9FB0", "#B57BF5"], glow: "rgba(181,123,245,0.6)", icon: "#FFC2CE" },
 };
 
-// 달성형(등급 없음) — 쿨 플래티넘
-const FLAT_VIS: TierVis = { grad: ["#CBD5E1", "#5B6B86"], glow: null, icon: "#CBD5E1" };
+// 달성형(등급 없음) — 핑크·라벤더·아이스블루 오팔
+const FLAT_VIS: TierVis = { grad: ["#F9A8D4", "#A78BFA"], glow: "rgba(192,132,252,0.32)", icon: "#F5D0FE" };
 
 // 리더(팀 1위) — 빛나는 골드 왕관
 const LEADER_VIS: TierVis = { grad: ["#FFE7A0", "#E0A100"], glow: "rgba(255,200,60,0.65)", icon: "#FFD45A" };
