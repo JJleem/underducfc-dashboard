@@ -127,7 +127,9 @@ function FaceOnMarker({
       }}
     >
       <div
-        className="mb-1 flex h-10 w-10 items-center justify-center rounded-full font-black"
+        className={`mb-1 flex h-10 w-10 items-center justify-center rounded-full font-black transition-opacity duration-150 ${
+          loaded ? "opacity-0" : "opacity-100"
+        }`}
         style={{ backgroundColor: color.bg, color: color.text }}
       >
         {isGuest ? "G" : no}

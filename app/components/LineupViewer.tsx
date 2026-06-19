@@ -27,7 +27,11 @@ function BenchFaceOn({ name, no }: { name: string; no?: string }) {
 
   return (
     <span className="relative flex h-12 w-10 shrink-0 items-center justify-center overflow-hidden">
-      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FF8FA3]/20 text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+      <span
+        className={`flex h-9 w-9 items-center justify-center rounded-full bg-[#FF8FA3]/20 text-[10px] font-black text-[#FF8FA3] transition-opacity duration-150 dark:text-[#FFB6C1] ${
+          loaded ? "opacity-0" : "opacity-100"
+        }`}
+      >
         {no || "G"}
       </span>
       {src && !failed && (

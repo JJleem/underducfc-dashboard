@@ -33,7 +33,9 @@ export default function PlayerAvatar({
       }}
     >
       <User
-        className="mb-3"
+        className={`mb-3 transition-opacity duration-150 ${
+          loaded ? "opacity-0" : "opacity-100"
+        }`}
         style={{ width: width * 0.52, height: width * 0.52, color: accent }}
         strokeWidth={1.4}
       />
