@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getFeedbackRows } from "../../lib/backend";
 import { appendFeedback, deleteFeedback } from "../../lib/sheets-write";
-import { requireUser } from "@/app/lib/admin";
+import { requireUser, isAdmin } from "@/app/lib/admin";
+import { auth } from "@/auth";
 
 export async function GET() {
   try {
@@ -46,6 +47,15 @@ export async function DELETE(request: NextRequest) {
     if (matchId === undefined || !timestamp || !name || !message) {
       return NextResponse.json({ error: "필수 필드 누락" }, { status: 400 });
     }
+
+    // 본인 댓글이거나 어드민만 삭제 가능
+    const session = await auth();
+    const userName = session?.user?.name;
+    const kakaoId = (session?.user as { kakaoId?: string } | undefined)?.kakaoId ?? null;
+    if (!isAdmin(kakaoId) && name !== userName) {
+      return NextResponse.json({ error: "본인의 댓글만 삭제할 수 있습니다." }, { status: 403 });
+    }
+
     await deleteFeedback(Number(matchId), timestamp, name, message);
     return NextResponse.json({ ok: true });
   } catch (err) {
