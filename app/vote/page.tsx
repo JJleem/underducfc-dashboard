@@ -88,7 +88,7 @@ export default async function VotePage() {
 
   // 예정 경기 (최신순)
   const upcomingMatches = matches
-    .filter((m) => m.result === "예정")
+    .filter((m) => m.result === "예정" && m.type !== "야유회")
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   // 지난 투표
