@@ -1,4 +1,4 @@
-import { getLineupRows, getRosterRows, getStatsRows, getAttendanceVoteRows, getVoteCommentRows } from "../../lib/backend";
+import { getLineupRows, getRosterRows, getStatsRows, getAttendanceVoteRows, getVoteCommentRows, getFeedbackRows } from "../../lib/backend";
 import { getMatchesRows } from "../../lib/matches-backend";
 import { LineupData, MatchData } from "../../components/DashboardClient";
 import MatchDetailClient from "./MatchDetailClient";
@@ -16,13 +16,14 @@ export default async function MatchDetailPage({
   const matchId = Number(id);
   const session = await auth();
 
-  const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult, rawAttendanceResult, rawVoteCommentsResult] = await Promise.allSettled([
+  const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult, rawAttendanceResult, rawVoteCommentsResult, rawFeedbacksResult] = await Promise.allSettled([
     getMatchesRows(),
     getLineupRows(),
     getRosterRows(),
     getStatsRows(),
     getAttendanceVoteRows(),
     getVoteCommentRows(),
+    getFeedbackRows(),
   ]);
 
   const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
@@ -31,6 +32,7 @@ export default async function MatchDetailPage({
   const rawStats = rawStatsResult.status === "fulfilled" ? rawStatsResult.value : [];
   const rawAttendanceVotes = rawAttendanceResult.status === "fulfilled" ? rawAttendanceResult.value : [];
   const rawVoteComments = rawVoteCommentsResult.status === "fulfilled" ? rawVoteCommentsResult.value : [];
+  const rawFeedbacks = rawFeedbacksResult.status === "fulfilled" ? rawFeedbacksResult.value : [];
 
   // 이름 → 등번호 맵 (A=등번호, B=이름)
   const rosterMap: Record<string, string> = {};
@@ -109,6 +111,7 @@ export default async function MatchDetailPage({
     rawRoster,
     rawAttendanceVotes,
     rawVoteComments,
+    rawFeedbacks,
   });
   const leaders = evaluateLeaders(contexts);
   const playerTitles: Record<string, EarnedTitle[]> = {};

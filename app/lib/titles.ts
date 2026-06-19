@@ -180,6 +180,7 @@ export interface RawSheets {
   rawRoster: string[][];
   rawAttendanceVotes?: string[][];
   rawVoteComments?: string[][];
+  rawFeedbacks?: string[][];
 }
 
 interface MatchInfo {
@@ -201,6 +202,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
   const { rawStats, rawMatches, rawLineups, rawRoster } = sheets;
   const rawVotes = sheets.rawAttendanceVotes ?? [];
   const rawComments = sheets.rawVoteComments ?? [];
+  const rawFeedbacks = sheets.rawFeedbacks ?? [];
 
   // 주장 역할
   const captainRoles: Record<string, string> = {};
@@ -294,6 +296,28 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
   };
   tallyFirst(rawVotes, votesByNick, firstVoteByNick);
   tallyFirst(rawComments, commentsByNick, firstCommentByNick);
+
+  // 피드백(매치카드 댓글)도 수다왕/오프너/활동왕에 합산
+  // 피드백 구조: [matchId, timestamp, name, message] — 닉네임이 r[2], 타임스탬프가 r[1]
+  {
+    const fbByMatch = new Map<number, { nick: string; ts: number }[]>();
+    rawFeedbacks.slice(1).forEach((r) => {
+      if (!r[0]) return;
+      const matchId = Number(r[0]);
+      const nick = (r[2] || "").trim();
+      if (!nick) return;
+      commentsByNick.set(nick, (commentsByNick.get(nick) ?? 0) + 1);
+      const ts = new Date(r[1] || "").getTime() || 0;
+      if (!fbByMatch.has(matchId)) fbByMatch.set(matchId, []);
+      fbByMatch.get(matchId)!.push({ nick, ts });
+    });
+    fbByMatch.forEach((list) => {
+      const withTs = list.filter((x) => x.ts > 0);
+      if (!withTs.length) return;
+      const earliest = withTs.reduce((a, b) => (b.ts < a.ts ? b : a));
+      firstCommentByNick.set(earliest.nick, (firstCommentByNick.get(earliest.nick) ?? 0) + 1);
+    });
+  }
 
   // ── 선수별 컨텍스트 빌드 (stats 시트의 선수 = 정식 명단)
   const contexts = new Map<string, PlayerContext>();

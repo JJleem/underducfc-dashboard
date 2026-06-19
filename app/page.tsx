@@ -9,6 +9,7 @@ import {
   getAttendanceVoteRows,
   getVoteCommentRows,
   getFeaturedRows,
+  getFeedbackRows,
 } from "./lib/backend";
 import { getMatchesRows } from "./lib/matches-backend";
 import DashboardClient, {
@@ -56,6 +57,7 @@ export default async function TeamDashboardPage({
     getAttendanceVoteRows(),
     getVoteCommentRows(),
     getFeaturedRows(),
+    getFeedbackRows(),
   ]);
   const rowsOf = (index: number): string[][] =>
     sheetResults[index].status === "fulfilled" ? sheetResults[index].value : [];
@@ -67,6 +69,7 @@ export default async function TeamDashboardPage({
   const rawAttendanceVotes = rowsOf(5);
   const rawVoteComments = rowsOf(6);
   const rawFeatured = rowsOf(7);
+  const rawFeedbacks = rowsOf(8);
   // Google Sheets가 "08:00"을 시간 포맷으로 인식해 "08:00:00"으로 반환하는 경우를 정규화
   const normalizeTime = (raw: string): string => {
     if (!raw) return "미정";
@@ -191,6 +194,7 @@ export default async function TeamDashboardPage({
     rawRoster,
     rawAttendanceVotes,
     rawVoteComments,
+    rawFeedbacks,
   });
   const leaders = evaluateLeaders(contexts);
   const allTitles: Record<string, EarnedTitle[]> = {};
