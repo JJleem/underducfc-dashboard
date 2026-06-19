@@ -1433,12 +1433,12 @@ export default function DashboardClient({
                 const FbAvatar = ({ name }: { name: string }) => {
                   const no = rosterMap[name.trim()];
                   return no ? (
-                    <div className="w-7 h-7 rounded-full bg-[#FFB6C1]/20 border border-[#FFB6C1]/40 flex items-center justify-center shrink-0">
-                      <span className="text-[9px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">#{no}</span>
+                    <div className="w-6 h-6 rounded-full bg-[#FFB6C1]/20 border border-[#FFB6C1]/40 flex items-center justify-center shrink-0">
+                      <span className="text-[8px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">#{no}</span>
                     </div>
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0">
-                      <User className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                    <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0">
+                      <User className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                     </div>
                   );
                 };
@@ -1561,7 +1561,7 @@ export default function DashboardClient({
                         </div>
 
                         {/* 피드백 */}
-                        <div className="border-t border-gray-100 dark:border-white/5 pt-3">
+                        <div className="border-t border-gray-100 dark:border-white/5 pt-3 overflow-hidden">
                           <button
                             onClick={() => toggleFeedback(match.id)}
                             className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors w-full"
@@ -1594,47 +1594,47 @@ export default function DashboardClient({
                                     <div className="flex items-center gap-1.5 mb-0.5">
                                       <span className="text-[10px] font-black text-gray-800 dark:text-gray-200">{fb.name}</span>
                                       <span className="text-[9px] text-gray-400">{formatFeedbackTime(fb.timestamp)}</span>
-                                      <button onClick={() => setDeleteTarget({ matchId: match.id, fb })} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-400">
-                                        <Trash2 className="w-3 h-3" />
-                                      </button>
+                                      {(isAdmin || (currentUser && fb.name === currentUser.name)) && (
+                                        <button onClick={() => setDeleteTarget({ matchId: match.id, fb })} className="ml-auto text-gray-300 hover:text-red-400 active:text-red-400 dark:text-gray-600 dark:hover:text-red-400">
+                                          <Trash2 className="w-3 h-3" />
+                                        </button>
+                                      )}
                                     </div>
                                     <p className="text-[11px] text-gray-600 dark:text-gray-300 break-words leading-relaxed">{fb.message}</p>
                                   </div>
                                 </div>
                               ))}
                               <div className="pt-3 border-t border-gray-100 dark:border-white/5">
-                                <div className="flex items-center gap-1.5 mb-2">
-                                  <span className="text-[10px] text-gray-400 shrink-0">닉네임</span>
-                                  <input
-                                    type="text"
-                                    placeholder="이름 입력"
-                                    value={fbForm.name}
-                                    maxLength={20}
-                                    onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...fbForm, name: e.target.value } }))}
-                                    className="w-28 text-[11px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-2.5 py-1.5 outline-none focus:border-[#FFB6C1]/60 dark:focus:border-[#FFB6C1]/60 placeholder:text-gray-400 text-gray-800 dark:text-gray-200"
-                                  />
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <FbAvatar name={fbForm.name} />
-                                  <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-[#FFB6C1]/60 dark:focus-within:border-[#FFB6C1]/60 transition-colors">
-                                    <input
-                                      type="text"
-                                      placeholder="댓글 달기"
-                                      value={fbForm.message}
-                                      maxLength={200}
-                                      onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...fbForm, message: e.target.value } }))}
-                                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitFeedback(match.id); } }}
-                                      className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-gray-400 text-gray-800 dark:text-gray-200 min-w-0"
-                                    />
-                                    <button
-                                      onClick={() => submitFeedback(match.id)}
-                                      disabled={submittingFeedback === match.id || !fbForm.name?.trim() || !fbForm.message?.trim()}
-                                      className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1] disabled:opacity-30 hover:opacity-70 transition-opacity"
-                                    >
-                                      <SendHorizonal className="w-4 h-4" />
-                                    </button>
+                                {currentUser ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <FbAvatar name={currentUser.name} />
+                                    <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-2.5 py-1.5 focus-within:border-[#FFB6C1]/60 dark:focus-within:border-[#FFB6C1]/60 transition-colors overflow-hidden">
+                                      <input
+                                        type="text"
+                                        placeholder="댓글 달기..."
+                                        value={fbForm.message}
+                                        maxLength={200}
+                                        onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...fbForm, message: e.target.value } }))}
+                                        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitFeedback(match.id); } }}
+                                        className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-gray-400 text-gray-800 dark:text-gray-200 min-w-0"
+                                      />
+                                      <button
+                                        onClick={() => submitFeedback(match.id)}
+                                        disabled={submittingFeedback === match.id || !fbForm.message?.trim()}
+                                        className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1] disabled:opacity-30 hover:opacity-70 transition-opacity"
+                                      >
+                                        <SendHorizonal className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
                                   </div>
-                                </div>
+                                ) : (
+                                  <button
+                                    onClick={() => signIn("kakao")}
+                                    className="w-full flex items-center justify-center gap-1.5 text-[11px] font-black py-2 rounded-xl bg-[#FEE500] text-black/85 hover:opacity-90 transition-opacity"
+                                  >
+                                    <Lock className="w-3 h-3" /> 로그인하고 댓글 쓰기
+                                  </button>
+                                )}
                               </div>
                             </div>
                           )}
@@ -2160,18 +2160,18 @@ export default function DashboardClient({
                       const FeedbackAvatar = ({ name }: { name: string }) => {
                         const no = rosterMap[name.trim()];
                         return no ? (
-                          <div className="w-7 h-7 rounded-full bg-[#FFB6C1]/20 border border-[#FFB6C1]/40 flex items-center justify-center shrink-0">
-                            <span className="text-[9px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">#{no}</span>
+                          <div className="w-6 h-6 rounded-full bg-[#FFB6C1]/20 border border-[#FFB6C1]/40 flex items-center justify-center shrink-0">
+                            <span className="text-[8px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">#{no}</span>
                           </div>
                         ) : (
-                          <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0">
-                            <User className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                          <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0">
+                            <User className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                           </div>
                         );
                       };
 
                       return (
-                        <div className="mt-3 border-t border-gray-100 dark:border-white/5 pt-3">
+                        <div className="mt-3 border-t border-gray-100 dark:border-white/5 pt-3 overflow-hidden">
                           <button
                             onClick={() => toggleFeedback(match.id)}
                             className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors w-full"
@@ -2234,7 +2234,7 @@ export default function DashboardClient({
                                       {(isAdmin || (currentUser && fb.name === currentUser.name)) && (
                                         <button
                                           onClick={() => setDeleteTarget({ matchId: match.id, fb })}
-                                          className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-400"
+                                          className="ml-auto text-gray-300 hover:text-red-400 active:text-red-400 dark:text-gray-600 dark:hover:text-red-400"
                                         >
                                           <Trash2 className="w-3 h-3" />
                                         </button>
@@ -2248,12 +2248,12 @@ export default function DashboardClient({
                               {/* 입력 폼 (로그인 회원만) */}
                               <div className="pt-3 border-t border-gray-100 dark:border-white/5">
                                 {currentUser ? (
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5">
                                     <FeedbackAvatar name={currentUser.name} />
-                                    <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-[#FFB6C1]/60 dark:focus-within:border-[#FFB6C1]/60 transition-colors">
+                                    <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-2.5 py-1.5 focus-within:border-[#FFB6C1]/60 dark:focus-within:border-[#FFB6C1]/60 transition-colors overflow-hidden">
                                       <input
                                         type="text"
-                                        placeholder={`${currentUser.name}(으)로 댓글 달기`}
+                                        placeholder="댓글 달기..."
                                         value={form.message}
                                         maxLength={200}
                                         onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, message: e.target.value } }))}
@@ -2265,14 +2265,14 @@ export default function DashboardClient({
                                         disabled={submittingFeedback === match.id || !form.message?.trim()}
                                         className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1] disabled:opacity-30 hover:opacity-70 transition-opacity"
                                       >
-                                        <SendHorizonal className="w-4 h-4" />
+                                        <SendHorizonal className="w-3.5 h-3.5" />
                                       </button>
                                     </div>
                                   </div>
                                 ) : (
                                   <button
                                     onClick={() => signIn("kakao")}
-                                    className="w-full flex items-center justify-center gap-1.5 text-[11px] font-black py-2.5 rounded-2xl bg-[#FEE500] text-black/85 hover:opacity-90 transition-opacity"
+                                    className="w-full flex items-center justify-center gap-1.5 text-[11px] font-black py-2 rounded-xl bg-[#FEE500] text-black/85 hover:opacity-90 transition-opacity"
                                   >
                                     <Lock className="w-3 h-3" /> 로그인하고 댓글 쓰기
                                   </button>

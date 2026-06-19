@@ -1,10 +1,11 @@
-import { getLineupRows, getRosterRows, getStatsRows } from "../../lib/backend";
+import { getLineupRows, getRosterRows, getStatsRows, getAttendanceVoteRows, getVoteCommentRows } from "../../lib/backend";
 import { getMatchesRows } from "../../lib/matches-backend";
 import { LineupData, MatchData } from "../../components/DashboardClient";
 import MatchDetailClient from "./MatchDetailClient";
 import { notFound } from "next/navigation";
 import { parseSubstitutions } from "../../lib/lineup";
 import { auth } from "@/auth";
+import { buildContexts, evaluatePlayer, evaluateLeaders, managerTitle, MANAGER_NAME, type EarnedTitle } from "../../lib/titles";
 
 export default async function MatchDetailPage({
   params,
@@ -15,17 +16,21 @@ export default async function MatchDetailPage({
   const matchId = Number(id);
   const session = await auth();
 
-  const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult] = await Promise.allSettled([
+  const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult, rawAttendanceResult, rawVoteCommentsResult] = await Promise.allSettled([
     getMatchesRows(),
     getLineupRows(),
     getRosterRows(),
     getStatsRows(),
+    getAttendanceVoteRows(),
+    getVoteCommentRows(),
   ]);
 
   const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
   const rawLineups = rawLineupsResult.status === "fulfilled" ? rawLineupsResult.value : [];
   const rawRoster = rawRosterResult.status === "fulfilled" ? rawRosterResult.value : [];
   const rawStats = rawStatsResult.status === "fulfilled" ? rawStatsResult.value : [];
+  const rawAttendanceVotes = rawAttendanceResult.status === "fulfilled" ? rawAttendanceResult.value : [];
+  const rawVoteComments = rawVoteCommentsResult.status === "fulfilled" ? rawVoteCommentsResult.value : [];
 
   // 이름 → 등번호 맵 (A=등번호, B=이름)
   const rosterMap: Record<string, string> = {};
@@ -71,6 +76,8 @@ export default async function MatchDetailPage({
     assists: row[9] || "",
     mom: row[10] || "",
     attendees: row[11] || "",
+    photos: row[12] || "",
+    weather: row[13] || "",
   }));
 
   const match = matches.find((m) => m.id === matchId);
@@ -93,6 +100,26 @@ export default async function MatchDetailPage({
     }))
     .filter((l: LineupData) => l.matchId === matchId);
 
+  // 칭호 산출
+  const contexts = buildContexts({
+    rawStats,
+    rawMatches,
+    rawLineups,
+    rawRoster,
+    rawAttendanceVotes,
+    rawVoteComments,
+  });
+  const leaders = evaluateLeaders(contexts);
+  const playerTitles: Record<string, EarnedTitle[]> = {};
+  contexts.forEach((ctx, name) => {
+    const earned = evaluatePlayer(ctx);
+    const lead = leaders.get(name) ?? [];
+    const all = [...lead, ...earned];
+    if (name === MANAGER_NAME) all.unshift(managerTitle());
+    if (all.length) playerTitles[name] = all;
+  });
+  if (!playerTitles[MANAGER_NAME]) playerTitles[MANAGER_NAME] = [managerTitle()];
+
   return (
     <MatchDetailClient
       match={match}
@@ -100,6 +127,7 @@ export default async function MatchDetailPage({
       rosterMap={rosterMap}
       captainRoles={captainRoles}
       playerStats={playerStats}
+      playerTitles={playerTitles}
       currentUserName={session?.user?.name}
     />
   );

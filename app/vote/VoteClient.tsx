@@ -166,6 +166,7 @@ export default function VoteClient({
   const allVoteMatches = Array.from(
     new Map([...upcomingMatches, ...pastMatches].map((match) => [match.id, match])).values()
   );
+  const [deleteCommentTarget, setDeleteCommentTarget] = useState<{ matchId: number; kakaoId: string; timestamp: string; message: string } | null>(null);
   const [closedMatchIds, setClosedMatchIds] = useState<Set<number>>(
     new Set(allVoteMatches.filter((match) => match.attendanceStatus === "마감").map((match) => match.id))
   );
@@ -577,43 +578,45 @@ export default function VoteClient({
                     <div key={`${c.kakaoId}-${c.timestamp}-${i}`} className="flex items-start gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-bold text-gray-700 dark:text-gray-200">{c.nickname}</span>
+                          <span className="text-[10px] font-black text-gray-700 dark:text-gray-200">{c.nickname}</span>
                           <span className="text-[9px] text-gray-400">{formatTime(c.timestamp)}</span>
                           {(currentUser?.kakaoId === c.kakaoId || isAdmin) && (
                             <button
-                              onClick={() => deleteComment(match.id, c.kakaoId, c.timestamp)}
-                              className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors"
+                              onClick={() => setDeleteCommentTarget({ matchId: match.id, kakaoId: c.kakaoId, timestamp: c.timestamp, message: c.message })}
+                              className="text-gray-300 dark:text-gray-600 hover:text-red-400 active:text-red-400 transition-colors"
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
                           )}
                         </div>
-                        <p className="text-[12px] text-gray-600 dark:text-gray-300 mt-0.5">{c.message}</p>
+                        <p className="text-[11px] text-gray-600 dark:text-gray-300 mt-0.5">{c.message}</p>
                       </div>
                     </div>
                   ))}
 
                   {/* 댓글 입력 */}
                   {currentUser ? (
-                    <div className="flex items-center gap-2 mt-2">
-                      <input
-                        type="text"
-                        value={commentInput[match.id] || ""}
-                        onChange={(e) => setCommentInput((prev) => ({ ...prev, [match.id]: e.target.value }))}
-                        onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) submitComment(match.id); }}
-                        placeholder="늦참, 후반만 가능 등..."
-                        className="flex-1 text-[12px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 outline-none focus:border-[#FF8FA3] dark:focus:border-[#FFB6C1] transition-colors"
-                      />
-                      <button
-                        onClick={() => submitComment(match.id)}
-                        disabled={submittingComment || !commentInput[match.id]?.trim()}
-                        className="p-2 rounded-lg bg-[#FF8FA3] dark:bg-[#FFB6C1] text-white dark:text-black disabled:opacity-30 transition-opacity"
-                      >
-                        {submittingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendHorizonal className="w-4 h-4" />}
-                      </button>
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-2.5 py-1.5 focus-within:border-[#FF8FA3] dark:focus-within:border-[#FFB6C1] transition-colors overflow-hidden">
+                        <input
+                          type="text"
+                          value={commentInput[match.id] || ""}
+                          onChange={(e) => setCommentInput((prev) => ({ ...prev, [match.id]: e.target.value }))}
+                          onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) submitComment(match.id); }}
+                          placeholder="댓글 달기..."
+                          className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-gray-400 text-gray-800 dark:text-gray-200 min-w-0"
+                        />
+                        <button
+                          onClick={() => submitComment(match.id)}
+                          disabled={submittingComment || !commentInput[match.id]?.trim()}
+                          className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1] disabled:opacity-30 hover:opacity-70 transition-opacity"
+                        >
+                          {submittingComment ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SendHorizonal className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    <p className="text-[11px] text-gray-400 text-center py-2">로그인 후 댓글을 남길 수 있습니다</p>
+                    <p className="text-[10px] text-gray-400 text-center py-2">로그인 후 댓글을 남길 수 있습니다</p>
                   )}
                 </div>
               )}
@@ -675,6 +678,41 @@ export default function VoteClient({
         </div>
       </div>
       <AppBottomNav active="vote" currentUserName={currentUser?.name} />
+
+      {/* 댓글 삭제 확인 모달 */}
+      {deleteCommentTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-6"
+          onClick={() => setDeleteCommentTarget(null)}
+        >
+          <div
+            className="w-full max-w-xs bg-white dark:bg-[#161618] rounded-3xl p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[13px] font-black text-gray-900 dark:text-white mb-1">댓글을 삭제하시겠습니까?</p>
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-5 leading-relaxed break-words">
+              &ldquo;{deleteCommentTarget.message}&rdquo;
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteCommentTarget(null)}
+                className="flex-1 py-2.5 rounded-2xl bg-gray-100 dark:bg-white/10 text-[12px] font-black text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={async () => {
+                  await deleteComment(deleteCommentTarget.matchId, deleteCommentTarget.kakaoId, deleteCommentTarget.timestamp);
+                  setDeleteCommentTarget(null);
+                }}
+                className="flex-1 py-2.5 rounded-2xl bg-red-500 text-[12px] font-black text-white hover:bg-red-600 transition-colors"
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

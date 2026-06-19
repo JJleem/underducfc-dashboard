@@ -120,21 +120,26 @@ export default async function TeamDashboardPage({
     if (name && (role === "C" || role === "VC")) captainRoles[name] = role;
   });
 
-  // 💡 4. PlayerData 타입에 맞춰서 가공
-  const players: PlayerData[] = rawStats.slice(1).map((row: string[]) => {
-    const name = row[1];
-    const rosterInfo = rosterMap.get(name) || { no: "-", pos: "-" };
-    const pos = row[2];
-    return {
-      name: name,
-      no: rosterInfo.no,
-      pos: pos,
-      apps: Number(row[3]) || 0,
-      goals: Number(row[4]) || 0,
-      assists: Number(row[5]) || 0,
-      mom: Number(row[6]) || 0,
-    };
-  });
+  // 💡 4. PlayerData 타입에 맞춰서 가공 (로스터에 있는 선수만 표시)
+  const players: PlayerData[] = rawStats.slice(1)
+    .filter((row: string[]) => {
+      const name = row[1]?.trim();
+      return name && rosterMap.has(name);
+    })
+    .map((row: string[]) => {
+      const name = row[1];
+      const rosterInfo = rosterMap.get(name) || { no: "-", pos: "-" };
+      const pos = row[2];
+      return {
+        name: name,
+        no: rosterInfo.no,
+        pos: pos,
+        apps: Number(row[3]) || 0,
+        goals: Number(row[4]) || 0,
+        assists: Number(row[5]) || 0,
+        mom: Number(row[6]) || 0,
+      };
+    });
 
   // 💡 5. 숫자 타입으로 변환했기 때문에 정렬 에러도 사라집니다.
   // 💡 5. TypeScript 에러 해결을 위해 Number()로 명시적 형변환

@@ -128,16 +128,16 @@ export default function TitlesPage() {
       </header>
 
       <div className="space-y-6 px-4 pb-10 pt-4">
-        <section className="relative overflow-hidden rounded-[22px] bg-[#10182f] p-4 text-white shadow-[0_16px_40px_rgba(15,23,42,0.18)]">
-          <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-[#FF8FA3]/20 blur-2xl" />
-          <p className="text-[9px] font-black tracking-[0.16em] text-[#FFB6C1]">TITLE COLLECTION</p>
+        <section className="relative overflow-hidden rounded-[22px] bg-white p-4 text-gray-900 shadow-[0_16px_40px_rgba(15,23,42,0.06)] border border-gray-200/80 dark:border-white/[0.08] dark:bg-[#10182f] dark:text-white dark:shadow-[0_16px_40px_rgba(15,23,42,0.18)]">
+          <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-[#FF8FA3]/15 blur-2xl dark:bg-[#FF8FA3]/20" />
+          <p className="text-[9px] font-black tracking-[0.16em] text-[#FF8FA3] dark:text-[#FFB6C1]">TITLE COLLECTION</p>
           <h2 className="mt-1 text-[21px] font-black tracking-[-0.04em]">기록이 쌓이면, 칭호가 된다.</h2>
-          <p className="mt-2 max-w-[310px] text-[10px] font-semibold leading-relaxed text-slate-300">
+          <p className="mt-2 max-w-[310px] text-[10px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
             경기 기록과 활동에 따라 자동으로 획득하는 언더덕 FC의 칭호와 달성 조건입니다.
           </p>
-          <div className="mt-3 flex items-start gap-2 rounded-xl border border-white/10 bg-white/[0.06] p-2.5">
-            <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" />
-            <p className="text-[9px] font-semibold leading-relaxed text-slate-300">
+          <div className="mt-3 flex items-start gap-2 rounded-xl border border-gray-200 bg-gray-50 p-2.5 dark:border-white/10 dark:bg-white/[0.06]">
+            <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500 dark:text-amber-300" />
+            <p className="text-[9px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
               칭호와 조건은 주기적으로 추가되거나 변경될 수 있습니다. 재미있는 칭호 아이디어가 있다면 언제든 알려주세요.
             </p>
           </div>
