@@ -1992,6 +1992,7 @@ export default function DashboardClient({
                                       captainRoles={captainRoles}
                                       matchInfo={{ goals: match.goals, assists: match.assists, mom: match.mom }}
                                       playerStats={playerStatsMap}
+                                      playerTitles={playerTitles}
                                     />
                                   ) : (
                                     <div className="flex flex-wrap gap-1.5">

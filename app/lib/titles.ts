@@ -106,6 +106,7 @@ export interface EarnedTitle {
   flagship: boolean;
   tier: TierIndex | null; // null = 달성형(등급 없음)
   tierLabel: string | null;
+  desc?: string; // 칭호 설명 (개인 페이지 카드용)
   /** 특수 뱃지 스타일: leader=팀 1위 왕관, manager=감독 전용 */
   variant?: "leader" | "manager";
 }
@@ -534,7 +535,7 @@ export function evaluatePlayer(c: PlayerContext, defs: TitleDef[] = TITLES): Ear
   for (const d of defs) {
     if (d.flat) {
       if (d.check?.(c)) {
-        out.push({ id: d.id, name: d.name, icon: d.icon, category: d.category, flagship: !!d.flagship, tier: null, tierLabel: null });
+        out.push({ id: d.id, name: d.name, icon: d.icon, category: d.category, flagship: !!d.flagship, tier: null, tierLabel: null, desc: d.desc });
       }
       continue;
     }
@@ -543,7 +544,7 @@ export function evaluatePlayer(c: PlayerContext, defs: TitleDef[] = TITLES): Ear
       const tier = tierForValue(d.value(c), d.tiers);
       if (tier !== null) {
         const labels = d.tierLabels ?? TIER_NAMES;
-        out.push({ id: d.id, name: d.name, icon: d.icon, category: d.category, flagship: !!d.flagship, tier, tierLabel: labels[tier] ?? `Lv${tier + 1}` });
+        out.push({ id: d.id, name: d.name, icon: d.icon, category: d.category, flagship: !!d.flagship, tier, tierLabel: labels[tier] ?? `Lv${tier + 1}`, desc: d.desc });
       }
     }
   }
@@ -581,7 +582,7 @@ export function evaluateLeaders(contexts: Map<string, PlayerContext>): Map<strin
     for (const c of list) {
       if (def.value(c) !== max) continue;
       const arr = result.get(c.name) ?? [];
-      arr.push({ id: def.id, name: def.name, icon: def.icon, category: "리더", flagship: true, tier: null, tierLabel: null, variant: "leader" });
+      arr.push({ id: def.id, name: def.name, icon: def.icon, category: "리더", flagship: true, tier: null, tierLabel: null, desc: def.desc, variant: "leader" });
       result.set(c.name, arr);
     }
   }
@@ -593,7 +594,7 @@ export function evaluateLeaders(contexts: Map<string, PlayerContext>): Map<strin
 export const MANAGER_NAME = "금상덕";
 
 export function managerTitle(): EarnedTitle {
-  return { id: "manager", name: "감독", icon: "clipboard-list", category: "특별", flagship: true, tier: null, tierLabel: null, variant: "manager" };
+  return { id: "manager", name: "감독", icon: "clipboard-list", category: "특별", flagship: true, tier: null, tierLabel: null, desc: "팀을 이끄는 감독", variant: "manager" };
 }
 
 // ───────────────────────── 정렬(상위 N) ─────────────────────────

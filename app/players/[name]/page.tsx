@@ -13,7 +13,7 @@ import {
   MANAGER_NAME,
   type EarnedTitle,
 } from "../../lib/titles";
-import { TitleChips } from "../../components/TitleBadges";
+import PlayerTitleCards from "../../components/PlayerTitleCards";
 
 export const dynamic = "force-dynamic";
 
@@ -196,11 +196,7 @@ export default async function PlayerPage({
           <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2.5">
             칭호 <span className="text-gray-400 font-bold">({titles.length})</span>
           </p>
-          {titles.length > 0 ? (
-            <TitleChips titles={titles} />
-          ) : (
-            <p className="text-[12px] text-gray-400 font-semibold py-2">아직 획득한 칭호가 없어요.</p>
-          )}
+          <PlayerTitleCards titles={titles} />
         </section>
 
         {/* 출석률 */}

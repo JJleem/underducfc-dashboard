@@ -3,6 +3,8 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Crown, X } from "lucide-react";
+import { TitleBadges } from "./TitleBadges";
+import type { EarnedTitle } from "../lib/titles";
 
 export interface LineupForField {
   formation: string;
@@ -105,12 +107,14 @@ export function FormationField({
   captainRoles = {},
   matchInfo,
   playerStats,
+  playerTitles,
 }: {
   lineup: LineupForField;
   rosterMap: Record<string, string>;
   captainRoles?: Record<string, string>;
   matchInfo?: { goals?: string; assists?: string; mom?: string };
   playerStats?: Record<string, SeasonStat>;
+  playerTitles?: Record<string, EarnedTitle[]>;
 }) {
   const positions = FORMATION_POSITIONS[lineup.formation];
   const totalLayers = lineup.formation.split("-").length;
@@ -403,6 +407,11 @@ export function FormationField({
                         >
                           {isSel ? name : name.length > 4 ? name.slice(0, 4) : name}
                         </div>
+                        {!isTbd && playerTitles?.[name]?.length ? (
+                          <div className="mt-0.5 flex justify-center">
+                            <TitleBadges titles={playerTitles[name]} size={13} max={3} gap={2} />
+                          </div>
+                        ) : null}
                       </motion.button>
                     </div>
                   </motion.div>
