@@ -16,36 +16,32 @@ import { TitleBadges } from "./TitleBadges";
 import SubstitutionEvents from "./SubstitutionEvents";
 import type { EarnedTitle } from "../lib/titles";
 import type { LineupData, MatchData } from "./DashboardClient";
+import { playerFaceOnSrc } from "../lib/player-faceons";
 
 const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
 
 function BenchFaceOn({ name, no }: { name: string; no?: string }) {
-  const candidates = [
-    `/players/${encodeURIComponent(name)}.png`,
-    `/players/${encodeURIComponent(name)}.webp`,
-    `/players/${encodeURIComponent(name)}.jpg`,
-    no ? `/players/${no}.png` : "",
-    no ? `/players/${no}.webp` : "",
-    no ? `/players/${no}.jpg` : "",
-  ].filter(Boolean);
-  const [imageIndex, setImageIndex] = useState(0);
-
-  if (imageIndex >= candidates.length) {
-    return (
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FF8FA3]/20 text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
-        {no || "G"}
-      </span>
-    );
-  }
+  const src = playerFaceOnSrc(name);
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   return (
-    <span className="h-12 w-10 shrink-0 overflow-hidden">
-      <img
-        src={candidates[imageIndex]}
-        alt=""
-        className="h-full w-full object-contain object-bottom"
-        onError={() => setImageIndex((current) => current + 1)}
-      />
+    <span className="relative flex h-12 w-10 shrink-0 items-center justify-center overflow-hidden">
+      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FF8FA3]/20 text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+        {no || "G"}
+      </span>
+      {src && !failed && (
+        <img
+          src={src}
+          alt=""
+          loading="eager"
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
+          className={`absolute inset-0 h-full w-full object-contain object-bottom transition-opacity duration-150 ${
+            loaded ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      )}
     </span>
   );
 }

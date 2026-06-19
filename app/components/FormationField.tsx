@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Crown, ExternalLink, X } from "lucide-react";
 import { TitleBadges } from "./TitleBadges";
 import type { EarnedTitle } from "../lib/titles";
+import { playerFaceOnSrc } from "../lib/player-faceons";
 
 export interface LineupForField {
   formation: string;
@@ -113,14 +114,9 @@ function FaceOnMarker({
   color: { bg: string; border: string; text: string };
   isGuest: boolean;
 }) {
-  const candidates = [
-    `/players/${encodeURIComponent(name)}.png`,
-    `/players/${encodeURIComponent(name)}.webp`,
-    `/players/${encodeURIComponent(name)}.jpg`,
-    ...(no ? [`/players/${no}.png`, `/players/${no}.webp`, `/players/${no}.jpg`] : []),
-  ];
-  const [imageIndex, setImageIndex] = useState(0);
-  const hasImage = imageIndex < candidates.length;
+  const src = playerFaceOnSrc(name);
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   return (
     <div
@@ -130,21 +126,25 @@ function FaceOnMarker({
         height: 62,
       }}
     >
-      {hasImage ? (
+      <div
+        className="mb-1 flex h-10 w-10 items-center justify-center rounded-full font-black"
+        style={{ backgroundColor: color.bg, color: color.text }}
+      >
+        {isGuest ? "G" : no}
+      </div>
+      {src && !failed && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={candidates[imageIndex]}
+          src={src}
           alt={name}
-          onError={() => setImageIndex((current) => current + 1)}
-          className="h-[62px] w-[54px] object-contain object-bottom drop-shadow-[0_5px_5px_rgba(0,0,0,0.85)]"
+          loading="eager"
+          fetchPriority="high"
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
+          className={`absolute inset-0 h-[62px] w-[54px] object-contain object-bottom drop-shadow-[0_5px_5px_rgba(0,0,0,0.85)] transition-opacity duration-150 ${
+            loaded ? "opacity-100" : "opacity-0"
+          }`}
         />
-      ) : (
-        <div
-          className="mb-1 flex h-10 w-10 items-center justify-center rounded-full font-black"
-          style={{ backgroundColor: color.bg, color: color.text }}
-        >
-          {isGuest ? "G" : no}
-        </div>
       )}
     </div>
   );

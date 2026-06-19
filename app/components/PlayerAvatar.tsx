@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { User } from "lucide-react";
+import { playerFaceOnSrc } from "../lib/player-faceons";
 
 export default function PlayerAvatar({
   name,
@@ -17,16 +18,9 @@ export default function PlayerAvatar({
   accent: string;
   width?: number;
 }) {
-  const candidates = [
-    `/players/${encodeURIComponent(name)}.jpg`,
-    `/players/${encodeURIComponent(name)}.png`,
-    `/players/${encodeURIComponent(name)}.webp`,
-    ...(no && no !== "-"
-      ? [`/players/${no}.jpg`, `/players/${no}.png`, `/players/${no}.webp`]
-      : []),
-  ];
-  const [idx, setIdx] = useState(0);
-  const failed = idx >= candidates.length;
+  const src = playerFaceOnSrc(name);
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
   const height = Math.round(width * 1.3);
 
   return (
@@ -38,19 +32,23 @@ export default function PlayerAvatar({
         background: `radial-gradient(110% 80% at 50% 6%, ${accent}2e 0%, transparent 70%)`,
       }}
     >
-      {!failed ? (
+      <User
+        className="mb-3"
+        style={{ width: width * 0.52, height: width * 0.52, color: accent }}
+        strokeWidth={1.4}
+      />
+      {src && !failed && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={candidates[idx]}
+          src={src}
           alt={name}
-          className="h-full w-full object-contain object-bottom drop-shadow-[0_6px_8px_rgba(0,0,0,0.45)]"
-          onError={() => setIdx((i) => i + 1)}
-        />
-      ) : (
-        <User
-          className="mb-3"
-          style={{ width: width * 0.52, height: width * 0.52, color: accent }}
-          strokeWidth={1.4}
+          loading="eager"
+          fetchPriority="high"
+          className={`absolute inset-0 h-full w-full object-contain object-bottom drop-shadow-[0_6px_8px_rgba(0,0,0,0.45)] transition-opacity duration-150 ${
+            loaded ? "opacity-100" : "opacity-0"
+          }`}
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
         />
       )}
     </div>
