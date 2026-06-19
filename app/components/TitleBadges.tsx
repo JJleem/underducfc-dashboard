@@ -26,8 +26,12 @@ const FLAT_VIS: TierVis = { grad: ["#CBD5E1", "#5B6B86"], glow: null, icon: "#CB
 // 리더(팀 1위) — 빛나는 골드 왕관
 const LEADER_VIS: TierVis = { grad: ["#FFE7A0", "#E0A100"], glow: "rgba(255,200,60,0.65)", icon: "#FFD45A" };
 
+// 히든 칭호 — 시안/틸 계열 신비로운 느낌
+const HIDDEN_VIS: TierVis = { grad: ["#67E8F9", "#0E7490"], glow: "rgba(103,232,249,0.55)", icon: "#67E8F9" };
+
 function visOf(t: EarnedTitle): TierVis {
   if (t.variant === "leader") return LEADER_VIS;
+  if (t.hidden) return HIDDEN_VIS;
   return t.tier === null ? FLAT_VIS : TIER_VIS[t.tier];
 }
 

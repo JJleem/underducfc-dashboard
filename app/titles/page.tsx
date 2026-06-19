@@ -104,7 +104,8 @@ function TitleCard({ title }: { title: TitleDef }) {
 }
 
 export default function TitlesPage() {
-  const categories = Array.from(new Set(TITLES.map((title) => title.category)));
+  const visibleTitles = TITLES.filter((t) => !t.hidden);
+  const categories = Array.from(new Set(visibleTitles.map((title) => title.category)));
 
   return (
     <main className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-white">
@@ -123,7 +124,7 @@ export default function TitlesPage() {
           <h1 className="text-[15px] font-black leading-none">칭호 도감</h1>
         </div>
         <span className="ml-auto rounded-full bg-gray-100 px-2 py-1 text-[8px] font-black text-gray-500 dark:bg-white/[0.07] dark:text-gray-400">
-          {TITLES.length + LEADER_TITLES.length + 1} TITLES
+          {TITLES.filter((t) => !t.hidden).length + LEADER_TITLES.length + 1} TITLES
         </span>
       </header>
 
@@ -134,6 +135,7 @@ export default function TitlesPage() {
           <h2 className="mt-1 text-[21px] font-black tracking-[-0.04em]">기록이 쌓이면, 칭호가 된다.</h2>
           <p className="mt-2 max-w-[310px] text-[10px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
             경기 기록과 활동에 따라 자동으로 획득하는 언더덕 FC의 칭호와 달성 조건입니다.
+            조건이 공개되지 않는 <span className="text-cyan-500 dark:text-cyan-300 font-black">히든 칭호</span>도 존재합니다.
           </p>
           <div className="mt-3 flex items-start gap-2 rounded-xl border border-gray-200 bg-gray-50 p-2.5 dark:border-white/10 dark:bg-white/[0.06]">
             <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500 dark:text-amber-300" />
@@ -162,7 +164,7 @@ export default function TitlesPage() {
         </section>
 
         {categories.map((category) => {
-          const titles = TITLES.filter((title) => title.category === category);
+          const titles = visibleTitles.filter((title) => title.category === category);
           return (
             <section key={category}>
               <div className="mb-2.5 flex items-center gap-2">

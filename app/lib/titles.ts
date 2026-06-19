@@ -64,6 +64,12 @@ export interface PlayerContext {
   activityPoints: number; // votes + comments*2
   firstVoteCount: number; // 한 경기 최초 투표 횟수
   firstCommentCount: number; // 한 경기 최초 댓글 횟수
+
+  // 히든 칭호용
+  isFirstBlood: boolean; // 시즌 첫 경기 득점자
+  goalPerGame: number; // 골/출전 비율
+  bestDuoAssists: number; // 같은 선수에게 어시스트한 최대 횟수
+  posGroupsWithMin3: number; // 3경기+ 경험한 포지션 그룹 수
 }
 
 export type TitleCategory =
@@ -76,6 +82,7 @@ export type TitleCategory =
   | "맞대결 · 승부"
   | "대시보드 활동"
   | "언성히어로 · 반전"
+  | "히든"
   | "리더"
   | "특별";
 
@@ -88,6 +95,7 @@ export interface TitleDef {
   category: TitleCategory;
   state: TitleState;
   flagship?: boolean; // 커스텀 SVG 대표 칭호 후보
+  hidden?: boolean; // 히든 칭호 (도감에 숨김, 달성 시만 표시)
   desc?: string;
   // 등급형
   tiers?: number[]; // 오름차순 임계값
@@ -109,6 +117,7 @@ export interface EarnedTitle {
   tier: TierIndex | null; // null = 달성형(등급 없음)
   tierLabel: string | null;
   desc?: string; // 칭호 설명 (개인 페이지 카드용)
+  hidden?: boolean; // 히든 칭호
   /** 특수 뱃지 스타일: leader=팀 1위 왕관, manager=감독 전용 */
   variant?: "leader" | "manager";
 }
@@ -466,6 +475,31 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     const firstVoteCount = firstVoteByNick.get(name) ?? 0;
     const firstCommentCount = firstCommentByNick.get(name) ?? 0;
 
+    // 히든: 퍼스트 블러드 — 시즌 첫 경기(실제 경기, 결과 있는)에서 득점했는가
+    const realCompleted = matches.filter((m) => m.isReal && m.result !== "예정");
+    const firstMatch = realCompleted.length ? realCompleted[0] : null; // matches는 이미 날짜순
+    const isFirstBlood = firstMatch ? countInCsv(firstMatch.goals, name) > 0 : false;
+
+    // 히든: 레이저 — 경기당 1골 이상 (골 > 출전, 최소 5경기)
+    const goalPerGame = apps > 0 ? goals / apps : 0;
+
+    // 히든: 찰떡궁합 — 같은 골잡이에게 어시스트한 최대 횟수
+    const duoAssistMap = new Map<string, number>();
+    matches.forEach((m) => {
+      const goalList = (m.goals || "").split(",").map((s) => s.trim());
+      const assistList = (m.assists || "").split(",").map((s) => s.trim());
+      goalList.forEach((scorer, i) => {
+        const assister = assistList[i]?.trim();
+        if (assister === name && scorer) {
+          duoAssistMap.set(scorer, (duoAssistMap.get(scorer) ?? 0) + 1);
+        }
+      });
+    });
+    const bestDuoAssists = duoAssistMap.size ? Math.max(...Array.from(duoAssistMap.values())) : 0;
+
+    // 히든: 변신의 귀재 — 3개+ 포지션 각 3경기 이상
+    const posGroupsWithMin3 = (["GK", "DF", "MF", "FW"] as PosGroup[]).filter((g) => posCounts[g] >= 3).length;
+
     contexts.set(name, {
       name,
       apps,
@@ -503,6 +537,10 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       activityPoints: votesCast + commentsCount * 2,
       firstVoteCount,
       firstCommentCount,
+      isFirstBlood,
+      goalPerGame,
+      bestDuoAssists,
+      posGroupsWithMin3,
     });
   });
 
@@ -577,6 +615,12 @@ export const TITLES: TitleDef[] = [
   { id: "devotion", name: "헌신왕", icon: "handshake", category: "언성히어로 · 반전", state: "live", flat: true, desc: "도움>골 & 도움 5+", check: (c) => c.assists > c.goals && c.assists >= 5 },
   { id: "onehit", name: "한방 있는 남자", icon: "zap", category: "언성히어로 · 반전", state: "live", flat: true, desc: "5경기 미만인데 득점", check: (c) => c.apps > 0 && c.apps < 5 && c.goals >= 1 },
   { id: "loyalty", name: "꾸준함의 미학", icon: "infinity", category: "언성히어로 · 반전", state: "live", flat: true, desc: "공격P 0 & 출전 30+", check: (c) => c.points === 0 && c.apps >= 30 },
+
+  // ── 히든 칭호
+  { id: "firstblood", name: "퍼스트 블러드", icon: "sword", category: "히든", state: "live", hidden: true, flat: true, desc: "시즌 첫 경기 득점자", check: (c) => c.isFirstBlood },
+  { id: "laser", name: "레이저", icon: "crosshair", category: "히든", state: "live", hidden: true, flat: true, desc: "경기당 1골 이상 (최소 5경기)", check: (c) => c.apps >= 5 && c.goalPerGame >= 1 },
+  { id: "duo", name: "찰떡궁합", icon: "heart-handshake", category: "히든", state: "live", hidden: true, flat: true, desc: "같은 선수에게 3회+ 어시스트", check: (c) => c.bestDuoAssists >= 3 },
+  { id: "shapeshifter", name: "변신의 귀재", icon: "shuffle", category: "히든", state: "live", hidden: true, flat: true, desc: "3개+ 포지션 각 3경기 이상", check: (c) => c.posGroupsWithMin3 >= 3 },
 ];
 
 // ───────────────────────── 평가 ─────────────────────────
@@ -595,7 +639,7 @@ export function evaluatePlayer(c: PlayerContext, defs: TitleDef[] = TITLES): Ear
   for (const d of defs) {
     if (d.flat) {
       if (d.check?.(c)) {
-        out.push({ id: d.id, name: d.name, icon: d.icon, category: d.category, flagship: !!d.flagship, tier: null, tierLabel: null, desc: d.desc });
+        out.push({ id: d.id, name: d.name, icon: d.icon, category: d.category, flagship: !!d.flagship, tier: null, tierLabel: null, desc: d.desc, hidden: !!d.hidden });
       }
       continue;
     }
@@ -604,7 +648,7 @@ export function evaluatePlayer(c: PlayerContext, defs: TitleDef[] = TITLES): Ear
       const tier = tierForValue(d.value(c), d.tiers);
       if (tier !== null) {
         const labels = d.tierLabels ?? TIER_NAMES;
-        out.push({ id: d.id, name: d.name, icon: d.icon, category: d.category, flagship: !!d.flagship, tier, tierLabel: labels[tier] ?? `Lv${tier + 1}`, desc: d.desc });
+        out.push({ id: d.id, name: d.name, icon: d.icon, category: d.category, flagship: !!d.flagship, tier, tierLabel: labels[tier] ?? `Lv${tier + 1}`, desc: d.desc, hidden: !!d.hidden });
       }
     }
   }

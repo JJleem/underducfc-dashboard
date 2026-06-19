@@ -9,7 +9,7 @@ import {
   BadgeCheck, Sprout, RotateCcw, CloudRain, Umbrella, Sun, Snowflake,
   CloudLightning, Swords, Lock, Rocket, Sparkles, Vote, MessageCircle,
   AlarmClock, Activity, MessageSquarePlus, HeartHandshake, Handshake,
-  Zap, Infinity as InfinityIcon, Trophy, Shield,
+  Zap, Infinity as InfinityIcon, Trophy, Shield, Sword,
   Medal, Award, ClipboardList,
   type LucideIcon,
 } from "lucide-react";
@@ -43,6 +43,7 @@ const ICONS: Record<string, LucideIcon> = {
   sun: Sun,
   snowflake: Snowflake,
   "cloud-lightning": CloudLightning,
+  sword: Sword,
   swords: Swords,
   lock: Lock,
   rocket: Rocket,
