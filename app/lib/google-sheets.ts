@@ -14,7 +14,8 @@ type SheetRange =
   | "push_subscriptions!A:A"
   | "attendance_vote!A1:E500"
   | "vote_comment!A1:E500"
-  | "users!A1:E1000";
+  | "users!A1:E1000"
+  | "featured!A1:D200";
 
 export async function getSheetData(range: SheetRange) {
   const sheetId = process.env.GOOGLE_SHEET_ID;

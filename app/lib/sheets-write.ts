@@ -47,6 +47,54 @@ async function getAccessToken(
 }
 
 
+// 대표 칭호(라인업 표시용 최대 3개)를 featured 시트에 저장 (선수명 기준 업서트)
+// featured 시트: A=선수명, B=id1, C=id2, D=id3
+export async function writeFeaturedTitles(playerName: string, ids: string[]): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+
+  const token = await getAccessToken();
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
+  const name = playerName.trim();
+  const padded = [ids[0] || "", ids[1] || "", ids[2] || ""];
+
+  const readRes = await fetch(`${base}/values/featured!A1:D200`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!readRes.ok) throw new Error("featured 시트를 찾을 수 없습니다. 시트 탭(featured)을 먼저 만들어주세요.");
+  const readData = await readRes.json();
+  const rows: string[][] = readData.values || [];
+
+  let foundIndex = -1;
+  for (let i = 0; i < rows.length; i++) {
+    if ((rows[i]?.[0] || "").trim() === name) {
+      foundIndex = i;
+      break;
+    }
+  }
+
+  if (foundIndex >= 0) {
+    const rowNum = foundIndex + 1; // 시트는 1-indexed
+    const range = `featured!A${rowNum}:D${rowNum}`;
+    await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ range, values: [[name, ...padded]] }),
+    });
+  } else {
+    const range = encodeURIComponent("featured!A:D");
+    const res = await fetch(
+      `${base}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ values: [[name, ...padded]] }),
+      }
+    );
+    if (!res.ok) throw new Error("featured 시트 쓰기 실패");
+  }
+}
+
 export async function addPhotosToMatch(matchId: number, newUrls: string[]): Promise<void> {
   const sheetId = process.env.GOOGLE_SHEET_ID;
   if (!sheetId) throw new Error("GOOGLE_SHEET_ID 환경변수가 없습니다.");

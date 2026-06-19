@@ -14,6 +14,7 @@ import {
   evaluatePlayer,
   evaluateLeaders,
   managerTitle,
+  pickBadges,
   MANAGER_NAME,
   type EarnedTitle,
 } from "./lib/titles";
@@ -52,6 +53,12 @@ export default async function TeamDashboardPage() {
     rawVoteComments = await getSheetData("vote_comment!A1:E500");
   } catch {
     rawVoteComments = [];
+  }
+  let rawFeatured: string[][] = [];
+  try {
+    rawFeatured = await getSheetData("featured!A1:D200");
+  } catch {
+    rawFeatured = [];
   }
   // Google Sheets가 "08:00"을 시간 포맷으로 인식해 "08:00:00"으로 반환하는 경우를 정규화
   const normalizeTime = (raw: string): string => {
@@ -171,16 +178,31 @@ export default async function TeamDashboardPage() {
     rawVoteComments,
   });
   const leaders = evaluateLeaders(contexts);
-  const playerTitles: Record<string, EarnedTitle[]> = {};
+  const allTitles: Record<string, EarnedTitle[]> = {};
   contexts.forEach((ctx, name) => {
     const earned = evaluatePlayer(ctx);
     const lead = leaders.get(name) ?? [];
     const all = [...lead, ...earned];
     if (name === MANAGER_NAME) all.unshift(managerTitle());
-    if (all.length) playerTitles[name] = all;
+    if (all.length) allTitles[name] = all;
   });
   // 감독이 stats에 없으면(선수로 안 뜀) 감독 뱃지만 단독 부여
-  if (!playerTitles[MANAGER_NAME]) playerTitles[MANAGER_NAME] = [managerTitle()];
+  if (!allTitles[MANAGER_NAME]) allTitles[MANAGER_NAME] = [managerTitle()];
+
+  // 대표 칭호(본인 선택) 맵
+  const featuredMap: Record<string, string[]> = {};
+  rawFeatured.forEach((r) => {
+    const nm = (r[0] || "").trim();
+    if (!nm) return;
+    const ids = [r[1], r[2], r[3]].map((x) => (x || "").trim()).filter(Boolean);
+    if (ids.length) featuredMap[nm] = ids;
+  });
+
+  // 라인업/순위 표시용: 대표 우선, 없으면 자동 상위 3
+  const playerTitles: Record<string, EarnedTitle[]> = {};
+  Object.entries(allTitles).forEach(([name, all]) => {
+    playerTitles[name] = pickBadges(all, featuredMap[name]);
+  });
 
   const firstNoticeRow = rawNotices[1]; // index 1이 실제 첫 번째 데이터 줄
 

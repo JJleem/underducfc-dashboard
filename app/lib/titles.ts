@@ -610,3 +610,20 @@ export function topTitles(earned: EarnedTitle[], n = 3): EarnedTitle[] {
   };
   return [...earned].sort((a, b) => rank(b) - rank(a)).slice(0, n);
 }
+
+/** 라인업 표시용 N개: 본인이 고른 대표(featuredIds) 우선, 없으면 자동 상위 N */
+export function pickBadges(
+  earned: EarnedTitle[],
+  featuredIds: string[] | undefined,
+  n = 3
+): EarnedTitle[] {
+  if (featuredIds && featuredIds.length) {
+    const byId = new Map(earned.map((t) => [t.id, t]));
+    const picked = featuredIds
+      .map((id) => byId.get(id))
+      .filter((t): t is EarnedTitle => !!t)
+      .slice(0, n);
+    if (picked.length) return picked;
+  }
+  return topTitles(earned, n);
+}

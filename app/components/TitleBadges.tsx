@@ -103,7 +103,8 @@ export function TitleBadges({
   max?: number;
   gap?: number;
 }) {
-  const list = topTitles(titles, max);
+  // titles는 이미 표시 순서로 정해진 목록(대표 칭호 우선). 재정렬 없이 자른다.
+  const list = titles.slice(0, max);
   if (!list.length) return null;
   return (
     <span style={{ display: "inline-flex", gap, alignItems: "center" }}>

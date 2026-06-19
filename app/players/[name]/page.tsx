@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
+import { auth } from "@/auth";
 import { getSheetData } from "../../lib/google-sheets";
 import {
   buildContexts,
@@ -14,6 +15,7 @@ import {
   type EarnedTitle,
 } from "../../lib/titles";
 import PlayerTitleCards from "../../components/PlayerTitleCards";
+import FeaturedEditor from "../../components/FeaturedEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -43,8 +45,20 @@ export default async function PlayerPage({
   try { rawAttendanceVotes = await getSheetData("attendance_vote!A1:E500"); } catch { rawAttendanceVotes = []; }
   let rawVoteComments: string[][] = [];
   try { rawVoteComments = await getSheetData("vote_comment!A1:E500"); } catch { rawVoteComments = []; }
+  let rawFeatured: string[][] = [];
+  try { rawFeatured = await getSheetData("featured!A1:D200"); } catch { rawFeatured = []; }
 
   const isManager = name === MANAGER_NAME;
+
+  // 본인 확인: 로그인 카카오 닉네임 == 선수명 이면 대표 칭호 편집 가능
+  const session = await auth();
+  const canEdit = !!session?.user?.name && session.user.name.trim() === name;
+
+  // 현재 대표 칭호 ids
+  const featuredRow = rawFeatured.find((r) => (r[0] || "").trim() === name);
+  const featuredIds = featuredRow
+    ? [featuredRow[1], featuredRow[2], featuredRow[3]].map((x) => (x || "").trim()).filter(Boolean)
+    : [];
 
   // 로스터 정보 (등번호 / 포지션 / 주장)
   const rosterRow = rawRoster.slice(1).find((r) => (r[1] || "").trim() === name);
@@ -196,6 +210,7 @@ export default async function PlayerPage({
           <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2.5">
             칭호 <span className="text-gray-400 font-bold">({titles.length})</span>
           </p>
+          {canEdit && <FeaturedEditor titles={titles} current={featuredIds} />}
           <PlayerTitleCards titles={titles} />
         </section>
 
