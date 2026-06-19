@@ -95,8 +95,9 @@ export default async function MatchDetailPage({
       ].filter(Boolean),
       subs: [
         row[14] || "", row[15] || "", row[16] || "", row[17] || "", row[18] || "",
+        row[19] || "", row[20] || "", row[21] || "", row[22] || "",
       ].filter(Boolean),
-      substitutions: parseSubstitutions(row[19]),
+      substitutions: parseSubstitutions(row[23]),
     }))
     .filter((l: LineupData) => l.matchId === matchId);
 

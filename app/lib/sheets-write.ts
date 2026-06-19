@@ -206,9 +206,8 @@ export async function writeLineup({
   subs: string[];
   substitutions: { out: string; in: string; time?: string }[];
 }) {
-  // 슬롯 위치 보존: p1~p11 / sub1~sub5 고정 길이(빈 슬롯은 "")
   const playerCells = [...players, ...Array(Math.max(0, 11 - players.length)).fill("")].slice(0, 11);
-  const subCells = [...subs, ...Array(Math.max(0, 5 - subs.length)).fill("")].slice(0, 5);
+  const subCells = subs.filter(Boolean);
   const cleanSubstitutions = substitutions
     .map((event) => ({
       out: String(event.out || "").trim(),

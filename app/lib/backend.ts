@@ -70,10 +70,10 @@ export async function getLineupRows(): Promise<string[][]> {
   const rows = await udGet<LineupOut[]>("/api/underduck/lineup");
   const HEADER = ["matchId", "quarter", "formation",
     "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10", "p11",
-    "sub1", "sub2", "sub3", "sub4", "sub5", "substitutions"];
+    "sub1", "sub2", "sub3", "sub4", "sub5", "sub6", "sub7", "sub8", "sub9", "substitutions"];
   return [HEADER, ...rows.map((r) => [
     s(r.match_id), s(r.quarter), s(r.formation),
-    ...pad(r.players, 11), ...pad(r.subs, 5),
+    ...pad(r.players, 11), ...pad(r.subs, 9),
     r.substitutions && r.substitutions.length ? JSON.stringify(r.substitutions) : "",
   ])];
 }

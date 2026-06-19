@@ -167,8 +167,9 @@ export default async function TeamDashboardPage({
     ].filter(Boolean),
     subs: [
       row[14] || "", row[15] || "", row[16] || "", row[17] || "", row[18] || "",
+      row[19] || "", row[20] || "", row[21] || "", row[22] || "",
     ].filter(Boolean),
-    substitutions: parseSubstitutions(row[19]),
+    substitutions: parseSubstitutions(row[23]),
   }));
 
   const attendanceVotes: AttendanceVoteData[] = rawAttendanceVotes
