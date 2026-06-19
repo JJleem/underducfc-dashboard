@@ -1,7 +1,8 @@
 // app/page.tsx
 import { auth } from "@/auth";
 import { isAdmin } from "./lib/admin";
-import { getMatchesData, getSheetData } from "./lib/google-sheets";
+import { getSheetData } from "./lib/google-sheets";
+import { getMatchesRows } from "./lib/matches-backend";
 import DashboardClient, {
   AttendanceVoteData,
   LineupData,
@@ -39,7 +40,7 @@ export default async function TeamDashboardPage({
 
   // 시트 하나가 일시 실패해도 홈 전체가 Runtime Error로 죽지 않게 병렬 안전 로딩
   const sheetResults = await Promise.allSettled([
-    getMatchesData(),
+    getMatchesRows(),
     getSheetData("roster!A1:J50"),
     getSheetData("stats!A1:G50"),
     getSheetData("notice!A1:E20"),

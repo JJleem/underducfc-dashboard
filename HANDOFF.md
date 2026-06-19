@@ -2,7 +2,7 @@
 
 > 새 세션/다른 PC에서 이 작업을 이어가기 위한 인수인계 문서.
 > 현재 브랜치: **`feat/kakao-login`** (★ master에 머지 X = 실서버 배포 안 함)
-> 최신 작업(2026-06-19): 라이트/다크 모드 정상화 + Google Sheets→underduck 백엔드 마이그레이션 **착수**(matches 도메인 래퍼까지). 아래 "라이트/다크" · "마이그레이션" 섹션 참고.
+> 최신 작업(2026-06-19): 라이트/다크 모드 정상화 + Google Sheets→underduck 백엔드 마이그레이션 **착수**(matches 도메인 래퍼까지, 배선 전). 아래 **"🚧 진행 중: 백엔드 마이그레이션"** 섹션 참고.
 
 ## 프로젝트 개요
 
@@ -143,6 +143,51 @@
 - 🟡 **날씨 칭호**: matches N열에 날씨 저장된 경기만. 앞으로 치르는 경기부터 정확.
 - 🟡 **투표/댓글 칭호**(투표러/수다왕/활동왕/얼리버드/오프너): 카카오 닉네임이 선수명과 정확히 같아야 집계.
 
+## 🚧 진행 중: Google Sheets → underduck 백엔드 마이그레이션 (Phase 3 프론트 컷오버)
+
+> ⚠️ **이 섹션은 직전 세션에서 작성 중 끊겼던 부분.** 현재 코드 기준으로 복원함.
+
+### 큰 그림
+- **백엔드 레포 = `../underduck-backend`** (`JJleem/underduck-backend`, private). Python 3.12 / FastAPI / SQLAlchemy / Postgres. 별도 프로세스·별도 DB.
+- **이미 라이브**: `https://underduck-api.cosmic-hustle.ai.kr` (Lightsail `3.36.239.214`, systemd `:8001`, nginx + Let's Encrypt). `main` push → GitHub Actions 자동 배포(rsync + `alembic upgrade head` + restart).
+- **13개 도메인 전부 백엔드 이전 완료** (matches/mom-vote/vote-comment/attendance/featured/push/roster/stats/notice/lineup/feedback/users/media). 엔드포인트 전부 `/api/underduck/*`, 헤더 `X-Underduck-Secret` 필수. 응답 스키마 = `../underduck-backend/schemas.py`.
+- **남은 일 = 프론트가 시트 대신 백엔드를 호출하도록 도메인 단위로 컷오버.** ★ 빅뱅 금지, 도메인별 PR + 매번 실검증.
+- 백엔드 측 상세 인수인계: **`../underduck-backend/HANDOFF.md`**
+
+### 프론트에 이미 만들어진 것 (배선 전 — 아무 데서도 아직 import 안 함)
+- **`app/lib/underduck.ts`** — 서버 전용 fetch 헬퍼. `udGet/udPost/udPatch/udPut/udDelete`. env `UNDERDUCK_API_BASE`/`UNDERDUCK_API_SECRET` 사용. `window` 가드로 클라 번들 차단. 429/5xx 재시도.
+- **`app/lib/matches-backend.ts`** — matches 도메인 래퍼. 백엔드 `MatchOut[]` ↔ 기존 시트 `string[][]`(A~O) 양방향. 함수: `getMatchesRows()`(= `getMatchesData()` 드롭인 대체), `getMatch()`, `createMatch()`, `patchMatch()`, `addMatchPhotos()`, `removeMatchPhoto()`. 백엔드 스키마와 필드 1:1 확인됨.
+
+### 🔴 블로커: secret 불일치 (컷오버·검증 전 반드시 해결)
+- 로컬 `underduck/.env.local` ↔ `underduck-backend/.env`의 `UNDERDUCK_API_SECRET`은 서로 같음(64자).
+- **그런데 라이브 서버(`underduck-api.cosmic-hustle.ai.kr`)는 이 secret을 401로 거부** → 배포된 서버 `.env`의 secret이 로컬과 다른 값.
+- 결과: 로컬 `npm run dev`·Vercel 어디서도 백엔드 호출이 전부 401. **검증 불가.**
+- **해결 방법(택1)**: ① 라이브 서버 `.env`의 `UNDERDUCK_API_SECRET` 값을 로컬과 동일하게 맞추고 서비스 재시작, 또는 ② 라이브 서버의 실제 secret 값을 `underduck/.env.local`(+Vercel)에 복사.
+
+### matches 도메인 컷오버 — 손댈 곳 (스코프 확정)
+**읽기(8곳)** — `getMatchesData()`/`getSheetData("matches!...")` → `getMatchesRows()`로 교체:
+- `app/page.tsx`, `app/api/attendance/route.ts`, `app/api/attendance/finalize/route.ts`, `app/api/mom-vote/finalize/route.ts`, `app/matches/[id]/page.tsx`, `app/matches/[id]/edit/page.tsx`, `app/players/[name]/page.tsx`, `app/vote/page.tsx`
+
+**쓰기** — `app/lib/sheets-write.ts`의 matches 함수 본문을 래퍼 호출로 교체(시그니처 유지 → API 라우트는 그대로):
+- `appendMatch` → `createMatch`, `updateMatchResult`/`writeMatchMom`/`writeMatchWeather`/`setAttendanceStatus` → `patchMatch`, `addPhotosToMatch`/`removePhotoFromMatch` → `addMatchPhotos`/`removeMatchPhoto`
+- ⚠️ `finalizeAttendance`는 **attendance_vote 읽기(=attendance 도메인, 미컷오버)** + matches.L 쓰기가 섞임. matches 컷오버 시엔 **matches.L 쓰기만** `patchMatch({attendees})`로 바꾸고, attendance_vote 읽기는 attendance 도메인 컷오버 때 처리.
+
+### 환경변수 (양쪽 .env.local + Vercel)
+| 변수 | 값 |
+|---|---|
+| `UNDERDUCK_API_BASE` | `https://underduck-api.cosmic-hustle.ai.kr` |
+| `UNDERDUCK_API_SECRET` | 라이브 서버 `.env`와 **반드시 동일** (위 블로커 참고) |
+
+### 컷오버 순서 (제안)
+1. 🔴 secret 정합 맞추기 → `curl -H "X-Underduck-Secret: …" .../api/underduck/matches`로 200 확인
+2. matches 도메인 읽기+쓰기 동시 컷오버(부분 컷오버 시 시트/DB 불일치 위험) → 실검증
+3. mom-vote → vote-comment → attendance → feedback → lineup → roster → notice → users → media → featured 순으로 도메인별 래퍼 작성+컷오버
+4. **stats**: 시트 수식 스냅샷이라, 시트 폐기 전 백엔드 집계 endpoint로 교체 필요(현재 백엔드 stats는 스냅샷)
+5. 전 도메인 전환 후 `google-sheets.ts`/`sheets-write.ts`/`GOOGLE_*` 제거
+
+## 🌗 완료: 라이트/다크 모드 정상화 (2026-06-19, 커밋 `bfa40bc`)
+- `app/globals.css`(테마 토큰), `app/layout.tsx`, `app/loading.tsx` 조정 — `next-themes` 기반 라이트/다크 표시 정상화. matches 마이그레이션과 같은 WIP 커밋(`d`/`bfa40bc`)에 섞여 들어감.
+
 ## 📋 다음 할 일 (순서대로)
 
 1. ✅ **로컬 살리기** — `npm run dev` 정상 (`.env.local` 파일명 이슈 해결: `env.local`→`.env.local`)
@@ -151,6 +196,8 @@
 4. ✅ **관리자/회원 게이팅** 완료 (위 "✅ 완료: 4단계" 참고)
 5. ✅ **2단계 투표 기능** 완료 (위 "완료: 2단계" 참고)
 6. ✅ **칭호/뱃지/페이스온** 완료 (위 "완료: 칭호/뱃지/페이스온" 참고)
+7. 🚧 **백엔드 마이그레이션(Phase 3 프론트 컷오버)** 진행 중 — 위 "🚧 진행 중: 백엔드 마이그레이션" 참고.
+   - 다음 단계: 🔴 secret 정합 → matches 도메인 컷오버 → 나머지 도메인.
 
 ### ⏭️ 칭호 시스템 — 다른 PC에서 이어서 할 것
 1. **`featured` 시트 탭 생성** (대표 칭호 저장용) — 안 만들면 저장 시 에러

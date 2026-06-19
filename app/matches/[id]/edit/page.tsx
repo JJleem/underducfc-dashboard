@@ -1,4 +1,5 @@
 import { getSheetData } from "../../../lib/google-sheets";
+import { getMatchesRows } from "../../../lib/matches-backend";
 import { LineupData, MatchData } from "../../../components/DashboardClient";
 import LineupEditor from "./LineupEditor";
 import { notFound, redirect } from "next/navigation";
@@ -17,7 +18,7 @@ export default async function LineupEditPage({
   const matchId = Number(id);
 
   const [rawMatchesResult, rawLineupsResult, rawRosterResult] = await Promise.allSettled([
-    getSheetData("matches!A1:M50"),
+    getMatchesRows(),
     getSheetData("lineup!A1:T100"),
     getSheetData("roster!A1:J50"),
   ]);

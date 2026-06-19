@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { finalizeAttendance, setAttendanceStatus, writeMatchWeather } from "../../../lib/sheets-write";
 import { requireAdmin } from "@/app/lib/admin";
-import { getMatchesData } from "@/app/lib/google-sheets";
+import { getMatchesRows } from "@/app/lib/matches-backend";
 import { getMatchWeather, serializeWeather } from "@/app/lib/weather";
 
 export async function POST(request: NextRequest) {
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     // 날씨도 함께 기록
     try {
-      const rawMatches = await getMatchesData();
+      const rawMatches = await getMatchesRows();
       const row = rawMatches[id + 1]; // header offset
       if (row) {
         const date = row[0] || "";

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMatchesData, getSheetData } from "../../lib/google-sheets";
+import { getSheetData } from "../../lib/google-sheets";
+import { getMatchesRows } from "../../lib/matches-backend";
 import { upsertAttendanceVote } from "../../lib/sheets-write";
 import { requireUser } from "@/app/lib/admin";
 import { auth } from "@/auth";
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "잘못된 응답값" }, { status: 400 });
     }
     const id = Number(matchId);
-    const rawMatches = await getMatchesData();
+    const rawMatches = await getMatchesRows();
     const matchRow = rawMatches[id + 1];
     if (!matchRow) {
       return NextResponse.json({ error: "경기를 찾을 수 없습니다." }, { status: 404 });

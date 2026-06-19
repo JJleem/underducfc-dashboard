@@ -102,8 +102,10 @@ export type MatchPatch = Partial<{
   location: string;
   opponent: string;
   type: string;
-  our_score: number;
-  their_score: number;
+  result: string;
+  // 빈 점수(예정 경기 등)는 null로 보내 백엔드에서 비운다.
+  our_score: number | null;
+  their_score: number | null;
   goals: string;
   assists: string;
   mom: string;

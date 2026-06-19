@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSheetData } from "../../../lib/google-sheets";
+import { getMatchesRows } from "../../../lib/matches-backend";
 import { writeMatchMom } from "../../../lib/sheets-write";
 import { requireAdmin } from "@/app/lib/admin";
 
@@ -8,7 +9,7 @@ export async function POST() {
   if (denied) return denied;
   try {
     // matches 읽기 (날짜 + 현재 MOM 확인용)
-    const rawMatches = await getSheetData("matches!A1:M50");
+    const rawMatches = await getMatchesRows();
     const matches = rawMatches.slice(1).map((row: string[], index: number) => ({
       id: index,
       date: row[0] || "",

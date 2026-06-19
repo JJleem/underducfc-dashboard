@@ -1,4 +1,5 @@
 import { getSheetData } from "../../lib/google-sheets";
+import { getMatchesRows } from "../../lib/matches-backend";
 import { LineupData, MatchData } from "../../components/DashboardClient";
 import MatchDetailClient from "./MatchDetailClient";
 import { notFound } from "next/navigation";
@@ -15,7 +16,7 @@ export default async function MatchDetailPage({
   const session = await auth();
 
   const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult] = await Promise.allSettled([
-    getSheetData("matches!A1:M50"),
+    getMatchesRows(),
     getSheetData("lineup!A1:T100"),
     getSheetData("roster!A1:J50"),
     getSheetData("stats!A1:G50"),

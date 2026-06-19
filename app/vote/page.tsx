@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { isAdmin } from "../lib/admin";
-import { getMatchesData, getSheetData } from "../lib/google-sheets";
+import { getSheetData } from "../lib/google-sheets";
+import { getMatchesRows } from "../lib/matches-backend";
 import { getMatchWeather, serializeWeather, parseWeather } from "../lib/weather";
 import { writeMatchWeather } from "../lib/sheets-write";
 import VoteClient from "./VoteClient";
@@ -17,7 +18,7 @@ export default async function VotePage() {
   const admin = isAdmin(currentUser?.kakaoId);
 
   // O열(출석 투표 상태)까지 포함해서 fetch
-  const rawMatches = await getMatchesData();
+  const rawMatches = await getMatchesRows();
   let rawAttendanceVotes: string[][] = [];
   try {
     rawAttendanceVotes = await getSheetData("attendance_vote!A1:E500");

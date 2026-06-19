@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { auth } from "@/auth";
 import { getSheetData } from "../../lib/google-sheets";
+import { getMatchesRows } from "../../lib/matches-backend";
 import {
   buildContexts,
   evaluatePlayer,
@@ -40,7 +41,7 @@ export default async function PlayerPage({
 
   const rawStats: string[][] = await getSheetData("stats!A1:G50");
   const rawRoster: string[][] = await getSheetData("roster!A1:J50");
-  const rawMatches: string[][] = await getSheetData("matches!A1:N50");
+  const rawMatches: string[][] = await getMatchesRows();
   let rawLineups: string[][] = [];
   try { rawLineups = await getSheetData("lineup!A1:T100"); } catch { rawLineups = []; }
   let rawAttendanceVotes: string[][] = [];

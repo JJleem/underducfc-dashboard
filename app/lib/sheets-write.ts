@@ -1,4 +1,14 @@
 // Google Sheets 쓰기 유틸리티 (Service Account JWT 인증)
+//
+// ※ matches 도메인은 underduck 백엔드로 컷오버됨 — 아래 matches 관련 함수는
+//   시그니처를 유지한 채 matches-backend.ts 래퍼에 위임한다(호출부 무변경).
+
+import {
+  createMatch,
+  patchMatch,
+  addMatchPhotos,
+  removeMatchPhoto,
+} from "./matches-backend";
 
 function base64url(str: string): string {
   return Buffer.from(str).toString("base64url");
@@ -97,58 +107,12 @@ export async function writeFeaturedTitles(playerName: string, ids: string[]): Pr
 }
 
 export async function addPhotosToMatch(matchId: number, newUrls: string[]): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 환경변수가 없습니다.");
-
-  const token = await getAccessToken();
-  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
-  const rowNum = matchId + 2;
-
-  const readRes = await fetch(`${base}/values/matches!M${rowNum}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const readData = await readRes.json();
-  const current: string = readData.values?.[0]?.[0] || "";
-  const existing = current ? current.split(",").filter(Boolean) : [];
-
-  const slots = 5 - existing.length;
-  if (slots <= 0) throw new Error("최대 5장까지 업로드 가능합니다.");
-
-  const toAdd = newUrls.slice(0, slots);
-  const newVal = [...existing, ...toAdd].join(",");
-  const range = `matches!M${rowNum}`;
-
-  await fetch(
-    `${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
-    {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ range, values: [[newVal]] }),
-    }
-  );
+  // 백엔드가 중복 무시 + 최대 5장 검증(초과 시 400).
+  await addMatchPhotos(matchId, newUrls);
 }
 
 export async function removePhotoFromMatch(matchId: number, url: string): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-
-  const token = await getAccessToken();
-  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
-  const rowNum = matchId + 2;
-
-  const readRes = await fetch(`${base}/values/matches!M${rowNum}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const readData = await readRes.json();
-  const current: string = readData.values?.[0]?.[0] || "";
-  const remaining = current.split(",").filter((u) => u && u !== url).join(",");
-  const range = `matches!M${rowNum}`;
-
-  await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
-    method: "PUT",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ range, values: [[remaining]] }),
-  });
+  await removeMatchPhoto(matchId, url);
 }
 
 export async function deleteFeedback(
@@ -282,21 +246,7 @@ export async function deleteMomVote(matchId: number, voterName: string, voteType
 }
 
 export async function writeMatchMom(matchId: number, mom: string): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-
-  const token = await getAccessToken();
-  const rowNum = matchId + 2; // 헤더 1행 + 0-index 보정
-  const range = `matches!K${rowNum}`;
-
-  await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
-    {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ range, values: [[mom]] }),
-    }
-  );
+  await patchMatch(matchId, { mom });
 }
 
 export async function updateMatchResult(
@@ -315,53 +265,25 @@ export async function updateMatchResult(
     attendees: string;
   }
 ): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-  const token = await getAccessToken();
-  const row = matchId + 2;
-
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        valueInputOption: "USER_ENTERED",
-        data: [
-          { range: `matches!A${row}`, values: [[data.date]] },
-          { range: `matches!B${row}`, values: [[data.time]] },
-          { range: `matches!C${row}`, values: [[data.location]] },
-          { range: `matches!D${row}`, values: [[data.opponent]] },
-          { range: `matches!E${row}`, values: [[data.ourScore]] },
-          { range: `matches!F${row}`, values: [[data.theirScore]] },
-          { range: `matches!G${row}`, values: [[data.result]] },
-          { range: `matches!H${row}`, values: [[data.type]] },
-          { range: `matches!I${row}`, values: [[data.goals]] },
-          { range: `matches!J${row}`, values: [[data.assists]] },
-          { range: `matches!L${row}`, values: [[data.attendees]] },
-        ],
-      }),
-    }
-  );
-  if (!res.ok) throw new Error("경기 결과 업데이트 실패");
+  // 빈 점수 문자열은 null로 보내 비운다(예정 경기 등).
+  await patchMatch(matchId, {
+    date: data.date,
+    time: data.time,
+    location: data.location,
+    opponent: data.opponent,
+    type: data.type,
+    result: data.result,
+    our_score: data.ourScore === "" ? null : Number(data.ourScore),
+    their_score: data.theirScore === "" ? null : Number(data.theirScore),
+    goals: data.goals,
+    assists: data.assists,
+    attendees: data.attendees,
+  });
 }
 
-// matches!N열에 날씨 기록 (업적/통계용)
-// 형식: "28°C,맑음,01d,10"
+// 날씨 기록 (업적/통계용). 형식: "28°C,맑음,01d,10"
 export async function writeMatchWeather(matchId: number, weatherStr: string): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-  const token = await getAccessToken();
-  const rowNum = matchId + 2;
-  const range = `matches!N${rowNum}`;
-  await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
-    {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ range, values: [[weatherStr]] }),
-    }
-  );
+  await patchMatch(matchId, { weather: weatherStr });
 }
 
 export async function appendRoster(player: {
@@ -392,33 +314,17 @@ export async function appendMatch(match: {
   location: string;
   opponent: string;
   type: string;
-  weather?: string; // N열: "28°C,맑음,01d,10"
+  weather?: string; // "28°C,맑음,01d,10"
 }): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-  const token = await getAccessToken();
-  const headerRange = "matches!O1";
-  const headerRes = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(headerRange)}?valueInputOption=USER_ENTERED`,
-    {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ range: headerRange, values: [["attendanceStatus"]] }),
-    }
-  );
-  if (!headerRes.ok) throw new Error("matches 시트 출석 상태 헤더 쓰기 실패");
-  // A~O열: 경기 정보 + 날씨 + 출석 투표 상태
-  const row = [match.date, match.time, match.location, match.opponent, "", "", "예정", match.type, "", "", "", "", "", match.weather || "", "진행중"];
-  const range = encodeURIComponent("matches!A:O");
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ values: [row] }),
-    }
-  );
-  if (!res.ok) throw new Error("matches 시트 쓰기 실패");
+  // 백엔드가 match_id=max+1, result="예정", attendance_status="진행중" 자동 부여.
+  await createMatch({
+    date: match.date,
+    time: match.time,
+    location: match.location,
+    opponent: match.opponent,
+    type: match.type,
+    weather: match.weather,
+  });
 }
 
 export async function updateNotice(notice: {
@@ -763,21 +669,9 @@ export async function finalizeAttendance(matchId: number): Promise<string> {
 
   const attendeeStr = attendees.join(",");
 
-  // matches!L{row}에 참석자, O열에 마감 상태 기록
-  const rowNum = matchId + 2;
-  const res = await fetch(`${base}/values:batchUpdate`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      valueInputOption: "USER_ENTERED",
-      data: [
-        { range: `matches!L${rowNum}`, values: [[attendeeStr]] },
-        { range: "matches!O1", values: [["attendanceStatus"]] },
-        { range: `matches!O${rowNum}`, values: [["마감"]] },
-      ],
-    }),
-  });
-  if (!res.ok) throw new Error("출석 투표 마감 저장 실패");
+  // 참석자 + 마감 상태를 백엔드 matches에 기록.
+  // ※ 투표(attendance_vote) 읽기는 아직 시트 — attendance 도메인 컷오버 때 백엔드로 이전 예정.
+  await patchMatch(matchId, { attendees: attendeeStr, attendance_status: "마감" });
 
   return attendeeStr;
 }
@@ -786,25 +680,7 @@ export async function setAttendanceStatus(
   matchId: number,
   status: "진행중" | "마감"
 ): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-  const token = await getAccessToken();
-  const rowNum = matchId + 2;
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        valueInputOption: "USER_ENTERED",
-        data: [
-          { range: "matches!O1", values: [["attendanceStatus"]] },
-          { range: `matches!O${rowNum}`, values: [[status]] },
-        ],
-      }),
-    }
-  );
-  if (!res.ok) throw new Error("출석 투표 상태 저장 실패");
+  await patchMatch(matchId, { attendance_status: status });
 }
 
 // ── 투표 댓글 관리 ────────────────────────────────────────────
