@@ -130,12 +130,6 @@ function FaceOnMarker({
         height: 62,
       }}
     >
-      <span
-        className="absolute left-0 top-1 z-10 text-[14px] font-black text-white/70"
-        style={{ textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}
-      >
-        {isGuest ? "G" : no}
-      </span>
       {hasImage ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -466,29 +460,56 @@ export function FormationField({
                             </div>
                           )}
                         </div>
-                        <div
-                          className="mt-1 px-1.5 rounded-md text-[9px] font-black text-white text-center leading-tight overflow-hidden text-ellipsis whitespace-nowrap"
-                          style={{
-                            maxWidth: isSel ? 96 : mode === "faceon" ? 68 : 50,
-                            background: isSel ? "rgba(255,143,163,0.92)" : "rgba(2,6,23,0.72)",
-                            border: "1px solid rgba(255,255,255,0.15)",
-                            textShadow: "0 1px 2px rgba(0,0,0,0.8)",
-                          }}
-                        >
-                          {isSel || mode === "faceon" ? name : name.length > 4 ? name.slice(0, 4) : name}
-                        </div>
+                        {mode === "faceon" ? (
+                          <div className="mt-1 flex items-center justify-center gap-1" style={{ maxWidth: 88 }}>
+                            {!isTbd && (
+                              <span
+                                className="shrink-0 rounded px-1 py-0.5 text-[10px] font-black leading-none text-white"
+                                style={{
+                                  background: color.bg,
+                                  border: `1px solid ${color.border}`,
+                                  textShadow: "0 1px 2px rgba(0,0,0,0.7)",
+                                }}
+                              >
+                                {isGuest ? "G" : jerseyNo}
+                              </span>
+                            )}
+                            <span
+                              className="rounded-md px-1.5 py-0.5 text-[11px] font-black text-white text-center leading-tight truncate"
+                              style={{
+                                background: isSel ? "rgba(255,143,163,0.92)" : "rgba(2,6,23,0.72)",
+                                border: "1px solid rgba(255,255,255,0.15)",
+                                textShadow: "0 1px 2px rgba(0,0,0,0.8)",
+                              }}
+                            >
+                              {name}
+                            </span>
+                          </div>
+                        ) : (
+                          <div
+                            className="mt-1 px-1.5 rounded-md text-[9px] font-black text-white text-center leading-tight overflow-hidden text-ellipsis whitespace-nowrap"
+                            style={{
+                              maxWidth: isSel ? 96 : 50,
+                              background: isSel ? "rgba(255,143,163,0.92)" : "rgba(2,6,23,0.72)",
+                              border: "1px solid rgba(255,255,255,0.15)",
+                              textShadow: "0 1px 2px rgba(0,0,0,0.8)",
+                            }}
+                          >
+                            {isSel ? name : name.length > 4 ? name.slice(0, 4) : name}
+                          </div>
+                        )}
                         {!isTbd && playerTitles?.[name]?.length ? (
                           <div
                             className={
                               mode === "faceon"
-                                ? "absolute right-0 top-[46px] z-20 flex justify-center"
+                                ? "absolute right-0 top-[42px] z-20 flex justify-center"
                                 : "mt-0.5 flex justify-center"
                             }
                           >
                             <TitleBadges
                               titles={playerTitles[name]}
-                              size={mode === "faceon" ? 16 : 13}
-                              max={mode === "faceon" ? 1 : 3}
+                              size={mode === "faceon" ? 19 : 13}
+                              max={mode === "faceon" ? 2 : 3}
                               gap={2}
                             />
                           </div>

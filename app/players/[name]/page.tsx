@@ -139,57 +139,62 @@ export default async function PlayerPage({
           <span className="text-[12px] font-black tracking-widest text-gray-400">PLAYER</span>
         </div>
 
-        {/* 페이스온 히어로 */}
-        <div
-          className="relative mx-4 mt-4 rounded-3xl overflow-hidden ring-1 ring-white/10"
-          style={{
-            background:
-              "linear-gradient(180deg,#0c1430 0%,#0f1a3c 55%,#0a0f24 100%)",
-            boxShadow: "0 16px 44px rgba(5,10,30,0.5)",
-          }}
-        >
+        {/* 페이스온 히어로 (라이트/다크 대응) */}
+        <div className="relative mx-4 mt-4 rounded-3xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-soft bg-gradient-to-b from-white to-gray-100 dark:from-[#0c1430] dark:to-[#0a0f24]">
           {/* 포지션 컬러 글로우 */}
           <div
             className="absolute -top-10 -right-10 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: accent, opacity: 0.22, filter: "blur(46px)" }}
+            style={{ background: accent, opacity: 0.18, filter: "blur(46px)" }}
           />
           {/* 잔디 로고 워터마크 */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.06]">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04] dark:opacity-[0.06]">
             <div className="relative w-40 h-40">
               <Image src="/underducklogo.png" alt="" fill className="object-contain" />
             </div>
           </div>
 
-          <div className="relative px-6 pt-7 pb-6 flex flex-col items-center">
-            {/* 프로필 사진 (없으면 기본 아바타) · 등번호는 코너 배지 */}
+          {/* 좌: 인물(잘리지 않게 크게) · 우: 이름/등번호/포지션 */}
+          <div className="relative flex items-end gap-3 px-5 pt-6 pb-5">
             <PlayerAvatar name={name} no={no} accent={accent} />
 
-            <div className="mt-4 flex items-center gap-2 flex-wrap justify-center">
-              <h1 className="text-2xl font-black tracking-tight text-white">{name}</h1>
-              {isManager && (
-                <span className="text-[10px] font-black px-2 py-0.5 rounded-md text-amber-950"
-                  style={{ background: "linear-gradient(135deg,#FFE9A8,#D4A017)" }}>
-                  감독
-                </span>
-              )}
-              {role && (role === "C" || role === "VC") && (
-                <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-gradient-to-br from-amber-200 to-amber-500 text-amber-950">
-                  {role}
-                </span>
-              )}
+            <div className="flex-1 min-w-0 pb-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-[26px] leading-none font-black tracking-tight text-gray-900 dark:text-white">{name}</h1>
+                {isManager && (
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-md text-amber-950"
+                    style={{ background: "linear-gradient(135deg,#FFE9A8,#D4A017)" }}>
+                    감독
+                  </span>
+                )}
+                {role && (role === "C" || role === "VC") && (
+                  <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-gradient-to-br from-amber-200 to-amber-500 text-amber-950">
+                    {role}
+                  </span>
+                )}
+              </div>
+              <div className="mt-2.5 flex items-center gap-2 flex-wrap">
+                {no && no !== "-" && (
+                  <span
+                    className="text-[13px] font-black px-2 py-0.5 rounded-md text-white"
+                    style={{ background: accent, boxShadow: `0 2px 8px ${accent}55` }}
+                  >
+                    #{no}
+                  </span>
+                )}
+                {pos !== "-" && (
+                  <span
+                    className="text-[10px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full"
+                    style={{ color: accent, background: `${accent}1f`, border: `1px solid ${accent}55` }}
+                  >
+                    {pos}
+                  </span>
+                )}
+              </div>
             </div>
-            {pos !== "-" && (
-              <span
-                className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full"
-                style={{ color: accent, background: `${accent}1f`, border: `1px solid ${accent}55` }}
-              >
-                {pos}
-              </span>
-            )}
           </div>
 
           {/* 스탯 4분할 */}
-          <div className="relative grid grid-cols-4 border-t border-white/10 divide-x divide-white/10">
+          <div className="relative grid grid-cols-4 border-t border-black/5 dark:border-white/10 divide-x divide-black/5 dark:divide-white/10">
             {[
               { label: "출전", value: apps },
               { label: "골", value: goals },
@@ -197,8 +202,8 @@ export default async function PlayerPage({
               { label: "MOM", value: mom },
             ].map((s) => (
               <div key={s.label} className="flex flex-col items-center justify-center py-3.5">
-                <span className="text-xl font-black tabular-nums text-white">{s.value}</span>
-                <span className="text-[9px] font-bold text-white/45 mt-0.5">{s.label}</span>
+                <span className="text-xl font-black tabular-nums text-gray-900 dark:text-white">{s.value}</span>
+                <span className="text-[9px] font-bold text-gray-400 dark:text-white/45 mt-0.5">{s.label}</span>
               </div>
             ))}
           </div>

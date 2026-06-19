@@ -1,6 +1,7 @@
 "use client";
-// 선수 아바타. public/players/ 에 파일이 있으면 그 사진, 없으면 기본 실루엣.
+// 선수 인물 사진(페이스온). public/players/ 에 파일이 있으면 그 사진, 없으면 기본 실루엣.
 // 파일명: 선수명(예: 이재준.jpg) 또는 등번호(예: 7.jpg). jpg/png/webp 지원.
+// 잘리지 않게 object-contain 으로 세로 전신을 보여준다(등번호는 이 컴포넌트 밖, 이름 옆에 표기).
 
 import { useState } from "react";
 import { User } from "lucide-react";
@@ -9,12 +10,12 @@ export default function PlayerAvatar({
   name,
   no,
   accent,
-  size = 104,
+  width = 124,
 }: {
   name: string;
   no: string;
   accent: string;
-  size?: number;
+  width?: number;
 }) {
   const candidates = [
     `/players/${encodeURIComponent(name)}.jpg`,
@@ -26,45 +27,31 @@ export default function PlayerAvatar({
   ];
   const [idx, setIdx] = useState(0);
   const failed = idx >= candidates.length;
+  const height = Math.round(width * 1.3);
 
   return (
-    <div className="relative">
-      <div
-        className="rounded-full overflow-hidden flex items-center justify-center"
-        style={{
-          width: size,
-          height: size,
-          background: `radial-gradient(120% 120% at 30% 20%, ${accent}33, rgba(255,255,255,0.03))`,
-          border: `3px solid ${accent}`,
-          boxShadow: `0 0 30px ${accent}55, inset 0 2px 10px rgba(255,255,255,0.12)`,
-        }}
-      >
-        {!failed ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={candidates[idx]}
-            alt={name}
-            className="w-full h-full object-cover"
-            onError={() => setIdx((i) => i + 1)}
-          />
-        ) : (
-          <User style={{ width: size * 0.5, height: size * 0.5, color: accent }} strokeWidth={1.6} />
-        )}
-      </div>
-      {no && no !== "-" && (
-        <span
-          className="absolute -bottom-1 -right-1 flex items-center justify-center rounded-full font-black text-white text-[13px]"
-          style={{
-            minWidth: 30,
-            height: 30,
-            padding: "0 6px",
-            background: accent,
-            border: "2.5px solid #0c1430",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
-          }}
-        >
-          {no}
-        </span>
+    <div
+      className="relative flex items-end justify-center overflow-hidden rounded-2xl shrink-0"
+      style={{
+        width,
+        height,
+        background: `radial-gradient(110% 80% at 50% 6%, ${accent}2e 0%, transparent 70%)`,
+      }}
+    >
+      {!failed ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={candidates[idx]}
+          alt={name}
+          className="h-full w-full object-contain object-bottom drop-shadow-[0_6px_8px_rgba(0,0,0,0.45)]"
+          onError={() => setIdx((i) => i + 1)}
+        />
+      ) : (
+        <User
+          className="mb-3"
+          style={{ width: width * 0.52, height: width * 0.52, color: accent }}
+          strokeWidth={1.4}
+        />
       )}
     </div>
   );
