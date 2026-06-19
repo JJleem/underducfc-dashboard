@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { Download, Maximize2, Pencil, Share2 } from "lucide-react";
+import { toBlob } from "html-to-image";
 import {
   Dialog,
   DialogContent,
@@ -13,11 +14,41 @@ import {
 import { FormationField, type SeasonStat } from "./FormationField";
 import { TitleBadges } from "./TitleBadges";
 import SubstitutionEvents from "./SubstitutionEvents";
-import { shareFormation } from "../lib/draw-formation";
 import type { EarnedTitle } from "../lib/titles";
 import type { LineupData, MatchData } from "./DashboardClient";
 
 const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
+
+function BenchFaceOn({ name, no }: { name: string; no?: string }) {
+  const candidates = [
+    `/players/${encodeURIComponent(name)}.png`,
+    `/players/${encodeURIComponent(name)}.webp`,
+    `/players/${encodeURIComponent(name)}.jpg`,
+    no ? `/players/${no}.png` : "",
+    no ? `/players/${no}.webp` : "",
+    no ? `/players/${no}.jpg` : "",
+  ].filter(Boolean);
+  const [imageIndex, setImageIndex] = useState(0);
+
+  if (imageIndex >= candidates.length) {
+    return (
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FF8FA3]/20 text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+        {no || "G"}
+      </span>
+    );
+  }
+
+  return (
+    <span className="h-12 w-10 shrink-0 overflow-hidden">
+      <img
+        src={candidates[imageIndex]}
+        alt=""
+        className="h-full w-full object-contain object-bottom"
+        onError={() => setImageIndex((current) => current + 1)}
+      />
+    </span>
+  );
+}
 
 export default function LineupViewer({
   match,
@@ -41,18 +72,62 @@ export default function LineupViewer({
   );
   const [activeQuarter, setActiveQuarter] = useState(sortedQuarters[0] || "");
   const [sharing, setSharing] = useState(false);
+  const captureRef = useRef<HTMLDivElement>(null);
   const lineup = lineups.find((item) => item.quarter === activeQuarter) ?? lineups[0];
 
   const share = async () => {
-    if (!lineup) return;
+    if (!lineup || !captureRef.current) return;
     setSharing(true);
     try {
-      await shareFormation(
-        lineup,
-        rosterMap,
-        `언더덕_${match.opponent}_${activeQuarter}_라인업.png`,
-        `언더덕 vs ${match.opponent} · ${activeQuarter} · ${match.date}`
+      await document.fonts.ready;
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
       );
+
+      const captureNode = captureRef.current;
+      const captureWidth = captureNode.scrollWidth;
+      const captureHeight = captureNode.scrollHeight;
+      const blob = await toBlob(captureNode, {
+        cacheBust: true,
+        pixelRatio: 2,
+        width: captureWidth,
+        height: captureHeight,
+        canvasWidth: captureWidth * 2,
+        canvasHeight: captureHeight * 2,
+        style: {
+          width: `${captureWidth}px`,
+          height: `${captureHeight}px`,
+          overflow: "visible",
+        },
+        backgroundColor: document.documentElement.classList.contains("dark")
+          ? "#070b18"
+          : "#f9fafb",
+        filter: (node) =>
+          !(node instanceof HTMLElement && node.dataset.shareHide === "true"),
+      });
+      if (!blob) throw new Error("이미지 생성 실패");
+
+      const fileName = `언더덕_${match.opponent}_${activeQuarter}_라인업.png`;
+      const file = new File([blob], fileName, { type: "image/png" });
+
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob }),
+        ]);
+      } catch {
+        // 클립보드 미지원 시 공유/다운로드만 진행
+      }
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: "언더덕 라인업" });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = fileName;
+        anchor.click();
+        URL.revokeObjectURL(url);
+      }
     } catch (error) {
       if (error instanceof Error && error.name !== "AbortError") {
         alert(`공유 실패: ${error.message}`);
@@ -92,7 +167,11 @@ export default function LineupViewer({
           쿼터별 포메이션, 선발 선수, 대기 선수와 교체 기록
         </DialogDescription>
 
-        <div className="sticky top-0 z-40 border-b border-gray-200 bg-gray-50/90 px-4 pb-3 pt-4 backdrop-blur-xl dark:border-white/10 dark:bg-[#070b18]/90">
+        <div
+          ref={captureRef}
+          className="min-h-full bg-gray-50 text-gray-900 dark:bg-[#070b18] dark:text-white"
+        >
+        <div className="border-b border-gray-200 bg-gray-50/90 px-4 pb-3 pt-4 dark:border-white/10 dark:bg-[#070b18]/90">
           <p className="pr-12 text-[9px] font-black tracking-[0.18em] text-[#FF8FA3] dark:text-[#FFB6C1]">
             MATCH LINEUP
           </p>
@@ -103,7 +182,7 @@ export default function LineupViewer({
                 {match.date} · {activeQuarter} · {lineup.formation}
               </p>
             </div>
-            <div className="flex shrink-0 gap-1.5">
+            <div data-share-hide="true" className="flex shrink-0 gap-1.5">
               <button
                 type="button"
                 onClick={share}
@@ -160,19 +239,26 @@ export default function LineupViewer({
               <p className="mb-2 text-[9px] font-black tracking-[0.16em] text-gray-400 dark:text-white/35">
                 대기 선수
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {lineup.subs.map((name) => (
                   <Link
                     key={name}
                     href={`/players/${encodeURIComponent(name)}`}
-                    className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-2.5 py-2 dark:border-white/10 dark:bg-white/[0.05]"
+                    className="relative flex min-w-0 items-end gap-2 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 px-2 pb-2 pt-1 dark:border-white/10 dark:bg-white/[0.05]"
                   >
-                    <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-[#FF8FA3]/20 px-1 text-[9px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
-                      {rosterMap[name] || "G"}
+                    <BenchFaceOn name={name} no={rosterMap[name]} />
+                    <span className="min-w-0 flex-1 pb-0.5">
+                      <span className="block truncate text-[10px] font-black text-gray-700 dark:text-white/80">
+                        {name}
+                      </span>
+                      <span className="block text-[8px] font-bold text-gray-400 dark:text-white/35">
+                        No. {rosterMap[name] || "-"}
+                      </span>
                     </span>
-                    <span className="text-[10px] font-black text-gray-700 dark:text-white/80">{name}</span>
                     {playerTitles[name]?.length ? (
-                      <TitleBadges titles={playerTitles[name]} size={15} max={1} gap={0} />
+                      <span className="absolute right-1.5 top-1.5">
+                        <TitleBadges titles={playerTitles[name]} size={12} max={3} gap={1} />
+                      </span>
                     ) : null}
                   </Link>
                 ))}
@@ -188,6 +274,7 @@ export default function LineupViewer({
               <SubstitutionEvents events={lineup.substitutions} />
             </section>
           )}
+        </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -97,17 +97,19 @@ export function TitleBadges({
   size = 26,
   max = 3,
   gap = 4,
+  direction = "row",
 }: {
   titles: EarnedTitle[];
   size?: number;
   max?: number;
   gap?: number;
+  direction?: "row" | "column";
 }) {
   // titles는 이미 표시 순서로 정해진 목록(대표 칭호 우선). 재정렬 없이 자른다.
   const list = titles.slice(0, max);
   if (!list.length) return null;
   return (
-    <span style={{ display: "inline-flex", gap, alignItems: "center" }}>
+    <span style={{ display: "inline-flex", flexDirection: direction, gap, alignItems: "center" }}>
       {list.map((t) => (
         <TitleBadge key={t.id} title={t} size={size} />
       ))}

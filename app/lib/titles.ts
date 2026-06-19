@@ -27,6 +27,7 @@ export interface PlayerContext {
   points: number; // goals + assists
 
   posCounts: Record<PosGroup, number>;
+  posLineupCounts: Record<PosGroup, number>; // 쿼터별 라인업 등장 횟수
   posSlotTotal: number; // GK+DF+MF+FW 출전 슬롯 합 (비율 계산용)
   posGroupsPlayed: number; // DF/MF/FW 중 실제로 뛴 그룹 수
   allFourPositions: boolean;
@@ -53,6 +54,7 @@ export interface PlayerContext {
   ironman: boolean; // 한 경기 전 쿼터 출전 경험
   maxAttendStreak: number; // 최대 연속 출석
   maxAbsenceGap: number; // 최대 연속 결장 (리턴 칭호용)
+  returnedAfterLongAbsence: boolean; // 과거 출전 → 5경기+ 결장 → 실제 복귀
 
   isCaptain: boolean;
   captainGames: number;
@@ -307,9 +309,18 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
 
     // 포지션 집계 (경기별로 그 선수가 뛴 포지션 그룹을 합산)
     const posCounts: Record<PosGroup, number> = { GK: 0, DF: 0, MF: 0, FW: 0 };
+    const posLineupCounts: Record<PosGroup, number> = { GK: 0, DF: 0, MF: 0, FW: 0 };
     matchPlayerPos.forEach((posMap) => {
       const set = posMap.get(name);
       if (set) set.forEach((p) => (posCounts[p] += 1));
+    });
+    lineupRows.forEach((r) => {
+      const formation = r[2] || "";
+      for (let slot = 0; slot < 11; slot++) {
+        if ((r[3 + slot] || "").trim() === name) {
+          posLineupCounts[slotToPos(slot, formation)] += 1;
+        }
+      }
     });
     const posSlotTotal = posCounts.GK + posCounts.DF + posCounts.MF + posCounts.FW;
     const outfieldGroups = (["DF", "MF", "FW"] as PosGroup[]).filter((g) => posCounts[g] > 0);
@@ -333,6 +344,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     const goalsByOpp = new Map<string, number>();
 
     const participatedDates: { date: string; played: boolean }[] = [];
+    const completedParticipation: { date: string; played: boolean }[] = [];
 
     matches.forEach((m) => {
       const g = countInCsv(m.goals, name);
@@ -351,6 +363,9 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       const played = inAttendees || inLineup;
 
       if (m.isReal) participatedDates.push({ date: m.date, played });
+      if (m.isReal && m.result !== "예정") {
+        completedParticipation.push({ date: m.date, played });
+      }
 
       if (played && m.isReal) {
         playedReal += 1;
@@ -400,6 +415,25 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       }
     });
 
+    // 첫 출전 전 공백과 마지막 출전 후 공백은 '복귀'가 아니다.
+    completedParticipation.sort(
+      (x, y) => new Date(x.date).getTime() - new Date(y.date).getTime()
+    );
+    let hasPlayedBefore = false;
+    let absenceAfterPlaying = 0;
+    let returnedAfterLongAbsence = false;
+    completedParticipation.forEach((d) => {
+      if (d.played) {
+        if (hasPlayedBefore && absenceAfterPlaying >= 5) {
+          returnedAfterLongAbsence = true;
+        }
+        hasPlayedBefore = true;
+        absenceAfterPlaying = 0;
+      } else if (hasPlayedBefore) {
+        absenceAfterPlaying += 1;
+      }
+    });
+
     const isCaptain = captainRoles[name] === "C";
     const captainGames = isCaptain ? playedReal : 0;
 
@@ -416,6 +450,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       mom,
       points: goals + assists,
       posCounts,
+      posLineupCounts,
       posSlotTotal,
       posGroupsPlayed: outfieldGroups.length,
       allFourPositions,
@@ -436,6 +471,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       ironman,
       maxAttendStreak,
       maxAbsenceGap,
+      returnedAfterLongAbsence,
       isCaptain,
       captainGames,
       votesCast,
@@ -489,7 +525,7 @@ export const TITLES: TitleDef[] = [
   { id: "ironman_q", name: "아이언맨", icon: "battery-full", category: "근성 · 출석", state: "live", flat: true, desc: "한 경기 전 쿼터 출전", check: (c) => c.ironman },
   { id: "captain", name: "캡틴", icon: "badge-check", category: "근성 · 출석", state: "live", desc: "주장으로 출전", tiers: [5, 15, 30], unit: "경기", gate: (c) => c.isCaptain, value: (c) => c.captainGames },
   { id: "rookie", name: "새내기", icon: "sprout", category: "근성 · 출석", state: "live", flat: true, desc: "통산 출전 3경기 미만", check: (c) => c.apps > 0 && c.apps < 3 },
-  { id: "return", name: "리턴 오브 더 킹", icon: "rotate-ccw", category: "근성 · 출석", state: "future", flat: true, desc: "장기 결장 후 복귀(공백 5경기+)", check: (c) => c.maxAbsenceGap >= 5 && c.maxAttendStreak >= 1 },
+  { id: "return", name: "리턴 오브 더 킹", icon: "rotate-ccw", category: "근성 · 출석", state: "future", flat: true, desc: "기존 출전자가 5경기 이상 결장 후 복귀", check: (c) => c.returnedAfterLongAbsence },
 
   // ── 날씨 · 환경
   { id: "rain_scorer", name: "수중전 골잡이", icon: "cloud-rain", category: "날씨 · 환경", state: "future", flagship: true, flat: true, desc: "비 오는 날 득점", check: (c) => c.goalsInRain >= 1 },

@@ -73,7 +73,7 @@ export default async function PlayerPage({
   // 로스터 정보 (등번호 / 포지션 / 주장)
   const rosterRow = rawRoster.slice(1).find((r) => (r[1] || "").trim() === name);
   const no = rosterRow?.[0]?.trim() || "-";
-  const pos = rosterRow?.[2]?.trim() || "-";
+  const registeredPos = rosterRow?.[2]?.trim().toUpperCase() || "-";
   const role = rosterRow?.[5]?.trim().toUpperCase();
 
   // 스탯
@@ -92,6 +92,13 @@ export default async function PlayerPage({
   });
   const leaders = evaluateLeaders(contexts);
   const ctx = contexts.get(name);
+  const earnedPositions = ctx
+    ? (["GK", "DF", "MF", "FW"] as const).filter((position) => ctx.posLineupCounts[position] >= 10)
+    : [];
+  const displayPositions = Array.from(new Set([
+    ...(registeredPos !== "-" ? [registeredPos] : []),
+    ...earnedPositions,
+  ]));
   const titles: EarnedTitle[] = [
     ...(isManager ? [managerTitle()] : []),
     ...(leaders.get(name) ?? []),
@@ -126,7 +133,7 @@ export default async function PlayerPage({
     .slice(-6)
     .reverse();
 
-  const accent = posColor(pos);
+  const accent = posColor(displayPositions[0] || registeredPos);
 
   return (
     <main className="min-h-dvh bg-gray-50 dark:bg-[#0a0a0c] text-gray-900 dark:text-white">
@@ -181,14 +188,22 @@ export default async function PlayerPage({
                     #{no}
                   </span>
                 )}
-                {pos !== "-" && (
-                  <span
-                    className="text-[10px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full"
-                    style={{ color: accent, background: `${accent}1f`, border: `1px solid ${accent}55` }}
-                  >
-                    {pos}
-                  </span>
-                )}
+                {displayPositions.map((position) => {
+                  const color = posColor(position);
+                  return (
+                    <span
+                      key={position}
+                      className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
+                      style={{
+                        color,
+                        background: `${color}1f`,
+                        border: `1px solid ${color}55`,
+                      }}
+                    >
+                      {position}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           </div>

@@ -864,6 +864,14 @@ export default function DashboardClient({
           UNDERDUCK
         </span>
         <div className="flex items-center gap-2">
+          <Link
+            href="/titles"
+            aria-label="칭호 도감"
+            title="칭호 도감"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3]/10 text-[#FF8FA3] transition-colors hover:bg-[#FF8FA3]/20 dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
+          >
+            <Trophy className="h-4 w-4" />
+          </Link>
           {currentUser ? (
             <DropdownMenu open={accountMenuOpen} onOpenChange={setAccountMenuOpen}>
               <DropdownMenuTrigger asChild>
@@ -951,26 +959,28 @@ export default function DashboardClient({
         {/* 팀 인트로 */}
         <div className="animate-rise relative mb-5 overflow-hidden rounded-[24px] border border-gray-200/70 bg-white px-4 py-4 shadow-sm dark:border-white/[0.07] dark:bg-[#141416]">
           <div className="pointer-events-none absolute -left-8 -top-10 h-28 w-28 rounded-full bg-[#FF8FA3]/15 blur-3xl dark:bg-[#FFB6C1]/10" />
-          <div className="relative flex items-center gap-3.5">
-          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[20px] bg-white shadow-md ring-1 ring-gray-200 dark:bg-[#161618] dark:ring-white/10">
+          <div className="relative flex items-center gap-3 pr-10 min-[380px]:gap-3.5">
+          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-[18px] bg-white shadow-md ring-1 ring-gray-200 dark:bg-[#161618] dark:ring-white/10 min-[380px]:h-16 min-[380px]:w-16 min-[380px]:rounded-[20px]">
             <Image src="/underducklogo.png" alt="Underduck Logo" fill priority className="object-cover" />
+            <Badge className="absolute bottom-1 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap border-none bg-gray-950/75 px-1.5 py-0 text-[6px] font-black text-white backdrop-blur-sm">
+              EST 2025
+            </Badge>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-[23px] font-black leading-none tracking-tight text-gray-900 dark:text-white">UNDERDUCK FC</h1>
-              <Badge className="border-none bg-[#FF8FA3]/10 px-1.5 text-[8px] font-black text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]">
-                EST 2025
-              </Badge>
-            </div>
-            <p className="mt-1.5 text-[10px] font-semibold tracking-[0.08em] text-gray-400">
+            <h1 className="whitespace-nowrap text-[20px] font-black leading-none tracking-[-0.04em] text-gray-900 dark:text-white min-[380px]:text-[23px]">
+              UNDERDUCK FC
+            </h1>
+            <p className="mt-1.5 whitespace-nowrap text-[8px] font-bold tracking-[0.04em] text-gray-400 min-[380px]:text-[9px] min-[380px]:tracking-[0.08em]">
               NOT BECAUSE OF, BUT THANKS TO
             </p>
-            <p className="mt-1 text-[10.5px] font-semibold leading-relaxed text-gray-500 dark:text-gray-400">
-              언더덕 FC는 &apos;때문에&apos;란 말보다 &quot;<span className="font-black text-[#FF8FA3] dark:text-[#FFB6C1]">덕분에</span>&quot;란 말을 추구하며,
-              서로를 존중하는 축구 동호회입니다.
+            <p className="mt-1.5 text-[10px] font-semibold leading-[1.55] text-gray-500 dark:text-gray-400 min-[380px]:text-[10.5px]">
+              <span className="block">언더덕 FC는 &apos;때문에&apos;란 말보다</span>
+              <span className="block">
+                &quot;<span className="font-black text-[#FF8FA3] dark:text-[#FFB6C1]">덕분에</span>&quot;란 말을 추구하며, 서로를 존중합니다.
+              </span>
             </p>
           </div>
-          <div className="flex flex-col gap-1.5">
+          <div className="absolute right-0 top-1/2 flex -translate-y-1/2 flex-col gap-1.5">
             <Link href="/roster" aria-label="로스터" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white shadow-sm dark:bg-white/10 dark:text-[#FFB6C1]">
               <Menu className="h-4 w-4" />
             </Link>
@@ -2179,9 +2189,19 @@ export default function DashboardClient({
                           {/* 접힌 상태: 첫 댓글 미리보기 */}
                           {!isOpen && firstFb && (
                             <div className="flex items-center gap-2 mt-2 px-1">
-                              <FeedbackAvatar name={firstFb.name} />
+                              <Link
+                                href={`/players/${encodeURIComponent(firstFb.name.trim())}`}
+                                aria-label={`${firstFb.name} 프로필 보기`}
+                              >
+                                <FeedbackAvatar name={firstFb.name} />
+                              </Link>
                               <p className="flex-1 min-w-0 text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                                <span className="font-black text-gray-700 dark:text-gray-300 mr-1.5">{firstFb.name}</span>
+                                <Link
+                                  href={`/players/${encodeURIComponent(firstFb.name.trim())}`}
+                                  className="mr-1.5 font-black text-gray-700 hover:text-[#FF8FA3] dark:text-gray-300 dark:hover:text-[#FFB6C1]"
+                                >
+                                  {firstFb.name}
+                                </Link>
                                 {firstFb.message}
                               </p>
                             </div>
@@ -2195,10 +2215,21 @@ export default function DashboardClient({
                               )}
                               {feedbacks.map((fb, i) => (
                                 <div key={i} className="flex gap-2 group">
-                                  <FeedbackAvatar name={fb.name} />
+                                  <Link
+                                    href={`/players/${encodeURIComponent(fb.name.trim())}`}
+                                    aria-label={`${fb.name} 프로필 보기`}
+                                    className="shrink-0"
+                                  >
+                                    <FeedbackAvatar name={fb.name} />
+                                  </Link>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5 mb-0.5">
-                                      <span className="text-[10px] font-black text-gray-800 dark:text-gray-200">{fb.name}</span>
+                                      <Link
+                                        href={`/players/${encodeURIComponent(fb.name.trim())}`}
+                                        className="text-[10px] font-black text-gray-800 hover:text-[#FF8FA3] dark:text-gray-200 dark:hover:text-[#FFB6C1]"
+                                      >
+                                        {fb.name}
+                                      </Link>
                                       <span className="text-[9px] text-gray-400">{formatFeedbackTime(fb.timestamp)}</span>
                                       {(isAdmin || (currentUser && fb.name === currentUser.name)) && (
                                         <button

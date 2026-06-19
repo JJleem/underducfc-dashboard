@@ -11,6 +11,9 @@ type KakaoProfile = {
   };
 };
 
+const normalizeMemberName = (name?: string | null) =>
+  name?.trim() === "준수" ? "김준수" : name?.trim() ?? "";
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [Kakao],
   session: {
@@ -26,14 +29,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const kakao = profile as KakaoProfile;
         token.kakaoId = String(kakao.id ?? "");
         const p = kakao.kakao_account?.profile;
-        if (p?.nickname) token.name = p.nickname;
+        if (p?.nickname) token.name = normalizeMemberName(p.nickname);
         if (p?.profile_image_url) token.picture = p.profile_image_url;
       }
+      token.name = normalizeMemberName(token.name);
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as { kakaoId?: string }).kakaoId = token.kakaoId as string;
+        session.user.name = normalizeMemberName(token.name);
       }
       return session;
     },
@@ -48,7 +53,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const p = kakao.kakao_account?.profile;
           await upsertUser({
             kakaoId: String(kakao.id),
-            nickname: p?.nickname ?? "",
+            nickname: normalizeMemberName(p?.nickname),
             profileImage: p?.profile_image_url ?? "",
           });
         }

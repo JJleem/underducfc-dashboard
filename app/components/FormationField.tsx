@@ -502,15 +502,16 @@ export function FormationField({
                           <div
                             className={
                               mode === "faceon"
-                                ? "absolute right-0 top-[42px] z-20 flex justify-center"
+                                ? "absolute left-[-5px] top-[15px] z-20 flex justify-center"
                                 : "mt-0.5 flex justify-center"
                             }
                           >
                             <TitleBadges
                               titles={playerTitles[name]}
-                              size={mode === "faceon" ? 19 : 13}
-                              max={mode === "faceon" ? 2 : 3}
-                              gap={2}
+                              size={mode === "faceon" ? 13 : 13}
+                              max={3}
+                              gap={mode === "faceon" ? 1 : 2}
+                              direction={mode === "faceon" ? "column" : "row"}
                             />
                           </div>
                         ) : null}
