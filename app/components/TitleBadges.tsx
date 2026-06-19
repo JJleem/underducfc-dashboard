@@ -23,17 +23,50 @@ const TIER_VIS: Record<TierIndex, TierVis> = {
 // 달성형(등급 없음) — 쿨 플래티넘
 const FLAT_VIS: TierVis = { grad: ["#CBD5E1", "#5B6B86"], glow: null, icon: "#CBD5E1" };
 
+// 리더(팀 1위) — 빛나는 골드 왕관
+const LEADER_VIS: TierVis = { grad: ["#FFE7A0", "#E0A100"], glow: "rgba(255,200,60,0.65)", icon: "#FFD45A" };
+
 function visOf(t: EarnedTitle): TierVis {
+  if (t.variant === "leader") return LEADER_VIS;
   return t.tier === null ? FLAT_VIS : TIER_VIS[t.tier];
 }
 
 export function TitleBadge({ title, size = 26 }: { title: EarnedTitle; size?: number }) {
-  const vis = visOf(title);
   const label = title.tierLabel ? `${title.name} · ${title.tierLabel}` : title.name;
   const icon = createElement(titleIcon(title.icon), {
     size: Math.round(size * 0.54),
     strokeWidth: 2.4,
   });
+
+  // 감독 전용: 회전하는 메탈 골드 콘릭 링 + 로열 다크 코어 (아예 다른 스타일)
+  if (title.variant === "manager") {
+    const mSize = Math.round(size * 1.12);
+    return (
+      <span
+        title="감독"
+        aria-label="감독"
+        style={{
+          width: mSize,
+          height: mSize,
+          borderRadius: "30%",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          border: "2.5px solid transparent",
+          background:
+            "radial-gradient(120% 120% at 30% 20%, #241a3d 0%, #0a0a16 100%) padding-box, " +
+            "conic-gradient(from 210deg, #FFE9A8, #B8860B, #FFD45A, #8a6508, #FFE9A8) border-box",
+          boxShadow: "0 0 12px rgba(255,196,70,0.55), inset 0 0 6px rgba(255,220,140,0.25), 0 2px 6px rgba(0,0,0,0.5)",
+          color: "#FFD978",
+          flex: "0 0 auto",
+        }}
+      >
+        {icon}
+      </span>
+    );
+  }
+
+  const vis = visOf(title);
   return (
     <span
       title={label}

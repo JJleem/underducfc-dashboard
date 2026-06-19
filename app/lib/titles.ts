@@ -73,7 +73,9 @@ export type TitleCategory =
   | "날씨 · 환경"
   | "맞대결 · 승부"
   | "대시보드 활동"
-  | "언성히어로 · 반전";
+  | "언성히어로 · 반전"
+  | "리더"
+  | "특별";
 
 export type TitleState = "live" | "future";
 
@@ -104,6 +106,8 @@ export interface EarnedTitle {
   flagship: boolean;
   tier: TierIndex | null; // null = 달성형(등급 없음)
   tierLabel: string | null;
+  /** 특수 뱃지 스타일: leader=팀 1위 왕관, manager=감독 전용 */
+  variant?: "leader" | "manager";
 }
 
 // ───────────────────────── 유틸 ─────────────────────────
@@ -546,9 +550,59 @@ export function evaluatePlayer(c: PlayerContext, defs: TitleDef[] = TITLES): Ear
   return out;
 }
 
-/** 라인업/로스터용: 최고등급 + 대표 우선으로 상위 N개 */
+// ───────────────────────── 리더(최다 1위) 칭호 ─────────────────────────
+// 임계값이 아니라 "팀 내 1위"에게만 주는 왕관형. 동률이면 공동 수여.
+
+export interface LeaderDef {
+  id: string;
+  name: string;
+  icon: string;
+  desc: string;
+  value: (c: PlayerContext) => number;
+  min: number; // 이 값 미만이면 아무에게도 안 줌 (예: 0골 1위는 무의미)
+}
+
+export const LEADER_TITLES: LeaderDef[] = [
+  { id: "lead_apps", name: "최다 출전", icon: "medal", desc: "팀 내 최다 출전", value: (c) => c.apps, min: 1 },
+  { id: "lead_goals", name: "득점왕", icon: "crown", desc: "팀 내 최다 득점", value: (c) => c.goals, min: 1 },
+  { id: "lead_assists", name: "도움왕", icon: "award", desc: "팀 내 최다 도움", value: (c) => c.assists, min: 1 },
+  { id: "lead_points", name: "공격포인트왕", icon: "trophy", desc: "팀 내 최다 공격포인트", value: (c) => c.points, min: 1 },
+  { id: "lead_cleansheet", name: "클린시트왕", icon: "shield-check", desc: "팀 내 최다 클린시트", value: (c) => c.cleanSheetsAsGK, min: 1 },
+];
+
+/** 전체 선수를 비교해 각 부문 1위(동률 공동)에게 리더 칭호 수여 → 선수명별 목록 */
+export function evaluateLeaders(contexts: Map<string, PlayerContext>): Map<string, EarnedTitle[]> {
+  const result = new Map<string, EarnedTitle[]>();
+  const list = Array.from(contexts.values());
+  for (const def of LEADER_TITLES) {
+    let max = 0;
+    for (const c of list) max = Math.max(max, def.value(c));
+    if (max < def.min) continue;
+    for (const c of list) {
+      if (def.value(c) !== max) continue;
+      const arr = result.get(c.name) ?? [];
+      arr.push({ id: def.id, name: def.name, icon: def.icon, category: "리더", flagship: true, tier: null, tierLabel: null, variant: "leader" });
+      result.set(c.name, arr);
+    }
+  }
+  return result;
+}
+
+// ───────────────────────── 감독(특별) 칭호 ─────────────────────────
+
+export const MANAGER_NAME = "금상덕";
+
+export function managerTitle(): EarnedTitle {
+  return { id: "manager", name: "감독", icon: "clipboard-list", category: "특별", flagship: true, tier: null, tierLabel: null, variant: "manager" };
+}
+
+// ───────────────────────── 정렬(상위 N) ─────────────────────────
+
+/** 라인업/로스터용: 감독 > 리더 > 고등급 > 대표 우선으로 상위 N개 */
 export function topTitles(earned: EarnedTitle[], n = 3): EarnedTitle[] {
   const rank = (t: EarnedTitle) => {
+    if (t.variant === "manager") return 1000;
+    if (t.variant === "leader") return 500 + (t.flagship ? 1 : 0);
     // 달성형은 중간 등급(2)로 취급, 등급형은 tier 그대로
     const tierScore = t.tier ?? 2;
     return tierScore * 10 + (t.flagship ? 1 : 0);
