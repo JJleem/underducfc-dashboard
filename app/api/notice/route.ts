@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateNotice } from "@/app/lib/sheets-write";
 import { sendPushToAll } from "@/app/lib/send-push";
+import { requireAdmin } from "@/app/lib/admin";
 
 export async function PUT(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { date, title, content, important, location } = body;

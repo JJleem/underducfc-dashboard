@@ -1,106 +1,30 @@
-// Google Sheets 쓰기 유틸리티 (Service Account JWT 인증)
+// 쓰기 유틸리티 — 전부 underduck 백엔드로 위임.
+//
+// ※ 파일명은 호환을 위해 유지(예전 Google Sheets 쓰기 모듈). 내부는 백엔드 호출만 한다.
+//   함수 시그니처는 그대로라 API 라우트/호출부는 변경 불필요.
+// ⚠️ 서버사이드 전용([[underduck.ts]] window 가드).
 
-function base64url(str: string): string {
-  return Buffer.from(str).toString("base64url");
+import { udGet, udPost, udPut, udDelete } from "./underduck";
+import { createMatch, patchMatch, addMatchPhotos, removeMatchPhoto } from "./matches-backend";
+
+const s = (v: unknown): string => (v === null || v === undefined ? "" : String(v));
+
+// ── 대표 칭호 (featured) ──
+export async function writeFeaturedTitles(playerName: string, ids: string[]): Promise<void> {
+  await udPut("/api/underduck/featured", { player_name: playerName.trim(), title_ids: ids });
 }
 
-async function getAccessToken(
-  scope = "https://www.googleapis.com/auth/spreadsheets"
-): Promise<string> {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
-
-  if (!email || !rawKey) {
-    throw new Error("SERVICE_ACCOUNT 환경변수가 설정되지 않았습니다.");
-  }
-
-  const privateKey = rawKey.replace(/\\n/g, "\n");
-  const now = Math.floor(Date.now() / 1000);
-
-  const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const payload = base64url(
-    JSON.stringify({
-      iss: email,
-      scope,
-      aud: "https://oauth2.googleapis.com/token",
-      exp: now + 3600,
-      iat: now,
-    })
-  );
-
-  const { createSign } = await import("node:crypto");
-  const sign = createSign("RSA-SHA256");
-  sign.update(`${header}.${payload}`);
-  const signature = sign.sign(privateKey, "base64url");
-
-  const jwt = `${header}.${payload}.${signature}`;
-
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
-  });
-
-  if (!res.ok) throw new Error("Access token 발급 실패");
-  const data = await res.json();
-  return data.access_token as string;
-}
-
-
+// ── 경기 사진 (matches 도메인) ──
 export async function addPhotosToMatch(matchId: number, newUrls: string[]): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 환경변수가 없습니다.");
-
-  const token = await getAccessToken();
-  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
-  const rowNum = matchId + 2;
-
-  const readRes = await fetch(`${base}/values/matches!M${rowNum}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const readData = await readRes.json();
-  const current: string = readData.values?.[0]?.[0] || "";
-  const existing = current ? current.split(",").filter(Boolean) : [];
-
-  const slots = 5 - existing.length;
-  if (slots <= 0) throw new Error("최대 5장까지 업로드 가능합니다.");
-
-  const toAdd = newUrls.slice(0, slots);
-  const newVal = [...existing, ...toAdd].join(",");
-  const range = `matches!M${rowNum}`;
-
-  await fetch(
-    `${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
-    {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ range, values: [[newVal]] }),
-    }
-  );
+  await addMatchPhotos(matchId, newUrls);
 }
 
 export async function removePhotoFromMatch(matchId: number, url: string): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-
-  const token = await getAccessToken();
-  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
-  const rowNum = matchId + 2;
-
-  const readRes = await fetch(`${base}/values/matches!M${rowNum}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const readData = await readRes.json();
-  const current: string = readData.values?.[0]?.[0] || "";
-  const remaining = current.split(",").filter((u) => u && u !== url).join(",");
-  const range = `matches!M${rowNum}`;
-
-  await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
-    method: "PUT",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ range, values: [[remaining]] }),
-  });
+  await removeMatchPhoto(matchId, url);
 }
+
+// ── feedback ──
+interface FeedbackRow { id: number; match_id: number | null; timestamp: string | null; name: string | null; message: string | null; }
 
 export async function deleteFeedback(
   matchId: number,
@@ -108,36 +32,10 @@ export async function deleteFeedback(
   name: string,
   message: string
 ): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-
-  const token = await getAccessToken();
-  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
-
-  const readRes = await fetch(`${base}/values/feedback!A1:D500`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const readData = await readRes.json();
-  const rows: string[][] = readData.values || [];
-
-  let deleted = false;
-  const newRows = rows.filter((row, i) => {
-    if (i === 0) return true;
-    if (!deleted && String(row[0]) === String(matchId) && row[1] === timestamp && row[2] === name && row[3] === message) {
-      deleted = true;
-      return false;
-    }
-    return true;
-  });
-
-  while (newRows.length < rows.length) newRows.push(["", "", "", ""]);
-
-  const range = `feedback!A1:D${Math.max(newRows.length, rows.length)}`;
-  await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
-    method: "PUT",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ range, values: newRows }),
-  });
+  // 백엔드는 id로 삭제 → (matchId, timestamp, name, message)로 행을 찾아 id 확보.
+  const list = await udGet<FeedbackRow[]>(`/api/underduck/feedback?match_id=${matchId}`);
+  const hit = list.find((f) => s(f.timestamp) === timestamp && s(f.name) === name && s(f.message) === message);
+  if (hit) await udDelete(`/api/underduck/feedback/${hit.id}`);
 }
 
 export async function appendFeedback({
@@ -149,28 +47,10 @@ export async function appendFeedback({
   name: string;
   message: string;
 }) {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 환경변수가 없습니다.");
-
-  const token = await getAccessToken();
-  const timestamp = new Date().toISOString();
-  const row = [String(matchId), timestamp, name.trim(), message.trim()];
-
-  const range = encodeURIComponent("feedback!A:D");
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ values: [row] }),
-    }
-  );
-  if (!res.ok) throw new Error("feedback 시트 쓰기 실패");
+  await udPost("/api/underduck/feedback", { match_id: matchId, name, message });
 }
 
+// ── mom_vote ──
 export async function appendMomVote({
   matchId,
   voterName,
@@ -182,72 +62,26 @@ export async function appendMomVote({
   votedFor: string;
   voteType: string;
 }) {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 환경변수가 없습니다.");
-
-  const token = await getAccessToken();
-  const timestamp = new Date().toISOString();
-  const row = [String(matchId), voterName.trim(), votedFor.trim(), voteType.trim(), timestamp];
-
-  const range = encodeURIComponent("mom_vote!A:E");
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ values: [row] }),
-    }
-  );
-  if (!res.ok) throw new Error("mom_vote 시트 쓰기 실패");
+  await udPost("/api/underduck/mom-vote", {
+    match_id: matchId,
+    voter_name: voterName,
+    voted_for: votedFor,
+    vote_type: voteType,
+  });
 }
 
 export async function deleteMomVote(matchId: number, voterName: string, voteType?: string) {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-
-  const token = await getAccessToken();
-  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
-
-  const readRes = await fetch(`${base}/values/mom_vote!A1:E500`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const readData = await readRes.json();
-  const rows: string[][] = readData.values || [];
-
-  const newRows = rows.filter((row, i) => {
-    if (i === 0) return true;
-    const matchesId = String(row[0]) === String(matchId);
-    const matchesVoter = row[1] === voterName;
-    const matchesType = voteType ? row[3] === voteType : true;
-    return !(matchesId && matchesVoter && matchesType);
-  });
-
-  while (newRows.length < rows.length) newRows.push(["", "", "", "", ""]);
-
-  const range = `mom_vote!A1:E${Math.max(newRows.length, rows.length)}`;
-  await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
-    method: "PUT",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ range, values: newRows }),
-  });
+  const body: { match_id: number; voter_name: string; vote_type?: string } = {
+    match_id: matchId,
+    voter_name: voterName,
+  };
+  if (voteType) body.vote_type = voteType;
+  await udDelete("/api/underduck/mom-vote", body);
 }
 
+// ── matches (점수/MOM/날씨/출석상태) ──
 export async function writeMatchMom(matchId: number, mom: string): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-
-  const token = await getAccessToken();
-  const rowNum = matchId + 2; // 헤더 1행 + 0-index 보정
-  const range = `matches!K${rowNum}`;
-
-  await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
-    {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ range, values: [[mom]] }),
-    }
-  );
+  await patchMatch(matchId, { mom });
 }
 
 export async function updateMatchResult(
@@ -266,82 +100,63 @@ export async function updateMatchResult(
     attendees: string;
   }
 ): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-  const token = await getAccessToken();
-  const row = matchId + 2;
-
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        valueInputOption: "USER_ENTERED",
-        data: [
-          { range: `matches!A${row}`, values: [[data.date]] },
-          { range: `matches!B${row}`, values: [[data.time]] },
-          { range: `matches!C${row}`, values: [[data.location]] },
-          { range: `matches!D${row}`, values: [[data.opponent]] },
-          { range: `matches!E${row}`, values: [[data.ourScore]] },
-          { range: `matches!F${row}`, values: [[data.theirScore]] },
-          { range: `matches!G${row}`, values: [[data.result]] },
-          { range: `matches!H${row}`, values: [[data.type]] },
-          { range: `matches!I${row}`, values: [[data.goals]] },
-          { range: `matches!J${row}`, values: [[data.assists]] },
-          { range: `matches!L${row}`, values: [[data.attendees]] },
-        ],
-      }),
-    }
-  );
-  if (!res.ok) throw new Error("경기 결과 업데이트 실패");
+  // 빈 점수 문자열은 null로 보내 비운다(예정 경기 등).
+  await patchMatch(matchId, {
+    date: data.date,
+    time: data.time,
+    location: data.location,
+    opponent: data.opponent,
+    type: data.type,
+    result: data.result,
+    our_score: data.ourScore === "" ? null : Number(data.ourScore),
+    their_score: data.theirScore === "" ? null : Number(data.theirScore),
+    goals: data.goals,
+    assists: data.assists,
+    attendees: data.attendees,
+  });
 }
 
+// 날씨 기록 (업적/통계용). 형식: "28°C,맑음,01d,10"
+export async function writeMatchWeather(matchId: number, weatherStr: string): Promise<void> {
+  await patchMatch(matchId, { weather: weatherStr });
+}
+
+// ── roster ──
 export async function appendRoster(player: {
   no: string;
   name: string;
   pos: string;
   status: string;
 }): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-  const token = await getAccessToken();
-  const row = [player.no, player.name, player.pos, player.status, "", ""];
-  const range = encodeURIComponent("roster!A:F");
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ values: [row] }),
-    }
-  );
-  if (!res.ok) throw new Error("roster 시트 쓰기 실패");
+  await udPost("/api/underduck/roster", {
+    no: player.no,
+    name: player.name,
+    pos: player.pos,
+    status: player.status,
+  });
 }
 
+// ── matches 생성 ──
 export async function appendMatch(match: {
   date: string;
   time: string;
   location: string;
   opponent: string;
   type: string;
+  weather?: string; // "28°C,맑음,01d,10"
 }): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-  const token = await getAccessToken();
-  const row = [match.date, match.time, match.location, match.opponent, "", "", "예정", match.type, "", "", "", "", ""];
-  const range = encodeURIComponent("matches!A:M");
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ values: [row] }),
-    }
-  );
-  if (!res.ok) throw new Error("matches 시트 쓰기 실패");
+  // 백엔드가 match_id=max+1, result="예정", attendance_status="진행중" 자동 부여.
+  await createMatch({
+    date: match.date,
+    time: match.time,
+    location: match.location,
+    opponent: match.opponent,
+    type: match.type,
+    weather: match.weather,
+  });
 }
 
+// ── notice ── (활성 공지 1건)
 export async function updateNotice(notice: {
   date: string;
   title: string;
@@ -349,221 +164,165 @@ export async function updateNotice(notice: {
   important: boolean;
   location?: string;
 }): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-  const token = await getAccessToken();
-  const range = "notice!A2:E2";
-  const values = [[notice.date, notice.title, notice.content, notice.important ? "Y" : "N", notice.location || ""]];
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
-    {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ range, values }),
-    }
-  );
-  if (!res.ok) throw new Error("notice 시트 쓰기 실패");
+  await udPut("/api/underduck/notice", {
+    date: notice.date,
+    title: notice.title,
+    content: notice.content,
+    important: notice.important,
+    location: notice.location || "",
+  });
 }
+
+// ── media ──
+interface MediaRow { id: number; url: string | null; }
 
 export async function appendMedia(item: {
   type: string;
   url: string;
   title: string;
 }): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-  const token = await getAccessToken();
-  const row = [item.type, item.url, item.title, new Date().toISOString()];
-  const range = encodeURIComponent("media!A:D");
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ values: [row] }),
-    }
-  );
-  if (!res.ok) throw new Error("media 시트 쓰기 실패");
+  await udPost("/api/underduck/media", { type: item.type, url: item.url, title: item.title });
 }
 
 export async function deleteMediaByUrl(url: string): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-  const token = await getAccessToken();
-  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
-
-  const readRes = await fetch(`${base}/values/media!A1:D100`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const readData = await readRes.json();
-  const rows: string[][] = readData.values || [];
-
-  const newRows = rows.filter((row, i) => i === 0 || row[1] !== url);
-  while (newRows.length < rows.length) newRows.push(["", "", "", ""]);
-
-  const range = `media!A1:D${Math.max(newRows.length, rows.length)}`;
-  await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
-    method: "PUT",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ range, values: newRows }),
-  });
+  const list = await udGet<MediaRow[]>("/api/underduck/media");
+  const hit = list.find((m) => s(m.url) === url);
+  if (hit) await udDelete(`/api/underduck/media/${hit.id}`);
 }
 
+// ── lineup ── (match_id+quarter upsert, 빈값이면 백엔드가 삭제)
 export async function writeLineup({
   matchId,
   quarter,
   formation,
   players,
   subs,
+  substitutions,
 }: {
   matchId: number;
   quarter: string;
   formation: string;
   players: string[];
   subs: string[];
+  substitutions: { out: string; in: string; time?: string }[];
 }) {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 환경변수가 없습니다.");
-
-  const token = await getAccessToken();
-  const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
-
-  // 기존 데이터 읽기
-  const readRes = await fetch(`${base}/values/lineup!A1:S100`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!readRes.ok) throw new Error("lineup 시트 읽기 실패");
-  const readData = await readRes.json();
-  const rows: string[][] = readData.values || [];
-
-  // 헤더 보존 (없으면 기본값)
-  const header = rows.length > 0
-    ? rows[0]
-    : ["matchId", "quarter", "formation", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10", "p11", "sub1", "sub2", "sub3", "sub4", "sub5"];
-
-  // 19칸 고정 (match_id, quarter, formation, p1~p11, sub1~sub5)
+  // 슬롯 위치 보존: p1~p11 / sub1~sub5 고정 길이(빈 슬롯은 "")
   const playerCells = [...players, ...Array(Math.max(0, 11 - players.length)).fill("")].slice(0, 11);
   const subCells = [...subs, ...Array(Math.max(0, 5 - subs.length)).fill("")].slice(0, 5);
-  const newRow = [String(matchId), quarter, formation, ...playerCells, ...subCells];
+  const cleanSubstitutions = substitutions
+    .map((event) => ({
+      out: String(event.out || "").trim(),
+      in: String(event.in || "").trim(),
+      time: String(event.time || "").trim(),
+    }))
+    .filter((event) => event.out || event.in);
 
-  // 플레이어/교체 모두 비어있으면 해당 행 삭제, 아니면 업데이트/추가
-  const isEmpty = playerCells.every(p => !p) && subCells.every(s => !s);
-
-  let found = false;
-  const dataRows = rows.slice(1)
-    .map((row): string[] | null => {
-      if (String(row[0]) === String(matchId) && row[1] === quarter) {
-        found = true;
-        return isEmpty ? null : newRow; // 비어있으면 행 삭제
-      }
-      return row;
-    })
-    .filter((row): row is string[] => row !== null);
-
-  if (!found && !isEmpty) {
-    dataRows.push(newRow);
-  }
-
-  // 기존 행보다 줄었으면 빈 행으로 패딩 → 이전 데이터 완전히 덮어쓰기
-  const originalRowCount = rows.length;
-  const allRows = [header, ...dataRows];
-  const emptyRow = Array(19).fill("");
-  while (allRows.length < originalRowCount) {
-    allRows.push(emptyRow);
-  }
-  const writeRange = `lineup!A1:S${Math.max(allRows.length, originalRowCount)}`;
-
-  await fetch(`${base}/values/${encodeURIComponent(writeRange)}?valueInputOption=USER_ENTERED`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ range: writeRange, values: allRows }),
+  await udPut("/api/underduck/lineup", {
+    match_id: matchId,
+    quarter,
+    formation,
+    players: playerCells,
+    subs: subCells,
+    substitutions: cleanSubstitutions,
   });
 }
 
-// ── Push 구독 관리 ────────────────────────────────────────────
-// push_subscriptions 시트: A=endpoint, B=p256dh, C=auth
-
+// ── push 구독 ──
 export async function addPushSubscription(sub: {
   endpoint: string;
   p256dh: string;
   auth: string;
 }): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-  const token = await getAccessToken();
-  const range = encodeURIComponent("push_subscriptions!A:C");
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ values: [[sub.endpoint, sub.p256dh, sub.auth]] }),
-    }
-  );
-  if (!res.ok) throw new Error("구독 저장 실패");
+  await udPost("/api/underduck/push", { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth });
 }
 
 export async function removePushSubscription(endpoint: string): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-  const token = await getAccessToken();
-
-  // 전체 읽어서 해당 endpoint 행 번호 찾기
-  const range = encodeURIComponent("push_subscriptions!A:A");
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  if (!res.ok) return;
-  const data = await res.json();
-  const rows: string[][] = data.values || [];
-  const rowIndex = rows.findIndex((r) => r[0] === endpoint);
-  if (rowIndex === -1) return;
-
-  // 해당 행 삭제 (batchUpdate deleteDimension)
-  const sheetInfoRes = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  const sheetInfo = await sheetInfoRes.json();
-  const sheet = sheetInfo.sheets?.find(
-    (s: { properties: { title: string; sheetId: number } }) => s.properties.title === "push_subscriptions"
-  );
-  if (!sheet) return;
-
-  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      requests: [{
-        deleteDimension: {
-          range: { sheetId: sheet.properties.sheetId, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 },
-        },
-      }],
-    }),
-  });
+  await udDelete("/api/underduck/push", { endpoint });
 }
 
 export async function getAllPushSubscriptions(): Promise<{ endpoint: string; p256dh: string; auth: string }[]> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
-  const token = await getAccessToken();
-  const range = encodeURIComponent("push_subscriptions!A:C");
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  if (!res.ok) return [];
-  const data = await res.json();
-  const rows: string[][] = data.values || [];
-  // 헤더 행 건너뜀 (A1이 "endpoint"인 경우)
-  const start = rows[0]?.[0] === "endpoint" ? 1 : 0;
-  return rows.slice(start).filter((r) => r[0]).map((r) => ({
-    endpoint: r[0],
-    p256dh: r[1] || "",
-    auth: r[2] || "",
+  const rows = await udGet<{ endpoint: string; p256dh: string | null; auth: string | null }[]>("/api/underduck/push");
+  return rows.filter((r) => r.endpoint).map((r) => ({
+    endpoint: r.endpoint,
+    p256dh: r.p256dh || "",
+    auth: r.auth || "",
   }));
+}
+
+// ── users (카카오 로그인 upsert) ──
+export async function upsertUser(user: {
+  kakaoId: string;
+  nickname: string;
+  profileImage: string;
+}): Promise<void> {
+  await udPost("/api/underduck/users", {
+    kakao_id: user.kakaoId,
+    nickname: user.nickname,
+    profile_image: user.profileImage,
+  });
+}
+
+// ── 출석 투표 ──
+export async function upsertAttendanceVote({
+  matchId,
+  kakaoId,
+  nickname,
+  response,
+}: {
+  matchId: number;
+  kakaoId: string;
+  nickname: string;
+  response: string; // "참석" | "불참" | "미정"
+}): Promise<void> {
+  await udPost("/api/underduck/attendance", {
+    match_id: matchId,
+    kakao_id: kakaoId,
+    nickname: nickname.trim(),
+    response,
+  });
+}
+
+export async function finalizeAttendance(matchId: number): Promise<string> {
+  // 백엔드가 "참석" 응답자를 모아 matches.attendees + attendance_status="마감" 기록.
+  const res = await udPost<{ attendees: string }>(`/api/underduck/attendance/${matchId}/finalize`);
+  return res?.attendees ?? "";
+}
+
+export async function setAttendanceStatus(
+  matchId: number,
+  status: "진행중" | "마감"
+): Promise<void> {
+  await patchMatch(matchId, { attendance_status: status });
+}
+
+// ── 투표 댓글 (vote_comment) ──
+interface VoteCommentRow { id: number; kakao_id: string | null; timestamp: string | null; }
+
+export async function appendVoteComment({
+  matchId,
+  kakaoId,
+  nickname,
+  message,
+}: {
+  matchId: number;
+  kakaoId: string;
+  nickname: string;
+  message: string;
+}): Promise<void> {
+  await udPost("/api/underduck/vote-comment", {
+    match_id: matchId,
+    kakao_id: kakaoId,
+    nickname: nickname.trim(),
+    message: message.trim(),
+  });
+}
+
+export async function deleteVoteComment(
+  matchId: number,
+  kakaoId: string,
+  timestamp: string
+): Promise<void> {
+  const list = await udGet<VoteCommentRow[]>(`/api/underduck/vote-comment?match_id=${matchId}`);
+  const hit = list.find((c) => s(c.kakao_id) === kakaoId && s(c.timestamp) === timestamp);
+  if (hit) await udDelete(`/api/underduck/vote-comment/${hit.id}`);
 }

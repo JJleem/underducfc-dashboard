@@ -1,17 +1,15 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import { Badge } from "../../components/ui/badge";
 import { Card, CardContent } from "../../components/ui/card";
-import { ArrowLeft, MapPin, Target, Pencil, Share2, Download } from "lucide-react";
-import { shareFormation } from "../../lib/draw-formation";
+import { ArrowLeft, MapPin, Target, Pencil } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 import { MatchData, LineupData } from "../../components/DashboardClient";
-import { FormationField, FORMATION_POSITIONS } from "../../components/FormationField";
-
-const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
+import AppBottomNav from "../../components/AppBottomNav";
+import LineupViewer from "../../components/LineupViewer";
 
 interface MatchDetailClientProps {
   match: MatchData;
@@ -19,30 +17,11 @@ interface MatchDetailClientProps {
   rosterMap: Record<string, string>;
   captainRoles?: Record<string, string>;
   playerStats?: Record<string, { apps: number; goals: number; assists: number; mom: number; pos?: string }>;
+  currentUserName?: string | null;
 }
 
-export default function MatchDetailClient({ match, lineups, rosterMap, captainRoles, playerStats }: MatchDetailClientProps) {
-  const { theme, setTheme } = useTheme();
-  const sortedQuarters = QUARTER_ORDER.filter((q) => lineups.some((l) => l.quarter === q));
-  const [activeQ, setActiveQ] = useState(sortedQuarters[0] || "");
-  const [sharing, setSharing] = useState(false);
-  const activeLineup = lineups.find((l) => l.quarter === activeQ);
-
-  const handleShare = async () => {
-    if (!activeLineup) return;
-    setSharing(true);
-    try {
-      const fileName = `언더덕_${match.opponent}_${activeQ}_라인업.png`;
-      const label = `언더덕 vs ${match.opponent} · ${activeQ} · ${match.date}`;
-      await shareFormation(activeLineup, rosterMap, fileName, label);
-    } catch (e) {
-      if (e instanceof Error && e.name !== "AbortError") {
-        alert("공유 실패: " + e.message);
-      }
-    } finally {
-      setSharing(false);
-    }
-  };
+export default function MatchDetailClient({ match, lineups, rosterMap, captainRoles, playerStats, currentUserName }: MatchDetailClientProps) {
+  const { resolvedTheme, setTheme } = useTheme();
   const isInternal = match.opponent === "자체전";
 
   const getResultBadgeStyle = (result: string) => {
@@ -60,7 +39,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
           <span className="font-extrabold text-sm uppercase tracking-tight">UNDERDUCK</span>
         </Link>
         <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
           className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10"
         >
           <Moon className="block dark:hidden w-4 h-4 text-gray-700" />
@@ -68,7 +47,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
         </button>
       </header>
 
-      <main className="p-5 pb-10 space-y-5">
+      <main className="p-5 pb-28 space-y-5">
         {/* 경기 정보 카드 */}
         <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-md">
           <CardContent className="p-6">
@@ -145,7 +124,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center justify-between px-1 mb-1">
               <h2 className="text-[13px] font-black text-gray-800 dark:text-white">라인업</h2>
               <Link
@@ -155,87 +134,18 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
                 <Pencil className="w-3 h-3" /> 편집
               </Link>
             </div>
-
-            <div className="flex items-center justify-between px-1">
-              <div className="flex gap-2 flex-wrap">
-                {sortedQuarters.map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => setActiveQ(q)}
-                    className={`text-[11px] font-black px-4 py-1.5 rounded-xl transition-all ${
-                      activeQ === q
-                        ? "bg-[#FFB6C1] text-black shadow-sm"
-                        : "bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10"
-                    }`}
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-              {activeLineup && (
-                <span className="text-[13px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
-                  {activeLineup.formation}
-                </span>
-              )}
-            </div>
-
-            {activeLineup && (
-              <>
-                {FORMATION_POSITIONS[activeLineup.formation] ? (
-                  <div className="relative">
-                    <div>
-                      <FormationField
-                        lineup={activeLineup}
-                        rosterMap={rosterMap}
-                        captainRoles={captainRoles}
-                        matchInfo={{ goals: match.goals, assists: match.assists, mom: match.mom }}
-                        playerStats={playerStats}
-                      />
-                    </div>
-                    <button
-                      onClick={handleShare}
-                      disabled={sharing}
-                      className="absolute top-2 right-2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/40 backdrop-blur-sm text-white text-[11px] font-black hover:bg-black/60 transition-all"
-                    >
-                      {sharing
-                        ? <Download className="w-3.5 h-3.5 animate-bounce" />
-                        : <Share2 className="w-3.5 h-3.5" />}
-                      {sharing ? "준비 중..." : "공유"}
-                    </button>
-                  </div>
-                ) : (
-                  <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-2xl">
-                    <CardContent className="p-4">
-                      <div className="flex flex-wrap gap-2">
-                        {activeLineup.players.map((p, i) => (
-                          <span key={i} className="text-[11px] font-bold px-2.5 py-1 bg-gray-100 dark:bg-white/5 rounded-lg text-gray-700 dark:text-gray-300">
-                            {p}
-                          </span>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {activeLineup.subs.length > 0 && (
-                  <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-2xl">
-                    <CardContent className="p-4">
-                      <p className="text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest">교체 선수</p>
-                      <div className="flex flex-wrap gap-2">
-                        {activeLineup.subs.map((s, i) => (
-                          <span key={i} className="text-[11px] font-bold px-2.5 py-1 bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/5 rounded-lg text-gray-500">
-                            {s}
-                          </span>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </>
-            )}
+            <LineupViewer
+              match={match}
+              lineups={lineups}
+              rosterMap={rosterMap}
+              captainRoles={captainRoles}
+              playerStats={playerStats}
+              editHref={`/matches/${match.id}/edit`}
+            />
           </div>
         )}
       </main>
+      <AppBottomNav active="matches" currentUserName={currentUserName} />
     </div>
   );
 }

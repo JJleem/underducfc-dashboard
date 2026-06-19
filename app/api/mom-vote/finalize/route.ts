@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
-import { getSheetData } from "../../../lib/google-sheets";
+import { getMomVoteRows } from "../../../lib/backend";
+import { getMatchesRows } from "../../../lib/matches-backend";
 import { writeMatchMom } from "../../../lib/sheets-write";
+import { requireAdmin } from "@/app/lib/admin";
 
 export async function POST() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     // matches 읽기 (날짜 + 현재 MOM 확인용)
-    const rawMatches = await getSheetData("matches!A1:M50");
+    const rawMatches = await getMatchesRows();
     const matches = rawMatches.slice(1).map((row: string[], index: number) => ({
       id: index,
       date: row[0] || "",
@@ -13,7 +17,7 @@ export async function POST() {
     }));
 
     // mom_vote 읽기
-    const rawVotes = await getSheetData("mom_vote!A1:E500");
+    const rawVotes = await getMomVoteRows();
     const votesByMatch: Record<number, { votedFor: string; voteType: string }[]> = {};
     rawVotes.slice(1).forEach((row: string[]) => {
       if (!row[0]) return;

@@ -94,7 +94,7 @@ export default function RootLayout({
             <div className="flex-1">{children}</div>
 
             {/* 💡 전역 Footer (모든 페이지 하단에 공통 적용) */}
-            <footer className="w-full pt-8 pb-10 px-5 flex flex-col items-center gap-5 border-t border-gray-200/60 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-sm mt-auto">
+            <footer className="w-full pt-8 pb-[calc(6.5rem+env(safe-area-inset-bottom))] px-5 flex flex-col items-center gap-5 border-t border-gray-200/60 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-sm mt-auto">
               {/* 팀 카피라이트 & 슬로건 */}
               <div className="flex flex-col items-center gap-1.5 text-center">
                 <p className="text-[10px] font-black tracking-[0.2em] text-[#FF8FA3]/80 dark:text-[#FFB6C1]/70 uppercase ">

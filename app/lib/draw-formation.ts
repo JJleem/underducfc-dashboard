@@ -75,6 +75,26 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+async function loadPlayerImage(name: string, no?: string): Promise<HTMLImageElement | null> {
+  const candidates = [
+    `/players/${encodeURIComponent(name)}.png`,
+    `/players/${encodeURIComponent(name)}.webp`,
+    `/players/${encodeURIComponent(name)}.jpg`,
+    ...(no
+      ? [`/players/${no}.png`, `/players/${no}.webp`, `/players/${no}.jpg`]
+      : []),
+  ];
+
+  for (const src of candidates) {
+    try {
+      return await loadImage(src);
+    } catch {
+      // 다음 확장자/등번호 이미지 시도
+    }
+  }
+  return null;
+}
+
 export async function drawFormationCanvas(
   lineup: { formation: string; players: string[] },
   rosterMap: Record<string, string>,
@@ -168,8 +188,6 @@ export async function drawFormationCanvas(
 
     const x = (pos.x / 100) * W;
     const y = (pos.y / 100) * H;
-    const R = 18;
-
     const layerIdx = getLayerIndex(i, lineup.formation);
     const isTbd = player.trim() === "미정";
     const jerseyNo = rosterMap[player.trim()];
@@ -179,44 +197,80 @@ export async function drawFormationCanvas(
       ? { bg: "#374151", border: "#9CA3AF", text: "#FFFFFF" }
       : getPlayerColor(layerIdx, totalLayers);
 
-    // 그림자
-    ctx.shadowColor = "rgba(0,0,0,0.5)";
-    ctx.shadowBlur = 8;
+    const faceOn = isTbd ? null : await loadPlayerImage(player.trim(), jerseyNo);
+    const imageW = 50;
+    const imageH = 58;
 
-    // 원
+    if (faceOn) {
+      const scale = Math.min(imageW / faceOn.naturalWidth, imageH / faceOn.naturalHeight);
+      const drawW = faceOn.naturalWidth * scale;
+      const drawH = faceOn.naturalHeight * scale;
+
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.75)";
+      ctx.shadowBlur = 7;
+      ctx.shadowOffsetY = 4;
+      ctx.drawImage(faceOn, x - drawW / 2, y - drawH / 2 - 2, drawW, drawH);
+      ctx.restore();
+    } else {
+      const R = 18;
+      ctx.shadowColor = "rgba(0,0,0,0.5)";
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(x, y, R, 0, Math.PI * 2);
+      ctx.fillStyle = color.bg;
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = color.border;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, R, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const fallbackLabel = isTbd ? "?" : isGuest ? "G" : jerseyNo;
+      ctx.fillStyle = color.text;
+      ctx.font = `bold ${fallbackLabel.length > 2 ? 10 : 13}px -apple-system, Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(fallbackLabel, x, y);
+    }
+
+    // 현재 화면과 같은 등번호 + 이름 라벨
+    const name = isTbd ? "미정" : player;
+    ctx.font = "bold 9px -apple-system, Arial, sans-serif";
+    const numberLabel = isTbd ? "" : isGuest ? "G" : jerseyNo;
+    const numberW = numberLabel ? Math.max(15, ctx.measureText(numberLabel).width + 6) : 0;
+    const nameW = ctx.measureText(name).width + 9;
+    const labelY = y + 31;
+    const totalW = numberW + (numberW ? 3 : 0) + nameW;
+    let labelX = x - totalW / 2;
+
+    if (numberLabel) {
+      ctx.fillStyle = color.bg;
+      ctx.strokeStyle = color.border;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(labelX, labelY, numberW, 14, 3);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(numberLabel, labelX + numberW / 2, labelY + 7);
+      labelX += numberW + 3;
+    }
+
+    ctx.fillStyle = "rgba(2,6,23,0.78)";
+    ctx.strokeStyle = "rgba(255,255,255,0.16)";
     ctx.beginPath();
-    ctx.arc(x, y, R, 0, Math.PI * 2);
-    ctx.fillStyle = color.bg;
+    ctx.roundRect(labelX, labelY, nameW, 14, 4);
     ctx.fill();
-
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = color.border;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x, y, R, 0, Math.PI * 2);
     ctx.stroke();
-
-    // 등번호/라벨
-    const label = isTbd ? "?" : isGuest ? "G" : jerseyNo;
-    ctx.fillStyle = color.text;
-    ctx.font = `bold ${label.length > 2 ? 10 : 13}px -apple-system, Arial, sans-serif`;
+    ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(label, x, y);
-
-    // 이름 배경
-    const name = isTbd ? "미정" : player.slice(0, 4);
-    ctx.font = "bold 8.5px -apple-system, Arial, sans-serif";
-    const nameW = ctx.measureText(name).width + 8;
-
-    ctx.fillStyle = "rgba(0,0,0,0.65)";
-    ctx.beginPath();
-    ctx.rect(x - nameW / 2, y + R + 2, nameW, 12);
-    ctx.fill();
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textBaseline = "top";
-    ctx.fillText(name, x, y + R + 3.5);
+    ctx.fillText(name, labelX + nameW / 2, labelY + 7);
   }
 
   // ─── 하단 라벨 (옵션) ────────────────────────────────────────

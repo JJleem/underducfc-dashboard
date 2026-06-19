@@ -1,20 +1,26 @@
-import { getSheetData } from "../../../lib/google-sheets";
+import { getLineupRows, getRosterRows } from "../../../lib/backend";
+import { getMatchesRows } from "../../../lib/matches-backend";
 import { LineupData, MatchData } from "../../../components/DashboardClient";
 import LineupEditor from "./LineupEditor";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { currentKakaoId, isAdmin } from "../../../lib/admin";
+import { parseSubstitutions } from "../../../lib/lineup";
 
 export default async function LineupEditPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // 라인업 편집은 관리자 전용
+  if (!isAdmin(await currentKakaoId())) redirect("/");
+
   const { id } = await params;
   const matchId = Number(id);
 
   const [rawMatchesResult, rawLineupsResult, rawRosterResult] = await Promise.allSettled([
-    getSheetData("matches!A1:M50"),
-    getSheetData("lineup!A1:S100"),
-    getSheetData("roster!A1:J50"),
+    getMatchesRows(),
+    getLineupRows(),
+    getRosterRows(),
   ]);
 
   const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
@@ -60,6 +66,7 @@ export default async function LineupEditPage({
       subs: [
         row[14] || "", row[15] || "", row[16] || "", row[17] || "", row[18] || "",
       ].filter(Boolean),
+      substitutions: parseSubstitutions(row[19]),
     }))
     .filter((l: LineupData) => l.matchId === matchId);
 

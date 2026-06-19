@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSheetData } from "../../lib/google-sheets";
+import { getFeedbackRows } from "../../lib/backend";
 import { appendFeedback, deleteFeedback } from "../../lib/sheets-write";
+import { requireUser } from "@/app/lib/admin";
 
 export async function GET() {
   try {
-    const rows = await getSheetData("feedback!A1:D500");
+    const rows = await getFeedbackRows();
     const feedbacks = rows.slice(1).map((row: string[]) => ({
       matchId: Number(row[0]) || 0,
       timestamp: row[1] || "",
@@ -19,6 +20,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await requireUser();
+  if (denied) return denied;
   try {
     const body = await request.json();
     const { matchId, name, message } = body;
@@ -36,6 +39,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const denied = await requireUser();
+  if (denied) return denied;
   try {
     const { matchId, timestamp, name, message } = await request.json();
     if (matchId === undefined || !timestamp || !name || !message) {

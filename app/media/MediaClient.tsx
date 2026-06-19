@@ -29,7 +29,7 @@ interface MediaClientProps {
 }
 
 export default function MediaClient({ media }: MediaClientProps) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
 
   // 미디어 콘텐츠
   const [mediaList, setMediaList] = React.useState<MediaData[]>(media);
@@ -141,7 +141,7 @@ export default function MediaClient({ media }: MediaClientProps) {
           CONTENTS
         </span>
         <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
           className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
         >
           <Moon className="block dark:hidden w-4 h-4 text-gray-700" />

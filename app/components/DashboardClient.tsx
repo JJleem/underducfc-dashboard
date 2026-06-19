@@ -6,6 +6,14 @@ import { Badge } from "./ui/badge";
 import { Calendar } from "./ui/calendar";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "./ui/drawer";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import {
   Trophy,
   CalendarDays,
   Menu,
@@ -38,14 +46,22 @@ import {
   Check,
   Swords,
   Sparkles,
+  LogIn,
+  LogOut,
 } from "lucide-react";
+import { signIn, signOut } from "next-auth/react";
 import { shareStoryCard } from "../lib/draw-story-card";
-import { FormationField, FORMATION_POSITIONS } from "./FormationField";
-import { shareFormation } from "../lib/draw-formation";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { DayPicker } from "react-day-picker";
+import { parseWeather, weatherEmoji } from "../lib/weather";
+import { TitleBadges } from "./TitleBadges";
+import type { EarnedTitle } from "../lib/titles";
+import type { SubstitutionEvent } from "../lib/lineup";
+import AppBottomNav from "./AppBottomNav";
+import LineupViewer from "./LineupViewer";
 
 // 숫자가 0에서 목표값까지 부드럽게 올라가는 카운트업 (전광판 느낌)
 function CountUp({
@@ -154,7 +170,8 @@ export interface LineupData {
   quarter: string; // "예상" | "1Q" | "2Q" | "3Q" | "4Q" | "5Q" | "6Q"
   formation: string; // "4-3-3" | "4-4-2" | "3-5-2" | "4-2-3-1" 등
   players: string[]; // p1~p11
-  subs: string[]; // sub1~sub5
+  subs: string[]; // 대기 선수 sub1~sub5
+  substitutions: SubstitutionEvent[]; // 실제 교체 OUT → IN
 }
 
 export interface MatchData {
@@ -172,6 +189,8 @@ export interface MatchData {
   mom?: string; // K열 - MOM
   attendees?: string; // L열 - 참석자 (쉼표 구분)
   photos?: string; // M열 - Drive 파일ID (쉼표 구분)
+  weather?: string; // N열 - "28°C,맑음,01d,10"
+  attendanceStatus?: "진행중" | "마감"; // O열 - 출석 투표 상태
 }
 
 export interface MediaData {
@@ -182,6 +201,14 @@ export interface MediaData {
   uploadedAt: string;
 }
 
+export interface AttendanceVoteData {
+  matchId: number;
+  kakaoId: string;
+  nickname: string;
+  response: string; // "참석" | "불참" | "미정"
+  timestamp: string;
+}
+
 interface DashboardClientProps {
   players: PlayerData[];
   matches: MatchData[];
@@ -189,6 +216,11 @@ interface DashboardClientProps {
   lineups: LineupData[];
   rosterMap: Record<string, string>;
   captainRoles?: Record<string, string>;
+  currentUser?: { kakaoId: string; name: string; image: string } | null;
+  isAdmin?: boolean;
+  attendanceVotes?: AttendanceVoteData[];
+  playerTitles?: Record<string, EarnedTitle[]>;
+  initialView?: "home" | "matches" | "stats";
 }
 
 export default function DashboardClient({
@@ -198,10 +230,28 @@ export default function DashboardClient({
   lineups,
   rosterMap,
   captainRoles,
+  currentUser,
+  isAdmin = false,
+  attendanceVotes: initialAttendanceVotes = [],
+  playerTitles = {},
+  initialView = "home",
 }: DashboardClientProps) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const router = useRouter();
   const [matchList, setMatchList] = React.useState<MatchData[]>(matches);
   const [showTopBtn, setShowTopBtn] = React.useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState(initialView === "stats" ? "stats" : "matches");
+
+  // 출석 투표 (요약 카드용, 읽기 전용)
+  const attendanceVoteMap = React.useMemo(() => {
+    const map: Record<number, AttendanceVoteData[]> = {};
+    initialAttendanceVotes.forEach((v) => {
+      if (!map[v.matchId]) map[v.matchId] = [];
+      map[v.matchId].push(v);
+    });
+    return map;
+  }, [initialAttendanceVotes]);
 
   // 공지사항 로컬 상태
   const [localNotice, setLocalNotice] = React.useState(notice);
@@ -269,6 +319,7 @@ export default function DashboardClient({
         mom: "",
         attendees: "",
         photos: "",
+        attendanceStatus: "진행중",
       };
       setMatchList((prev) => [...prev, newMatch]);
       setAddMatchModal(false);
@@ -287,9 +338,6 @@ export default function DashboardClient({
   }, []);
 
   const [statSort, setStatSort] = React.useState<"pos" | "apps" | "goals" | "assists" | "mom">("pos");
-  const [openLineups, setOpenLineups] = React.useState<Set<number>>(new Set());
-  const [activeQuarters, setActiveQuarters] = React.useState<Record<number, string>>({});
-  const [sharingMatch, setSharingMatch] = React.useState<number | null>(null);
   const matchCardRefs = React.useRef<Record<number, HTMLDivElement | null>>({});
   const [calendarMonth, setCalendarMonth] = React.useState<Date>(new Date());
 
@@ -327,7 +375,8 @@ export default function DashboardClient({
   }, [players]);
 
   // 선수 프로필 바텀시트
-  const [profilePlayer, setProfilePlayer] = React.useState<PlayerData | null>(null);
+  const goToPlayer = (n: string) =>
+    router.push(`/players/${encodeURIComponent(n.trim())}`);
 
   // 스토리 카드 공유
   const [sharingStory, setSharingStory] = React.useState<number | null>(null);
@@ -411,9 +460,17 @@ export default function DashboardClient({
   };
 
   const nextMatch = [...matchList]
-    .filter((m) => m.result === "예정" && m.type !== "야유회")
+    .filter((m) => m.result === "예정" && m.type !== "야유회" && m.attendanceStatus !== "마감")
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
   const dDay = nextMatch ? getDDay(nextMatch.date) : null;
+  const nextVotes = nextMatch ? attendanceVoteMap[nextMatch.id] || [] : [];
+  const nextAttending = nextVotes.filter((vote) => vote.response === "참석").length;
+  const nextMaybe = nextVotes.filter((vote) => vote.response === "미정").length;
+  const nextAbsent = nextVotes.filter((vote) => vote.response === "불참").length;
+  const nextVoteTotal = nextAttending + nextMaybe + nextAbsent;
+  const myNextVote = currentUser
+    ? nextVotes.find((vote) => vote.kakaoId === currentUser.kakaoId)?.response
+    : undefined;
 
   // 사진 상태
   const [openPhotos, setOpenPhotos] = React.useState<Set<number>>(new Set());
@@ -484,7 +541,6 @@ export default function DashboardClient({
 
   // MOM 투표 상태
   const [momVoteMap, setMomVoteMap] = React.useState<Record<number, MomVoteData[]>>({});
-  const [momVoterName, setMomVoterName] = React.useState<Record<number, string>>({});
   const [submittingVote, setSubmittingVote] = React.useState<number | null>(null);
   const [openVotes, setOpenVotes] = React.useState<Set<number>>(new Set());
   const [momModal, setMomModal] = React.useState<{ matchId: number; attendees: string[] } | null>(null);
@@ -492,8 +548,9 @@ export default function DashboardClient({
   const [momModalAtk, setMomModalAtk] = React.useState("");
   const [momModalDef, setMomModalDef] = React.useState("");
 
-  // 페이지 로드 시 마감된 경기 MOM 자동 확정 후 카드에 반영
+  // 페이지 로드 시 마감된 경기 MOM 자동 확정 후 카드에 반영 (관리자 방문 시에만 실행)
   React.useEffect(() => {
+    if (!isAdmin) return;
     fetch("/api/mom-vote/finalize", { method: "POST" })
       .then((r) => r.json())
       .then((data: { finalized?: { matchId: number; mom: string }[] }) => {
@@ -507,7 +564,7 @@ export default function DashboardClient({
         }
       })
       .catch(() => {});
-  }, []);
+  }, [isAdmin]);
 
   React.useEffect(() => {
     fetch("/api/mom-vote")
@@ -639,26 +696,27 @@ export default function DashboardClient({
 
   const submitFeedback = async (matchId: number) => {
     const form = feedbackForms[matchId];
-    if (!form?.name?.trim() || !form?.message?.trim()) return;
+    const name = currentUser?.name?.trim();
+    if (!name || !form?.message?.trim()) return;
     setSubmittingFeedback(matchId);
     try {
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchId, name: form.name, message: form.message }),
+        body: JSON.stringify({ matchId, name, message: form.message }),
       });
       if (res.ok) {
         const newFb: FeedbackData = {
           matchId,
           timestamp: new Date().toISOString(),
-          name: form.name.trim(),
+          name,
           message: form.message.trim(),
         };
         setFeedbackMap((prev) => ({
           ...prev,
           [matchId]: [...(prev[matchId] || []), newFb],
         }));
-        setFeedbackForms((prev) => ({ ...prev, [matchId]: { name: form.name, message: "" } }));
+        setFeedbackForms((prev) => ({ ...prev, [matchId]: { name: "", message: "" } }));
       }
     } finally {
       setSubmittingFeedback(null);
@@ -676,16 +734,6 @@ export default function DashboardClient({
     } catch {
       return "";
     }
-  };
-
-  const toggleLineup = (matchId: number) => {
-    buzz();
-    setOpenLineups((prev) => {
-      const next = new Set(prev);
-      if (next.has(matchId)) next.delete(matchId);
-      else next.add(matchId);
-      return next;
-    });
   };
 
   const getMatchLineups = (matchId: number) =>
@@ -815,109 +863,210 @@ export default function DashboardClient({
           <span className="w-1.5 h-1.5 rounded-full bg-[#FF8FA3]" />
           UNDERDUCK
         </span>
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 transition-all"
-        >
-          <Moon className="block dark:hidden w-4 h-4 text-gray-700" />
-          <Sun className="hidden dark:block w-4 h-4 text-[#FFB6C1]" />
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/titles"
+            aria-label="칭호 도감"
+            title="칭호 도감"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3]/10 text-[#FF8FA3] transition-colors hover:bg-[#FF8FA3]/20 dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
+          >
+            <Trophy className="h-4 w-4" />
+          </Link>
+          {currentUser ? (
+            <DropdownMenu open={accountMenuOpen} onOpenChange={setAccountMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className={`flex items-center gap-1.5 h-8 pl-1 pr-2 rounded-full outline-none transition-all ${
+                    accountMenuOpen
+                      ? "bg-gray-200 dark:bg-white/15 ring-2 ring-[#FF8FA3]/20"
+                      : "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15"
+                  }`}
+                >
+                  {currentUser.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={currentUser.image}
+                      alt={currentUser.name}
+                      className="w-6 h-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FF8FA3] text-white text-[10px] font-bold">
+                      {currentUser.name.slice(0, 1) || "U"}
+                    </span>
+                  )}
+                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 max-w-[64px] truncate">
+                    {currentUser.name || "회원"}
+                  </span>
+                  <ChevronDown
+                    className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
+                      accountMenuOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                sideOffset={8}
+                className="w-44 rounded-2xl border-gray-200/80 dark:border-white/10 bg-white/95 dark:bg-[#17171a]/95 p-1.5 shadow-[0_14px_38px_rgba(15,23,42,0.18)] dark:shadow-[0_18px_42px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+              >
+                <DropdownMenuLabel className="px-2.5 py-2 font-normal">
+                  <p className="text-[10px] font-bold text-gray-400">로그인 계정</p>
+                  <p className="mt-0.5 text-xs font-extrabold text-gray-800 dark:text-gray-100 truncate">
+                    {currentUser.name || "회원"}
+                  </p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-gray-100 dark:bg-white/[0.07]" />
+                <DropdownMenuItem
+                  asChild
+                  className="rounded-xl px-2.5 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 focus:bg-gray-100 dark:focus:bg-white/[0.07]"
+                >
+                  <Link href={`/players/${encodeURIComponent(currentUser.name.trim())}`}>
+                    <User className="w-4 h-4 !text-[#FF8FA3]" />
+                    마이페이지
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={() => signOut()}
+                  className="rounded-xl px-2.5 py-2 text-xs font-bold"
+                >
+                  <LogOut className="w-4 h-4" />
+                  로그아웃
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <button
+              onClick={() => signIn("kakao")}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-[#FEE500] text-black text-xs font-bold transition-all hover:brightness-95"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              카카오 로그인
+            </button>
+          )}
+          <button
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 transition-all"
+          >
+            <Moon className="block dark:hidden w-4 h-4 text-gray-700" />
+            <Sun className="hidden dark:block w-4 h-4 text-[#FFB6C1]" />
+          </button>
+        </div>
       </header>
 
-      <main className="p-5 pb-10">
-        {/* 🦆 히어로 섹션 (복구 완료!) */}
-        <div className="animate-rise relative py-7 flex flex-col items-center border-b border-gray-200/70 dark:border-white/[0.06] mb-5">
-          {/* 은은한 앰비언트 라이팅 (네온 아님, 깊이감용) */}
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-52 h-28 bg-[#FFB6C1]/20 dark:bg-[#FF8FA3]/10 blur-[64px] rounded-full -z-10 pointer-events-none" />
-          <div className="relative w-[72px] h-[72px] rounded-full bg-white dark:bg-[#141416] ring-1 ring-gray-200 dark:ring-white/10 shadow-soft flex items-center justify-center overflow-hidden mb-4">
-            <Image
-              src="/underducklogo.png"
-              alt="Underduck Logo"
-              fill
-              priority
-              className="object-cover"
-            />
+      <main className="p-5 pb-28">
+        {/* 팀 인트로 */}
+        <div className="animate-rise relative mb-5 overflow-hidden rounded-[24px] border border-gray-200/70 bg-white px-4 py-4 shadow-sm dark:border-white/[0.07] dark:bg-[#141416]">
+          <div className="pointer-events-none absolute -left-8 -top-10 h-28 w-28 rounded-full bg-[#FF8FA3]/15 blur-3xl dark:bg-[#FFB6C1]/10" />
+          <div className="relative flex items-center gap-3 pr-10 min-[380px]:gap-3.5">
+          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-[18px] bg-white shadow-md ring-1 ring-gray-200 dark:bg-[#161618] dark:ring-white/10 min-[380px]:h-16 min-[380px]:w-16 min-[380px]:rounded-[20px]">
+            <Image src="/underducklogo.png" alt="Underduck Logo" fill priority className="object-cover" />
+            <Badge className="absolute bottom-1 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap border-none bg-gray-950/75 px-1.5 py-0 text-[6px] font-black text-white backdrop-blur-sm">
+              EST 2025
+            </Badge>
           </div>
-          <h1 className="text-[34px] leading-none w-full text-center font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#FF8FA3] to-gray-900 dark:from-[#FFB6C1] dark:to-zinc-100">
-            UNDERDUCK FC
-          </h1>
-          <div className="flex flex-col gap-2 mt-3 max-w-[400px] items-center text-center">
-            <div className="flex items-center gap-2">
-              <Badge className="bg-[#FFB6C1]/20 dark:bg-white/5 text-[#FF8FA3] dark:text-[#FFB6C1] border-none text-[10px]">
-                EST 2025
-              </Badge>
-              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold tracking-[0.14em] uppercase">
-                Not &apos;Because of&apos;, but &apos;Thanks to&apos;
-              </span>
-            </div>
-            <p className="text-[12px] text-gray-600 dark:text-gray-400 leading-relaxed font-medium mt-1 px-4">
-              <span className="text-[#FF8FA3] dark:text-[#FFB6C1] font-bold">
-                언더덕 FC
-              </span>
-              는 &apos;때문에&apos;란 말보다
-              <span className="text-gray-900 dark:text-white font-bold mx-1 underline underline-offset-4 decoration-[#FFB6C1]">
-                &quot;덕분에&quot;
-              </span>
-              란 말을 추구하며, <br /> 서로를 존중하는 축구 동호회입니다.
+          <div className="min-w-0 flex-1">
+            <h1 className="whitespace-nowrap text-[20px] font-black leading-none tracking-[-0.04em] text-gray-900 dark:text-white min-[380px]:text-[23px]">
+              UNDERDUCK FC
+            </h1>
+            <p className="mt-1.5 whitespace-nowrap text-[8px] font-bold tracking-[0.04em] text-gray-400 min-[380px]:text-[9px] min-[380px]:tracking-[0.08em]">
+              NOT BECAUSE OF, BUT THANKS TO
             </p>
-
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
-              <Link
-                href="/roster"
-                className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 dark:bg-white/10 hover:bg-gray-800 dark:hover:bg-white/20 text-white dark:text-[#FFB6C1] rounded-full text-xs font-bold transition-all shadow-md"
-              >
-                <Menu className="w-4 h-4" />로스터
-              </Link>
-
-              {/* 💡 콘텐츠(미디어) 진입 버튼 */}
-              <Link
-                href="/media"
-                className="flex items-center gap-1.5 px-5 py-2.5 bg-white dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 rounded-full text-xs font-bold transition-all border border-gray-200 dark:border-white/10"
-              >
-                <Film className="w-4 h-4" />콘텐츠
-              </Link>
-
-              {/* 💡 인스타그램 버튼 */}
-              <Link
-                href="https://www.instagram.com/underduck_fc/"
-                target="_blank"
-                rel="noopener noreferrer"
-                // 💡 overflow-hidden 추가: 혹시 모를 이미지 삐져나옴 방지
-                className="flex items-center justify-center w-[36px] h-[36px] bg-white dark:bg-[#161618] rounded-full hover:scale-110 transition-transform shadow-md border border-gray-100 dark:border-white/10 overflow-hidden"
-                aria-label="Instagram"
-              >
-                <Image
-                  src="/instagram-logo.webp"
-                  alt="Instagram"
-                  // 💡 컨테이너(36)보다 작게 설정하여 안정적인 여백 생성
-                  width={22}
-                  height={22}
-                  className="object-contain" // 💡 비율 찌그러짐 방지
-                />
-              </Link>
-
-              {/* 💡 구글 시트 버튼 */}
-              <Link
-                href="https://docs.google.com/spreadsheets/d/1e2w3S5zeiryWlXE3BfhkOoraXCZZays5BPiI5UsKhQs/edit?gid=0#gid=0"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center w-[36px] h-[36px] bg-white dark:bg-[#161618] rounded-full hover:scale-110 transition-transform shadow-md border border-gray-100 dark:border-white/10 overflow-hidden"
-                aria-label="Google Sheets"
-              >
-                <Image
-                  src="/sheets-logo.png"
-                  alt="Google Sheets"
-                  width={22}
-                  height={22}
-                  className="object-contain h-[22px]!"
-                />
-              </Link>
-            </div>
+            <p className="mt-1.5 text-[10px] font-semibold leading-[1.55] text-gray-500 dark:text-gray-400 min-[380px]:text-[10.5px]">
+              <span className="block">언더덕 FC는 &apos;때문에&apos;란 말보다</span>
+              <span className="block">
+                &quot;<span className="font-black text-[#FF8FA3] dark:text-[#FFB6C1]">덕분에</span>&quot;란 말을 추구하며, 서로를 존중합니다.
+              </span>
+            </p>
+          </div>
+          <div className="absolute right-0 top-1/2 flex -translate-y-1/2 flex-col gap-1.5">
+            <Link href="/roster" aria-label="로스터" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white shadow-sm dark:bg-white/10 dark:text-[#FFB6C1]">
+              <Menu className="h-4 w-4" />
+            </Link>
+            <Link href="/media" aria-label="콘텐츠" className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
+              <Film className="h-4 w-4" />
+            </Link>
+          </div>
           </div>
         </div>
 
+        {/* 다음 경기 허브 */}
+        {nextMatch && dDay !== null && (() => {
+          const weather = parseWeather(nextMatch.weather || "");
+          return (
+            <section className="relative mb-5 overflow-hidden rounded-[26px] bg-white p-4 text-gray-900 shadow-soft ring-1 ring-gray-200 dark:bg-[#10182f] dark:text-white dark:shadow-[0_16px_36px_rgba(15,23,42,0.22)] dark:ring-white/10">
+              <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-[#FF8FA3]/20 blur-3xl dark:bg-[#FF8FA3]/25" />
+              <div className="relative">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-black tracking-[0.18em] text-[#FF8FA3] dark:text-[#FFB6C1]">NEXT MATCH</p>
+                    <h2 className="mt-1 truncate text-[19px] font-black">vs {nextMatch.opponent}</h2>
+                    <p className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 dark:text-white/55">
+                      <CalendarDays className="h-3 w-3" />
+                      {nextMatch.date} · {nextMatch.time}
+                    </p>
+                    <p className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 dark:text-white/55">
+                      <MapPin className="h-3 w-3" />
+                      <span className="truncate">{nextMatch.location}</span>
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[30px] font-black leading-none text-[#FF8FA3] dark:text-[#FFB6C1] tabular-nums">
+                      {dDay === 0 ? "D-DAY" : dDay < 0 ? `D+${Math.abs(dDay)}` : `D-${dDay}`}
+                    </p>
+                    {weather.available && (
+                      <p className="mt-2 text-[10px] font-bold text-gray-500 dark:text-white/60">
+                        {weatherEmoji(weather.icon)} {weather.temp}° · {weather.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-3 dark:border-white/10 dark:bg-white/[0.06]">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="flex items-center gap-1.5 text-[10px] font-black text-gray-600 dark:text-white/65">
+                      <Users className="h-3 w-3" /> 출석 현황
+                    </p>
+                    {myNextVote && (
+                      <span className="rounded-full bg-[#FF8FA3]/10 px-2 py-0.5 text-[9px] font-black text-[#FF8FA3] dark:bg-white/10 dark:text-[#FFB6C1]">
+                        나는 {myNextVote}
+                      </span>
+                    )}
+                  </div>
+                  {nextVoteTotal > 0 ? (
+                    <>
+                      <div className="mb-2 flex h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
+                        {nextAttending > 0 && <div className="bg-[#FF8FA3]" style={{ width: `${(nextAttending / nextVoteTotal) * 100}%` }} />}
+                        {nextMaybe > 0 && <div className="bg-amber-400" style={{ width: `${(nextMaybe / nextVoteTotal) * 100}%` }} />}
+                        {nextAbsent > 0 && <div className="bg-gray-400 dark:bg-white/25" style={{ width: `${(nextAbsent / nextVoteTotal) * 100}%` }} />}
+                      </div>
+                      <div className="flex gap-3 text-[9px] font-black">
+                        <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">참석 {nextAttending}</span>
+                        <span className="text-amber-500 dark:text-amber-300">미정 {nextMaybe}</span>
+                        <span className="text-gray-400 dark:text-white/40">불참 {nextAbsent}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-[10px] font-semibold text-gray-400 dark:text-white/40">아직 등록된 투표가 없습니다.</p>
+                  )}
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <Link href="/vote" className="flex items-center justify-center rounded-xl bg-[#FF8FA3] py-2.5 text-[11px] font-black text-white">
+                    {myNextVote ? "투표 확인하기" : "출석 투표하기"}
+                  </Link>
+                  <Link href={`/matches/${nextMatch.id}`} className="flex items-center justify-center rounded-xl bg-gray-100 py-2.5 text-[11px] font-black text-gray-700 dark:bg-white/10 dark:text-white/85">
+                    경기 상세 보기
+                  </Link>
+                </div>
+              </div>
+            </section>
+          );
+        })()}
+
         {/* 탭 섹션 */}
-        <Tabs defaultValue="matches" className="w-full h-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
           {/* 💡 탭은 다시 2개로 조정 */}
           <TabsList
             onClick={buzz}
@@ -963,22 +1112,24 @@ export default function DashboardClient({
                         <Badge className="bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-500 border-none font-bold text-[10px] px-2 py-0">
                           {localNotice.date}
                         </Badge>
-                        <button
-                          onClick={() => {
-                            setNoticeEditForm({
-                              date: localNotice.date,
-                              title: localNotice.title,
-                              content: localNotice.content,
-                              important: localNotice.important,
-                              location: localNotice.location || "",
-                            });
-                            setNoticeEditModal(true);
-                          }}
-                          className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
-                          aria-label="공지 수정"
-                        >
-                          <Pencil className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => {
+                              setNoticeEditForm({
+                                date: localNotice.date,
+                                title: localNotice.title,
+                                content: localNotice.content,
+                                important: localNotice.important,
+                                location: localNotice.location || "",
+                              });
+                              setNoticeEditModal(true);
+                            }}
+                            className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                            aria-label="공지 수정"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -1224,24 +1375,6 @@ export default function DashboardClient({
               </Card>
             </div>
 
-            {/* D-Day 배너 */}
-            {nextMatch && dDay !== null && (
-              <div className="mb-4 rounded-2xl bg-white dark:bg-[#141416] border border-gray-200/70 dark:border-white/[0.06] shadow-sm p-4 flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] font-bold text-[#FF8FA3] dark:text-[#FFB6C1] mb-1 tracking-[0.14em]">NEXT MATCH</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">vs {nextMatch.opponent}</p>
-                  <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
-                    {nextMatch.date} · {nextMatch.time} · {nextMatch.location}
-                  </p>
-                </div>
-                <div className="text-right shrink-0 ml-4">
-                  <div className="text-[32px] font-extrabold tracking-tight text-[#FF8FA3] dark:text-[#FFB6C1] leading-none tabular-nums">
-                    {dDay === 0 ? "D-DAY" : dDay < 0 ? `D+${Math.abs(dDay)}` : `D-${dDay}`}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* 최근 5경기 폼 */}
             {completedMatches.length > 0 && (
               <div className="mb-4 rounded-2xl bg-white dark:bg-[#141416] border border-gray-200/70 dark:border-white/[0.06] shadow-sm px-4 py-3 flex items-center justify-between">
@@ -1264,19 +1397,22 @@ export default function DashboardClient({
               </div>
             )}
 
-            {/* 경기 일정 등록 버튼 */}
-            <button
-              onClick={() => {
-                setAddMatchForm({ date: "", time: "", location: "", opponent: "", type: "일반 매칭" });
-                setAddMatchModal(true);
-              }}
-              className="w-full mb-2 flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-[#FFB6C1]/40 dark:border-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] text-[12px] font-black hover:bg-[#FF8FA3]/5 dark:hover:bg-[#FFB6C1]/5 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              경기 일정 등록
-            </button>
+            {/* 경기 일정 등록 버튼 (관리자 전용) */}
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setAddMatchForm({ date: "", time: "", location: "", opponent: "", type: "일반 매칭" });
+                  setAddMatchModal(true);
+                }}
+                className="w-full mb-2 flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-[#FFB6C1]/40 dark:border-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] text-[12px] font-black hover:bg-[#FF8FA3]/5 dark:hover:bg-[#FFB6C1]/5 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                경기 일정 등록
+              </button>
+            )}
 
             {/* 경기 일정 리스트 */}
+            <div id="match-list" className="scroll-mt-24" />
             {[...matchList].reverse().map((match, mi) => {
               const isInternal = match.opponent === "자체전";
               const riseDelay = `${Math.min(mi, 8) * 60}ms`;
@@ -1379,7 +1515,7 @@ export default function DashboardClient({
                               <Camera className="w-3.5 h-3.5 text-[#FFB6C1]" />
                               {allPhotos.length > 1 ? `사진 ${allPhotos.length - 1}` : "사진 없음"}
                             </div>
-                            {allPhotos.length < 10 && (
+                            {isAdmin && allPhotos.length < 10 && (
                               <>
                                 <button
                                   onClick={() => fileInputRefs.current[match.id]?.click()}
@@ -1410,12 +1546,14 @@ export default function DashboardClient({
                                     onClick={() => setLightbox({ ids: allPhotos, index: i + 1 })}
                                     className="h-24 w-24 object-cover rounded-2xl cursor-pointer"
                                   />
-                                  <button
-                                    onClick={() => deletePhoto(match.id, url)}
-                                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-red-500/80 transition-all opacity-0 group-hover/photo:opacity-100"
-                                  >
-                                    <X className="w-3 h-3 text-white" />
-                                  </button>
+                                  {isAdmin && (
+                                    <button
+                                      onClick={() => deletePhoto(match.id, url)}
+                                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-red-500/80 transition-all opacity-0 group-hover/photo:opacity-100"
+                                    >
+                                      <X className="w-3 h-3 text-white" />
+                                    </button>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -1532,6 +1670,16 @@ export default function DashboardClient({
                             </Badge>
                           )}
                         </div>
+                        {/* 날씨 */}
+                        {match.weather && (() => {
+                          const w = parseWeather(match.weather);
+                          if (!w.available) return null;
+                          return (
+                            <span className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                              {weatherEmoji(w.icon)} {w.temp}°C {w.description} <span className="text-blue-400">💧{w.pop}%</span>
+                            </span>
+                          );
+                        })()}
                         {/* 상대전적 미리보기 */}
                         {!isInternal && (match.type || "").replace(/\s/g, "") === "일반매칭" && (() => {
                           const h2h = opponentStats.find((o) => o.key === (match.opponent || "").trim());
@@ -1547,13 +1695,15 @@ export default function DashboardClient({
                         })()}
                       </div>
                       <div className="flex flex-col items-end gap-1.5">
-                        <button
-                          onClick={() => openMatchEdit(match)}
-                          className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
-                          aria-label="결과 입력"
-                        >
-                          <Pencil className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => openMatchEdit(match)}
+                            className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                            aria-label="결과 입력"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                          </button>
+                        )}
                         {match.mom && (
                           <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-400/10 border border-yellow-300/50 dark:border-yellow-400/30 rounded-md px-2 py-0.5">
                             <Star className="w-2.5 h-2.5 text-yellow-500 dark:text-yellow-400 fill-yellow-500 dark:fill-yellow-400" />
@@ -1732,139 +1882,35 @@ export default function DashboardClient({
                       );
                     })()}
 
-                    {/* 라인업 아코디언 */}
+                    {/* 풀스크린 라인업 */}
                     {(() => {
                       const matchLineups = getMatchLineups(match.id);
-                      const isOpen = openLineups.has(match.id);
-                      const sortedQuarters = QUARTER_ORDER.filter((q) =>
-                        matchLineups.some((l) => l.quarter === q)
-                      );
-                      const activeQ =
-                        activeQuarters[match.id] || sortedQuarters[0] || "";
-                      const activeLineup = matchLineups.find(
-                        (l) => l.quarter === activeQ
-                      );
-
                       return (
                         <div className="mt-4 border-t border-gray-100 dark:border-white/5 pt-3">
-                          <div className="flex items-center justify-between">
-                            <button
-                              onClick={() => matchLineups.length > 0 && toggleLineup(match.id)}
-                              className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                            >
+                          {matchLineups.length > 0 ? (
+                            <LineupViewer
+                              match={match}
+                              lineups={matchLineups}
+                              rosterMap={rosterMap}
+                              captainRoles={captainRoles}
+                              playerStats={playerStatsMap}
+                              playerTitles={playerTitles}
+                              editHref={isAdmin ? `/matches/${match.id}/edit` : undefined}
+                            />
+                          ) : (
+                            <div className="flex items-center justify-between rounded-2xl border border-dashed border-gray-200 px-3.5 py-3 dark:border-white/10">
+                              <span className="flex items-center gap-1.5 text-[11px] font-black text-gray-400">
                               <Users className="w-3.5 h-3.5 text-[#FFB6C1]" />
-                              {matchLineups.length > 0 ? "라인업 보기" : "라인업 미등록"}
-                              {matchLineups.length > 0 && (
-                                isOpen ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />
-                              )}
-                            </button>
-                            <Link
-                              href={`/matches/${match.id}/edit`}
-                              className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] hover:opacity-70 transition-opacity"
-                            >
-                              {matchLineups.length > 0 ? "편집" : "+ 추가"}
-                            </Link>
-                          </div>
-                          {isOpen && matchLineups.length > 0 && (
-                            <div className="mt-3 space-y-3">
-                              {/* 쿼터 탭 */}
-                              {sortedQuarters.length > 1 && (
-                                <div className="flex gap-1.5 flex-wrap">
-                                  {sortedQuarters.map((q) => (
-                                    <button
-                                      key={q}
-                                      onClick={() =>
-                                        setActiveQuarters((prev) => ({
-                                          ...prev,
-                                          [match.id]: q,
-                                        }))
-                                      }
-                                      className={`text-[10px] font-black px-2.5 py-1 rounded-lg transition-all ${
-                                        activeQ === q
-                                          ? "bg-[#FFB6C1] dark:bg-[#FFB6C1] text-black"
-                                          : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400"
-                                      }`}
-                                    >
-                                      {q}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-
-                              {activeLineup && (
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
-                                        {activeLineup.formation}
-                                      </span>
-                                      <span className="text-[9px] text-gray-400">포메이션</span>
-                                    </div>
-                                    {FORMATION_POSITIONS[activeLineup.formation] && (
-                                      <button
-                                        onClick={async () => {
-                                          setSharingMatch(match.id);
-                                          try {
-                                            await shareFormation(
-                                              activeLineup,
-                                              rosterMap,
-                                              `언더덕_${match.opponent}_${activeQ}_라인업.png`,
-                                              `언더덕 vs ${match.opponent} · ${activeQ} · ${match.date}`
-                                            );
-                                          } catch (e) {
-                                            if (e instanceof Error && e.name !== "AbortError") {
-                                              alert("공유 실패: " + e.message);
-                                            }
-                                          } finally {
-                                            setSharingMatch(null);
-                                          }
-                                        }}
-                                        disabled={sharingMatch === match.id}
-                                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-black/10 dark:bg-white/10 text-[10px] font-black text-gray-600 dark:text-gray-300 hover:bg-black/20 dark:hover:bg-white/20 transition-all"
-                                      >
-                                        {sharingMatch === match.id
-                                          ? <Download className="w-3 h-3 animate-bounce" />
-                                          : <Share2 className="w-3 h-3" />}
-                                        공유
-                                      </button>
-                                    )}
-                                  </div>
-                                  {FORMATION_POSITIONS[activeLineup.formation] ? (
-                                    <FormationField
-                                      lineup={activeLineup}
-                                      rosterMap={rosterMap}
-                                      captainRoles={captainRoles}
-                                      matchInfo={{ goals: match.goals, assists: match.assists, mom: match.mom }}
-                                      playerStats={playerStatsMap}
-                                    />
-                                  ) : (
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {activeLineup.players.map((p, i) => (
-                                        <span key={i} className="text-[10px] font-bold px-2 py-0.5 bg-gray-100 dark:bg-white/5 rounded-md text-gray-700 dark:text-gray-300">
-                                          {p}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {activeLineup.subs.length > 0 && (
-                                    <div className="pt-1 border-t border-gray-100 dark:border-white/5">
-                                      <span className="text-[9px] text-gray-400 mr-1.5">교체</span>
-                                      {activeLineup.subs.map((s, i) => (
-                                        <span key={i} className="text-[10px] font-bold px-2 py-0.5 bg-gray-50 dark:bg-white/[0.03] rounded-md text-gray-500 mr-1">
-                                          {s}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-
+                                라인업 미등록
+                              </span>
+                              {isAdmin && (
                               <Link
-                                href={`/matches/${match.id}`}
-                                className="flex items-center justify-center w-full py-2 mt-1 rounded-xl bg-gray-100 dark:bg-white/5 text-[11px] font-black text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+                                href={`/matches/${match.id}/edit`}
+                                className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] hover:opacity-70 transition-opacity"
                               >
-                                자세히 보기 →
+                                  + 추가
                               </Link>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1886,7 +1932,7 @@ export default function DashboardClient({
                               <Camera className="w-3.5 h-3.5 text-[#FFB6C1]" />
                               {hasPhotos ? `경기 사진 ${photos.length}` : "경기 사진 없음"}
                             </div>
-                            {photos.length < 5 && (
+                            {isAdmin && photos.length < 5 && (
                               <>
                                 <button
                                   onClick={() => fileInputRefs.current[match.id]?.click()}
@@ -1923,12 +1969,14 @@ export default function DashboardClient({
                                     onClick={() => setLightbox({ ids: photos, index: i })}
                                     className="h-24 w-24 object-cover rounded-2xl cursor-pointer transition-opacity"
                                   />
-                                  <button
-                                    onClick={() => deletePhoto(match.id, id)}
-                                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-red-500/80 transition-all opacity-0 group-hover/photo:opacity-100"
-                                  >
-                                    <X className="w-3 h-3 text-white" />
-                                  </button>
+                                  {isAdmin && (
+                                    <button
+                                      onClick={() => deletePhoto(match.id, id)}
+                                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-red-500/80 transition-all opacity-0 group-hover/photo:opacity-100"
+                                    >
+                                      <X className="w-3 h-3 text-white" />
+                                    </button>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -1942,7 +1990,8 @@ export default function DashboardClient({
                       const attendees = match.attendees!.split(",").map((n) => n.trim()).filter(Boolean);
                       const votes = momVoteMap[match.id] || [];
                       const isOpen = openVotes.has(match.id);
-                      const voterName = momVoterName[match.id] || "";
+                      // 투표자 신원 = 로그인한 카카오 이름 (자동)
+                      const voterName = currentUser?.name || "";
 
                       // 경기 당일까지만 투표 가능, 다음날부터 잠금
                       const matchDay = new Date(match.date);
@@ -2059,30 +2108,39 @@ export default function DashboardClient({
                                     <p className="text-[10px] text-gray-400 mb-2">
                                       투표는 경기 당일까지만 가능합니다
                                     </p>
-                                    <div className="flex items-center justify-between">
-                                      <button
-                                        onClick={() => {
-                                          setMomModalVoter(voterName);
-                                          setMomModalAtk(myAtkVote || "");
-                                          setMomModalDef(myDefVote || "");
-                                          setMomModal({ matchId: match.id, attendees });
-                                        }}
-                                        className="text-[11px] font-black px-4 py-1.5 rounded-2xl bg-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10 text-[#FF8FA3] dark:text-[#FFB6C1] hover:bg-[#FF8FA3]/20 transition-colors"
-                                      >
-                                        {hasVoted ? "투표 변경" : "투표하기"}
-                                      </button>
-                                      {hasVoted && (
+                                    {currentUser ? (
+                                      <div className="flex items-center justify-between">
                                         <button
-                                          onClick={async () => {
-                                            if (myAtkVote) await cancelMomVote(match.id, voterName, "공격");
-                                            if (myDefVote) await cancelMomVote(match.id, voterName, "수비");
+                                          onClick={() => {
+                                            setMomModalVoter(voterName);
+                                            setMomModalAtk(myAtkVote || "");
+                                            setMomModalDef(myDefVote || "");
+                                            setMomModal({ matchId: match.id, attendees });
                                           }}
-                                          className="text-[10px] text-gray-400 hover:text-red-400 transition-colors"
+                                          className="text-[11px] font-black px-4 py-1.5 rounded-2xl bg-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10 text-[#FF8FA3] dark:text-[#FFB6C1] hover:bg-[#FF8FA3]/20 transition-colors"
                                         >
-                                          투표 취소
+                                          {hasVoted ? "투표 변경" : "투표하기"}
                                         </button>
-                                      )}
-                                    </div>
+                                        {hasVoted && (
+                                          <button
+                                            onClick={async () => {
+                                              if (myAtkVote) await cancelMomVote(match.id, voterName, "공격");
+                                              if (myDefVote) await cancelMomVote(match.id, voterName, "수비");
+                                            }}
+                                            className="text-[10px] text-gray-400 hover:text-red-400 transition-colors"
+                                          >
+                                            투표 취소
+                                          </button>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={() => signIn("kakao")}
+                                        className="w-full flex items-center justify-center gap-1.5 text-[11px] font-black py-2 rounded-2xl bg-[#FEE500] text-black/85 hover:opacity-90 transition-opacity"
+                                      >
+                                        <Lock className="w-3 h-3" /> 로그인하고 투표하기
+                                      </button>
+                                    )}
                                   </>
                                 )}
                               </div>
@@ -2131,9 +2189,19 @@ export default function DashboardClient({
                           {/* 접힌 상태: 첫 댓글 미리보기 */}
                           {!isOpen && firstFb && (
                             <div className="flex items-center gap-2 mt-2 px-1">
-                              <FeedbackAvatar name={firstFb.name} />
+                              <Link
+                                href={`/players/${encodeURIComponent(firstFb.name.trim())}`}
+                                aria-label={`${firstFb.name} 프로필 보기`}
+                              >
+                                <FeedbackAvatar name={firstFb.name} />
+                              </Link>
                               <p className="flex-1 min-w-0 text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                                <span className="font-black text-gray-700 dark:text-gray-300 mr-1.5">{firstFb.name}</span>
+                                <Link
+                                  href={`/players/${encodeURIComponent(firstFb.name.trim())}`}
+                                  className="mr-1.5 font-black text-gray-700 hover:text-[#FF8FA3] dark:text-gray-300 dark:hover:text-[#FFB6C1]"
+                                >
+                                  {firstFb.name}
+                                </Link>
                                 {firstFb.message}
                               </p>
                             </div>
@@ -2147,59 +2215,68 @@ export default function DashboardClient({
                               )}
                               {feedbacks.map((fb, i) => (
                                 <div key={i} className="flex gap-2 group">
-                                  <FeedbackAvatar name={fb.name} />
+                                  <Link
+                                    href={`/players/${encodeURIComponent(fb.name.trim())}`}
+                                    aria-label={`${fb.name} 프로필 보기`}
+                                    className="shrink-0"
+                                  >
+                                    <FeedbackAvatar name={fb.name} />
+                                  </Link>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5 mb-0.5">
-                                      <span className="text-[10px] font-black text-gray-800 dark:text-gray-200">{fb.name}</span>
-                                      <span className="text-[9px] text-gray-400">{formatFeedbackTime(fb.timestamp)}</span>
-                                      <button
-                                        onClick={() => setDeleteTarget({ matchId: match.id, fb })}
-                                        className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-400"
+                                      <Link
+                                        href={`/players/${encodeURIComponent(fb.name.trim())}`}
+                                        className="text-[10px] font-black text-gray-800 hover:text-[#FF8FA3] dark:text-gray-200 dark:hover:text-[#FFB6C1]"
                                       >
-                                        <Trash2 className="w-3 h-3" />
-                                      </button>
+                                        {fb.name}
+                                      </Link>
+                                      <span className="text-[9px] text-gray-400">{formatFeedbackTime(fb.timestamp)}</span>
+                                      {(isAdmin || (currentUser && fb.name === currentUser.name)) && (
+                                        <button
+                                          onClick={() => setDeleteTarget({ matchId: match.id, fb })}
+                                          className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-400"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </button>
+                                      )}
                                     </div>
                                     <p className="text-[11px] text-gray-600 dark:text-gray-300 break-words leading-relaxed">{fb.message}</p>
                                   </div>
                                 </div>
                               ))}
 
-                              {/* 입력 폼 */}
+                              {/* 입력 폼 (로그인 회원만) */}
                               <div className="pt-3 border-t border-gray-100 dark:border-white/5">
-                                {/* 이름 입력 (컴팩트) */}
-                                <div className="flex items-center gap-1.5 mb-2">
-                                  <span className="text-[10px] text-gray-400 shrink-0">닉네임</span>
-                                  <input
-                                    type="text"
-                                    placeholder="이름 입력"
-                                    value={form.name}
-                                    maxLength={20}
-                                    onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, name: e.target.value } }))}
-                                    className="w-28 text-[11px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-2.5 py-1.5 outline-none focus:border-[#FFB6C1]/60 dark:focus:border-[#FFB6C1]/60 placeholder:text-gray-400 text-gray-800 dark:text-gray-200"
-                                  />
-                                </div>
-                                {/* 메시지 입력 + 전송 */}
-                                <div className="flex items-center gap-2">
-                                  <FeedbackAvatar name={form.name} />
-                                  <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-[#FFB6C1]/60 dark:focus-within:border-[#FFB6C1]/60 transition-colors">
-                                    <input
-                                      type="text"
-                                      placeholder="댓글 달기"
-                                      value={form.message}
-                                      maxLength={200}
-                                      onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, message: e.target.value } }))}
-                                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitFeedback(match.id); } }}
-                                      className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-gray-400 text-gray-800 dark:text-gray-200 min-w-0"
-                                    />
-                                    <button
-                                      onClick={() => submitFeedback(match.id)}
-                                      disabled={submittingFeedback === match.id || !form.name?.trim() || !form.message?.trim()}
-                                      className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1] disabled:opacity-30 hover:opacity-70 transition-opacity"
-                                    >
-                                      <SendHorizonal className="w-4 h-4" />
-                                    </button>
+                                {currentUser ? (
+                                  <div className="flex items-center gap-2">
+                                    <FeedbackAvatar name={currentUser.name} />
+                                    <div className="flex-1 flex items-center gap-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-[#FFB6C1]/60 dark:focus-within:border-[#FFB6C1]/60 transition-colors">
+                                      <input
+                                        type="text"
+                                        placeholder={`${currentUser.name}(으)로 댓글 달기`}
+                                        value={form.message}
+                                        maxLength={200}
+                                        onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, message: e.target.value } }))}
+                                        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitFeedback(match.id); } }}
+                                        className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-gray-400 text-gray-800 dark:text-gray-200 min-w-0"
+                                      />
+                                      <button
+                                        onClick={() => submitFeedback(match.id)}
+                                        disabled={submittingFeedback === match.id || !form.message?.trim()}
+                                        className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1] disabled:opacity-30 hover:opacity-70 transition-opacity"
+                                      >
+                                        <SendHorizonal className="w-4 h-4" />
+                                      </button>
+                                    </div>
                                   </div>
-                                </div>
+                                ) : (
+                                  <button
+                                    onClick={() => signIn("kakao")}
+                                    className="w-full flex items-center justify-center gap-1.5 text-[11px] font-black py-2.5 rounded-2xl bg-[#FEE500] text-black/85 hover:opacity-90 transition-opacity"
+                                  >
+                                    <Lock className="w-3 h-3" /> 로그인하고 댓글 쓰기
+                                  </button>
+                                )}
                               </div>
                             </div>
                           )}
@@ -2473,7 +2550,7 @@ export default function DashboardClient({
                         {sortedPlayers.map((player, idx) => (
                           <tr
                             key={idx}
-                            onClick={() => { buzz(); setProfilePlayer(player); }}
+                            onClick={() => { buzz(); goToPlayer(player.name); }}
                             className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
                           >
                             <td className="py-4 pl-4 overflow-hidden">
@@ -2485,6 +2562,11 @@ export default function DashboardClient({
                                   {player.pos !== "-" ? player.pos : "SUB"}
                                 </span>
                               </div>
+                              {playerTitles[player.name.trim()]?.length ? (
+                                <div className="mt-1.5">
+                                  <TitleBadges titles={playerTitles[player.name.trim()]} size={15} max={3} gap={3} />
+                                </div>
+                              ) : null}
                             </td>
                             <td className={`py-4 text-center text-[13px] font-bold ${statSort === "apps" ? "text-[#FF8FA3] dark:text-[#FFB6C1] font-black" : "text-gray-400"}`}>
                               {player.apps}
@@ -3031,152 +3113,6 @@ export default function DashboardClient({
         </DrawerContent>
       </Drawer>
 
-      {/* 선수 프로필 Drawer */}
-      <Drawer open={profilePlayer !== null} onOpenChange={(open) => { if (!open) setProfilePlayer(null); }}>
-        <DrawerContent className="bg-white dark:bg-[#161618] max-h-[92dvh]">
-          {profilePlayer && (() => {
-            const pName = profilePlayer.name.trim();
-            const role = captainRoles?.[pName];
-            const matchesWithAttendees = completedMatches.filter((m) => (m.attendees || "").trim());
-            const attendCount = matchesWithAttendees.filter((m) =>
-              m.attendees!.split(",").map((s) => s.trim()).includes(pName)
-            ).length;
-            const attendRate = matchesWithAttendees.length > 0
-              ? Math.round((attendCount / matchesWithAttendees.length) * 100)
-              : null;
-            const partners = duoAll.filter((d) => d.a === pName || d.b === pName).slice(0, 3);
-            const contributedMatches = completedMatches
-              .filter((m) =>
-                (m.goals || "").split(",").map((s) => s.trim()).includes(pName) ||
-                (m.assists || "").split(",").map((s) => s.trim()).includes(pName)
-              )
-              .slice(-5)
-              .reverse();
-            return (
-              <>
-                <DrawerHeader className="pb-0">
-                  <DrawerTitle className="flex items-center gap-2 text-[15px] font-bold text-gray-900 dark:text-white">
-                    <span className="flex items-center justify-center w-9 h-9 rounded-full bg-[#FFB6C1]/20 border border-[#FFB6C1]/40 text-[12px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] shrink-0">
-                      {profilePlayer.no !== "-" ? `#${profilePlayer.no}` : "?"}
-                    </span>
-                    {pName}
-                    <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm ${getPosBadgeStyle(profilePlayer.pos)}`}>
-                      {profilePlayer.pos !== "-" ? profilePlayer.pos : "SUB"}
-                    </span>
-                    {role && (
-                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-gradient-to-br from-amber-200 to-amber-500 text-amber-950">
-                        {role}
-                      </span>
-                    )}
-                  </DrawerTitle>
-                </DrawerHeader>
-
-                <div className="overflow-y-auto px-5 py-4 space-y-5 pb-8">
-                  {/* 시즌 스탯 4분할 */}
-                  <div className="grid grid-cols-4 rounded-2xl border border-gray-200/70 dark:border-white/[0.06] divide-x divide-gray-100 dark:divide-white/5 overflow-hidden bg-gray-50 dark:bg-white/[0.02]">
-                    {[
-                      { label: "출전", value: Number(profilePlayer.apps) || 0, color: "text-gray-900 dark:text-white" },
-                      { label: "골", value: Number(profilePlayer.goals) || 0, color: "text-blue-500" },
-                      { label: "도움", value: Number(profilePlayer.assists) || 0, color: "text-emerald-500" },
-                      { label: "MOM", value: Number(profilePlayer.mom) || 0, color: "text-amber-500" },
-                    ].map((s) => (
-                      <div key={s.label} className="flex flex-col items-center justify-center py-3.5">
-                        <span className={`text-xl font-black tabular-nums ${s.color}`}>
-                          <CountUp value={s.value} duration={700} />
-                        </span>
-                        <span className="text-[9px] font-bold text-gray-400 mt-0.5">{s.label}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* 출석률 */}
-                  {attendRate !== null && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-widest">
-                          출석률 <span className="text-gray-400 font-medium">({attendCount}/{matchesWithAttendees.length}경기)</span>
-                        </p>
-                        <span className="text-[13px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] tabular-nums">
-                          <CountUp value={attendRate} duration={700} />%
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#FFB6C1] to-[#FF8FA3] transition-[width] duration-700 ease-out"
-                          style={{ width: `${attendRate}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 듀오 파트너 */}
-                  {partners.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-widest mb-2">
-                        호흡 잘 맞는 파트너
-                      </p>
-                      <div className="space-y-1.5">
-                        {partners.map((d) => {
-                          const partner = d.a === pName ? d.b : d.a;
-                          return (
-                            <div key={`${d.a}|${d.b}`} className="flex items-center justify-between rounded-xl bg-gray-50 dark:bg-white/[0.03] px-3 py-2">
-                              <span className="text-[12px] font-bold text-gray-800 dark:text-gray-200">{partner}</span>
-                              <span className="text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] tabular-nums">
-                                {d.count}회 합작
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 활약한 경기 (골/어시) */}
-                  {contributedMatches.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-widest mb-2">
-                        최근 활약한 경기
-                      </p>
-                      <div className="space-y-1.5">
-                        {contributedMatches.map((m) => {
-                          const goalCnt = (m.goals || "").split(",").map((s) => s.trim()).filter((s) => s === pName).length;
-                          const assistCnt = (m.assists || "").split(",").map((s) => s.trim()).filter((s) => s === pName).length;
-                          return (
-                            <Link
-                              key={m.id}
-                              href={`/matches/${m.id}`}
-                              onClick={() => setProfilePlayer(null)}
-                              className="flex items-center justify-between rounded-xl bg-gray-50 dark:bg-white/[0.03] px-3 py-2 hover:bg-gray-100 dark:hover:bg-white/[0.06] active:scale-[0.98] transition-all"
-                            >
-                              <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300 truncate">
-                                vs {m.opponent} <span className="text-gray-400 font-medium ml-1">{m.date}</span>
-                              </span>
-                              <span className="shrink-0 flex items-center gap-1.5 ml-2">
-                                {goalCnt > 0 && (
-                                  <span className="text-[11px] font-black text-gray-800 dark:text-gray-200">
-                                    ⚽{goalCnt > 1 ? ` ×${goalCnt}` : ""}
-                                  </span>
-                                )}
-                                {assistCnt > 0 && (
-                                  <span className="text-[11px] font-black text-emerald-500">
-                                    🅰️{assistCnt > 1 ? ` ×${assistCnt}` : ""}
-                                  </span>
-                                )}
-                                <ChevronRight className="w-3 h-3 text-gray-300 dark:text-gray-600" />
-                              </span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            );
-          })()}
-        </DrawerContent>
-      </Drawer>
-
       {/* 경기 일정 등록 Drawer */}
       <Drawer open={addMatchModal} onOpenChange={setAddMatchModal} handleOnly repositionInputs={false}>
         <DrawerContent className="bg-white dark:bg-[#161618] max-h-[92dvh]">
@@ -3309,25 +3245,10 @@ export default function DashboardClient({
             className="w-full max-w-xs bg-white dark:bg-[#161618] rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-[14px] font-bold text-gray-900 dark:text-white mb-4">MOM 투표</p>
-
-            {/* 투표자(나) 선택 */}
-            <div className="mb-4">
-              <p className="text-[10px] font-semibold text-gray-400 mb-1.5 tracking-widest">나는</p>
-              <div className="flex flex-wrap gap-1.5">
-                {momModal.attendees.map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => { setMomModalVoter(n); if (momModalAtk === n) setMomModalAtk(""); if (momModalDef === n) setMomModalDef(""); }}
-                    className={`text-[11px] font-black px-2.5 py-1 rounded-xl transition-all ${
-                      momModalVoter === n ? "bg-gray-800 dark:bg-white text-white dark:text-black" : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300"
-                    }`}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <p className="text-[14px] font-bold text-gray-900 dark:text-white mb-1">MOM 투표</p>
+            <p className="text-[11px] text-gray-400 mb-4">
+              <span className="font-black text-gray-700 dark:text-gray-300">{momModalVoter}</span> 님으로 투표합니다
+            </p>
 
             {/* 공격 MOM */}
             <div className="mb-4">
@@ -3363,9 +3284,6 @@ export default function DashboardClient({
                   </button>
                 ))}
               </div>
-              {!momModalVoter && (
-                <p className="text-[10px] text-gray-400 mt-2">먼저 본인 이름을 선택해주세요</p>
-              )}
             </div>
 
             <div className="flex gap-2">
@@ -3381,7 +3299,6 @@ export default function DashboardClient({
                   try {
                     if (momModalAtk) await submitMomVote(momModal.matchId, momModalVoter, momModalAtk, "공격");
                     if (momModalDef) await submitMomVote(momModal.matchId, momModalVoter, momModalDef, "수비");
-                    setMomVoterName((prev) => ({ ...prev, [momModal.matchId]: momModalVoter }));
                     setMomModal(null);
                   } catch {
                     alert("투표 저장에 실패했습니다. 다시 시도해주세요.");
@@ -3435,12 +3352,16 @@ export default function DashboardClient({
       {showTopBtn && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-white dark:bg-[#161618] border border-gray-200 dark:border-white/10 shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+          className="fixed bottom-24 right-6 z-50 w-10 h-10 rounded-full bg-white dark:bg-[#161618] border border-gray-200 dark:border-white/10 shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
           aria-label="맨 위로"
         >
           <ChevronUp className="w-5 h-5 text-[#FF8FA3] dark:text-[#FFB6C1]" />
         </button>
       )}
+      <AppBottomNav
+        active={activeTab === "stats" ? "stats" : initialView === "home" ? "home" : "matches"}
+        currentUserName={currentUser?.name}
+      />
     </div>
   );
 }
