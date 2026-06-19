@@ -96,7 +96,7 @@ export default async function PlayerPage({
   const leaders = evaluateLeaders(contexts);
   const ctx = contexts.get(name);
   const earnedPositions = ctx
-    ? (["GK", "DF", "MF", "FW"] as const).filter((position) => ctx.posLineupCounts[position] >= 10)
+    ? (["GK", "DF", "MF", "FW"] as const).filter((position) => ctx.posCounts[position] >= 10)
     : [];
   const displayPositions = Array.from(new Set([
     ...(registeredPos !== "-" ? [registeredPos] : []),

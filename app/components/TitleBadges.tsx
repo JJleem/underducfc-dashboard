@@ -23,15 +23,39 @@ const TIER_VIS: Record<TierIndex, TierVis> = {
 // 달성형(등급 없음) — 차콜·네이비에 아주 옅은 자개 포인트
 const FLAT_VIS: TierVis = { grad: ["#94A3B8", "#6F687D"], glow: null, icon: "#D7DEE8" };
 
+// 난도가 높은 일반 달성형 — 딥 블루·청보라
+const ELITE_VIS: TierVis = { grad: ["#7DD3FC", "#6366F1"], glow: "rgba(79,127,219,0.24)", icon: "#BFDBFE" };
+
 // 리더(팀 1위) — 빛나는 골드 왕관
 const LEADER_VIS: TierVis = { grad: ["#FFE7A0", "#E0A100"], glow: "rgba(255,200,60,0.65)", icon: "#FFD45A" };
 
 // 히든 칭호 — 시안/틸 계열 신비로운 느낌
 const HIDDEN_VIS: TierVis = { grad: ["#67E8F9", "#0E7490"], glow: "rgba(103,232,249,0.55)", icon: "#67E8F9" };
 
+const ELITE_ACHIEVEMENT_IDS = new Set([
+  "multiplayer",
+  "utility",
+  "concrete",
+  "fox",
+  "box2box",
+  "lastman",
+  "sweeperkeeper",
+  "attacking_fullback",
+  "attacking_centerback",
+  "invincible",
+  "unsung",
+  "devotion",
+  "onehit",
+  "loyalty",
+]);
+
+const isEliteAchievement = (id: string) =>
+  ELITE_ACHIEVEMENT_IDS.has(id.replace(/-(?:flat|[0-3])$/, ""));
+
 function visOf(t: EarnedTitle): TierVis {
   if (t.variant === "leader") return LEADER_VIS;
   if (t.hidden) return HIDDEN_VIS;
+  if (isEliteAchievement(t.id)) return ELITE_VIS;
   return t.tier === null ? FLAT_VIS : TIER_VIS[t.tier];
 }
 

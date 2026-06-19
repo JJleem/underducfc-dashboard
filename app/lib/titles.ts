@@ -120,6 +120,7 @@ export interface EarnedTitle {
   tierLabel: string | null;
   desc?: string; // 칭호 설명 (개인 페이지 카드용)
   hidden?: boolean; // 히든 칭호
+  stats?: { label: string; value: string }[]; // 개인 페이지 상세 기록
   /** 특수 뱃지 스타일: leader=팀 1위 왕관, manager=감독 전용 */
   variant?: "leader" | "manager";
 }
@@ -676,12 +677,49 @@ function tierForValue(value: number, tiers: number[]): TierIndex | null {
   return earned;
 }
 
+function achievementStats(id: string, c: PlayerContext): { label: string; value: string }[] {
+  const positionStats = [
+    { label: "GK", value: `${c.posCounts.GK}경기` },
+    { label: "DF", value: `${c.posCounts.DF}경기` },
+    { label: "MF", value: `${c.posCounts.MF}경기` },
+    { label: "FW", value: `${c.posCounts.FW}경기` },
+  ];
+  switch (id) {
+    case "multiplayer": return positionStats.slice(1);
+    case "utility":
+    case "shapeshifter": return positionStats;
+    case "concrete": return [{ label: "DF 출전", value: `${c.posCounts.DF}경기` }, { label: "DF 비율", value: `${Math.round(ratio(c.posCounts.DF, c.posSlotTotal) * 100)}%` }];
+    case "fox": return [{ label: "FW 출전", value: `${c.posCounts.FW}경기` }, { label: "득점", value: `${c.goals}골` }];
+    case "box2box": return [{ label: "MF 출전", value: `${c.posCounts.MF}경기` }, { label: "공격 기록", value: `${c.goals}골 · ${c.assists}도움` }];
+    case "lastman": return [{ label: "GK 출전", value: `${c.posCounts.GK}경기` }];
+    case "sweeperkeeper": return [{ label: "GK 출전", value: `${c.posCounts.GK}경기` }, { label: "도움", value: `${c.assists}개` }];
+    case "attacking_fullback":
+    case "overlap_machine":
+    case "underduck_cafu": return [{ label: "풀백 출전", value: `${c.fullbackGames}경기` }, { label: "공격 기록", value: `${c.goals}골 · ${c.assists}도움` }];
+    case "attacking_centerback":
+    case "libero":
+    case "scoring_wall": return [{ label: "센터백 출전", value: `${c.centerbackGames}경기` }, { label: "공격포인트", value: `${c.points}P` }];
+    case "setpiece_nightmare": return [{ label: "센터백 출전", value: `${c.centerbackGames}경기` }, { label: "득점", value: `${c.goals}골` }];
+    case "false_nine": return [{ label: "FW · MF", value: `${c.posCounts.FW} · ${c.posCounts.MF}경기` }, { label: "도움", value: `${c.assists}개` }];
+    case "football_master": return [...positionStats, { label: "공격포인트", value: `${c.points}P` }];
+    case "unsung":
+    case "loyalty": return [{ label: "출전", value: `${c.apps}경기` }, { label: "공격포인트", value: `${c.points}P` }];
+    case "devotion": return [{ label: "득점", value: `${c.goals}골` }, { label: "도움", value: `${c.assists}개` }];
+    case "onehit": return [{ label: "출전", value: `${c.apps}경기` }, { label: "득점", value: `${c.goals}골` }];
+    case "invincible": return [{ label: "출전", value: `${c.apps}경기` }, { label: "승률", value: `${Math.round(c.winRate * 100)}%` }];
+    case "firstblood": return [{ label: "데뷔전", value: "득점 성공" }];
+    case "laser": return [{ label: "출전", value: `${c.apps}경기` }, { label: "경기당 득점", value: c.goalPerGame.toFixed(2) }];
+    case "duo": return [{ label: "최다 호흡", value: `${c.bestDuoAssists}도움` }];
+    default: return [{ label: "출전", value: `${c.apps}경기` }, { label: "공격 기록", value: `${c.goals}골 · ${c.assists}도움` }];
+  }
+}
+
 export function evaluatePlayer(c: PlayerContext, defs: TitleDef[] = TITLES): EarnedTitle[] {
   const out: EarnedTitle[] = [];
   for (const d of defs) {
     if (d.flat) {
       if (d.check?.(c)) {
-        out.push({ id: d.id, name: d.name, icon: d.icon, category: d.category, flagship: !!d.flagship, tier: null, tierLabel: null, desc: d.desc, hidden: !!d.hidden });
+        out.push({ id: d.id, name: d.name, icon: d.icon, category: d.category, flagship: !!d.flagship, tier: null, tierLabel: null, desc: d.desc, hidden: !!d.hidden, stats: achievementStats(d.id, c) });
       }
       continue;
     }
@@ -690,7 +728,8 @@ export function evaluatePlayer(c: PlayerContext, defs: TitleDef[] = TITLES): Ear
       const tier = tierForValue(d.value(c), d.tiers);
       if (tier !== null) {
         const labels = d.tierLabels ?? TIER_NAMES;
-        out.push({ id: d.id, name: d.name, icon: d.icon, category: d.category, flagship: !!d.flagship, tier, tierLabel: labels[tier] ?? `Lv${tier + 1}`, desc: d.desc, hidden: !!d.hidden });
+        const value = d.value(c);
+        out.push({ id: d.id, name: d.name, icon: d.icon, category: d.category, flagship: !!d.flagship, tier, tierLabel: labels[tier] ?? `Lv${tier + 1}`, desc: d.desc, hidden: !!d.hidden, stats: [{ label: "현재 기록", value: `${value}${d.unit ?? ""}` }] });
       }
     }
   }
@@ -728,7 +767,7 @@ export function evaluateLeaders(contexts: Map<string, PlayerContext>): Map<strin
     for (const c of list) {
       if (def.value(c) !== max) continue;
       const arr = result.get(c.name) ?? [];
-      arr.push({ id: def.id, name: def.name, icon: def.icon, category: "리더", flagship: true, tier: null, tierLabel: null, desc: def.desc, variant: "leader" });
+      arr.push({ id: def.id, name: def.name, icon: def.icon, category: "리더", flagship: true, tier: null, tierLabel: null, desc: def.desc, variant: "leader", stats: [{ label: "팀 내 1위 기록", value: String(def.value(c)) }] });
       result.set(c.name, arr);
     }
   }
