@@ -1,8 +1,8 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { Badge } from "../../components/ui/badge";
 import { Card, CardContent } from "../../components/ui/card";
-import { ArrowLeft, MapPin, Target, Pencil, Star, Users } from "lucide-react";
+import { ArrowLeft, MapPin, Target, Pencil, Star, Users, Camera } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
@@ -10,6 +10,7 @@ import { Sun, Moon } from "lucide-react";
 import { MatchData, LineupData } from "../../components/DashboardClient";
 import AppBottomNav from "../../components/AppBottomNav";
 import LineupViewer from "../../components/LineupViewer";
+import { parseWeather, weatherEmoji } from "../../lib/weather";
 import type { EarnedTitle } from "../../lib/titles";
 
 interface MatchDetailClientProps {
@@ -25,6 +26,9 @@ interface MatchDetailClientProps {
 export default function MatchDetailClient({ match, lineups, rosterMap, captainRoles, playerStats, playerTitles = {}, currentUserName }: MatchDetailClientProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const isInternal = match.opponent === "자체전";
+  const [lightbox, setLightbox] = useState<{ urls: string[]; index: number } | null>(null);
+  const weather = parseWeather(match.weather || "");
+  const photos = match.photos ? match.photos.split(",").filter(Boolean) : [];
 
   const getResultBadgeStyle = (result: string) => {
     if (result === "승") return "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black";
@@ -70,6 +74,12 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
                     </Badge>
                   )}
                 </div>
+                {/* 날씨 */}
+                {weather.available && (
+                  <span className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400 font-medium px-1">
+                    {weatherEmoji(weather.icon)} {weather.temp}°C {weather.description} <span className="text-blue-400">💧{weather.pop}%</span>
+                  </span>
+                )}
               </div>
               {match.result && (
                 <Badge className={`border-none font-black text-[11px] px-3 ${getResultBadgeStyle(match.result)}`}>
@@ -115,24 +125,28 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
         </Card>
 
         {/* 경기 세부 정보 */}
-        {(match.weather || match.mom || match.attendees) && (
+        {(match.goals || match.mom || match.attendees || photos.length > 0) && (
           <Card className="bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-md">
-            <CardContent className="p-4 space-y-3">
-              {/* 날씨 */}
-              {match.weather && (() => {
-                try {
-                  const w = JSON.parse(match.weather);
-                  if (!w.temp) return null;
-                  return (
-                    <div className="flex items-center gap-2 text-[11px] text-gray-600 dark:text-gray-300">
-                      <span className="text-base">{w.icon === "01d" || w.icon === "01n" ? "☀️" : w.icon?.startsWith("02") ? "⛅" : w.icon?.startsWith("03") || w.icon?.startsWith("04") ? "☁️" : w.icon?.startsWith("09") || w.icon?.startsWith("10") ? "🌧️" : w.icon?.startsWith("13") ? "❄️" : "🌤️"}</span>
-                      <span className="font-bold">{w.temp}°C</span>
-                      <span className="text-gray-400">{w.description}</span>
-                      {w.pop !== undefined && <span className="text-blue-400">💧{w.pop}%</span>}
-                    </div>
-                  );
-                } catch { return null; }
-              })()}
+            <CardContent className="p-4 space-y-4">
+              {/* 득점 & 어시스트 */}
+              {match.goals && (
+                <div>
+                  <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 tracking-wider mb-1.5">득점 기록</p>
+                  <div className="space-y-1.5">
+                    {match.goals.split(",").map((scorer, i) => {
+                      const assistant = match.assists?.split(",")[i]?.trim();
+                      return (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="text-[11px] font-black text-gray-800 dark:text-gray-200">⚽ {scorer.trim()}</span>
+                          {assistant && (
+                            <span className="text-[10px] text-[#FF8FA3] dark:text-[#FFB6C1]">assist by {assistant}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* MOM */}
               {match.mom && (
@@ -160,6 +174,28 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
                       >
                         {name.trim()}
                       </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 사진 */}
+              {photos.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <Camera className="w-3.5 h-3.5 text-[#FFB6C1]" />
+                    <span className="text-[10px] font-black text-gray-500 dark:text-gray-400">사진 ({photos.length})</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {photos.map((url, i) => (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        key={i}
+                        src={url.replace("/upload/", "/upload/c_fill,w_300,h_300,q_auto,f_auto/")}
+                        alt={`경기 사진 ${i + 1}`}
+                        className="w-full aspect-square object-cover rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => setLightbox({ urls: photos, index: i })}
+                      />
                     ))}
                   </div>
                 </div>
@@ -203,6 +239,44 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
         )}
       </main>
       <AppBottomNav active="matches" currentUserName={currentUserName} />
+
+      {/* 라이트박스 */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors text-2xl font-bold"
+            onClick={() => setLightbox(null)}
+          >
+            ✕
+          </button>
+          {lightbox.index > 0 && (
+            <button
+              className="absolute left-4 text-white/70 hover:text-white text-2xl"
+              onClick={(e) => { e.stopPropagation(); setLightbox({ ...lightbox, index: lightbox.index - 1 }); }}
+            >
+              ‹
+            </button>
+          )}
+          {lightbox.index < lightbox.urls.length - 1 && (
+            <button
+              className="absolute right-4 text-white/70 hover:text-white text-2xl"
+              onClick={(e) => { e.stopPropagation(); setLightbox({ ...lightbox, index: lightbox.index + 1 }); }}
+            >
+              ›
+            </button>
+          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lightbox.urls[lightbox.index].replace("/upload/", "/upload/q_auto,f_auto/")}
+            alt="경기 사진"
+            className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
