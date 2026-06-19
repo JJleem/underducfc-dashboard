@@ -20,7 +20,7 @@ function accentOf(t: EarnedTitle): Accent {
   if (t.variant === "manager") return { ring: "#D4A017", text: "#FFD978", lightBg: "linear-gradient(135deg,#fff9e8 0%,#f5e7bd 100%)", darkBg: "linear-gradient(135deg,#241a3d 0%,#17101f 55%,#34240b 100%)", glow: "rgba(255,196,70,0.22)" };
   if (t.variant === "leader") return { ring: "#E0A100", text: "#FFD45A", lightBg: "linear-gradient(135deg,#fffbed 0%,#f8e8ad 100%)", darkBg: "linear-gradient(135deg,#241d0a 0%,#16140d 58%,#302407 100%)", glow: "rgba(255,200,60,0.18)" };
   if (t.hidden) return { ring: "#22D3EE", text: "#A5F3FC", lightBg: "linear-gradient(125deg,#ecfeff 0%,#e0f2fe 42%,#f3e8ff 100%)", darkBg: "linear-gradient(125deg,#061b2c 0%,#09263b 42%,#21113b 100%)", glow: "rgba(34,211,238,0.24)" };
-  if (t.tier === null) return { ring: "#C084FC", text: "#F5D0FE", lightBg: "linear-gradient(125deg,#fff1f7 0%,#f3e8ff 48%,#e0f2fe 100%)", darkBg: "linear-gradient(125deg,#31152b 0%,#24163b 48%,#102b42 100%)", glow: "rgba(192,132,252,0.16)" };
+  if (t.tier === null) return { ring: "#718096", text: "#D7DEE8", lightBg: "linear-gradient(135deg,#f1f3f6 0%,#e7ebf0 72%,#e9e5ef 100%)", darkBg: "linear-gradient(135deg,#17202d 0%,#111827 72%,#1b1924 100%)" };
   const m: Accent[] = [
     { ring: "#B87333", text: "#F1B678", lightBg: "linear-gradient(135deg,#fff7ed 0%,#f2ddc7 100%)", darkBg: "linear-gradient(135deg,#2b1b12 0%,#171311 100%)" },
     { ring: "#8291A6", text: "#DCE6F3", lightBg: "linear-gradient(135deg,#f8fafc 0%,#dfe7f0 100%)", darkBg: "linear-gradient(135deg,#202938 0%,#121722 100%)" },

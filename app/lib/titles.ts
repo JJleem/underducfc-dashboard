@@ -609,9 +609,9 @@ export const TITLES: TitleDef[] = [
   // ── 포지션 특성
   { id: "multiplayer", name: "멀티플레이어", icon: "shuffle", category: "포지션 특성", state: "live", flagship: true, flat: true, desc: "2개 포지션+ & 10경기+", check: (c) => c.posGroupsPlayed >= 2 && c.apps >= 10 },
   { id: "utility", name: "만능 유틸리티", icon: "boxes", category: "포지션 특성", state: "live", flagship: true, flat: true, desc: "전 포지션 경험", check: (c) => c.allFourPositions },
-  { id: "concrete", name: "콘크리트", icon: "brick-wall", category: "포지션 특성", state: "live", flat: true, desc: "출전 80%+ DF", check: (c) => c.posSlotTotal >= 5 && ratio(c.posCounts.DF, c.posSlotTotal) >= 0.8 },
-  { id: "fox", name: "폭스 인 더 박스", icon: "target", category: "포지션 특성", state: "live", flat: true, desc: "출전 80%+ FW", check: (c) => c.posSlotTotal >= 5 && ratio(c.posCounts.FW, c.posSlotTotal) >= 0.8 },
-  { id: "box2box", name: "박스 투 박스", icon: "footprints", category: "포지션 특성", state: "live", flat: true, desc: "출전 80%+ MF", check: (c) => c.posSlotTotal >= 5 && ratio(c.posCounts.MF, c.posSlotTotal) >= 0.8 },
+  { id: "concrete", name: "콘크리트", icon: "brick-wall", category: "포지션 특성", state: "live", flat: true, desc: "DF 15경기+ & 출전 비율 80%+", check: (c) => c.posCounts.DF >= 15 && ratio(c.posCounts.DF, c.posSlotTotal) >= 0.8 },
+  { id: "fox", name: "폭스 인 더 박스", icon: "target", category: "포지션 특성", state: "live", flat: true, desc: "FW 10경기+ & 득점 5+", check: (c) => c.posCounts.FW >= 10 && c.goals >= 5 },
+  { id: "box2box", name: "박스 투 박스", icon: "footprints", category: "포지션 특성", state: "live", flat: true, desc: "MF 15경기+ & 3골·3도움+", check: (c) => c.posCounts.MF >= 15 && c.goals >= 3 && c.assists >= 3 },
   { id: "lastman", name: "라스트맨", icon: "hand", category: "포지션 특성", state: "live", flat: true, desc: "GK 1경기+", check: (c) => c.playedGK },
   { id: "sweeperkeeper", name: "스위퍼 키퍼", icon: "hand-metal", category: "포지션 특성", state: "live", flat: true, desc: "GK 경험 & 도움 보유", check: (c) => c.playedGK && c.assists >= 1 },
   { id: "attacking_fullback", name: "공격적인 윙백", icon: "trending-up", category: "포지션 특성", state: "live", flat: true, desc: "좌·우 풀백 10경기+ & 공격P 10+", check: (c) => c.fullbackGames >= 10 && c.points >= 10 },

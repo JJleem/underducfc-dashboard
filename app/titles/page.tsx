@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Lightbulb, Sparkles } from "lucide-react";
+import { ArrowLeft, Lightbulb, LockKeyhole, Sparkles } from "lucide-react";
 import { TitleBadge } from "../components/TitleBadges";
 import { titleIcon } from "../lib/title-icons";
 import {
@@ -105,6 +105,7 @@ function TitleCard({ title }: { title: TitleDef }) {
 
 export default function TitlesPage() {
   const visibleTitles = TITLES.filter((t) => !t.hidden);
+  const hiddenTitles = TITLES.filter((t) => t.hidden);
   const categories = Array.from(new Set(visibleTitles.map((title) => title.category)));
 
   return (
@@ -160,6 +161,41 @@ export default function TitlesPage() {
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        <section>
+          <div className="mb-2.5 flex items-center gap-2">
+            <span className="h-4 w-1 rounded-full bg-gradient-to-b from-cyan-300 to-violet-500" />
+            <h2 className="text-[13px] font-black">히든 칭호</h2>
+            <span className="rounded-full bg-cyan-50 px-1.5 py-0.5 text-[8px] font-black text-cyan-600 dark:bg-cyan-300/10 dark:text-cyan-300">
+              {hiddenTitles.length}개 존재
+            </span>
+          </div>
+          <div className="relative overflow-hidden rounded-[20px] border border-cyan-200/50 bg-gradient-to-br from-slate-950 via-[#0c1d31] to-[#211238] p-3 shadow-[0_12px_30px_rgba(34,211,238,0.08)]">
+            <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-cyan-300/15 blur-2xl" />
+            <div className="absolute -bottom-10 left-10 h-24 w-24 rounded-full bg-violet-500/15 blur-2xl" />
+            <div className="relative grid grid-cols-3 gap-2">
+              {hiddenTitles.slice(0, 3).map((title, index) => (
+                <div
+                  key={title.id}
+                  className="relative flex h-[74px] items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.055]"
+                >
+                  <div className="flex flex-col items-center gap-1.5 blur-[5px] select-none">
+                    <span className="h-7 w-7 rounded-lg border border-cyan-200/40 bg-gradient-to-br from-cyan-300/30 to-violet-400/30" />
+                    <span className="h-1.5 rounded-full bg-white/35" style={{ width: 34 + index * 5 }} />
+                    <span className="h-1 w-8 rounded-full bg-white/15" />
+                  </div>
+                  <LockKeyhole className="absolute h-4 w-4 text-cyan-100/80 drop-shadow-[0_0_6px_rgba(103,232,249,0.7)]" />
+                </div>
+              ))}
+            </div>
+            <div className="relative mt-3 text-center">
+              <p className="text-[10px] font-black text-white">조건은 비공개입니다</p>
+              <p className="mt-0.5 text-[8px] font-semibold text-cyan-100/55">
+                기록을 쌓다 보면 어느 날 조용히 해금됩니다.
+              </p>
+            </div>
           </div>
         </section>
 
