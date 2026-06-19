@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ChevronLeft, User } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { auth } from "@/auth";
 import { getSheetData } from "../../lib/google-sheets";
 import {
@@ -16,6 +16,7 @@ import {
 } from "../../lib/titles";
 import PlayerTitleCards from "../../components/PlayerTitleCards";
 import FeaturedEditor from "../../components/FeaturedEditor";
+import PlayerAvatar from "../../components/PlayerAvatar";
 
 export const dynamic = "force-dynamic";
 
@@ -117,9 +118,6 @@ export default async function PlayerPage({
     .reverse();
 
   const accent = posColor(pos);
-  // 선수 사진 — 아직 소스 없음. 생기면 여기 세팅(예: roster 사진 URL / Cloudinary).
-  // 없으면 기본 아바타(실루엣)로 표시.
-  const photoUrl = "";
 
   return (
     <main className="min-h-dvh bg-gray-50 dark:bg-[#0a0a0c] text-gray-900 dark:text-white">
@@ -155,36 +153,7 @@ export default async function PlayerPage({
 
           <div className="relative px-6 pt-7 pb-6 flex flex-col items-center">
             {/* 프로필 사진 (없으면 기본 아바타) · 등번호는 코너 배지 */}
-            <div className="relative">
-              <div
-                className="rounded-full overflow-hidden flex items-center justify-center"
-                style={{
-                  width: 104, height: 104,
-                  background: `radial-gradient(120% 120% at 30% 20%, ${accent}33, rgba(255,255,255,0.03))`,
-                  border: `3px solid ${accent}`,
-                  boxShadow: `0 0 30px ${accent}55, inset 0 2px 10px rgba(255,255,255,0.12)`,
-                }}
-              >
-                {photoUrl ? (
-                  <Image src={photoUrl} alt={name} width={104} height={104} className="w-full h-full object-cover" />
-                ) : (
-                  <User style={{ width: 52, height: 52, color: accent }} strokeWidth={1.6} />
-                )}
-              </div>
-              {no !== "-" && (
-                <span
-                  className="absolute -bottom-1 -right-1 flex items-center justify-center rounded-full font-black text-white text-[13px]"
-                  style={{
-                    minWidth: 30, height: 30, padding: "0 6px",
-                    background: accent,
-                    border: "2.5px solid #0c1430",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
-                  }}
-                >
-                  {no}
-                </span>
-              )}
-            </div>
+            <PlayerAvatar name={name} no={no} accent={accent} />
 
             <div className="mt-4 flex items-center gap-2 flex-wrap justify-center">
               <h1 className="text-2xl font-black tracking-tight text-white">{name}</h1>
