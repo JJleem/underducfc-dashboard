@@ -47,8 +47,11 @@ import { shareFormation } from "../lib/draw-formation";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { DayPicker } from "react-day-picker";
 import { parseWeather, weatherEmoji } from "../lib/weather";
+import { TitleBadges } from "./TitleBadges";
+import type { EarnedTitle } from "../lib/titles";
 
 // 숫자가 0에서 목표값까지 부드럽게 올라가는 카운트업 (전광판 느낌)
 function CountUp({
@@ -204,6 +207,7 @@ interface DashboardClientProps {
   currentUser?: { kakaoId: string; name: string; image: string } | null;
   isAdmin?: boolean;
   attendanceVotes?: AttendanceVoteData[];
+  playerTitles?: Record<string, EarnedTitle[]>;
 }
 
 export default function DashboardClient({
@@ -216,8 +220,10 @@ export default function DashboardClient({
   currentUser,
   isAdmin = false,
   attendanceVotes: initialAttendanceVotes = [],
+  playerTitles = {},
 }: DashboardClientProps) {
   const { theme, setTheme } = useTheme();
+  const router = useRouter();
   const [matchList, setMatchList] = React.useState<MatchData[]>(matches);
   const [showTopBtn, setShowTopBtn] = React.useState(false);
 
@@ -355,7 +361,8 @@ export default function DashboardClient({
   }, [players]);
 
   // 선수 프로필 바텀시트
-  const [profilePlayer, setProfilePlayer] = React.useState<PlayerData | null>(null);
+  const goToPlayer = (n: string) =>
+    router.push(`/players/${encodeURIComponent(n.trim())}`);
 
   // 스토리 카드 공유
   const [sharingStory, setSharingStory] = React.useState<number | null>(null);
@@ -2632,7 +2639,7 @@ export default function DashboardClient({
                         {sortedPlayers.map((player, idx) => (
                           <tr
                             key={idx}
-                            onClick={() => { buzz(); setProfilePlayer(player); }}
+                            onClick={() => { buzz(); goToPlayer(player.name); }}
                             className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
                           >
                             <td className="py-4 pl-4 overflow-hidden">
@@ -2644,6 +2651,11 @@ export default function DashboardClient({
                                   {player.pos !== "-" ? player.pos : "SUB"}
                                 </span>
                               </div>
+                              {playerTitles[player.name.trim()]?.length ? (
+                                <div className="mt-1.5">
+                                  <TitleBadges titles={playerTitles[player.name.trim()]} size={15} max={3} gap={3} />
+                                </div>
+                              ) : null}
                             </td>
                             <td className={`py-4 text-center text-[13px] font-bold ${statSort === "apps" ? "text-[#FF8FA3] dark:text-[#FFB6C1] font-black" : "text-gray-400"}`}>
                               {player.apps}
@@ -3187,152 +3199,6 @@ export default function DashboardClient({
               {savingNotice ? <Loader2 className="w-4 h-4 animate-spin" /> : "저장하기"}
             </button>
           </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-
-      {/* 선수 프로필 Drawer */}
-      <Drawer open={profilePlayer !== null} onOpenChange={(open) => { if (!open) setProfilePlayer(null); }}>
-        <DrawerContent className="bg-white dark:bg-[#161618] max-h-[92dvh]">
-          {profilePlayer && (() => {
-            const pName = profilePlayer.name.trim();
-            const role = captainRoles?.[pName];
-            const matchesWithAttendees = completedMatches.filter((m) => (m.attendees || "").trim());
-            const attendCount = matchesWithAttendees.filter((m) =>
-              m.attendees!.split(",").map((s) => s.trim()).includes(pName)
-            ).length;
-            const attendRate = matchesWithAttendees.length > 0
-              ? Math.round((attendCount / matchesWithAttendees.length) * 100)
-              : null;
-            const partners = duoAll.filter((d) => d.a === pName || d.b === pName).slice(0, 3);
-            const contributedMatches = completedMatches
-              .filter((m) =>
-                (m.goals || "").split(",").map((s) => s.trim()).includes(pName) ||
-                (m.assists || "").split(",").map((s) => s.trim()).includes(pName)
-              )
-              .slice(-5)
-              .reverse();
-            return (
-              <>
-                <DrawerHeader className="pb-0">
-                  <DrawerTitle className="flex items-center gap-2 text-[15px] font-bold text-gray-900 dark:text-white">
-                    <span className="flex items-center justify-center w-9 h-9 rounded-full bg-[#FFB6C1]/20 border border-[#FFB6C1]/40 text-[12px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] shrink-0">
-                      {profilePlayer.no !== "-" ? `#${profilePlayer.no}` : "?"}
-                    </span>
-                    {pName}
-                    <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm ${getPosBadgeStyle(profilePlayer.pos)}`}>
-                      {profilePlayer.pos !== "-" ? profilePlayer.pos : "SUB"}
-                    </span>
-                    {role && (
-                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-gradient-to-br from-amber-200 to-amber-500 text-amber-950">
-                        {role}
-                      </span>
-                    )}
-                  </DrawerTitle>
-                </DrawerHeader>
-
-                <div className="overflow-y-auto px-5 py-4 space-y-5 pb-8">
-                  {/* 시즌 스탯 4분할 */}
-                  <div className="grid grid-cols-4 rounded-2xl border border-gray-200/70 dark:border-white/[0.06] divide-x divide-gray-100 dark:divide-white/5 overflow-hidden bg-gray-50 dark:bg-white/[0.02]">
-                    {[
-                      { label: "출전", value: Number(profilePlayer.apps) || 0, color: "text-gray-900 dark:text-white" },
-                      { label: "골", value: Number(profilePlayer.goals) || 0, color: "text-blue-500" },
-                      { label: "도움", value: Number(profilePlayer.assists) || 0, color: "text-emerald-500" },
-                      { label: "MOM", value: Number(profilePlayer.mom) || 0, color: "text-amber-500" },
-                    ].map((s) => (
-                      <div key={s.label} className="flex flex-col items-center justify-center py-3.5">
-                        <span className={`text-xl font-black tabular-nums ${s.color}`}>
-                          <CountUp value={s.value} duration={700} />
-                        </span>
-                        <span className="text-[9px] font-bold text-gray-400 mt-0.5">{s.label}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* 출석률 */}
-                  {attendRate !== null && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-widest">
-                          출석률 <span className="text-gray-400 font-medium">({attendCount}/{matchesWithAttendees.length}경기)</span>
-                        </p>
-                        <span className="text-[13px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] tabular-nums">
-                          <CountUp value={attendRate} duration={700} />%
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#FFB6C1] to-[#FF8FA3] transition-[width] duration-700 ease-out"
-                          style={{ width: `${attendRate}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 듀오 파트너 */}
-                  {partners.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-widest mb-2">
-                        호흡 잘 맞는 파트너
-                      </p>
-                      <div className="space-y-1.5">
-                        {partners.map((d) => {
-                          const partner = d.a === pName ? d.b : d.a;
-                          return (
-                            <div key={`${d.a}|${d.b}`} className="flex items-center justify-between rounded-xl bg-gray-50 dark:bg-white/[0.03] px-3 py-2">
-                              <span className="text-[12px] font-bold text-gray-800 dark:text-gray-200">{partner}</span>
-                              <span className="text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] tabular-nums">
-                                {d.count}회 합작
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 활약한 경기 (골/어시) */}
-                  {contributedMatches.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-widest mb-2">
-                        최근 활약한 경기
-                      </p>
-                      <div className="space-y-1.5">
-                        {contributedMatches.map((m) => {
-                          const goalCnt = (m.goals || "").split(",").map((s) => s.trim()).filter((s) => s === pName).length;
-                          const assistCnt = (m.assists || "").split(",").map((s) => s.trim()).filter((s) => s === pName).length;
-                          return (
-                            <Link
-                              key={m.id}
-                              href={`/matches/${m.id}`}
-                              onClick={() => setProfilePlayer(null)}
-                              className="flex items-center justify-between rounded-xl bg-gray-50 dark:bg-white/[0.03] px-3 py-2 hover:bg-gray-100 dark:hover:bg-white/[0.06] active:scale-[0.98] transition-all"
-                            >
-                              <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300 truncate">
-                                vs {m.opponent} <span className="text-gray-400 font-medium ml-1">{m.date}</span>
-                              </span>
-                              <span className="shrink-0 flex items-center gap-1.5 ml-2">
-                                {goalCnt > 0 && (
-                                  <span className="text-[11px] font-black text-gray-800 dark:text-gray-200">
-                                    ⚽{goalCnt > 1 ? ` ×${goalCnt}` : ""}
-                                  </span>
-                                )}
-                                {assistCnt > 0 && (
-                                  <span className="text-[11px] font-black text-emerald-500">
-                                    🅰️{assistCnt > 1 ? ` ×${assistCnt}` : ""}
-                                  </span>
-                                )}
-                                <ChevronRight className="w-3 h-3 text-gray-300 dark:text-gray-600" />
-                              </span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            );
-          })()}
         </DrawerContent>
       </Drawer>
 

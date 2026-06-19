@@ -9,6 +9,14 @@ import DashboardClient, {
   NoticeData,
   PlayerData,
 } from "./components/DashboardClient";
+import {
+  buildContexts,
+  evaluatePlayer,
+  evaluateLeaders,
+  managerTitle,
+  MANAGER_NAME,
+  type EarnedTitle,
+} from "./lib/titles";
 
 export default async function TeamDashboardPage() {
   // 로그인 세션 (카카오) — 로그인 안 했으면 null
@@ -38,6 +46,12 @@ export default async function TeamDashboardPage() {
     rawAttendanceVotes = await getSheetData("attendance_vote!A1:E500");
   } catch {
     rawAttendanceVotes = [];
+  }
+  let rawVoteComments: string[][] = [];
+  try {
+    rawVoteComments = await getSheetData("vote_comment!A1:E500");
+  } catch {
+    rawVoteComments = [];
   }
   // Google Sheets가 "08:00"을 시간 포맷으로 인식해 "08:00:00"으로 반환하는 경우를 정규화
   const normalizeTime = (raw: string): string => {
@@ -147,6 +161,27 @@ export default async function TeamDashboardPage() {
       timestamp: row[4] || "",
     }));
 
+  // 칭호 산출: 선수별 자동 칭호 + 리더(팀 1위) + 감독
+  const contexts = buildContexts({
+    rawStats,
+    rawMatches,
+    rawLineups,
+    rawRoster,
+    rawAttendanceVotes,
+    rawVoteComments,
+  });
+  const leaders = evaluateLeaders(contexts);
+  const playerTitles: Record<string, EarnedTitle[]> = {};
+  contexts.forEach((ctx, name) => {
+    const earned = evaluatePlayer(ctx);
+    const lead = leaders.get(name) ?? [];
+    const all = [...lead, ...earned];
+    if (name === MANAGER_NAME) all.unshift(managerTitle());
+    if (all.length) playerTitles[name] = all;
+  });
+  // 감독이 stats에 없으면(선수로 안 뜀) 감독 뱃지만 단독 부여
+  if (!playerTitles[MANAGER_NAME]) playerTitles[MANAGER_NAME] = [managerTitle()];
+
   const firstNoticeRow = rawNotices[1]; // index 1이 실제 첫 번째 데이터 줄
 
   // 2. 데이터가 있을 때만 객체로 만들고, 없으면 undefined 처리를 합니다.
@@ -171,6 +206,7 @@ export default async function TeamDashboardPage() {
       currentUser={currentUser}
       isAdmin={admin}
       attendanceVotes={attendanceVotes}
+      playerTitles={playerTitles}
     />
   );
 }

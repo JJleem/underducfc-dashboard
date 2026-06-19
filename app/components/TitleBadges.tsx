@@ -2,7 +2,7 @@
 // 칭호 아이콘 뱃지 (아이콘 전용). 라인업·로스터·대시보드 인라인용.
 // 개인 페이지의 카드형과 달리, 여기선 최고등급 상위 N개만 압축 표시.
 
-import { createElement } from "react";
+import { createElement, type CSSProperties } from "react";
 import { EarnedTitle, TierIndex, topTitles } from "../lib/titles";
 import { titleIcon } from "../lib/title-icons";
 
@@ -111,5 +111,71 @@ export function TitleBadges({
         <TitleBadge key={t.id} title={t} size={size} />
       ))}
     </span>
+  );
+}
+
+// ── 칩형 (개인 프로필용): 아이콘 + 칭호명 + 등급. 전체 표시.
+const chipBase: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  padding: "4px 10px",
+  borderRadius: 999,
+  border: "1px solid transparent",
+  fontSize: 11,
+  fontWeight: 800,
+  lineHeight: 1.2,
+  whiteSpace: "nowrap",
+};
+
+function TitleChip({ title }: { title: EarnedTitle }) {
+  const icon = createElement(titleIcon(title.icon), { size: 13, strokeWidth: 2.4 });
+  const label = title.tierLabel ? `${title.name} ${title.tierLabel}` : title.name;
+
+  if (title.variant === "manager") {
+    return (
+      <span
+        title={title.name}
+        style={{
+          ...chipBase,
+          color: "#FFD978",
+          background:
+            "radial-gradient(120% 120% at 30% 20%, #241a3d, #0a0a16) padding-box, " +
+            "conic-gradient(from 210deg, #FFE9A8, #B8860B, #FFD45A, #8a6508, #FFE9A8) border-box",
+          boxShadow: "0 0 8px rgba(255,196,70,0.4)",
+        }}
+      >
+        {icon}
+        {label}
+      </span>
+    );
+  }
+
+  const vis = visOf(title);
+  return (
+    <span
+      title={label}
+      style={{
+        ...chipBase,
+        color: vis.icon,
+        background: `linear-gradient(#11182e,#11182e) padding-box, linear-gradient(135deg, ${vis.grad[0]}, ${vis.grad[1]}) border-box`,
+        boxShadow: vis.glow ? `0 0 7px ${vis.glow}` : undefined,
+      }}
+    >
+      {icon}
+      {label}
+    </span>
+  );
+}
+
+export function TitleChips({ titles }: { titles: EarnedTitle[] }) {
+  if (!titles.length) return null;
+  const sorted = topTitles(titles, titles.length);
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      {sorted.map((t) => (
+        <TitleChip key={t.id} title={t} />
+      ))}
+    </div>
   );
 }
