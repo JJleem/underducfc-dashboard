@@ -3,6 +3,7 @@ import { LineupData, MatchData } from "../../../components/DashboardClient";
 import LineupEditor from "./LineupEditor";
 import { notFound, redirect } from "next/navigation";
 import { currentKakaoId, isAdmin } from "../../../lib/admin";
+import { parseSubstitutions } from "../../../lib/lineup";
 
 export default async function LineupEditPage({
   params,
@@ -17,7 +18,7 @@ export default async function LineupEditPage({
 
   const [rawMatchesResult, rawLineupsResult, rawRosterResult] = await Promise.allSettled([
     getSheetData("matches!A1:M50"),
-    getSheetData("lineup!A1:S100"),
+    getSheetData("lineup!A1:T100"),
     getSheetData("roster!A1:J50"),
   ]);
 
@@ -64,6 +65,7 @@ export default async function LineupEditPage({
       subs: [
         row[14] || "", row[15] || "", row[16] || "", row[17] || "", row[18] || "",
       ].filter(Boolean),
+      substitutions: parseSubstitutions(row[19]),
     }))
     .filter((l: LineupData) => l.matchId === matchId);
 

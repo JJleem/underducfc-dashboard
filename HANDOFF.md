@@ -2,7 +2,7 @@
 
 > 새 세션/다른 PC에서 이 작업을 이어가기 위한 인수인계 문서.
 > 현재 브랜치: **`feat/kakao-login`** (★ master에 머지 X = 실서버 배포 안 함)
-> 최신 커밋: `9ea9a77` (칭호/뱃지/페이스온까지 완료, working tree 클린)
+> 최신 작업(2026-06-19): 라이트/다크 모드 정상화 + Google Sheets→underduck 백엔드 마이그레이션 **착수**(matches 도메인 래퍼까지). 아래 "라이트/다크" · "마이그레이션" 섹션 참고.
 
 ## 프로젝트 개요
 
@@ -83,6 +83,9 @@
 
 - **`attendance_vote` 시트 스키마**: `A=matchId  B=kakaoId  C=nickname  D=response(참석/불참/미정)  E=timestamp`
   - ⚠️ **구글 시트에 `attendance_vote` 탭을 수동으로 생성해야 함** (헤더: matchId, kakaoId, nickname, response, timestamp)
+- **`matches` 시트 O열**: `attendanceStatus` (`진행중`/`마감`)
+  - 기존 행의 빈값은 `진행중`으로 간주
+  - 관리자 마감 시 참석자를 L열에 확정하고 O열을 `마감`으로 저장
 - **`app/lib/sheets-write.ts`**: `upsertAttendanceVote()` — (matchId, kakaoId) 기준 upsert, `finalizeAttendance()` — 참석자 → matches!L 기록
 - **`app/lib/google-sheets.ts`**: SheetRange에 `attendance_vote!A1:E500` 추가
 - **API 라우트**:

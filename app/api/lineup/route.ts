@@ -8,13 +8,20 @@ export async function POST(request: NextRequest) {
   if (denied) return denied;
   try {
     const body = await request.json();
-    const { matchId, quarter, formation, players, subs } = body;
+    const { matchId, quarter, formation, players, subs, substitutions } = body;
 
     if (matchId === undefined || !quarter || !formation) {
       return NextResponse.json({ error: "필수 필드 누락" }, { status: 400 });
     }
 
-    await writeLineup({ matchId, quarter, formation, players: players || [], subs: subs || [] });
+    await writeLineup({
+      matchId,
+      quarter,
+      formation,
+      players: players || [],
+      subs: subs || [],
+      substitutions: substitutions || [],
+    });
 
     revalidatePath(`/matches/${matchId}`);
     revalidatePath("/");

@@ -1,7 +1,7 @@
 // app/page.tsx
 import { auth } from "@/auth";
 import { isAdmin } from "./lib/admin";
-import { getSheetData } from "./lib/google-sheets";
+import { getMatchesData, getSheetData } from "./lib/google-sheets";
 import DashboardClient, {
   AttendanceVoteData,
   LineupData,
@@ -18,8 +18,14 @@ import {
   MANAGER_NAME,
   type EarnedTitle,
 } from "./lib/titles";
-
-export default async function TeamDashboardPage() {
+import { parseSubstitutions } from "./lib/lineup";
+export default async function TeamDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
+  const initialView = tab === "stats" ? "stats" : tab === "matches" ? "matches" : "home";
   // 로그인 세션 (카카오) — 로그인 안 했으면 null
   const session = await auth();
   const currentUser = session?.user
@@ -31,35 +37,27 @@ export default async function TeamDashboardPage() {
     : null;
   const admin = isAdmin(currentUser?.kakaoId);
 
-  // 💡 1. 가져오는 데이터가 2차원 문자열 배열(string[][])임을 명시합니다.
-  const rawMatches: string[][] = await getSheetData("matches!A1:N50");
-  const rawRoster: string[][] = await getSheetData("roster!A1:J50");
-  const rawStats: string[][] = await getSheetData("stats!A1:G50");
-  const rawNotices: string[][] = await getSheetData("notice!A1:E20");
-  let rawLineups: string[][] = [];
-  try {
-    rawLineups = await getSheetData("lineup!A1:S100");
-  } catch {
-    rawLineups = [];
-  }
-  let rawAttendanceVotes: string[][] = [];
-  try {
-    rawAttendanceVotes = await getSheetData("attendance_vote!A1:E500");
-  } catch {
-    rawAttendanceVotes = [];
-  }
-  let rawVoteComments: string[][] = [];
-  try {
-    rawVoteComments = await getSheetData("vote_comment!A1:E500");
-  } catch {
-    rawVoteComments = [];
-  }
-  let rawFeatured: string[][] = [];
-  try {
-    rawFeatured = await getSheetData("featured!A1:D200");
-  } catch {
-    rawFeatured = [];
-  }
+  // 시트 하나가 일시 실패해도 홈 전체가 Runtime Error로 죽지 않게 병렬 안전 로딩
+  const sheetResults = await Promise.allSettled([
+    getMatchesData(),
+    getSheetData("roster!A1:J50"),
+    getSheetData("stats!A1:G50"),
+    getSheetData("notice!A1:E20"),
+    getSheetData("lineup!A1:T100"),
+    getSheetData("attendance_vote!A1:E500"),
+    getSheetData("vote_comment!A1:E500"),
+    getSheetData("featured!A1:D200"),
+  ]);
+  const rowsOf = (index: number): string[][] =>
+    sheetResults[index].status === "fulfilled" ? sheetResults[index].value : [];
+  const rawMatches = rowsOf(0);
+  const rawRoster = rowsOf(1);
+  const rawStats = rowsOf(2);
+  const rawNotices = rowsOf(3);
+  const rawLineups = rowsOf(4);
+  const rawAttendanceVotes = rowsOf(5);
+  const rawVoteComments = rowsOf(6);
+  const rawFeatured = rowsOf(7);
   // Google Sheets가 "08:00"을 시간 포맷으로 인식해 "08:00:00"으로 반환하는 경우를 정규화
   const normalizeTime = (raw: string): string => {
     if (!raw) return "미정";
@@ -87,6 +85,7 @@ export default async function TeamDashboardPage() {
       attendees: row[11] || "", // L열 참석자
       photos: row[12] || "", // M열 Drive 파일ID (쉼표 구분)
       weather: row[13] || "", // N열 날씨
+      attendanceStatus: row[14] === "마감" ? "마감" : "진행중",
     }));
 
   // 💡 3. Map의 Key와 Value 타입 명시
@@ -155,6 +154,7 @@ export default async function TeamDashboardPage() {
     subs: [
       row[14] || "", row[15] || "", row[16] || "", row[17] || "", row[18] || "",
     ].filter(Boolean),
+    substitutions: parseSubstitutions(row[19]),
   }));
 
   const attendanceVotes: AttendanceVoteData[] = rawAttendanceVotes
@@ -229,6 +229,7 @@ export default async function TeamDashboardPage() {
       isAdmin={admin}
       attendanceVotes={attendanceVotes}
       playerTitles={playerTitles}
+      initialView={initialView}
     />
   );
 }

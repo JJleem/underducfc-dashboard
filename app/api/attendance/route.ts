@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSheetData } from "../../lib/google-sheets";
+import { getMatchesData, getSheetData } from "../../lib/google-sheets";
 import { upsertAttendanceVote } from "../../lib/sheets-write";
 import { requireUser } from "@/app/lib/admin";
 import { auth } from "@/auth";
@@ -39,9 +39,21 @@ export async function POST(request: NextRequest) {
     if (!["참석", "불참", "미정"].includes(response)) {
       return NextResponse.json({ error: "잘못된 응답값" }, { status: 400 });
     }
+    const id = Number(matchId);
+    const rawMatches = await getMatchesData();
+    const matchRow = rawMatches[id + 1];
+    if (!matchRow) {
+      return NextResponse.json({ error: "경기를 찾을 수 없습니다." }, { status: 404 });
+    }
+    if ((matchRow[6] || "예정").trim() !== "예정") {
+      return NextResponse.json({ error: "종료된 경기에는 투표할 수 없습니다." }, { status: 409 });
+    }
+    if ((matchRow[14] || "").trim() === "마감") {
+      return NextResponse.json({ error: "이미 마감된 투표입니다." }, { status: 409 });
+    }
 
     await upsertAttendanceVote({
-      matchId: Number(matchId),
+      matchId: id,
       kakaoId,
       nickname,
       response,

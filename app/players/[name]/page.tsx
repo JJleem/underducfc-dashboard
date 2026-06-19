@@ -17,6 +17,7 @@ import {
 import PlayerTitleCards from "../../components/PlayerTitleCards";
 import FeaturedEditor from "../../components/FeaturedEditor";
 import PlayerAvatar from "../../components/PlayerAvatar";
+import AppBottomNav from "../../components/AppBottomNav";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export default async function PlayerPage({
   const rawRoster: string[][] = await getSheetData("roster!A1:J50");
   const rawMatches: string[][] = await getSheetData("matches!A1:N50");
   let rawLineups: string[][] = [];
-  try { rawLineups = await getSheetData("lineup!A1:S100"); } catch { rawLineups = []; }
+  try { rawLineups = await getSheetData("lineup!A1:T100"); } catch { rawLineups = []; }
   let rawAttendanceVotes: string[][] = [];
   try { rawAttendanceVotes = await getSheetData("attendance_vote!A1:E500"); } catch { rawAttendanceVotes = []; }
   let rawVoteComments: string[][] = [];
@@ -121,7 +122,7 @@ export default async function PlayerPage({
 
   return (
     <main className="min-h-dvh bg-gray-50 dark:bg-[#0a0a0c] text-gray-900 dark:text-white">
-      <div className="max-w-md mx-auto pb-16">
+      <div className="max-w-md mx-auto pb-28">
         {/* 상단 바 */}
         <div className="sticky top-0 z-10 flex items-center gap-2 px-4 py-3 bg-gray-50/80 dark:bg-[#0a0a0c]/80 backdrop-blur border-b border-gray-200/60 dark:border-white/[0.06]">
           <Link href="/" className="flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10">
@@ -249,6 +250,7 @@ export default async function PlayerPage({
           </section>
         )}
       </div>
+      <AppBottomNav active="my" currentUserName={session?.user?.name} />
     </main>
   );
 }

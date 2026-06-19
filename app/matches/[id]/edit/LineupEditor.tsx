@@ -1,12 +1,20 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Sun, Moon, RotateCcw, Save, Check, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Sun, Moon, RotateCcw, Save, Check, UserPlus, X, ArrowRightLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { MatchData, LineupData } from "../../../components/DashboardClient";
 import { FORMATION_POSITIONS } from "../../../components/FormationField";
+import type { SubstitutionEvent } from "../../../lib/lineup";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
 
 const QUARTERS = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
 const FORMATIONS = ["4-3-3", "4-4-2", "4-2-3-1", "3-5-2", "3-4-3", "5-3-2", "4-1-4-1"];
@@ -41,13 +49,14 @@ interface LineupEditorProps {
 }
 
 export default function LineupEditor({ match, lineups, attendees, rosterMap }: LineupEditorProps) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
 
   const [quarter, setQuarter] = useState(QUARTERS[0]);
   const [formation, setFormation] = useState(FORMATIONS[0]);
   const [assignments, setAssignments] = useState<(string | null)[]>(Array(11).fill(null));
   const [subs, setSubs] = useState<(string | null)[]>(Array(MAX_SUBS).fill(null));
+  const [substitutions, setSubstitutions] = useState<SubstitutionEvent[]>([]);
   const [activeSlot, setActiveSlot] = useState<ActiveSlot | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -65,9 +74,11 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
       const subsArr = Array(MAX_SUBS).fill(null);
       existing.subs.forEach((s, i) => { subsArr[i] = s || null; });
       setSubs(subsArr);
+      setSubstitutions(existing.substitutions || []);
     } else {
       setAssignments(Array(11).fill(null));
       setSubs(Array(MAX_SUBS).fill(null));
+      setSubstitutions([]);
     }
     setActiveSlot(null);
   }, [quarter]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -94,6 +105,12 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
   };
 
   const allPlayers = [...attendees, ...guests];
+  const substitutionPlayers = Array.from(new Set([
+    ...allPlayers,
+    ...assignments.filter((player): player is string => !!player),
+    ...subs.filter((player): player is string => !!player),
+    ...substitutions.flatMap((event) => [event.out, event.in]).filter(Boolean),
+  ]));
 
   const assignedPlayers = new Set([
     ...assignments.filter(Boolean),
@@ -196,6 +213,7 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
           formation,
           players: assignments.map((p) => p || ""),
           subs: subs.map((s) => s || ""),
+          substitutions,
         }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -222,7 +240,7 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
           <span className="font-extrabold text-sm uppercase tracking-tight">라인업 편집</span>
         </Link>
         <div className="flex items-center gap-2">
-          <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/10">
+          <button onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/10">
             <Moon className="block dark:hidden w-4 h-4 text-gray-700" />
             <Sun className="hidden dark:block w-4 h-4 text-[#FFB6C1]" />
           </button>
@@ -298,7 +316,7 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
               {activeSlot?.type === "player"
                 ? `슬롯 ${activeSlot.index + 1} 선택됨 → 다른 슬롯 탭 시 스왑`
                 : activeSlot?.type === "sub"
-                ? `교체 슬롯 ${activeSlot.index + 1} 선택됨 → 다른 슬롯 탭 시 스왑`
+                ? `대기 슬롯 ${activeSlot.index + 1} 선택됨 → 다른 슬롯 탭 시 스왑`
                 : "슬롯을 탭해서 선택하세요"}
             </span>
             <button
@@ -388,9 +406,9 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
           </div>
         </div>
 
-        {/* 교체 선수 슬롯 */}
+        {/* 대기 선수 슬롯 */}
         <div>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">교체 선수</p>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">대기 선수</p>
           <div className="flex gap-2 flex-wrap">
             {Array.from({ length: MAX_SUBS }).map((_, i) => {
               const sub = subs[i];
@@ -411,6 +429,140 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* 실제 교체 기록 */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-300">
+                <ArrowRightLeft className="h-3.5 w-3.5 text-[#FF8FA3]" />
+                교체 기록
+              </p>
+              <p className="mt-1 text-[10px] font-semibold text-gray-400">경기 중 나간 선수와 들어온 선수를 기록합니다</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSubstitutions((events) => [...events, { out: "", in: "", time: "" }])}
+              className="flex items-center gap-1 rounded-xl bg-gray-900 px-2.5 py-2 text-[10px] font-black text-white dark:bg-white dark:text-black"
+            >
+              <Plus className="h-3 w-3" /> 추가
+            </button>
+          </div>
+
+          {substitutions.length === 0 ? (
+            <button
+              type="button"
+              onClick={() => setSubstitutions([{ out: "", in: "", time: "" }])}
+              className="w-full rounded-xl border border-dashed border-gray-200 py-4 text-[11px] font-bold text-gray-400 transition-colors hover:border-[#FF8FA3]/50 hover:text-[#FF8FA3] dark:border-white/10"
+            >
+              + 첫 교체 기록 추가
+            </button>
+          ) : (
+            <div className="space-y-2">
+              {substitutions.map((event, index) => (
+                <div
+                  key={index}
+                  className="rounded-xl border border-gray-100 bg-gray-50/70 p-2.5 dark:border-white/[0.06] dark:bg-black/10"
+                >
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                    <Select
+                      value={event.out || undefined}
+                      onValueChange={(value) =>
+                        setSubstitutions((events) =>
+                          events.map((item, i) => i === index ? { ...item, out: value } : item)
+                        )
+                      }
+                    >
+                      <SelectTrigger
+                        size="sm"
+                        className="rounded-lg border-gray-200 bg-white text-[11px] font-bold dark:border-white/10 dark:bg-[#202024]"
+                      >
+                        <SelectValue placeholder="OUT 선수" />
+                      </SelectTrigger>
+                      <SelectContent className="z-[100] border-gray-200 bg-white text-gray-900 shadow-xl dark:border-white/10 dark:bg-[#17171a] dark:text-gray-100">
+                        {substitutionPlayers.map((player) => (
+                          <SelectItem
+                            key={`out-${player}`}
+                            value={player}
+                            className="text-[12px] font-bold focus:bg-gray-100 dark:focus:bg-white/10"
+                          >
+                            {player}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <ArrowRightLeft className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600" />
+                    <Select
+                      value={event.in || undefined}
+                      onValueChange={(value) =>
+                        setSubstitutions((events) =>
+                          events.map((item, i) => i === index ? { ...item, in: value } : item)
+                        )
+                      }
+                    >
+                      <SelectTrigger
+                        size="sm"
+                        className="rounded-lg border-gray-200 bg-white text-[11px] font-bold dark:border-white/10 dark:bg-[#202024]"
+                      >
+                        <SelectValue placeholder="IN 선수" />
+                      </SelectTrigger>
+                      <SelectContent className="z-[100] border-gray-200 bg-white text-gray-900 shadow-xl dark:border-white/10 dark:bg-[#17171a] dark:text-gray-100">
+                        {substitutionPlayers.map((player) => (
+                          <SelectItem
+                            key={`in-${player}`}
+                            value={player}
+                            className="text-[12px] font-bold focus:bg-gray-100 dark:focus:bg-white/10"
+                          >
+                            {player}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <input
+                      value={event.time || ""}
+                      onChange={(e) =>
+                        setSubstitutions((events) =>
+                          events.map((item, i) => i === index ? { ...item, time: e.target.value } : item)
+                        )
+                      }
+                      placeholder="시점 (예: 12분)"
+                      className="h-8 flex-1 rounded-lg border border-gray-200 bg-white px-2.5 text-[11px] font-bold outline-none focus:border-[#FF8FA3] dark:border-white/10 dark:bg-white/5"
+                    />
+                    <button
+                      type="button"
+                      aria-label="교체 기록 삭제"
+                      onClick={() => setSubstitutions((events) => events.filter((_, i) => i !== index))}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-3 border-t border-gray-100 pt-3 dark:border-white/[0.06]">
+            <p className="mb-2 text-[10px] font-semibold leading-relaxed text-gray-400">
+              교체 기록은 현재 쿼터의 포메이션·선발·대기 선수와 함께 저장됩니다.
+            </p>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving || saved}
+              className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-black transition-all ${
+                saved
+                  ? "bg-emerald-500 text-white"
+                  : "bg-[#FFB6C1] text-black hover:bg-[#FF8FA3]"
+              } disabled:opacity-70`}
+            >
+              {saved ? <Check className="h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
+              {saved ? "저장됨" : saving ? "저장 중..." : `${quarter} 라인업과 교체 기록 저장`}
+            </button>
           </div>
         </div>
 

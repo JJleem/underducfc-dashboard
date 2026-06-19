@@ -21,6 +21,7 @@ import {
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { weatherEmoji } from "../lib/weather";
+import AppBottomNav from "../components/AppBottomNav";
 
 interface MatchInfo {
   id: number;
@@ -31,6 +32,7 @@ interface MatchInfo {
   result: string;
   type: string;
   attendees: string;
+  attendanceStatus: "진행중" | "마감";
 }
 
 interface AttendanceVote {
@@ -153,17 +155,31 @@ export default function VoteClient({
 }: VoteClientProps) {
   const [votes, setVotes] = useState<AttendanceVote[]>(initialVotes);
   const [comments, setComments] = useState<VoteComment[]>(initialComments);
-  const [submitting, setSubmitting] = useState(false);
+  const [submittingVote, setSubmittingVote] = useState<{ matchId: number; response: string } | null>(null);
+  const [savedVote, setSavedVote] = useState<{ matchId: number; response: string } | null>(null);
   const [commentInput, setCommentInput] = useState<Record<number, string>>({});
   const [submittingComment, setSubmittingComment] = useState(false);
   const [expandedPast, setExpandedPast] = useState(false);
   const [expandedComments, setExpandedComments] = useState<Set<number>>(
     new Set(upcomingMatches.map((m) => m.id))
   );
+  const allVoteMatches = Array.from(
+    new Map([...upcomingMatches, ...pastMatches].map((match) => [match.id, match])).values()
+  );
+  const [closedMatchIds, setClosedMatchIds] = useState<Set<number>>(
+    new Set(allVoteMatches.filter((match) => match.attendanceStatus === "마감").map((match) => match.id))
+  );
+  const activeMatches = allVoteMatches
+    .filter((match) => match.result === "예정" && match.type !== "야유회" && !closedMatchIds.has(match.id))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const closedMatches = allVoteMatches
+    .filter((match) => closedMatchIds.has(match.id) || match.result !== "예정")
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const submitVote = async (matchId: number, response: string) => {
-    if (!currentUser || submitting) return;
-    setSubmitting(true);
+    if (!currentUser || submittingVote) return;
+    setSubmittingVote({ matchId, response });
+    setSavedVote(null);
     try {
       const res = await fetch("/api/attendance", {
         method: "POST",
@@ -184,10 +200,16 @@ export default function VoteClient({
         });
         return filtered;
       });
+      setSavedVote({ matchId, response });
+      window.setTimeout(() => {
+        setSavedVote((current) =>
+          current?.matchId === matchId && current.response === response ? null : current
+        );
+      }, 1200);
     } catch (e) {
       alert(e instanceof Error ? e.message : "투표 실패");
     } finally {
-      setSubmitting(false);
+      setSubmittingVote(null);
     }
   };
 
@@ -247,9 +269,29 @@ export default function VoteClient({
         body: JSON.stringify({ matchId }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "마감 실패");
-      alert("투표가 마감되었습니다.");
+      setClosedMatchIds((current) => new Set(current).add(matchId));
+      setExpandedPast(true);
     } catch (e) {
       alert(e instanceof Error ? e.message : "마감 실패");
+    }
+  };
+
+  const reopenVote = async (matchId: number) => {
+    if (!confirm("이 투표를 다시 열까요? 회원들이 응답을 변경할 수 있게 됩니다.")) return;
+    try {
+      const res = await fetch("/api/attendance/finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matchId, action: "open" }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "다시 열기 실패");
+      setClosedMatchIds((current) => {
+        const next = new Set(current);
+        next.delete(matchId);
+        return next;
+      });
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "다시 열기 실패");
     }
   };
 
@@ -282,7 +324,7 @@ export default function VoteClient({
     return (
       <Card
         key={match.id}
-        className="rounded-2xl border-gray-200/70 dark:border-white/[0.06] shadow-sm overflow-hidden"
+        className="rounded-2xl bg-white dark:bg-[#161618] text-gray-900 dark:text-white border-gray-200/70 dark:border-white/[0.06] shadow-sm overflow-hidden"
       >
         <CardContent className="p-0">
           {/* 경기 정보 헤더 */}
@@ -296,6 +338,11 @@ export default function VoteClient({
                   {isUpcoming && dDay !== null && (
                     <span className="text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
                       {dDay === 0 ? "D-DAY" : dDay > 0 ? `D-${dDay}` : `D+${Math.abs(dDay)}`}
+                    </span>
+                  )}
+                  {!isUpcoming && closedMatchIds.has(match.id) && (
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[9px] font-black text-gray-400 dark:bg-white/10">
+                      투표 마감
                     </span>
                   )}
                 </div>
@@ -345,6 +392,9 @@ export default function VoteClient({
                 <div className="flex gap-2 mb-4">
                   {(["참석", "미정", "불참"] as const).map((opt) => {
                     const isSelected = myVote === opt;
+                    const isSaving = submittingVote?.matchId === match.id && submittingVote.response === opt;
+                    const isSaved = savedVote?.matchId === match.id && savedVote.response === opt;
+                    const matchIsSaving = submittingVote?.matchId === match.id;
                     const styles: Record<string, string> = {
                       "참석": isSelected
                         ? "bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-white dark:text-black shadow-md"
@@ -360,11 +410,30 @@ export default function VoteClient({
                       <button
                         key={opt}
                         onClick={() => submitVote(match.id, opt)}
-                        disabled={submitting}
-                        className={`flex-1 py-2.5 rounded-xl text-[13px] font-black transition-all ${styles[opt]} ${submitting ? "opacity-50" : ""}`}
+                        disabled={matchIsSaving}
+                        aria-busy={isSaving}
+                        className={`flex-1 min-h-10 py-2.5 rounded-xl text-[13px] font-black transition-all duration-200 ${styles[opt]} ${
+                          matchIsSaving && !isSaving ? "opacity-40" : ""
+                        } ${isSaving ? "scale-[0.98]" : "active:scale-[0.97]"}`}
                       >
-                        {isSelected && <Check className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}
-                        {opt}
+                        <span className="inline-flex items-center justify-center gap-1.5">
+                          {isSaving ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              저장 중
+                            </>
+                          ) : isSaved ? (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              저장됨
+                            </>
+                          ) : (
+                            <>
+                              {isSelected && <Check className="w-3.5 h-3.5" />}
+                              {opt}
+                            </>
+                          )}
+                        </span>
                       </button>
                     );
                   })}
@@ -466,12 +535,20 @@ export default function VoteClient({
             )}
 
             {/* 관리자: 투표 마감 */}
-            {isAdmin && isUpcoming && matchVotes.length > 0 && (
+            {isAdmin && isUpcoming && (
               <button
                 onClick={() => finalizeVote(match.id)}
                 className="w-full py-2 rounded-xl border border-[#FF8FA3]/30 dark:border-[#FFB6C1]/20 text-[11px] font-bold text-[#FF8FA3] dark:text-[#FFB6C1] hover:bg-[#FF8FA3]/5 transition-colors mb-3"
               >
                 투표 마감 (참석 {attending.length}명 확정)
+              </button>
+            )}
+            {isAdmin && !isUpcoming && closedMatchIds.has(match.id) && match.result === "예정" && (
+              <button
+                onClick={() => reopenVote(match.id)}
+                className="mb-3 w-full rounded-xl border border-gray-200 py-2 text-[11px] font-bold text-gray-500 transition-colors hover:bg-gray-50 dark:border-white/10 dark:text-gray-400 dark:hover:bg-white/5"
+              >
+                투표 다시 열기
               </button>
             )}
 
@@ -549,7 +626,7 @@ export default function VoteClient({
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0B0B0D]">
-      <div className="max-w-md mx-auto pb-20">
+      <div className="max-w-md mx-auto pb-24">
         {/* 헤더 */}
         <div className="sticky top-0 z-10 bg-gray-50/80 dark:bg-[#0B0B0D]/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-white/5 px-4 py-3">
           <div className="flex items-center gap-3">
@@ -565,10 +642,10 @@ export default function VoteClient({
 
         <div className="px-4 pt-4 space-y-4">
           {/* 진행 중 투표 */}
-          {upcomingMatches.length > 0 ? (
+          {activeMatches.length > 0 ? (
             <>
               <p className="text-[10px] font-bold text-gray-400 tracking-[0.14em]">진행 중</p>
-              {upcomingMatches.map((m) => renderMatchVoteCard(m, true))}
+              {activeMatches.map((m) => renderMatchVoteCard(m, true))}
             </>
           ) : (
             <div className="text-center py-12">
@@ -579,24 +656,25 @@ export default function VoteClient({
           )}
 
           {/* 지난 투표 */}
-          {pastMatches.length > 0 && (
+          {closedMatches.length > 0 && (
             <>
               <button
                 onClick={() => setExpandedPast(!expandedPast)}
                 className="flex items-center gap-1 text-[10px] font-bold text-gray-400 tracking-[0.14em] w-full mt-6"
               >
-                지난 투표 ({pastMatches.length})
+                지난 투표 ({closedMatches.length})
                 {expandedPast ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
               </button>
               {expandedPast && (
                 <div className="space-y-4">
-                  {pastMatches.map((m) => renderMatchVoteCard(m, false))}
+                  {closedMatches.map((m) => renderMatchVoteCard(m, false))}
                 </div>
               )}
             </>
           )}
         </div>
       </div>
+      <AppBottomNav active="vote" currentUserName={currentUser?.name} />
     </div>
   );
 }

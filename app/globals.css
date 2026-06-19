@@ -6,11 +6,23 @@
 :root {
   --background: #f6f6f7;
   --foreground: #18181b;
+  /* 라인업 피치: 라이트(주간 경기장) */
+  --pitch-frame: linear-gradient(180deg, #c7d7ee 0%, #e2ebf8 55%, #c7d7ee 100%);
+  --pitch-frame-shadow: 0 12px 40px rgba(80, 110, 160, 0.25),
+    0 0 28px rgba(255, 143, 163, 0.08);
+  --pitch-bar: rgba(255, 255, 255, 0.92);
+  --pitch-bar-border: rgba(0, 0, 0, 0.06);
 }
 
 .dark {
   --background: #09090b;
   --foreground: #f4f4f5;
+  /* 라인업 피치: 다크(야간 경기장) */
+  --pitch-frame: linear-gradient(180deg, #070d20 0%, #0d1733 55%, #070d20 100%);
+  --pitch-frame-shadow: 0 12px 40px rgba(5, 10, 30, 0.55),
+    0 0 28px rgba(255, 143, 163, 0.1);
+  --pitch-bar: rgba(3, 8, 26, 0.9);
+  --pitch-bar-border: rgba(255, 255, 255, 0.06);
 }
 
 @theme inline {

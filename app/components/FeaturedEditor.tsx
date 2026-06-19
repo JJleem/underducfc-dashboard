@@ -2,7 +2,6 @@
 // 대표 칭호 선택 (본인만). 라인업/순위에 보일 최대 3개를 순서대로 고른다.
 
 import { createElement, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { EarnedTitle } from "../lib/titles";
 import { titleIcon } from "../lib/title-icons";
@@ -14,9 +13,9 @@ export default function FeaturedEditor({
   titles: EarnedTitle[];
   current: string[];
 }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [sel, setSel] = useState<string[]>(current.slice(0, 3));
+  const [saved, setSaved] = useState<string[]>(current.slice(0, 3));
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -38,8 +37,8 @@ export default function FeaturedEditor({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "저장 실패");
+      setSaved(sel);
       setOpen(false);
-      router.refresh();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "저장 실패");
     } finally {
@@ -100,7 +99,7 @@ export default function FeaturedEditor({
           type="button"
           onClick={() => {
             setOpen(false);
-            setSel(current.slice(0, 3));
+            setSel(saved);
             setErr(null);
           }}
           className="flex-1 py-2 rounded-xl text-[12px] font-black bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300"

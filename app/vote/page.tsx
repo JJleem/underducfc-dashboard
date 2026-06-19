@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { isAdmin } from "../lib/admin";
-import { getSheetData } from "../lib/google-sheets";
+import { getMatchesData, getSheetData } from "../lib/google-sheets";
 import { getMatchWeather, serializeWeather, parseWeather } from "../lib/weather";
 import { writeMatchWeather } from "../lib/sheets-write";
 import VoteClient from "./VoteClient";
@@ -16,8 +16,8 @@ export default async function VotePage() {
     : null;
   const admin = isAdmin(currentUser?.kakaoId);
 
-  // N열(날씨)까지 포함해서 fetch
-  const rawMatches = await getSheetData("matches!A1:N50");
+  // O열(출석 투표 상태)까지 포함해서 fetch
+  const rawMatches = await getMatchesData();
   let rawAttendanceVotes: string[][] = [];
   try {
     rawAttendanceVotes = await getSheetData("attendance_vote!A1:E500");
@@ -44,7 +44,7 @@ export default async function VotePage() {
     return `${m[1].padStart(2, "0")}:${m[2]}`;
   };
 
-  const matches: { id: number; date: string; time: string; location: string; opponent: string; result: string; type: string; attendees: string; weatherRaw: string }[] = rawMatches.slice(1).map((row: string[], index: number) => ({
+  const matches: { id: number; date: string; time: string; location: string; opponent: string; result: string; type: string; attendees: string; weatherRaw: string; attendanceStatus: "진행중" | "마감" }[] = rawMatches.slice(1).map((row: string[], index: number) => ({
     id: index,
     date: row[0] || "",
     time: normalizeTime(row[1]),
@@ -54,6 +54,7 @@ export default async function VotePage() {
     type: row[7] || "일반 매칭",
     attendees: row[11] || "",
     weatherRaw: row[13] || "", // N열
+    attendanceStatus: row[14] === "마감" ? "마감" : "진행중",
   }));
 
   const attendanceVotes = rawAttendanceVotes
@@ -88,13 +89,13 @@ export default async function VotePage() {
 
   // 예정 경기 (최신순)
   const upcomingMatches = matches
-    .filter((m) => m.result === "예정" && m.type !== "야유회")
+    .filter((m) => m.result === "예정" && m.type !== "야유회" && m.attendanceStatus !== "마감")
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   // 지난 투표
   const pastVoteMatchIds = new Set(attendanceVotes.map((v) => v.matchId));
   const pastMatches = matches
-    .filter((m) => m.result !== "예정" && pastVoteMatchIds.has(m.id))
+    .filter((m) => m.attendanceStatus === "마감" || (m.result !== "예정" && pastVoteMatchIds.has(m.id)))
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // 날씨: 시트에 저장된 값 우선, 없으면 API 조회 후 시트에 저장

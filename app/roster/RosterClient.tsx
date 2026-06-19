@@ -16,14 +16,16 @@ import {
 import { useTheme } from "next-themes";
 import { Badge } from "../components/ui/badge";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "../components/ui/drawer";
+import AppBottomNav from "../components/AppBottomNav";
 
 interface RosterClientProps {
   players: string[][];
   isAdmin?: boolean;
+  currentUserName?: string | null;
 }
 
-export default function RosterClient({ players: initialPlayers, isAdmin = false }: RosterClientProps) {
-  const { theme, setTheme } = useTheme();
+export default function RosterClient({ players: initialPlayers, isAdmin = false, currentUserName }: RosterClientProps) {
+  const { resolvedTheme, setTheme } = useTheme();
   const [playerList, setPlayerList] = React.useState<string[][]>(initialPlayers);
 
   const [addModal, setAddModal] = React.useState(false);
@@ -77,7 +79,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
           SQUAD
         </span>
         <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
           className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
         >
           <Moon className="block dark:hidden w-4 h-4 text-gray-700" />
@@ -85,7 +87,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
         </button>
       </header>
 
-      <main className="p-5 pb-10">
+      <main className="p-5 pb-28">
         {/* 타이틀 영역 */}
         <div className="flex items-center gap-3 mb-6 px-1">
           <div className="relative w-10 h-10 rounded-full bg-white dark:bg-[#161618] ring-1 ring-gray-200 dark:ring-white/10 shadow-sm flex items-center justify-center overflow-hidden">
@@ -204,6 +206,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
 
         </div>
       </main>
+      <AppBottomNav active="home" currentUserName={currentUserName} />
 
       {/* 선수 추가 Drawer */}
       <Drawer open={addModal} onOpenChange={setAddModal}>

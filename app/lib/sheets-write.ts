@@ -76,11 +76,12 @@ export async function writeFeaturedTitles(playerName: string, ids: string[]): Pr
   if (foundIndex >= 0) {
     const rowNum = foundIndex + 1; // 시트는 1-indexed
     const range = `featured!A${rowNum}:D${rowNum}`;
-    await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
+    const res = await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ range, values: [[name, ...padded]] }),
     });
+    if (!res.ok) throw new Error("featured 시트 쓰기 실패");
   } else {
     const range = encodeURIComponent("featured!A:D");
     const res = await fetch(
@@ -396,9 +397,19 @@ export async function appendMatch(match: {
   const sheetId = process.env.GOOGLE_SHEET_ID;
   if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
   const token = await getAccessToken();
-  // A~N열 (14컬럼): date,time,location,opponent,ourScore,theirScore,result,type,goals,assists,MOM,attendees,photos,weather
-  const row = [match.date, match.time, match.location, match.opponent, "", "", "예정", match.type, "", "", "", "", "", match.weather || ""];
-  const range = encodeURIComponent("matches!A:N");
+  const headerRange = "matches!O1";
+  const headerRes = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(headerRange)}?valueInputOption=USER_ENTERED`,
+    {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ range: headerRange, values: [["attendanceStatus"]] }),
+    }
+  );
+  if (!headerRes.ok) throw new Error("matches 시트 출석 상태 헤더 쓰기 실패");
+  // A~O열: 경기 정보 + 날씨 + 출석 투표 상태
+  const row = [match.date, match.time, match.location, match.opponent, "", "", "예정", match.type, "", "", "", "", "", match.weather || "", "진행중"];
+  const range = encodeURIComponent("matches!A:O");
   const res = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
     {
@@ -483,12 +494,14 @@ export async function writeLineup({
   formation,
   players,
   subs,
+  substitutions,
 }: {
   matchId: number;
   quarter: string;
   formation: string;
   players: string[];
   subs: string[];
+  substitutions: { out: string; in: string; time?: string }[];
 }) {
   const sheetId = process.env.GOOGLE_SHEET_ID;
   if (!sheetId) throw new Error("GOOGLE_SHEET_ID 환경변수가 없습니다.");
@@ -497,7 +510,7 @@ export async function writeLineup({
   const base = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`;
 
   // 기존 데이터 읽기
-  const readRes = await fetch(`${base}/values/lineup!A1:S100`, {
+  const readRes = await fetch(`${base}/values/lineup!A1:T100`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!readRes.ok) throw new Error("lineup 시트 읽기 실패");
@@ -506,16 +519,25 @@ export async function writeLineup({
 
   // 헤더 보존 (없으면 기본값)
   const header = rows.length > 0
-    ? rows[0]
-    : ["matchId", "quarter", "formation", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10", "p11", "sub1", "sub2", "sub3", "sub4", "sub5"];
+    ? [...rows[0]]
+    : ["matchId", "quarter", "formation", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10", "p11", "sub1", "sub2", "sub3", "sub4", "sub5", "substitutions"];
+  header[19] = "substitutions";
 
-  // 19칸 고정 (match_id, quarter, formation, p1~p11, sub1~sub5)
+  // 20칸 고정 (match_id, quarter, formation, p1~p11, 대기선수 sub1~sub5, 교체기록 JSON)
   const playerCells = [...players, ...Array(Math.max(0, 11 - players.length)).fill("")].slice(0, 11);
   const subCells = [...subs, ...Array(Math.max(0, 5 - subs.length)).fill("")].slice(0, 5);
-  const newRow = [String(matchId), quarter, formation, ...playerCells, ...subCells];
+  const cleanSubstitutions = substitutions
+    .map((event) => ({
+      out: String(event.out || "").trim(),
+      in: String(event.in || "").trim(),
+      time: String(event.time || "").trim(),
+    }))
+    .filter((event) => event.out || event.in);
+  const substitutionCell = cleanSubstitutions.length ? JSON.stringify(cleanSubstitutions) : "";
+  const newRow = [String(matchId), quarter, formation, ...playerCells, ...subCells, substitutionCell];
 
-  // 플레이어/교체 모두 비어있으면 해당 행 삭제, 아니면 업데이트/추가
-  const isEmpty = playerCells.every(p => !p) && subCells.every(s => !s);
+  // 선발/대기/교체기록이 모두 비어있으면 해당 행 삭제, 아니면 업데이트/추가
+  const isEmpty = playerCells.every(p => !p) && subCells.every(s => !s) && !substitutionCell;
 
   let found = false;
   const dataRows = rows.slice(1)
@@ -535,13 +557,13 @@ export async function writeLineup({
   // 기존 행보다 줄었으면 빈 행으로 패딩 → 이전 데이터 완전히 덮어쓰기
   const originalRowCount = rows.length;
   const allRows = [header, ...dataRows];
-  const emptyRow = Array(19).fill("");
+  const emptyRow = Array(20).fill("");
   while (allRows.length < originalRowCount) {
     allRows.push(emptyRow);
   }
-  const writeRange = `lineup!A1:S${Math.max(allRows.length, originalRowCount)}`;
+  const writeRange = `lineup!A1:T${Math.max(allRows.length, originalRowCount)}`;
 
-  await fetch(`${base}/values/${encodeURIComponent(writeRange)}?valueInputOption=USER_ENTERED`, {
+  const writeRes = await fetch(`${base}/values/${encodeURIComponent(writeRange)}?valueInputOption=USER_ENTERED`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -549,6 +571,7 @@ export async function writeLineup({
     },
     body: JSON.stringify({ range: writeRange, values: allRows }),
   });
+  if (!writeRes.ok) throw new Error("lineup 시트 쓰기 실패");
 }
 
 // ── Push 구독 관리 ────────────────────────────────────────────
@@ -740,16 +763,48 @@ export async function finalizeAttendance(matchId: number): Promise<string> {
 
   const attendeeStr = attendees.join(",");
 
-  // matches!L{row}에 기록
+  // matches!L{row}에 참석자, O열에 마감 상태 기록
   const rowNum = matchId + 2;
-  const range = `matches!L${rowNum}`;
-  await fetch(`${base}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
-    method: "PUT",
+  const res = await fetch(`${base}/values:batchUpdate`, {
+    method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ range, values: [[attendeeStr]] }),
+    body: JSON.stringify({
+      valueInputOption: "USER_ENTERED",
+      data: [
+        { range: `matches!L${rowNum}`, values: [[attendeeStr]] },
+        { range: "matches!O1", values: [["attendanceStatus"]] },
+        { range: `matches!O${rowNum}`, values: [["마감"]] },
+      ],
+    }),
   });
+  if (!res.ok) throw new Error("출석 투표 마감 저장 실패");
 
   return attendeeStr;
+}
+
+export async function setAttendanceStatus(
+  matchId: number,
+  status: "진행중" | "마감"
+): Promise<void> {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error("GOOGLE_SHEET_ID 없음");
+  const token = await getAccessToken();
+  const rowNum = matchId + 2;
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        valueInputOption: "USER_ENTERED",
+        data: [
+          { range: "matches!O1", values: [["attendanceStatus"]] },
+          { range: `matches!O${rowNum}`, values: [[status]] },
+        ],
+      }),
+    }
+  );
+  if (!res.ok) throw new Error("출석 투표 상태 저장 실패");
 }
 
 // ── 투표 댓글 관리 ────────────────────────────────────────────

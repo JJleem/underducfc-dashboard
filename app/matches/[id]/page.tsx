@@ -2,6 +2,8 @@ import { getSheetData } from "../../lib/google-sheets";
 import { LineupData, MatchData } from "../../components/DashboardClient";
 import MatchDetailClient from "./MatchDetailClient";
 import { notFound } from "next/navigation";
+import { parseSubstitutions } from "../../lib/lineup";
+import { auth } from "@/auth";
 
 export default async function MatchDetailPage({
   params,
@@ -10,10 +12,11 @@ export default async function MatchDetailPage({
 }) {
   const { id } = await params;
   const matchId = Number(id);
+  const session = await auth();
 
   const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult] = await Promise.allSettled([
     getSheetData("matches!A1:M50"),
-    getSheetData("lineup!A1:S100"),
+    getSheetData("lineup!A1:T100"),
     getSheetData("roster!A1:J50"),
     getSheetData("stats!A1:G50"),
   ]);
@@ -85,8 +88,18 @@ export default async function MatchDetailPage({
       subs: [
         row[14] || "", row[15] || "", row[16] || "", row[17] || "", row[18] || "",
       ].filter(Boolean),
+      substitutions: parseSubstitutions(row[19]),
     }))
     .filter((l: LineupData) => l.matchId === matchId);
 
-  return <MatchDetailClient match={match} lineups={lineups} rosterMap={rosterMap} captainRoles={captainRoles} playerStats={playerStats} />;
+  return (
+    <MatchDetailClient
+      match={match}
+      lineups={lineups}
+      rosterMap={rosterMap}
+      captainRoles={captainRoles}
+      playerStats={playerStats}
+      currentUserName={session?.user?.name}
+    />
+  );
 }

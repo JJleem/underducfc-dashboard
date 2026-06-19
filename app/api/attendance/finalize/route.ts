@@ -1,24 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { finalizeAttendance, writeMatchWeather } from "../../../lib/sheets-write";
+import { finalizeAttendance, setAttendanceStatus, writeMatchWeather } from "../../../lib/sheets-write";
 import { requireAdmin } from "@/app/lib/admin";
-import { getSheetData } from "@/app/lib/google-sheets";
+import { getMatchesData } from "@/app/lib/google-sheets";
 import { getMatchWeather, serializeWeather } from "@/app/lib/weather";
 
 export async function POST(request: NextRequest) {
   const denied = await requireAdmin();
   if (denied) return denied;
   try {
-    const { matchId } = await request.json();
+    const { matchId, action = "close" } = await request.json();
     if (matchId === undefined) {
       return NextResponse.json({ error: "matchId 필수" }, { status: 400 });
     }
 
     const id = Number(matchId);
+    if (action === "open") {
+      await setAttendanceStatus(id, "진행중");
+      return NextResponse.json({ ok: true, status: "진행중" });
+    }
     const attendees = await finalizeAttendance(id);
 
     // 날씨도 함께 기록
     try {
-      const rawMatches = await getSheetData("matches!A1:N50");
+      const rawMatches = await getMatchesData();
       const row = rawMatches[id + 1]; // header offset
       if (row) {
         const date = row[0] || "";

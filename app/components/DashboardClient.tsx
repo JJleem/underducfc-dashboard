@@ -6,6 +6,14 @@ import { Badge } from "./ui/badge";
 import { Calendar } from "./ui/calendar";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "./ui/drawer";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import {
   Trophy,
   CalendarDays,
   Menu,
@@ -39,11 +47,10 @@ import {
   Swords,
   Sparkles,
   LogIn,
+  LogOut,
 } from "lucide-react";
 import { signIn, signOut } from "next-auth/react";
 import { shareStoryCard } from "../lib/draw-story-card";
-import { FormationField, FORMATION_POSITIONS } from "./FormationField";
-import { shareFormation } from "../lib/draw-formation";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
@@ -52,6 +59,9 @@ import { DayPicker } from "react-day-picker";
 import { parseWeather, weatherEmoji } from "../lib/weather";
 import { TitleBadges } from "./TitleBadges";
 import type { EarnedTitle } from "../lib/titles";
+import type { SubstitutionEvent } from "../lib/lineup";
+import AppBottomNav from "./AppBottomNav";
+import LineupViewer from "./LineupViewer";
 
 // 숫자가 0에서 목표값까지 부드럽게 올라가는 카운트업 (전광판 느낌)
 function CountUp({
@@ -160,7 +170,8 @@ export interface LineupData {
   quarter: string; // "예상" | "1Q" | "2Q" | "3Q" | "4Q" | "5Q" | "6Q"
   formation: string; // "4-3-3" | "4-4-2" | "3-5-2" | "4-2-3-1" 등
   players: string[]; // p1~p11
-  subs: string[]; // sub1~sub5
+  subs: string[]; // 대기 선수 sub1~sub5
+  substitutions: SubstitutionEvent[]; // 실제 교체 OUT → IN
 }
 
 export interface MatchData {
@@ -179,6 +190,7 @@ export interface MatchData {
   attendees?: string; // L열 - 참석자 (쉼표 구분)
   photos?: string; // M열 - Drive 파일ID (쉼표 구분)
   weather?: string; // N열 - "28°C,맑음,01d,10"
+  attendanceStatus?: "진행중" | "마감"; // O열 - 출석 투표 상태
 }
 
 export interface MediaData {
@@ -208,6 +220,7 @@ interface DashboardClientProps {
   isAdmin?: boolean;
   attendanceVotes?: AttendanceVoteData[];
   playerTitles?: Record<string, EarnedTitle[]>;
+  initialView?: "home" | "matches" | "stats";
 }
 
 export default function DashboardClient({
@@ -221,11 +234,14 @@ export default function DashboardClient({
   isAdmin = false,
   attendanceVotes: initialAttendanceVotes = [],
   playerTitles = {},
+  initialView = "home",
 }: DashboardClientProps) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
   const [matchList, setMatchList] = React.useState<MatchData[]>(matches);
   const [showTopBtn, setShowTopBtn] = React.useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState(initialView === "stats" ? "stats" : "matches");
 
   // 출석 투표 (요약 카드용, 읽기 전용)
   const attendanceVoteMap = React.useMemo(() => {
@@ -303,6 +319,7 @@ export default function DashboardClient({
         mom: "",
         attendees: "",
         photos: "",
+        attendanceStatus: "진행중",
       };
       setMatchList((prev) => [...prev, newMatch]);
       setAddMatchModal(false);
@@ -321,9 +338,6 @@ export default function DashboardClient({
   }, []);
 
   const [statSort, setStatSort] = React.useState<"pos" | "apps" | "goals" | "assists" | "mom">("pos");
-  const [openLineups, setOpenLineups] = React.useState<Set<number>>(new Set());
-  const [activeQuarters, setActiveQuarters] = React.useState<Record<number, string>>({});
-  const [sharingMatch, setSharingMatch] = React.useState<number | null>(null);
   const matchCardRefs = React.useRef<Record<number, HTMLDivElement | null>>({});
   const [calendarMonth, setCalendarMonth] = React.useState<Date>(new Date());
 
@@ -446,9 +460,17 @@ export default function DashboardClient({
   };
 
   const nextMatch = [...matchList]
-    .filter((m) => m.result === "예정" && m.type !== "야유회")
+    .filter((m) => m.result === "예정" && m.type !== "야유회" && m.attendanceStatus !== "마감")
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
   const dDay = nextMatch ? getDDay(nextMatch.date) : null;
+  const nextVotes = nextMatch ? attendanceVoteMap[nextMatch.id] || [] : [];
+  const nextAttending = nextVotes.filter((vote) => vote.response === "참석").length;
+  const nextMaybe = nextVotes.filter((vote) => vote.response === "미정").length;
+  const nextAbsent = nextVotes.filter((vote) => vote.response === "불참").length;
+  const nextVoteTotal = nextAttending + nextMaybe + nextAbsent;
+  const myNextVote = currentUser
+    ? nextVotes.find((vote) => vote.kakaoId === currentUser.kakaoId)?.response
+    : undefined;
 
   // 사진 상태
   const [openPhotos, setOpenPhotos] = React.useState<Set<number>>(new Set());
@@ -714,16 +736,6 @@ export default function DashboardClient({
     }
   };
 
-  const toggleLineup = (matchId: number) => {
-    buzz();
-    setOpenLineups((prev) => {
-      const next = new Set(prev);
-      if (next.has(matchId)) next.delete(matchId);
-      else next.add(matchId);
-      return next;
-    });
-  };
-
   const getMatchLineups = (matchId: number) =>
     lineups.filter((l) => l.matchId === matchId);
 
@@ -853,27 +865,69 @@ export default function DashboardClient({
         </span>
         <div className="flex items-center gap-2">
           {currentUser ? (
-            <button
-              onClick={() => signOut()}
-              title="로그아웃"
-              className="flex items-center gap-1.5 h-8 pl-1 pr-2.5 rounded-full bg-gray-100 dark:bg-white/10 transition-all"
-            >
-              {currentUser.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={currentUser.image}
-                  alt={currentUser.name}
-                  className="w-6 h-6 rounded-full object-cover"
-                />
-              ) : (
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FF8FA3] text-white text-[10px] font-bold">
-                  {currentUser.name.slice(0, 1) || "U"}
-                </span>
-              )}
-              <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 max-w-[72px] truncate">
-                {currentUser.name || "회원"}
-              </span>
-            </button>
+            <DropdownMenu open={accountMenuOpen} onOpenChange={setAccountMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className={`flex items-center gap-1.5 h-8 pl-1 pr-2 rounded-full outline-none transition-all ${
+                    accountMenuOpen
+                      ? "bg-gray-200 dark:bg-white/15 ring-2 ring-[#FF8FA3]/20"
+                      : "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15"
+                  }`}
+                >
+                  {currentUser.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={currentUser.image}
+                      alt={currentUser.name}
+                      className="w-6 h-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FF8FA3] text-white text-[10px] font-bold">
+                      {currentUser.name.slice(0, 1) || "U"}
+                    </span>
+                  )}
+                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 max-w-[64px] truncate">
+                    {currentUser.name || "회원"}
+                  </span>
+                  <ChevronDown
+                    className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
+                      accountMenuOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                sideOffset={8}
+                className="w-44 rounded-2xl border-gray-200/80 dark:border-white/10 bg-white/95 dark:bg-[#17171a]/95 p-1.5 shadow-[0_14px_38px_rgba(15,23,42,0.18)] dark:shadow-[0_18px_42px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+              >
+                <DropdownMenuLabel className="px-2.5 py-2 font-normal">
+                  <p className="text-[10px] font-bold text-gray-400">로그인 계정</p>
+                  <p className="mt-0.5 text-xs font-extrabold text-gray-800 dark:text-gray-100 truncate">
+                    {currentUser.name || "회원"}
+                  </p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-gray-100 dark:bg-white/[0.07]" />
+                <DropdownMenuItem
+                  asChild
+                  className="rounded-xl px-2.5 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 focus:bg-gray-100 dark:focus:bg-white/[0.07]"
+                >
+                  <Link href={`/players/${encodeURIComponent(currentUser.name.trim())}`}>
+                    <User className="w-4 h-4 !text-[#FF8FA3]" />
+                    마이페이지
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={() => signOut()}
+                  className="rounded-xl px-2.5 py-2 text-xs font-bold"
+                >
+                  <LogOut className="w-4 h-4" />
+                  로그아웃
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <button
               onClick={() => signIn("kakao")}
@@ -884,7 +938,7 @@ export default function DashboardClient({
             </button>
           )}
           <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
             className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 transition-all"
           >
             <Moon className="block dark:hidden w-4 h-4 text-gray-700" />
@@ -893,100 +947,116 @@ export default function DashboardClient({
         </div>
       </header>
 
-      <main className="p-5 pb-10">
-        {/* 🦆 히어로 섹션 (복구 완료!) */}
-        <div className="animate-rise relative py-7 flex flex-col items-center border-b border-gray-200/70 dark:border-white/[0.06] mb-5">
-          {/* 은은한 앰비언트 라이팅 (네온 아님, 깊이감용) */}
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-52 h-28 bg-[#FFB6C1]/20 dark:bg-[#FF8FA3]/10 blur-[64px] rounded-full -z-10 pointer-events-none" />
-          <div className="relative w-[72px] h-[72px] rounded-full bg-white dark:bg-[#141416] ring-1 ring-gray-200 dark:ring-white/10 shadow-soft flex items-center justify-center overflow-hidden mb-4">
-            <Image
-              src="/underducklogo.png"
-              alt="Underduck Logo"
-              fill
-              priority
-              className="object-cover"
-            />
+      <main className="p-5 pb-28">
+        {/* 팀 인트로 */}
+        <div className="animate-rise relative mb-5 overflow-hidden rounded-[24px] border border-gray-200/70 bg-white px-4 py-4 shadow-sm dark:border-white/[0.07] dark:bg-[#141416]">
+          <div className="pointer-events-none absolute -left-8 -top-10 h-28 w-28 rounded-full bg-[#FF8FA3]/15 blur-3xl dark:bg-[#FFB6C1]/10" />
+          <div className="relative flex items-center gap-3.5">
+          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[20px] bg-white shadow-md ring-1 ring-gray-200 dark:bg-[#161618] dark:ring-white/10">
+            <Image src="/underducklogo.png" alt="Underduck Logo" fill priority className="object-cover" />
           </div>
-          <h1 className="text-[34px] leading-none w-full text-center font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#FF8FA3] to-gray-900 dark:from-[#FFB6C1] dark:to-zinc-100">
-            UNDERDUCK FC
-          </h1>
-          <div className="flex flex-col gap-2 mt-3 max-w-[400px] items-center text-center">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <Badge className="bg-[#FFB6C1]/20 dark:bg-white/5 text-[#FF8FA3] dark:text-[#FFB6C1] border-none text-[10px]">
+              <h1 className="text-[23px] font-black leading-none tracking-tight text-gray-900 dark:text-white">UNDERDUCK FC</h1>
+              <Badge className="border-none bg-[#FF8FA3]/10 px-1.5 text-[8px] font-black text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]">
                 EST 2025
               </Badge>
-              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold tracking-[0.14em] uppercase">
-                Not &apos;Because of&apos;, but &apos;Thanks to&apos;
-              </span>
             </div>
-            <p className="text-[12px] text-gray-600 dark:text-gray-400 leading-relaxed font-medium mt-1 px-4">
-              <span className="text-[#FF8FA3] dark:text-[#FFB6C1] font-bold">
-                언더덕 FC
-              </span>
-              는 &apos;때문에&apos;란 말보다
-              <span className="text-gray-900 dark:text-white font-bold mx-1 underline underline-offset-4 decoration-[#FFB6C1]">
-                &quot;덕분에&quot;
-              </span>
-              란 말을 추구하며, <br /> 서로를 존중하는 축구 동호회입니다.
+            <p className="mt-1.5 text-[10px] font-semibold tracking-[0.08em] text-gray-400">
+              NOT BECAUSE OF, BUT THANKS TO
             </p>
-
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
-              <Link
-                href="/roster"
-                className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 dark:bg-white/10 hover:bg-gray-800 dark:hover:bg-white/20 text-white dark:text-[#FFB6C1] rounded-full text-xs font-bold transition-all shadow-md"
-              >
-                <Menu className="w-4 h-4" />로스터
-              </Link>
-
-              {/* 💡 콘텐츠(미디어) 진입 버튼 */}
-              <Link
-                href="/media"
-                className="flex items-center gap-1.5 px-5 py-2.5 bg-white dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 rounded-full text-xs font-bold transition-all border border-gray-200 dark:border-white/10"
-              >
-                <Film className="w-4 h-4" />콘텐츠
-              </Link>
-
-              {/* 💡 인스타그램 버튼 */}
-              <Link
-                href="https://www.instagram.com/underduck_fc/"
-                target="_blank"
-                rel="noopener noreferrer"
-                // 💡 overflow-hidden 추가: 혹시 모를 이미지 삐져나옴 방지
-                className="flex items-center justify-center w-[36px] h-[36px] bg-white dark:bg-[#161618] rounded-full hover:scale-110 transition-transform shadow-md border border-gray-100 dark:border-white/10 overflow-hidden"
-                aria-label="Instagram"
-              >
-                <Image
-                  src="/instagram-logo.webp"
-                  alt="Instagram"
-                  // 💡 컨테이너(36)보다 작게 설정하여 안정적인 여백 생성
-                  width={22}
-                  height={22}
-                  className="object-contain" // 💡 비율 찌그러짐 방지
-                />
-              </Link>
-
-              {/* 💡 구글 시트 버튼 */}
-              <Link
-                href="https://docs.google.com/spreadsheets/d/1e2w3S5zeiryWlXE3BfhkOoraXCZZays5BPiI5UsKhQs/edit?gid=0#gid=0"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center w-[36px] h-[36px] bg-white dark:bg-[#161618] rounded-full hover:scale-110 transition-transform shadow-md border border-gray-100 dark:border-white/10 overflow-hidden"
-                aria-label="Google Sheets"
-              >
-                <Image
-                  src="/sheets-logo.png"
-                  alt="Google Sheets"
-                  width={22}
-                  height={22}
-                  className="object-contain h-[22px]!"
-                />
-              </Link>
-            </div>
+            <p className="mt-1 text-[10.5px] font-semibold leading-relaxed text-gray-500 dark:text-gray-400">
+              언더덕 FC는 &apos;때문에&apos;란 말보다 &quot;<span className="font-black text-[#FF8FA3] dark:text-[#FFB6C1]">덕분에</span>&quot;란 말을 추구하며,
+              서로를 존중하는 축구 동호회입니다.
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Link href="/roster" aria-label="로스터" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white shadow-sm dark:bg-white/10 dark:text-[#FFB6C1]">
+              <Menu className="h-4 w-4" />
+            </Link>
+            <Link href="/media" aria-label="콘텐츠" className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
+              <Film className="h-4 w-4" />
+            </Link>
+          </div>
           </div>
         </div>
 
+        {/* 다음 경기 허브 */}
+        {nextMatch && dDay !== null && (() => {
+          const weather = parseWeather(nextMatch.weather || "");
+          return (
+            <section className="relative mb-5 overflow-hidden rounded-[26px] bg-white p-4 text-gray-900 shadow-soft ring-1 ring-gray-200 dark:bg-[#10182f] dark:text-white dark:shadow-[0_16px_36px_rgba(15,23,42,0.22)] dark:ring-white/10">
+              <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-[#FF8FA3]/20 blur-3xl dark:bg-[#FF8FA3]/25" />
+              <div className="relative">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-black tracking-[0.18em] text-[#FF8FA3] dark:text-[#FFB6C1]">NEXT MATCH</p>
+                    <h2 className="mt-1 truncate text-[19px] font-black">vs {nextMatch.opponent}</h2>
+                    <p className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 dark:text-white/55">
+                      <CalendarDays className="h-3 w-3" />
+                      {nextMatch.date} · {nextMatch.time}
+                    </p>
+                    <p className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 dark:text-white/55">
+                      <MapPin className="h-3 w-3" />
+                      <span className="truncate">{nextMatch.location}</span>
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[30px] font-black leading-none text-[#FF8FA3] dark:text-[#FFB6C1] tabular-nums">
+                      {dDay === 0 ? "D-DAY" : dDay < 0 ? `D+${Math.abs(dDay)}` : `D-${dDay}`}
+                    </p>
+                    {weather.available && (
+                      <p className="mt-2 text-[10px] font-bold text-gray-500 dark:text-white/60">
+                        {weatherEmoji(weather.icon)} {weather.temp}° · {weather.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-3 dark:border-white/10 dark:bg-white/[0.06]">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="flex items-center gap-1.5 text-[10px] font-black text-gray-600 dark:text-white/65">
+                      <Users className="h-3 w-3" /> 출석 현황
+                    </p>
+                    {myNextVote && (
+                      <span className="rounded-full bg-[#FF8FA3]/10 px-2 py-0.5 text-[9px] font-black text-[#FF8FA3] dark:bg-white/10 dark:text-[#FFB6C1]">
+                        나는 {myNextVote}
+                      </span>
+                    )}
+                  </div>
+                  {nextVoteTotal > 0 ? (
+                    <>
+                      <div className="mb-2 flex h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
+                        {nextAttending > 0 && <div className="bg-[#FF8FA3]" style={{ width: `${(nextAttending / nextVoteTotal) * 100}%` }} />}
+                        {nextMaybe > 0 && <div className="bg-amber-400" style={{ width: `${(nextMaybe / nextVoteTotal) * 100}%` }} />}
+                        {nextAbsent > 0 && <div className="bg-gray-400 dark:bg-white/25" style={{ width: `${(nextAbsent / nextVoteTotal) * 100}%` }} />}
+                      </div>
+                      <div className="flex gap-3 text-[9px] font-black">
+                        <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">참석 {nextAttending}</span>
+                        <span className="text-amber-500 dark:text-amber-300">미정 {nextMaybe}</span>
+                        <span className="text-gray-400 dark:text-white/40">불참 {nextAbsent}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-[10px] font-semibold text-gray-400 dark:text-white/40">아직 등록된 투표가 없습니다.</p>
+                  )}
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <Link href="/vote" className="flex items-center justify-center rounded-xl bg-[#FF8FA3] py-2.5 text-[11px] font-black text-white">
+                    {myNextVote ? "투표 확인하기" : "출석 투표하기"}
+                  </Link>
+                  <Link href={`/matches/${nextMatch.id}`} className="flex items-center justify-center rounded-xl bg-gray-100 py-2.5 text-[11px] font-black text-gray-700 dark:bg-white/10 dark:text-white/85">
+                    경기 상세 보기
+                  </Link>
+                </div>
+              </div>
+            </section>
+          );
+        })()}
+
         {/* 탭 섹션 */}
-        <Tabs defaultValue="matches" className="w-full h-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
           {/* 💡 탭은 다시 2개로 조정 */}
           <TabsList
             onClick={buzz}
@@ -1295,91 +1365,6 @@ export default function DashboardClient({
               </Card>
             </div>
 
-            {/* D-Day 배너 */}
-            {nextMatch && dDay !== null && (() => {
-              const w = parseWeather(nextMatch.weather || "");
-              return (
-                <div className="mb-4 rounded-2xl bg-white dark:bg-[#141416] border border-gray-200/70 dark:border-white/[0.06] shadow-sm p-4 flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold text-[#FF8FA3] dark:text-[#FFB6C1] mb-1 tracking-[0.14em]">NEXT MATCH</p>
-                    <p className="text-sm font-bold text-gray-900 dark:text-white">vs {nextMatch.opponent}</p>
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
-                      {nextMatch.date} · {nextMatch.time} · {nextMatch.location}
-                    </p>
-                    {w.available && (
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
-                        <span>{weatherEmoji(w.icon)}</span>
-                        <span>{w.temp}°C {w.description}</span>
-                        <span className="text-blue-400">💧{w.pop}%</span>
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-right shrink-0 ml-4">
-                    <div className="text-[32px] font-extrabold tracking-tight text-[#FF8FA3] dark:text-[#FFB6C1] leading-none tabular-nums">
-                      {dDay === 0 ? "D-DAY" : dDay < 0 ? `D+${Math.abs(dDay)}` : `D-${dDay}`}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* 출석 투표 요약 */}
-            {nextMatch && (() => {
-              const votes = attendanceVoteMap[nextMatch.id] || [];
-              const myVote = currentUser
-                ? votes.find((v) => v.kakaoId === currentUser.kakaoId)?.response
-                : undefined;
-              const attending = votes.filter((v) => v.response === "참석").length;
-              const absent = votes.filter((v) => v.response === "불참").length;
-              const maybe = votes.filter((v) => v.response === "미정").length;
-              const total = attending + absent + maybe;
-
-              return (
-                <Link href="/vote" className="block mb-4">
-                  <div className="rounded-2xl bg-white dark:bg-[#141416] border border-gray-200/70 dark:border-white/[0.06] shadow-sm p-4 hover:border-[#FF8FA3]/30 dark:hover:border-[#FFB6C1]/20 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-[0.14em] flex items-center gap-1">
-                        <Users className="w-3 h-3" />
-                        출석 투표
-                      </p>
-                      <span className="text-[10px] font-bold text-[#FF8FA3] dark:text-[#FFB6C1]">
-                        상세 보기 →
-                      </span>
-                    </div>
-
-                    {/* 참석 바 그래프 */}
-                    {total > 0 ? (
-                      <>
-                        <div className="flex h-2 rounded-full overflow-hidden bg-gray-100 dark:bg-white/5 mb-2">
-                          {attending > 0 && (
-                            <div className="bg-[#FF8FA3] dark:bg-[#FFB6C1] transition-all" style={{ width: `${(attending / total) * 100}%` }} />
-                          )}
-                          {maybe > 0 && (
-                            <div className="bg-amber-400 transition-all" style={{ width: `${(maybe / total) * 100}%` }} />
-                          )}
-                          {absent > 0 && (
-                            <div className="bg-gray-400 transition-all" style={{ width: `${(absent / total) * 100}%` }} />
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3 text-[10px] font-bold">
-                          <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">참석 {attending}</span>
-                          <span className="text-amber-400">미정 {maybe}</span>
-                          <span className="text-gray-400">불참 {absent}</span>
-                          {myVote && (
-                            <span className="ml-auto text-gray-500 dark:text-gray-400">
-                              내 투표: <span className={myVote === "참석" ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : myVote === "미정" ? "text-amber-400" : "text-gray-400"}>{myVote}</span>
-                            </span>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <p className="text-[11px] text-gray-400 dark:text-gray-500">아직 투표가 없습니다. 눌러서 투표하기</p>
-                    )}
-                  </div>
-                </Link>
-              );
-            })()}
-
             {/* 최근 5경기 폼 */}
             {completedMatches.length > 0 && (
               <div className="mb-4 rounded-2xl bg-white dark:bg-[#141416] border border-gray-200/70 dark:border-white/[0.06] shadow-sm px-4 py-3 flex items-center justify-between">
@@ -1417,6 +1402,7 @@ export default function DashboardClient({
             )}
 
             {/* 경기 일정 리스트 */}
+            <div id="match-list" className="scroll-mt-24" />
             {[...matchList].reverse().map((match, mi) => {
               const isInternal = match.opponent === "자체전";
               const riseDelay = `${Math.min(mi, 8) * 60}ms`;
@@ -1886,142 +1872,35 @@ export default function DashboardClient({
                       );
                     })()}
 
-                    {/* 라인업 아코디언 */}
+                    {/* 풀스크린 라인업 */}
                     {(() => {
                       const matchLineups = getMatchLineups(match.id);
-                      const isOpen = openLineups.has(match.id);
-                      const sortedQuarters = QUARTER_ORDER.filter((q) =>
-                        matchLineups.some((l) => l.quarter === q)
-                      );
-                      const activeQ =
-                        activeQuarters[match.id] || sortedQuarters[0] || "";
-                      const activeLineup = matchLineups.find(
-                        (l) => l.quarter === activeQ
-                      );
-
                       return (
                         <div className="mt-4 border-t border-gray-100 dark:border-white/5 pt-3">
-                          <div className="flex items-center justify-between">
-                            <button
-                              onClick={() => matchLineups.length > 0 && toggleLineup(match.id)}
-                              className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                            >
+                          {matchLineups.length > 0 ? (
+                            <LineupViewer
+                              match={match}
+                              lineups={matchLineups}
+                              rosterMap={rosterMap}
+                              captainRoles={captainRoles}
+                              playerStats={playerStatsMap}
+                              playerTitles={playerTitles}
+                              editHref={isAdmin ? `/matches/${match.id}/edit` : undefined}
+                            />
+                          ) : (
+                            <div className="flex items-center justify-between rounded-2xl border border-dashed border-gray-200 px-3.5 py-3 dark:border-white/10">
+                              <span className="flex items-center gap-1.5 text-[11px] font-black text-gray-400">
                               <Users className="w-3.5 h-3.5 text-[#FFB6C1]" />
-                              {matchLineups.length > 0 ? "라인업 보기" : "라인업 미등록"}
-                              {matchLineups.length > 0 && (
-                                isOpen ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />
-                              )}
-                            </button>
-                            {isAdmin && (
+                                라인업 미등록
+                              </span>
+                              {isAdmin && (
                               <Link
                                 href={`/matches/${match.id}/edit`}
                                 className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] hover:opacity-70 transition-opacity"
                               >
-                                {matchLineups.length > 0 ? "편집" : "+ 추가"}
+                                  + 추가
                               </Link>
-                            )}
-                          </div>
-                          {isOpen && matchLineups.length > 0 && (
-                            <div className="mt-3 space-y-3">
-                              {/* 쿼터 탭 */}
-                              {sortedQuarters.length > 1 && (
-                                <div className="flex gap-1.5 flex-wrap">
-                                  {sortedQuarters.map((q) => (
-                                    <button
-                                      key={q}
-                                      onClick={() =>
-                                        setActiveQuarters((prev) => ({
-                                          ...prev,
-                                          [match.id]: q,
-                                        }))
-                                      }
-                                      className={`text-[10px] font-black px-2.5 py-1 rounded-lg transition-all ${
-                                        activeQ === q
-                                          ? "bg-[#FFB6C1] dark:bg-[#FFB6C1] text-black"
-                                          : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400"
-                                      }`}
-                                    >
-                                      {q}
-                                    </button>
-                                  ))}
-                                </div>
                               )}
-
-                              {activeLineup && (
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
-                                        {activeLineup.formation}
-                                      </span>
-                                      <span className="text-[9px] text-gray-400">포메이션</span>
-                                    </div>
-                                    {FORMATION_POSITIONS[activeLineup.formation] && (
-                                      <button
-                                        onClick={async () => {
-                                          setSharingMatch(match.id);
-                                          try {
-                                            await shareFormation(
-                                              activeLineup,
-                                              rosterMap,
-                                              `언더덕_${match.opponent}_${activeQ}_라인업.png`,
-                                              `언더덕 vs ${match.opponent} · ${activeQ} · ${match.date}`
-                                            );
-                                          } catch (e) {
-                                            if (e instanceof Error && e.name !== "AbortError") {
-                                              alert("공유 실패: " + e.message);
-                                            }
-                                          } finally {
-                                            setSharingMatch(null);
-                                          }
-                                        }}
-                                        disabled={sharingMatch === match.id}
-                                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-black/10 dark:bg-white/10 text-[10px] font-black text-gray-600 dark:text-gray-300 hover:bg-black/20 dark:hover:bg-white/20 transition-all"
-                                      >
-                                        {sharingMatch === match.id
-                                          ? <Download className="w-3 h-3 animate-bounce" />
-                                          : <Share2 className="w-3 h-3" />}
-                                        공유
-                                      </button>
-                                    )}
-                                  </div>
-                                  {FORMATION_POSITIONS[activeLineup.formation] ? (
-                                    <FormationField
-                                      lineup={activeLineup}
-                                      rosterMap={rosterMap}
-                                      captainRoles={captainRoles}
-                                      matchInfo={{ goals: match.goals, assists: match.assists, mom: match.mom }}
-                                      playerStats={playerStatsMap}
-                                      playerTitles={playerTitles}
-                                    />
-                                  ) : (
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {activeLineup.players.map((p, i) => (
-                                        <span key={i} className="text-[10px] font-bold px-2 py-0.5 bg-gray-100 dark:bg-white/5 rounded-md text-gray-700 dark:text-gray-300">
-                                          {p}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {activeLineup.subs.length > 0 && (
-                                    <div className="pt-1 border-t border-gray-100 dark:border-white/5">
-                                      <span className="text-[9px] text-gray-400 mr-1.5">교체</span>
-                                      {activeLineup.subs.map((s, i) => (
-                                        <span key={i} className="text-[10px] font-bold px-2 py-0.5 bg-gray-50 dark:bg-white/[0.03] rounded-md text-gray-500 mr-1">
-                                          {s}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-
-                              <Link
-                                href={`/matches/${match.id}`}
-                                className="flex items-center justify-center w-full py-2 mt-1 rounded-xl bg-gray-100 dark:bg-white/5 text-[11px] font-black text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
-                              >
-                                자세히 보기 →
-                              </Link>
                             </div>
                           )}
                         </div>
@@ -3442,12 +3321,16 @@ export default function DashboardClient({
       {showTopBtn && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-white dark:bg-[#161618] border border-gray-200 dark:border-white/10 shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+          className="fixed bottom-24 right-6 z-50 w-10 h-10 rounded-full bg-white dark:bg-[#161618] border border-gray-200 dark:border-white/10 shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
           aria-label="맨 위로"
         >
           <ChevronUp className="w-5 h-5 text-[#FF8FA3] dark:text-[#FFB6C1]" />
         </button>
       )}
+      <AppBottomNav
+        active={activeTab === "stats" ? "stats" : initialView === "home" ? "home" : "matches"}
+        currentUserName={currentUser?.name}
+      />
     </div>
   );
 }

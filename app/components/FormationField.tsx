@@ -1,8 +1,9 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Crown, X } from "lucide-react";
+import { Crown, ExternalLink, X } from "lucide-react";
 import { TitleBadges } from "./TitleBadges";
 import type { EarnedTitle } from "../lib/titles";
 
@@ -101,6 +102,60 @@ const buzz = () => {
   } catch { /* 미지원 무시 */ }
 };
 
+function FaceOnMarker({
+  name,
+  no,
+  color,
+  isGuest,
+}: {
+  name: string;
+  no?: string;
+  color: { bg: string; border: string; text: string };
+  isGuest: boolean;
+}) {
+  const candidates = [
+    `/players/${encodeURIComponent(name)}.png`,
+    `/players/${encodeURIComponent(name)}.webp`,
+    `/players/${encodeURIComponent(name)}.jpg`,
+    ...(no ? [`/players/${no}.png`, `/players/${no}.webp`, `/players/${no}.jpg`] : []),
+  ];
+  const [imageIndex, setImageIndex] = useState(0);
+  const hasImage = imageIndex < candidates.length;
+
+  return (
+    <div
+      className="relative flex items-end justify-center"
+      style={{
+        width: 54,
+        height: 62,
+      }}
+    >
+      <span
+        className="absolute left-0 top-1 z-10 text-[14px] font-black text-white/70"
+        style={{ textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}
+      >
+        {isGuest ? "G" : no}
+      </span>
+      {hasImage ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={candidates[imageIndex]}
+          alt={name}
+          onError={() => setImageIndex((current) => current + 1)}
+          className="h-[62px] w-[54px] object-contain object-bottom drop-shadow-[0_5px_5px_rgba(0,0,0,0.85)]"
+        />
+      ) : (
+        <div
+          className="mb-1 flex h-10 w-10 items-center justify-center rounded-full font-black"
+          style={{ backgroundColor: color.bg, color: color.text }}
+        >
+          {isGuest ? "G" : no}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function FormationField({
   lineup,
   rosterMap,
@@ -108,6 +163,7 @@ export function FormationField({
   matchInfo,
   playerStats,
   playerTitles,
+  mode = "token",
 }: {
   lineup: LineupForField;
   rosterMap: Record<string, string>;
@@ -115,6 +171,7 @@ export function FormationField({
   matchInfo?: { goals?: string; assists?: string; mom?: string };
   playerStats?: Record<string, SeasonStat>;
   playerTitles?: Record<string, EarnedTitle[]>;
+  mode?: "token" | "faceon";
 }) {
   const positions = FORMATION_POSITIONS[lineup.formation];
   const totalLayers = lineup.formation.split("-").length;
@@ -141,16 +198,16 @@ export function FormationField({
 
   return (
     <div
-      className="w-full rounded-2xl overflow-hidden ring-1 ring-white/10"
+      className="w-full rounded-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10"
       style={{
-        background: "linear-gradient(180deg,#070d20 0%,#0d1733 55%,#070d20 100%)",
-        boxShadow: "0 12px 40px rgba(5,10,30,0.55), 0 0 28px rgba(255,143,163,0.10)",
+        background: "var(--pitch-frame)",
+        boxShadow: "var(--pitch-frame-shadow)",
       }}
     >
-      <div className="relative w-full" style={{ paddingBottom: "112%" }}>
-        {/* 밤하늘 별 */}
+      <div className="relative w-full" style={{ paddingBottom: mode === "faceon" ? "145%" : "112%" }}>
+        {/* 밤하늘 별 (다크 전용) */}
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none hidden dark:block"
           style={{
             backgroundImage:
               "radial-gradient(1.5px 1.5px at 12% 10%, rgba(255,255,255,0.7), transparent)," +
@@ -318,25 +375,38 @@ export function FormationField({
                           type: "spring", stiffness: 320, damping: 22,
                           delay: entered ? 0 : 0.15 + layerIdx * 0.12,
                         }}
-                        className="flex flex-col items-center cursor-pointer"
-                        style={{ transformOrigin: "50% 100%" }}
+                        className="relative flex flex-col items-center justify-end cursor-pointer"
+                        style={{
+                          transformOrigin: "50% 100%",
+                          width: mode === "faceon" ? 72 : undefined,
+                          height: mode === "faceon" ? 88 : undefined,
+                        }}
                       >
                         <div className="relative">
-                          <div
-                            className="flex items-center justify-center rounded-full font-black"
-                            style={{
-                              width: 34, height: 34,
-                              fontSize: isTbd ? 10 : 13,
-                              backgroundColor: isTbd ? "#374151" : color.bg,
-                              border: `2.5px solid ${isTbd ? "#6B7280" : color.border}`,
-                              color: "#fff",
-                              boxShadow: isSel
-                                ? `0 0 18px ${color.bg}, 0 4px 10px rgba(0,0,0,0.55)`
-                                : "0 4px 10px rgba(0,0,0,0.55)",
-                            }}
-                          >
-                            {isTbd ? "?" : isGuest ? "G" : jerseyNo}
-                          </div>
+                          {mode === "faceon" && !isTbd ? (
+                            <FaceOnMarker
+                              name={name}
+                              no={jerseyNo}
+                              color={color}
+                              isGuest={isGuest}
+                            />
+                          ) : (
+                            <div
+                              className="flex items-center justify-center rounded-full font-black"
+                              style={{
+                                width: 34, height: 34,
+                                fontSize: isTbd ? 10 : 13,
+                                backgroundColor: isTbd ? "#374151" : color.bg,
+                                border: `2.5px solid ${isTbd ? "#6B7280" : color.border}`,
+                                color: "#fff",
+                                boxShadow: isSel
+                                  ? `0 0 18px ${color.bg}, 0 4px 10px rgba(0,0,0,0.55)`
+                                  : "0 4px 10px rgba(0,0,0,0.55)",
+                              }}
+                            >
+                              {isTbd ? "?" : isGuest ? "G" : jerseyNo}
+                            </div>
+                          )}
                           {isCaptain && (
                             <div
                               className="absolute flex items-center justify-center font-black"
@@ -399,17 +469,28 @@ export function FormationField({
                         <div
                           className="mt-1 px-1.5 rounded-md text-[9px] font-black text-white text-center leading-tight overflow-hidden text-ellipsis whitespace-nowrap"
                           style={{
-                            maxWidth: isSel ? 96 : 50,
+                            maxWidth: isSel ? 96 : mode === "faceon" ? 68 : 50,
                             background: isSel ? "rgba(255,143,163,0.92)" : "rgba(2,6,23,0.72)",
                             border: "1px solid rgba(255,255,255,0.15)",
                             textShadow: "0 1px 2px rgba(0,0,0,0.8)",
                           }}
                         >
-                          {isSel ? name : name.length > 4 ? name.slice(0, 4) : name}
+                          {isSel || mode === "faceon" ? name : name.length > 4 ? name.slice(0, 4) : name}
                         </div>
                         {!isTbd && playerTitles?.[name]?.length ? (
-                          <div className="mt-0.5 flex justify-center">
-                            <TitleBadges titles={playerTitles[name]} size={13} max={3} gap={2} />
+                          <div
+                            className={
+                              mode === "faceon"
+                                ? "absolute right-0 top-[46px] z-20 flex justify-center"
+                                : "mt-0.5 flex justify-center"
+                            }
+                          >
+                            <TitleBadges
+                              titles={playerTitles[name]}
+                              size={mode === "faceon" ? 16 : 13}
+                              max={mode === "faceon" ? 1 : 3}
+                              gap={2}
+                            />
                           </div>
                         ) : null}
                       </motion.button>
@@ -480,6 +561,13 @@ export function FormationField({
               >
                 <X className="w-3 h-3 text-white/60" />
               </button>
+              <Link
+                href={`/players/${encodeURIComponent(selectedName)}`}
+                className="shrink-0 flex h-7 items-center gap-1 rounded-lg bg-[#FF8FA3] px-2 text-[9px] font-black text-white transition-opacity hover:opacity-85"
+              >
+                프로필 보기
+                <ExternalLink className="h-3 w-3" />
+              </Link>
             </motion.div>
           )}
         </AnimatePresence>
@@ -487,9 +575,9 @@ export function FormationField({
 
       <div
         className="flex items-center justify-between px-4 py-2.5"
-        style={{ background: "rgba(3,8,26,0.9)", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+        style={{ background: "var(--pitch-bar)", borderTop: "1px solid var(--pitch-bar-border)" }}
       >
-        <span className="text-[9px] font-black tracking-[0.25em] text-white/50">
+        <span className="text-[9px] font-black tracking-[0.25em] text-gray-500 dark:text-white/50">
           STARTING XI
         </span>
         <div className="flex items-center gap-3">
@@ -501,7 +589,7 @@ export function FormationField({
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-              <span className="text-[9px] font-bold text-white/60">{item.label}</span>
+              <span className="text-[9px] font-bold text-gray-600 dark:text-white/60">{item.label}</span>
             </div>
           ))}
         </div>
