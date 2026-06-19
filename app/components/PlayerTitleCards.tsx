@@ -2,7 +2,7 @@
 // 개인 페이지 칭호 — 카드형. 일부만 보이고 아래 블러 + "전체 확인하기"로 펼침.
 // 라이트/다크 테마 대응: 어두운 배경에선 밝은 accent 텍스트(a.text), 라이트에선 진한 accent(a.ring).
 
-import { createElement, useEffect, useState } from "react";
+import { createElement, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useTheme } from "next-themes";
 import { EarnedTitle, topTitles } from "../lib/titles";
@@ -17,12 +17,13 @@ interface Accent {
 function accentOf(t: EarnedTitle): Accent {
   if (t.variant === "manager") return { ring: "#D4A017", tint: "rgba(212,160,23,0.12)", text: "#FFD978" };
   if (t.variant === "leader") return { ring: "#E0A100", tint: "rgba(255,200,60,0.12)", text: "#FFD45A" };
+  if (t.hidden) return { ring: "#0E7490", tint: "rgba(103,232,249,0.12)", text: "#67E8F9" };
   if (t.tier === null) return { ring: "#5B6B86", tint: "rgba(148,163,184,0.10)", text: "#CBD5E1" };
   const m: Accent[] = [
-    { ring: "#9C5F28", tint: "rgba(199,123,58,0.12)", text: "#EAB07A" },
-    { ring: "#94A1B3", tint: "rgba(174,182,194,0.10)", text: "#DCE3ED" },
-    { ring: "#CF9C12", tint: "rgba(243,197,59,0.12)", text: "#F5CE5A" },
-    { ring: "#B57BF5", tint: "rgba(181,123,245,0.14)", text: "#FFC2CE" },
+    { ring: "#B87333", tint: "rgba(184,115,51,0.14)", text: "#E8A96B" },   // 루키 — 브론즈
+    { ring: "#7B8FA8", tint: "rgba(148,175,200,0.12)", text: "#B0C4DE" },   // 아마추어 — 실버
+    { ring: "#D4A017", tint: "rgba(243,197,59,0.14)", text: "#F5CE5A" },    // 준프로 — 골드
+    { ring: "#A855F7", tint: "rgba(168,85,247,0.16)", text: "#D8B4FE" },    // 프로 — 퍼플/레전드
   ];
   return m[t.tier];
 }
@@ -54,6 +55,14 @@ function TitleCard({ title, isLight }: { title: EarnedTitle; isLight: boolean })
           <span className="text-[13px] font-black truncate" style={{ color: fg }}>
             {title.name}
           </span>
+          {title.hidden && (
+            <span
+              className="text-[8px] font-black px-1.5 py-0.5 rounded-md shrink-0"
+              style={{ color: "#67E8F9", background: "rgba(6,182,212,0.2)", border: "1px solid rgba(103,232,249,0.3)" }}
+            >
+              히든
+            </span>
+          )}
           {title.tierLabel && (
             <span
               className="text-[9px] font-black px-1.5 py-0.5 rounded-md shrink-0"
@@ -77,10 +86,8 @@ const PREVIEW = 4; // 접힌 상태에서 보이는 개수
 
 export default function PlayerTitleCards({ titles }: { titles: EarnedTitle[] }) {
   const [expanded, setExpanded] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const { resolvedTheme } = useTheme();
-  useEffect(() => setMounted(true), []);
-  const isLight = mounted && resolvedTheme === "light";
+  const isLight = resolvedTheme === "light";
 
   if (!titles.length) {
     return <p className="text-[12px] text-gray-400 font-semibold py-2">아직 획득한 칭호가 없어요.</p>;
