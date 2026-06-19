@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendMedia, deleteMediaByUrl } from "@/app/lib/sheets-write";
-import { getSheetData } from "@/app/lib/google-sheets";
+import { getMediaRows } from "@/app/lib/backend";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +12,7 @@ function checkPin(req: NextRequest): boolean {
 
 export async function GET() {
   try {
-    const rows = await getSheetData("media!A1:D100");
+    const rows = await getMediaRows();
     const items = rows
       .slice(1)
       .map((row: string[], i: number) => ({

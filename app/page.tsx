@@ -1,7 +1,15 @@
 // app/page.tsx
 import { auth } from "@/auth";
 import { isAdmin } from "./lib/admin";
-import { getSheetData } from "./lib/google-sheets";
+import {
+  getRosterRows,
+  getStatsRows,
+  getNoticeRows,
+  getLineupRows,
+  getAttendanceVoteRows,
+  getVoteCommentRows,
+  getFeaturedRows,
+} from "./lib/backend";
 import { getMatchesRows } from "./lib/matches-backend";
 import DashboardClient, {
   AttendanceVoteData,
@@ -41,13 +49,13 @@ export default async function TeamDashboardPage({
   // 시트 하나가 일시 실패해도 홈 전체가 Runtime Error로 죽지 않게 병렬 안전 로딩
   const sheetResults = await Promise.allSettled([
     getMatchesRows(),
-    getSheetData("roster!A1:J50"),
-    getSheetData("stats!A1:G50"),
-    getSheetData("notice!A1:E20"),
-    getSheetData("lineup!A1:T100"),
-    getSheetData("attendance_vote!A1:E500"),
-    getSheetData("vote_comment!A1:E500"),
-    getSheetData("featured!A1:D200"),
+    getRosterRows(),
+    getStatsRows(),
+    getNoticeRows(),
+    getLineupRows(),
+    getAttendanceVoteRows(),
+    getVoteCommentRows(),
+    getFeaturedRows(),
   ]);
   const rowsOf = (index: number): string[][] =>
     sheetResults[index].status === "fulfilled" ? sheetResults[index].value : [];

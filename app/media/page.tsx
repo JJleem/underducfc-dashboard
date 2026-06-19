@@ -1,12 +1,12 @@
 // app/media/page.tsx
-import { getSheetData } from "../lib/google-sheets";
+import { getMediaRows } from "../lib/backend";
 import { MediaData } from "../components/DashboardClient";
 import MediaClient from "./MediaClient";
 
 export default async function MediaPage() {
   let rawMedia: string[][] = [];
   try {
-    rawMedia = await getSheetData("media!A1:D100");
+    rawMedia = await getMediaRows();
   } catch {
     rawMedia = [];
   }

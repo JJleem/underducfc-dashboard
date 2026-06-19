@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSheetData } from "../../../lib/google-sheets";
+import { getMomVoteRows } from "../../../lib/backend";
 import { getMatchesRows } from "../../../lib/matches-backend";
 import { writeMatchMom } from "../../../lib/sheets-write";
 import { requireAdmin } from "@/app/lib/admin";
@@ -17,7 +17,7 @@ export async function POST() {
     }));
 
     // mom_vote 읽기
-    const rawVotes = await getSheetData("mom_vote!A1:E500");
+    const rawVotes = await getMomVoteRows();
     const votesByMatch: Record<number, { votedFor: string; voteType: string }[]> = {};
     rawVotes.slice(1).forEach((row: string[]) => {
       if (!row[0]) return;

@@ -1,4 +1,4 @@
-import { getSheetData } from "../../lib/google-sheets";
+import { getLineupRows, getRosterRows, getStatsRows } from "../../lib/backend";
 import { getMatchesRows } from "../../lib/matches-backend";
 import { LineupData, MatchData } from "../../components/DashboardClient";
 import MatchDetailClient from "./MatchDetailClient";
@@ -17,9 +17,9 @@ export default async function MatchDetailPage({
 
   const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult] = await Promise.allSettled([
     getMatchesRows(),
-    getSheetData("lineup!A1:T100"),
-    getSheetData("roster!A1:J50"),
-    getSheetData("stats!A1:G50"),
+    getLineupRows(),
+    getRosterRows(),
+    getStatsRows(),
   ]);
 
   const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSheetData } from "../../lib/google-sheets";
+import { getMomVoteRows } from "../../lib/backend";
 import { appendMomVote, deleteMomVote } from "../../lib/sheets-write";
 import { requireUser } from "@/app/lib/admin";
 
 export async function GET() {
   try {
-    const rows = await getSheetData("mom_vote!A1:E500");
+    const rows = await getMomVoteRows();
     const votes = rows.slice(1).map((row: string[]) => ({
       matchId: Number(row[0]) || 0,
       voterName: row[1] || "",

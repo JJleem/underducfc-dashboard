@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSheetData } from "../../lib/google-sheets";
 import { getMatchesRows } from "../../lib/matches-backend";
+import { getAttendanceVoteRows } from "../../lib/backend";
 import { upsertAttendanceVote } from "../../lib/sheets-write";
 import { requireUser } from "@/app/lib/admin";
 import { auth } from "@/auth";
 
 export async function GET() {
   try {
-    const rows = await getSheetData("attendance_vote!A1:E500");
+    const rows = await getAttendanceVoteRows();
     const votes = rows.slice(1).map((row: string[]) => ({
       matchId: Number(row[0]) || 0,
       kakaoId: row[1] || "",

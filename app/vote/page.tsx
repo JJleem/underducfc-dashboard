@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { isAdmin } from "../lib/admin";
-import { getSheetData } from "../lib/google-sheets";
 import { getMatchesRows } from "../lib/matches-backend";
+import { getAttendanceVoteRows, getVoteCommentRows, getUsersRows } from "../lib/backend";
 import { getMatchWeather, serializeWeather, parseWeather } from "../lib/weather";
 import { writeMatchWeather } from "../lib/sheets-write";
 import VoteClient from "./VoteClient";
@@ -21,19 +21,19 @@ export default async function VotePage() {
   const rawMatches = await getMatchesRows();
   let rawAttendanceVotes: string[][] = [];
   try {
-    rawAttendanceVotes = await getSheetData("attendance_vote!A1:E500");
+    rawAttendanceVotes = await getAttendanceVoteRows();
   } catch {
     rawAttendanceVotes = [];
   }
   let rawVoteComments: string[][] = [];
   try {
-    rawVoteComments = await getSheetData("vote_comment!A1:E500");
+    rawVoteComments = await getVoteCommentRows();
   } catch {
     rawVoteComments = [];
   }
   let rawUsers: string[][] = [];
   try {
-    rawUsers = await getSheetData("users!A1:E1000");
+    rawUsers = await getUsersRows();
   } catch {
     rawUsers = [];
   }

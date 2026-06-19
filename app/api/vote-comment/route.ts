@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSheetData } from "../../lib/google-sheets";
+import { getVoteCommentRows } from "../../lib/backend";
 import { appendVoteComment, deleteVoteComment } from "../../lib/sheets-write";
 import { requireUser } from "@/app/lib/admin";
 import { auth } from "@/auth";
@@ -7,7 +7,7 @@ import { isAdmin } from "@/app/lib/admin";
 
 export async function GET() {
   try {
-    const rows = await getSheetData("vote_comment!A1:E500");
+    const rows = await getVoteCommentRows();
     const comments = rows.slice(1).filter((r: string[]) => r[0]).map((row: string[]) => ({
       matchId: Number(row[0]) || 0,
       kakaoId: row[1] || "",

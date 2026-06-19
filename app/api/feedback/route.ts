@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSheetData } from "../../lib/google-sheets";
+import { getFeedbackRows } from "../../lib/backend";
 import { appendFeedback, deleteFeedback } from "../../lib/sheets-write";
 import { requireUser } from "@/app/lib/admin";
 
 export async function GET() {
   try {
-    const rows = await getSheetData("feedback!A1:D500");
+    const rows = await getFeedbackRows();
     const feedbacks = rows.slice(1).map((row: string[]) => ({
       matchId: Number(row[0]) || 0,
       timestamp: row[1] || "",

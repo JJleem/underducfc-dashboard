@@ -5,8 +5,15 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { auth } from "@/auth";
-import { getSheetData } from "../../lib/google-sheets";
 import { getMatchesRows } from "../../lib/matches-backend";
+import {
+  getStatsRows,
+  getRosterRows,
+  getLineupRows,
+  getAttendanceVoteRows,
+  getVoteCommentRows,
+  getFeaturedRows,
+} from "../../lib/backend";
 import {
   buildContexts,
   evaluatePlayer,
@@ -39,17 +46,17 @@ export default async function PlayerPage({
   const { name: rawName } = await params;
   const name = decodeURIComponent(rawName).trim();
 
-  const rawStats: string[][] = await getSheetData("stats!A1:G50");
-  const rawRoster: string[][] = await getSheetData("roster!A1:J50");
+  const rawStats: string[][] = await getStatsRows();
+  const rawRoster: string[][] = await getRosterRows();
   const rawMatches: string[][] = await getMatchesRows();
   let rawLineups: string[][] = [];
-  try { rawLineups = await getSheetData("lineup!A1:T100"); } catch { rawLineups = []; }
+  try { rawLineups = await getLineupRows(); } catch { rawLineups = []; }
   let rawAttendanceVotes: string[][] = [];
-  try { rawAttendanceVotes = await getSheetData("attendance_vote!A1:E500"); } catch { rawAttendanceVotes = []; }
+  try { rawAttendanceVotes = await getAttendanceVoteRows(); } catch { rawAttendanceVotes = []; }
   let rawVoteComments: string[][] = [];
-  try { rawVoteComments = await getSheetData("vote_comment!A1:E500"); } catch { rawVoteComments = []; }
+  try { rawVoteComments = await getVoteCommentRows(); } catch { rawVoteComments = []; }
   let rawFeatured: string[][] = [];
-  try { rawFeatured = await getSheetData("featured!A1:D200"); } catch { rawFeatured = []; }
+  try { rawFeatured = await getFeaturedRows(); } catch { rawFeatured = []; }
 
   const isManager = name === MANAGER_NAME;
 
