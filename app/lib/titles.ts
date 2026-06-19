@@ -475,10 +475,14 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     const firstVoteCount = firstVoteByNick.get(name) ?? 0;
     const firstCommentCount = firstCommentByNick.get(name) ?? 0;
 
-    // 히든: 퍼스트 블러드 — 시즌 첫 경기(실제 경기, 결과 있는)에서 득점했는가
-    const realCompleted = matches.filter((m) => m.isReal && m.result !== "예정");
-    const firstMatch = realCompleted.length ? realCompleted[0] : null; // matches는 이미 날짜순
-    const isFirstBlood = firstMatch ? countInCsv(firstMatch.goals, name) > 0 : false;
+    // 히든: 퍼스트 블러드 — 개인의 첫 경기(데뷔전)에서 득점했는가
+    const firstPlayedMatch = matches.find((m) => {
+      if (!m.isReal || m.result === "예정") return false;
+      const inAttendees = namesOf(m.attendees).includes(name);
+      const inLineup = matchPlayerPos.get(m.id)?.has(name) ?? false;
+      return inAttendees || inLineup;
+    });
+    const isFirstBlood = firstPlayedMatch ? countInCsv(firstPlayedMatch.goals, name) > 0 : false;
 
     // 히든: 레이저 — 경기당 1골 이상 (골 > 출전, 최소 5경기)
     const goalPerGame = apps > 0 ? goals / apps : 0;
@@ -617,7 +621,7 @@ export const TITLES: TitleDef[] = [
   { id: "loyalty", name: "꾸준함의 미학", icon: "infinity", category: "언성히어로 · 반전", state: "live", flat: true, desc: "공격P 0 & 출전 30+", check: (c) => c.points === 0 && c.apps >= 30 },
 
   // ── 히든 칭호
-  { id: "firstblood", name: "퍼스트 블러드", icon: "sword", category: "히든", state: "live", hidden: true, flat: true, desc: "시즌 첫 경기 득점자", check: (c) => c.isFirstBlood },
+  { id: "firstblood", name: "퍼스트 블러드", icon: "sword", category: "히든", state: "live", hidden: true, flat: true, desc: "데뷔전 득점자", check: (c) => c.isFirstBlood },
   { id: "laser", name: "레이저", icon: "crosshair", category: "히든", state: "live", hidden: true, flat: true, desc: "경기당 1골 이상 (최소 5경기)", check: (c) => c.apps >= 5 && c.goalPerGame >= 1 },
   { id: "duo", name: "찰떡궁합", icon: "heart-handshake", category: "히든", state: "live", hidden: true, flat: true, desc: "같은 선수에게 3회+ 어시스트", check: (c) => c.bestDuoAssists >= 3 },
   { id: "shapeshifter", name: "변신의 귀재", icon: "shuffle", category: "히든", state: "live", hidden: true, flat: true, desc: "3개+ 포지션 각 3경기 이상", check: (c) => c.posGroupsWithMin3 >= 3 },
