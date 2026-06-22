@@ -62,6 +62,7 @@ import type { EarnedTitle } from "../lib/titles";
 import type { SubstitutionEvent } from "../lib/lineup";
 import AppBottomNav from "./AppBottomNav";
 import LineupViewer from "./LineupViewer";
+import PlayerFace from "./PlayerFace";
 
 // 숫자가 0에서 목표값까지 부드럽게 올라가는 카운트업 (전광판 느낌)
 function CountUp({
@@ -2482,9 +2483,15 @@ export default function DashboardClient({
                           {rank}
                         </span>
                         <div className="flex-1 min-w-0 flex items-center gap-1.5 text-[13px] font-bold text-gray-900 dark:text-white">
-                          <span className="truncate">{d.a}</span>
+                          <span className="inline-flex items-center gap-1 min-w-0">
+                            <PlayerFace name={d.a} size={20} />
+                            <span className="truncate">{d.a}</span>
+                          </span>
                           <span className="text-gray-300 dark:text-gray-600 shrink-0">×</span>
-                          <span className="truncate">{d.b}</span>
+                          <span className="inline-flex items-center gap-1 min-w-0">
+                            <PlayerFace name={d.b} size={20} />
+                            <span className="truncate">{d.b}</span>
+                          </span>
                         </div>
                         <span className="shrink-0 text-[13px] font-extrabold text-[#FF8FA3] dark:text-[#FFB6C1] tabular-nums">
                           {d.count}
