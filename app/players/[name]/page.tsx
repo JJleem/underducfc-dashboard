@@ -253,8 +253,9 @@ export default async function PlayerPage({
           <section className="px-4 mt-4">
             <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/30 bg-gradient-to-r from-emerald-400/10 to-transparent px-4 py-3">
               <div className="flex items-center -space-x-2 shrink-0">
-                <PlayerFace name={name} size={36} />
-                <PlayerFace name={relations.bestDuo.names[0]} size={36} />
+                {relations.bestDuo.names.map((nm) => (
+                  <PlayerFace key={nm} name={nm} size={36} />
+                ))}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">최고의 듀오</p>
