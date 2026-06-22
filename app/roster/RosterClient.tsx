@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Star,
   Plus,
+  Pencil,
   Loader2,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -28,27 +29,66 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
   const { resolvedTheme, setTheme } = useTheme();
   const [playerList, setPlayerList] = React.useState<string[][]>(initialPlayers);
 
-  const [addModal, setAddModal] = React.useState(false);
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [mode, setMode] = React.useState<"add" | "edit">("add");
+  const [editId, setEditId] = React.useState<string | null>(null);
   const [form, setForm] = React.useState({ no: "", name: "", pos: "MF", status: "활동" });
-  const [adding, setAdding] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
 
-  const addPlayer = async () => {
+  const openAdd = () => {
+    setMode("add");
+    setEditId(null);
+    setForm({ no: "", name: "", pos: "MF", status: "활동" });
+    setModalOpen(true);
+  };
+
+  const openEdit = (player: string[]) => {
+    setMode("edit");
+    setEditId(player[6] || null);
+    setForm({
+      no: player[0] === "-" ? "" : player[0] || "",
+      name: player[1] || "",
+      pos: (player[2] || "MF").toUpperCase(),
+      status: player[3] || "활동",
+    });
+    setModalOpen(true);
+  };
+
+  const submit = async () => {
     if (!form.name.trim()) return;
-    setAdding(true);
+    setSaving(true);
     try {
-      const res = await fetch("/api/roster", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) throw new Error("등록 실패");
-      setPlayerList((prev) => [...prev, [form.no || "-", form.name, form.pos, form.status, "", ""]]);
-      setAddModal(false);
-      setForm({ no: "", name: "", pos: "MF", status: "활동" });
+      if (mode === "add") {
+        const res = await fetch("/api/roster", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        if (!res.ok) throw new Error("등록 실패");
+        const data = await res.json().catch(() => ({}));
+        const newId = data?.id != null ? String(data.id) : "";
+        setPlayerList((prev) => [...prev, [form.no || "-", form.name, form.pos, form.status, "", "", newId]]);
+      } else {
+        if (!editId) throw new Error("수정할 선수를 찾을 수 없습니다.");
+        const res = await fetch(`/api/roster/${editId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        if (!res.ok) throw new Error("수정 실패");
+        setPlayerList((prev) =>
+          prev.map((p) =>
+            p[6] === editId
+              ? [form.no || "-", form.name, form.pos, form.status, p[4] || "", p[5] || "", p[6]]
+              : p
+          )
+        );
+      }
+      setModalOpen(false);
     } catch (e) {
-      alert(e instanceof Error ? e.message : "등록 실패");
+      alert(e instanceof Error ? e.message : "저장 실패");
     } finally {
-      setAdding(false);
+      setSaving(false);
     }
   };
 
@@ -108,7 +148,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
           {/* 선수 추가 버튼 (관리자 전용) */}
           {isAdmin && (
             <button
-              onClick={() => setAddModal(true)}
+              onClick={openAdd}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-dashed border-gray-300 dark:border-white/15 text-gray-500 dark:text-gray-400 text-[13px] font-semibold hover:border-[#FFB6C1] hover:text-[#FF8FA3] dark:hover:text-[#FFB6C1] transition-colors"
             >
               <Plus className="w-4 h-4" />
@@ -200,6 +240,15 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
                     </span>
                   </div>
                 </div>
+                {isAdmin && (
+                  <button
+                    onClick={() => openEdit(player)}
+                    className="self-start shrink-0 p-2 -mr-1 -mt-1 rounded-full text-gray-400 hover:text-[#FF8FA3] hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                    aria-label="선수 수정"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             );
           })}
@@ -208,11 +257,13 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
       </main>
       <AppBottomNav active="home" currentUserName={currentUserName} />
 
-      {/* 선수 추가 Drawer */}
-      <Drawer open={addModal} onOpenChange={setAddModal}>
+      {/* 선수 추가/수정 Drawer */}
+      <Drawer open={modalOpen} onOpenChange={setModalOpen}>
         <DrawerContent className="bg-white dark:bg-[#161618] max-h-[85dvh]">
           <DrawerHeader className="pb-0">
-            <DrawerTitle className="text-[15px] font-bold text-gray-900 dark:text-white">선수 추가</DrawerTitle>
+            <DrawerTitle className="text-[15px] font-bold text-gray-900 dark:text-white">
+              {mode === "add" ? "선수 추가" : "선수 수정"}
+            </DrawerTitle>
           </DrawerHeader>
 
           <div className="overflow-y-auto px-4 py-4 space-y-4">
@@ -297,11 +348,11 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
 
           <DrawerFooter className="pt-2">
             <button
-              onClick={addPlayer}
-              disabled={adding || !form.name.trim()}
+              onClick={submit}
+              disabled={saving || !form.name.trim()}
               className="w-full py-3 rounded-2xl bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-[13px] font-black text-white dark:text-black hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5"
             >
-              {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : "추가하기"}
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : mode === "add" ? "추가하기" : "수정하기"}
             </button>
           </DrawerFooter>
         </DrawerContent>

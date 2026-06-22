@@ -127,8 +127,21 @@ export async function appendRoster(player: {
   name: string;
   pos: string;
   status: string;
-}): Promise<void> {
-  await udPost("/api/underduck/roster", {
+}): Promise<{ id: number }> {
+  const out = await udPost<{ id: number }>("/api/underduck/roster", {
+    no: player.no,
+    name: player.name,
+    pos: player.pos,
+    status: player.status,
+  });
+  return { id: out.id };
+}
+
+export async function updateRoster(
+  id: number | string,
+  player: { no: string; name: string; pos: string; status: string }
+): Promise<void> {
+  await udPut(`/api/underduck/roster/${id}`, {
     no: player.no,
     name: player.name,
     pos: player.pos,

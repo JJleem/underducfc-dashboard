@@ -22,8 +22,8 @@ interface RosterOut {
 }
 export async function getRosterRows(): Promise<string[][]> {
   const rows = await udGet<RosterOut[]>("/api/underduck/roster");
-  const HEADER = ["no", "name", "pos", "status", "", "memo"];
-  return [HEADER, ...rows.map((r) => [s(r.no), s(r.name), s(r.pos), s(r.status), "", s(r.memo)])];
+  const HEADER = ["no", "name", "pos", "status", "", "memo", "id"];
+  return [HEADER, ...rows.map((r) => [s(r.no), s(r.name), s(r.pos), s(r.status), "", s(r.memo), s(r.id)])];
 }
 
 // ── stats ── 시트 컬럼: A=no B=name C=pos D=apps E=goals F=assists G=mom
