@@ -254,13 +254,23 @@ export default async function PlayerPage({
             <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/30 bg-gradient-to-r from-emerald-400/10 to-transparent px-4 py-3">
               <div className="flex items-center -space-x-2 shrink-0">
                 {relations.bestDuo.names.map((nm) => (
-                  <PlayerFace key={nm} name={nm} size={36} />
+                  <Link key={nm} href={`/players/${encodeURIComponent(nm)}`} className="active:opacity-60">
+                    <PlayerFace name={nm} size={36} />
+                  </Link>
                 ))}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">최고의 듀오</p>
                 <p className="text-[13px] font-black text-gray-900 dark:text-white truncate">
-                  {name} <span className="text-gray-400 font-bold">×</span> {relations.bestDuo.names.join(" · ")}
+                  {name} <span className="text-gray-400 font-bold">×</span>{" "}
+                  {relations.bestDuo.names.map((nm, i) => (
+                    <span key={nm}>
+                      {i > 0 && <span className="text-gray-400"> · </span>}
+                      <Link href={`/players/${encodeURIComponent(nm)}`} className="underline-offset-2 hover:underline">
+                        {nm}
+                      </Link>
+                    </span>
+                  ))}
                 </p>
               </div>
               <span className="shrink-0 text-right">
@@ -348,10 +358,14 @@ export default async function PlayerPage({
                       <p className="text-[10px] font-bold text-gray-400">{item.label}</p>
                       <div className="flex items-center gap-x-2.5 gap-y-1 flex-wrap mt-0.5">
                         {item.rel.names.map((nm) => (
-                          <span key={nm} className="inline-flex items-center gap-1.5">
+                          <Link
+                            key={nm}
+                            href={`/players/${encodeURIComponent(nm)}`}
+                            className="inline-flex items-center gap-1.5 active:opacity-60"
+                          >
                             <PlayerFace name={nm} size={18} />
-                            <span className="text-[12px] font-black text-gray-800 dark:text-gray-200">{nm}</span>
-                          </span>
+                            <span className="text-[12px] font-black text-gray-800 dark:text-gray-200 underline-offset-2 hover:underline">{nm}</span>
+                          </Link>
                         ))}
                       </div>
                     </div>

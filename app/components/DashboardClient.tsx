@@ -2483,15 +2483,15 @@ export default function DashboardClient({
                           {rank}
                         </span>
                         <div className="flex-1 min-w-0 flex items-center gap-1.5 text-[13px] font-bold text-gray-900 dark:text-white">
-                          <span className="inline-flex items-center gap-1 min-w-0">
+                          <Link href={`/players/${encodeURIComponent(d.a)}`} className="inline-flex items-center gap-1 min-w-0 active:opacity-60">
                             <PlayerFace name={d.a} size={20} />
-                            <span className="truncate">{d.a}</span>
-                          </span>
+                            <span className="truncate underline-offset-2 hover:underline">{d.a}</span>
+                          </Link>
                           <span className="text-gray-300 dark:text-gray-600 shrink-0">×</span>
-                          <span className="inline-flex items-center gap-1 min-w-0">
+                          <Link href={`/players/${encodeURIComponent(d.b)}`} className="inline-flex items-center gap-1 min-w-0 active:opacity-60">
                             <PlayerFace name={d.b} size={20} />
-                            <span className="truncate">{d.b}</span>
-                          </span>
+                            <span className="truncate underline-offset-2 hover:underline">{d.b}</span>
+                          </Link>
                         </div>
                         <span className="shrink-0 text-[13px] font-extrabold text-[#FF8FA3] dark:text-[#FFB6C1] tabular-nums">
                           {d.count}
