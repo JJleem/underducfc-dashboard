@@ -11,8 +11,16 @@ type KakaoProfile = {
   };
 };
 
-const normalizeMemberName = (name?: string | null) =>
-  name?.trim() === "준수" ? "김준수" : name?.trim() ?? "";
+const MEMBER_NAME_ALIASES: Record<string, string> = {
+  준수: "김준수",
+  성원: "백성원",
+  창의: "홍창의",
+};
+
+const normalizeMemberName = (name?: string | null) => {
+  const trimmed = name?.trim() ?? "";
+  return MEMBER_NAME_ALIASES[trimmed] ?? trimmed;
+};
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [Kakao],
