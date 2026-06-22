@@ -19,6 +19,7 @@ import {
   buildContexts,
   evaluatePlayer,
   evaluateLeaders,
+  buildPlayerRelations,
   managerTitle,
   MANAGER_NAME,
   type EarnedTitle,
@@ -26,6 +27,7 @@ import {
 import PlayerTitleCards from "../../components/PlayerTitleCards";
 import FeaturedEditor from "../../components/FeaturedEditor";
 import PlayerAvatar from "../../components/PlayerAvatar";
+import PlayerFace from "../../components/PlayerFace";
 import AppBottomNav from "../../components/AppBottomNav";
 
 export const dynamic = "force-dynamic";
@@ -136,6 +138,25 @@ export default async function PlayerPage({
     .slice(-6)
     .reverse();
 
+  // 현재 연속 출석 (최근 경기부터 거슬러 연속 참석)
+  let currentStreak = 0;
+  for (let i = withAttendees.length - 1; i >= 0; i--) {
+    const present = withAttendees[i].attendees.split(",").map((s) => s.trim()).includes(name);
+    if (present) currentStreak += 1;
+    else break;
+  }
+
+  // 케미 · 관계 + 베스트 경기
+  const relations = buildPlayerRelations(name, rawMatches, rawLineups);
+
+  // 포지션 출전 분포 (뛴 포지션만)
+  const posDist = ctx
+    ? (["GK", "DF", "MF", "FW"] as const)
+        .map((p) => ({ pos: p, count: ctx.posCounts[p] }))
+        .filter((d) => d.count > 0)
+    : [];
+  const posMax = posDist.reduce((mx, d) => Math.max(mx, d.count), 0);
+
   const accent = posColor(displayPositions[0] || registeredPos);
 
   return (
@@ -227,6 +248,28 @@ export default async function PlayerPage({
           </div>
         </div>
 
+        {/* 최고의 듀오 */}
+        {relations.bestDuo && (
+          <section className="px-4 mt-4">
+            <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/30 bg-gradient-to-r from-emerald-400/10 to-transparent px-4 py-3">
+              <div className="flex items-center -space-x-2 shrink-0">
+                <PlayerFace name={name} size={36} />
+                <PlayerFace name={relations.bestDuo.names[0]} size={36} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">최고의 듀오</p>
+                <p className="text-[13px] font-black text-gray-900 dark:text-white truncate">
+                  {name} <span className="text-gray-400 font-bold">×</span> {relations.bestDuo.names.join(" · ")}
+                </p>
+              </div>
+              <span className="shrink-0 text-right">
+                <span className="text-[16px] font-black text-emerald-500 tabular-nums">{relations.bestDuo.count}</span>
+                <span className="text-[10px] font-bold text-gray-400 ml-0.5">골 합작</span>
+              </span>
+            </div>
+          </section>
+        )}
+
         {/* 칭호 */}
         <section className="px-4 mt-6">
           <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2.5">
@@ -236,13 +279,136 @@ export default async function PlayerPage({
           <PlayerTitleCards titles={titles} />
         </section>
 
+        {/* 시즌 베스트 경기 */}
+        {relations.bestGame && (
+          <section className="px-4 mt-6">
+            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2">
+              시즌 베스트 경기
+            </p>
+            <Link
+              href={`/matches/${relations.bestGame.matchId}`}
+              className="block rounded-2xl border border-[#FF8FA3]/30 dark:border-[#FFB6C1]/20 bg-gradient-to-r from-[#FF8FA3]/10 to-transparent dark:from-[#FFB6C1]/10 px-4 py-3 active:scale-[0.98] transition-transform"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[13px] font-black text-gray-900 dark:text-white truncate">
+                    vs {relations.bestGame.opponent}
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{relations.bestGame.date}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <div className="flex items-center justify-end gap-1.5">
+                    {relations.bestGame.goals > 0 && (
+                      <span className="text-[12px] font-black text-gray-800 dark:text-gray-100">
+                        ⚽{relations.bestGame.goals > 1 ? `×${relations.bestGame.goals}` : ""}
+                      </span>
+                    )}
+                    {relations.bestGame.assists > 0 && (
+                      <span className="text-[12px] font-black text-emerald-500">
+                        🅰️{relations.bestGame.assists > 1 ? `×${relations.bestGame.assists}` : ""}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-end gap-1.5 mt-1">
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-[#FF8FA3]/15 text-[#FF8FA3] dark:text-[#FFB6C1]">
+                      공격P {relations.bestGame.points}
+                    </span>
+                    {relations.bestGame.isMom && (
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-gradient-to-br from-amber-200 to-amber-500 text-amber-950">
+                        🏅 MOM
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </section>
+        )}
+
+        {/* 케미 · 관계 */}
+        {(relations.mostPlayedWith || relations.assistRecipients || relations.assistGivers) && (
+          <section className="px-4 mt-6">
+            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2">
+              케미
+            </p>
+            <div className="space-y-1.5">
+              {[
+                { emoji: "🤝", label: "가장 많이 함께 뛴 동료", rel: relations.mostPlayedWith, unit: "경기" },
+                { emoji: "🎯", label: "내 도움을 가장 많이 받은 선수", rel: relations.assistRecipients, unit: "골" },
+                { emoji: "⚽", label: "나를 가장 많이 살린 도우미", rel: relations.assistGivers, unit: "도움" },
+              ].map((item) =>
+                item.rel ? (
+                  <div
+                    key={item.label}
+                    className="flex items-center gap-2.5 rounded-xl bg-white dark:bg-white/[0.03] border border-gray-100 dark:border-white/[0.06] px-3 py-2.5"
+                  >
+                    <span className="text-[16px] shrink-0">{item.emoji}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold text-gray-400">{item.label}</p>
+                      <div className="flex items-center gap-x-2.5 gap-y-1 flex-wrap mt-0.5">
+                        {item.rel.names.map((nm) => (
+                          <span key={nm} className="inline-flex items-center gap-1.5">
+                            <PlayerFace name={nm} size={18} />
+                            <span className="text-[12px] font-black text-gray-800 dark:text-gray-200">{nm}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-[12px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+                      {item.rel.count}
+                      {item.unit}
+                    </span>
+                  </div>
+                ) : null
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* 포지션 출전 분포 */}
+        {posDist.length > 0 && (
+          <section className="px-4 mt-6">
+            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2">
+              포지션 출전
+            </p>
+            <div className="space-y-2">
+              {posDist.map((d) => {
+                const color = posColor(d.pos);
+                return (
+                  <div key={d.pos} className="flex items-center gap-2">
+                    <span className="text-[10px] font-black w-8 shrink-0" style={{ color }}>
+                      {d.pos}
+                    </span>
+                    <div className="flex-1 h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${posMax > 0 ? (d.count / posMax) * 100 : 0}%`, background: color }}
+                      />
+                    </div>
+                    <span className="text-[11px] font-black tabular-nums text-gray-500 dark:text-gray-400 w-10 text-right">
+                      {d.count}경기
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* 출석률 */}
         {attendRate !== null && (
           <section className="px-4 mt-6">
             <div className="flex items-center justify-between mb-1.5">
-              <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest">
-                출석률 <span className="text-gray-400 font-medium">({attendCount}/{withAttendees.length})</span>
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest">
+                  출석률 <span className="text-gray-400 font-medium">({attendCount}/{withAttendees.length})</span>
+                </p>
+                {currentStreak >= 2 && (
+                  <span className="inline-flex items-center gap-0.5 text-[10px] font-black text-orange-500">
+                    🔥 {currentStreak}연속
+                  </span>
+                )}
+              </div>
               <span className="text-[13px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] tabular-nums">{attendRate}%</span>
             </div>
             <div className="h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">

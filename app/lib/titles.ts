@@ -782,6 +782,138 @@ export function managerTitle(): EarnedTitle {
   return { id: "manager", name: "감독", icon: "clipboard-list", category: "특별", flagship: true, tier: null, tierLabel: null, desc: "팀을 이끄는 감독", variant: "manager" };
 }
 
+// ───────────────────────── 케미 · 관계 + 베스트 경기 ─────────────────────────
+// 선수 개인 페이지용. 골/도움 CSV는 같은 index끼리 짝(득점자[i] ↔ 어시스트[i]).
+
+export interface RelationTop {
+  names: string[]; // 동률이면 여러 명 (가나다순)
+  count: number;
+}
+
+export interface BestGame {
+  matchId: number;
+  opponent: string;
+  date: string;
+  goals: number;
+  assists: number;
+  points: number; // 골+도움
+  isMom: boolean;
+}
+
+export interface PlayerRelations {
+  mostPlayedWith: RelationTop | null; // 라인업 동시 출전 최다 동료
+  assistRecipients: RelationTop | null; // 내 도움을 가장 많이 받은 득점자
+  assistGivers: RelationTop | null; // 나를 가장 많이 살린 도우미
+  bestDuo: RelationTop | null; // 양방향 합작 골 최다 파트너 (내 도움 + 받은 도움)
+  bestGame: BestGame | null;
+}
+
+function topOfMap(m: Map<string, number>): RelationTop | null {
+  if (!m.size) return null;
+  const max = Math.max(...Array.from(m.values()));
+  if (max <= 0) return null;
+  const names = Array.from(m.entries())
+    .filter(([, v]) => v === max)
+    .map(([k]) => k)
+    .sort((a, b) => a.localeCompare(b, "ko"));
+  return { names, count: max };
+}
+
+export function buildPlayerRelations(
+  name: string,
+  rawMatches: string[][],
+  rawLineups: string[][]
+): PlayerRelations {
+  const matches = rawMatches.slice(1).map((r, i) => ({
+    id: i,
+    date: r[0] || "",
+    opponent: (r[3] || "").trim(),
+    result: r[6] || "예정",
+    goals: r[8] || "",
+    assists: r[9] || "",
+    mom: (r[10] || "").trim(),
+    isReal: (r[7] || "일반 매칭") !== "야유회",
+  }));
+
+  // 같이 뛴 동료: 경기별 라인업에 동시 등장한 횟수(경기 단위)
+  const matchTeammates = new Map<number, Set<string>>();
+  rawLineups.slice(1).forEach((r) => {
+    const matchId = Number(r[0]);
+    if (isNaN(matchId)) return;
+    if (!matchTeammates.has(matchId)) matchTeammates.set(matchId, new Set());
+    const set = matchTeammates.get(matchId)!;
+    for (let slot = 0; slot < 11; slot++) {
+      const n = (r[3 + slot] || "").trim();
+      if (n && n !== "미정") set.add(n);
+    }
+  });
+  const coPlay = new Map<string, number>();
+  matchTeammates.forEach((set) => {
+    if (!set.has(name)) return;
+    set.forEach((n) => {
+      if (n !== name) coPlay.set(n, (coPlay.get(n) ?? 0) + 1);
+    });
+  });
+
+  // 어시 관계: 득점자[i] ↔ 어시스트[i]
+  const recipients = new Map<string, number>(); // 내가 어시 → 그 득점자
+  const givers = new Map<string, number>(); // 내가 득점 ← 그 어시스트
+  matches.forEach((m) => {
+    const goalList = m.goals.split(",").map((s) => s.trim());
+    const assistList = m.assists.split(",").map((s) => s.trim());
+    goalList.forEach((scorer, i) => {
+      if (!scorer) return;
+      const assister = assistList[i]?.trim() || "";
+      if (assister === name && scorer !== name) {
+        recipients.set(scorer, (recipients.get(scorer) ?? 0) + 1);
+      }
+      if (scorer === name && assister && assister !== name) {
+        givers.set(assister, (givers.get(assister) ?? 0) + 1);
+      }
+    });
+  });
+
+  // 베스트 경기: 공격포인트 최다 (동점이면 MOM 경기 > 골 많은 경기 우선)
+  let bestGame: BestGame | null = null;
+  matches.forEach((m) => {
+    if (!m.isReal || m.result === "예정") return;
+    const goals = countInCsv(m.goals, name);
+    const assists = countInCsv(m.assists, name);
+    const points = goals + assists;
+    if (points <= 0) return;
+    const isMom = m.mom === name;
+    const better =
+      !bestGame ||
+      points > bestGame.points ||
+      (points === bestGame.points && isMom && !bestGame.isMom) ||
+      (points === bestGame.points && isMom === bestGame.isMom && goals > bestGame.goals);
+    if (better) {
+      bestGame = {
+        matchId: m.id,
+        opponent: m.opponent || "상대 미정",
+        date: m.date,
+        goals,
+        assists,
+        points,
+        isMom,
+      };
+    }
+  });
+
+  // 최고의 듀오: 양방향 합작(내가 어시 + 나를 어시)이 가장 많은 파트너
+  const duo = new Map<string, number>();
+  recipients.forEach((v, k) => duo.set(k, (duo.get(k) ?? 0) + v));
+  givers.forEach((v, k) => duo.set(k, (duo.get(k) ?? 0) + v));
+
+  return {
+    mostPlayedWith: topOfMap(coPlay),
+    assistRecipients: topOfMap(recipients),
+    assistGivers: topOfMap(givers),
+    bestDuo: topOfMap(duo),
+    bestGame,
+  };
+}
+
 // ───────────────────────── 정렬(상위 N) ─────────────────────────
 
 /** 라인업/로스터용: 감독 > 리더 > 고등급 > 대표 우선으로 상위 N개 */
