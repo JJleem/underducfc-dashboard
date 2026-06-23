@@ -186,6 +186,14 @@ export default async function TeamDashboardPage({
       timestamp: row[4] || "",
     }));
 
+  // 경기별 투표 댓글 수 (vote_comment 시트 A=matchId)
+  const voteCommentCounts: Record<number, number> = {};
+  rawVoteComments.slice(1).forEach((row: string[]) => {
+    const id = Number(row[0]);
+    if (!row[0] || Number.isNaN(id)) return;
+    voteCommentCounts[id] = (voteCommentCounts[id] || 0) + 1;
+  });
+
   // 칭호 산출: 선수별 자동 칭호 + 리더(팀 1위) + 감독
   const contexts = buildContexts({
     rawStats,
@@ -247,6 +255,7 @@ export default async function TeamDashboardPage({
       currentUser={currentUser}
       isAdmin={admin}
       attendanceVotes={attendanceVotes}
+      voteCommentCounts={voteCommentCounts}
       playerTitles={playerTitles}
       initialView={initialView}
     />

@@ -220,6 +220,7 @@ interface DashboardClientProps {
   currentUser?: { kakaoId: string; name: string; image: string } | null;
   isAdmin?: boolean;
   attendanceVotes?: AttendanceVoteData[];
+  voteCommentCounts?: Record<number, number>;
   playerTitles?: Record<string, EarnedTitle[]>;
   initialView?: "home" | "matches" | "stats";
 }
@@ -234,6 +235,7 @@ export default function DashboardClient({
   currentUser,
   isAdmin = false,
   attendanceVotes: initialAttendanceVotes = [],
+  voteCommentCounts = {},
   playerTitles = {},
   initialView = "home",
 }: DashboardClientProps) {
@@ -469,6 +471,7 @@ export default function DashboardClient({
   const nextMaybe = nextVotes.filter((vote) => vote.response === "미정").length;
   const nextAbsent = nextVotes.filter((vote) => vote.response === "불참").length;
   const nextVoteTotal = nextAttending + nextMaybe + nextAbsent;
+  const nextCommentCount = nextMatch ? voteCommentCounts[nextMatch.id] || 0 : 0;
   const myNextVote = currentUser
     ? nextVotes.find((vote) => vote.kakaoId === currentUser.kakaoId)?.response
     : undefined;
@@ -1026,9 +1029,16 @@ export default function DashboardClient({
 
                 <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-3 dark:border-white/10 dark:bg-white/[0.06]">
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="flex items-center gap-1.5 text-[10px] font-black text-gray-600 dark:text-white/65">
-                      <Users className="h-3 w-3" /> 출석 현황
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="flex items-center gap-1.5 text-[10px] font-black text-gray-600 dark:text-white/65">
+                        <Users className="h-3 w-3" /> 출석 현황
+                      </p>
+                      {nextCommentCount > 0 && (
+                        <Link href="/vote" className="flex items-center gap-0.5 text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+                          <MessageCircle className="h-3 w-3" /> 투표댓글 {nextCommentCount}
+                        </Link>
+                      )}
+                    </div>
                     {myNextVote && (
                       <span className="rounded-full bg-[#FF8FA3]/10 px-2 py-0.5 text-[9px] font-black text-[#FF8FA3] dark:bg-white/10 dark:text-[#FFB6C1]">
                         나는 {myNextVote}
