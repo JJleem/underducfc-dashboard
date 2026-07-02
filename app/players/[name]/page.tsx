@@ -97,12 +97,15 @@ export default async function PlayerPage({
   });
   const leaders = evaluateLeaders(contexts);
   const ctx = contexts.get(name);
-  const earnedPositions = ctx
-    ? (["GK", "DF", "MF", "FW"] as const).filter((position) => ctx.posCounts[position] >= 10)
+  const maxPositionCount = ctx ? Math.max(...Object.values(ctx.posCounts)) : 0;
+  const mostPlayedPositions = ctx
+    ? (["GK", "DF", "MF", "FW"] as const).filter((position) => {
+        return maxPositionCount > 0 && ctx.posCounts[position] === maxPositionCount;
+      })
     : [];
   const displayPositions = Array.from(new Set([
     ...(registeredPos !== "-" ? [registeredPos] : []),
-    ...earnedPositions,
+    ...mostPlayedPositions,
   ]));
   const titles: EarnedTitle[] = [
     ...(isManager ? [managerTitle()] : []),
