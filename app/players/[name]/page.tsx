@@ -97,10 +97,10 @@ export default async function PlayerPage({
   });
   const leaders = evaluateLeaders(contexts);
   const ctx = contexts.get(name);
-  const maxPositionCount = ctx ? Math.max(...Object.values(ctx.posCounts)) : 0;
+  const maxPositionCount = ctx ? Math.max(...Object.values(ctx.posLineupCounts)) : 0;
   const mostPlayedPositions = ctx
     ? (["GK", "DF", "MF", "FW"] as const).filter((position) => {
-        return maxPositionCount > 0 && ctx.posCounts[position] === maxPositionCount;
+        return maxPositionCount > 0 && ctx.posLineupCounts[position] === maxPositionCount;
       })
     : [];
   const displayPositions = Array.from(new Set([
@@ -152,10 +152,10 @@ export default async function PlayerPage({
   // 케미 · 관계 + 베스트 경기
   const relations = buildPlayerRelations(name, rawMatches, rawLineups);
 
-  // 포지션 출전 분포 (뛴 포지션만)
+  // 포지션 출전 분포 (쿼터별 라인업 등장 기준)
   const posDist = ctx
     ? (["GK", "DF", "MF", "FW"] as const)
-        .map((p) => ({ pos: p, count: ctx.posCounts[p] }))
+        .map((p) => ({ pos: p, count: ctx.posLineupCounts[p] }))
         .filter((d) => d.count > 0)
     : [];
   const posMax = posDist.reduce((mx, d) => Math.max(mx, d.count), 0);
@@ -404,7 +404,7 @@ export default async function PlayerPage({
                       />
                     </div>
                     <span className="text-[11px] font-black tabular-nums text-gray-500 dark:text-gray-400 w-10 text-right">
-                      {d.count}경기
+                      {d.count}쿼터
                     </span>
                   </div>
                 );
