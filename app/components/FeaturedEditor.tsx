@@ -14,8 +14,10 @@ export default function FeaturedEditor({
   current: string[];
 }) {
   const [open, setOpen] = useState(false);
-  const [sel, setSel] = useState<string[]>(current.slice(0, 3));
-  const [saved, setSaved] = useState<string[]>(current.slice(0, 3));
+  const earnedIds = new Set(titles.map((t) => t.id));
+  const validCurrent = current.filter((id) => earnedIds.has(id)).slice(0, 3);
+  const [sel, setSel] = useState<string[]>(validCurrent);
+  const [saved, setSaved] = useState<string[]>(validCurrent);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
