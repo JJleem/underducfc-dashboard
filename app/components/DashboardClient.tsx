@@ -231,11 +231,13 @@ interface Storyline {
   priority: number;
 }
 
-// 경기 "주목 포인트" 자동 생성: 대상 경기 이전까지의 기록으로 스토리라인을 만든다
+// 경기 "주목 포인트" 자동 생성: 대상 경기 이전까지의 기록으로 스토리라인을 만든다.
+// 리더(득점왕/도움왕/MVP)는 순위 페이지와 반드시 일치해야 하므로 stats(playerStats)를 사용한다.
 function buildMatchStorylines(
   target: MatchData,
   allMatches: MatchData[],
   attendees: string[],
+  playerStats: Record<string, { apps: number; goals: number; assists: number; mom: number; pos?: string }>,
 ): Storyline[] {
   // 이름 목록 파싱: 한 셀에 여러 명이 "," 또는 "/"로 묶여 들어올 수 있음 (특히 MOM)
   const parseNames = (csv?: string) =>
@@ -261,7 +263,6 @@ function buildMatchStorylines(
   const apps: Record<string, number> = {};
   const goals: Record<string, number> = {};
   const assists: Record<string, number> = {};
-  const mom: Record<string, number> = {};
   const seq: Record<string, { goals: number; point: boolean }[]> = {};
   const lastAppIdx: Record<string, number> = {}; // 선수별 마지막 출전 경기의 prior 인덱스
   const attSets: Set<string>[] = []; // 경기별 출전자 집합 (개근 계산용)
@@ -280,30 +281,26 @@ function buildMatchStorylines(
       lastAppIdx[name] = idx;
       (seq[name] ||= []).push({ goals: g, point: g + a > 0 });
     }
-    // 한 경기에 공동 MOM(여러 명)이 있을 수 있으므로 개별로 집계
-    for (const mn of new Set(parseNames(m.mom))) mom[mn] = (mom[mn] || 0) + 1;
   });
 
   const out: Storyline[] = [];
 
   // ── 선수별 스토리라인
-  // 득점왕/도움왕/MVP는 엔트리 내부가 아니라 "팀 전체" 기준 1위여야 함
-  const goalVals = Object.values(goals);
-  const assistVals = Object.values(assists);
-  const momVals = Object.values(mom);
-  const teamMaxGoals = goalVals.length ? Math.max(...goalVals) : 0;
-  const teamMaxAssists = assistVals.length ? Math.max(...assistVals) : 0;
-  const teamMaxMom = momVals.length ? Math.max(...momVals) : 0;
-  const goalLeaderCount = goalVals.filter((v) => v === teamMaxGoals).length;
-  const assistLeaderCount = assistVals.filter((v) => v === teamMaxAssists).length;
-  const momLeaderCount = momVals.filter((v) => v === teamMaxMom).length;
+  // 득점왕/도움왕/MVP는 순위 페이지(stats)와 일치해야 하므로 playerStats(현재 시즌 누적)를 사용
+  const statList = Object.values(playerStats);
+  const teamMaxGoals = statList.length ? Math.max(...statList.map((s) => s.goals)) : 0;
+  const teamMaxAssists = statList.length ? Math.max(...statList.map((s) => s.assists)) : 0;
+  const teamMaxMom = statList.length ? Math.max(...statList.map((s) => s.mom)) : 0;
+  const goalLeaderCount = statList.filter((s) => s.goals === teamMaxGoals).length;
+  const assistLeaderCount = statList.filter((s) => s.assists === teamMaxAssists).length;
+  const momLeaderCount = statList.filter((s) => s.mom === teamMaxMom).length;
   // 팀의 실제 직전 경기 득점자 (결장 선수에게 "지난 경기"가 잘못 뜨지 않도록)
   const lastMatchScorers = prior.length > 0 ? parseNames(prior[prior.length - 1].goals) : [];
   for (const name of attendees) {
     const a = apps[name] || 0;
     const g = goals[name] || 0;
     const as = assists[name] || 0;
-    const mm = mom[name] || 0;
+    const st = playerStats[name] || { apps: 0, goals: 0, assists: 0, mom: 0 };
     const s = seq[name] || [];
 
     if (a === 0) {
@@ -347,18 +344,18 @@ function buildMatchStorylines(
       out.push({ icon: "🅰️", text: `${name} 시즌 ${as + 1}호 도움 도전`, priority: 52 });
     }
 
-    // 득점왕 (팀 시즌 최다 득점 1위)
-    if (g > 0 && g === teamMaxGoals) {
-      out.push({ icon: "🥇", text: `${name} 시즌 득점 ${goalLeaderCount === 1 ? "1위" : "공동 1위"} (${g}골)`, priority: 50 });
+    // 득점왕 (순위 기준 시즌 최다 득점 1위)
+    if (st.goals > 0 && st.goals === teamMaxGoals) {
+      out.push({ icon: "🥇", text: `${name} 시즌 득점 ${goalLeaderCount === 1 ? "1위" : "공동 1위"} (${st.goals}골)`, priority: 50 });
     }
-    // 도움왕 (팀 시즌 최다 도움 1위)
-    if (as > 0 && as === teamMaxAssists) {
-      out.push({ icon: "🅰️", text: `${name} 시즌 도움 ${assistLeaderCount === 1 ? "1위" : "공동 1위"} (${as}개)`, priority: 49 });
+    // 도움왕 (순위 기준 시즌 최다 도움 1위)
+    if (st.assists > 0 && st.assists === teamMaxAssists) {
+      out.push({ icon: "🅰️", text: `${name} 시즌 도움 ${assistLeaderCount === 1 ? "1위" : "공동 1위"} (${st.assists}개)`, priority: 49 });
     }
 
-    // MVP 선두 (팀 MOM 최다이며 2회 이상)
-    if (mm >= 2 && mm === teamMaxMom) {
-      out.push({ icon: "👑", text: `${name} MOM ${mm}회, 시즌 MVP ${momLeaderCount === 1 ? "선두" : "공동 선두"}`, priority: 48 });
+    // MVP 선두 (순위 기준 MOM 최다이며 2회 이상)
+    if (st.mom >= 2 && st.mom === teamMaxMom) {
+      out.push({ icon: "👑", text: `${name} MOM ${st.mom}회, 시즌 MVP ${momLeaderCount === 1 ? "선두" : "공동 선두"}`, priority: 48 });
     }
 
     // 개근 (팀 최근 경기를 연속으로 전부 출전 중)
@@ -617,10 +614,10 @@ export default function DashboardClient({
     const map: Record<number, Storyline[]> = {};
     matchList.forEach((m) => {
       const att = (m.attendees || "").split(",").map((s) => s.trim()).filter(Boolean);
-      map[m.id] = buildMatchStorylines(m, matchList, att);
+      map[m.id] = buildMatchStorylines(m, matchList, att, playerStatsMap);
     });
     return map;
-  }, [matchList]);
+  }, [matchList, playerStatsMap]);
 
   // D-Day 계산
   const getDDay = (dateStr: string): number | null => {
