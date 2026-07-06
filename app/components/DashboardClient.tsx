@@ -263,9 +263,11 @@ function buildMatchStorylines(
   const mom: Record<string, number> = {};
   const seq: Record<string, { goals: number; point: boolean }[]> = {};
   const lastAppIdx: Record<string, number> = {}; // 선수별 마지막 출전 경기의 prior 인덱스
+  const attSets: Set<string>[] = []; // 경기별 출전자 집합 (개근 계산용)
 
   prior.forEach((m, idx) => {
     const att = Array.from(new Set(parseNames(m.attendees)));
+    attSets.push(new Set(att));
     const gs = parseNames(m.goals);
     const as = parseNames(m.assists);
     const momName = (m.mom || "").trim();
@@ -285,6 +287,8 @@ function buildMatchStorylines(
 
   // ── 선수별 스토리라인
   const maxMom = Math.max(0, ...attendees.map((n) => mom[n] || 0));
+  const maxGoals = Math.max(0, ...attendees.map((n) => goals[n] || 0));
+  const maxAssists = Math.max(0, ...attendees.map((n) => assists[n] || 0));
   // 팀의 실제 직전 경기 득점자 (결장 선수에게 "지난 경기"가 잘못 뜨지 않도록)
   const lastMatchScorers = prior.length > 0 ? parseNames(prior[prior.length - 1].goals) : [];
   for (const name of attendees) {
@@ -323,18 +327,37 @@ function buildMatchStorylines(
       out.push({ icon: "🎖️", text: `${name} ${nextApp}경기 출전`, priority: 60 });
     }
 
-    // 득점 이정표 (다음 골이 5의 배수)
-    if (g > 0 && (g + 1) % 5 === 0) {
-      out.push({ icon: "⚽", text: `${name} 시즌 ${g + 1}호골 도전`, priority: 56 });
+    // 득점 이정표 (다음 골이 10의 배수면 통산, 그 외 5의 배수면 시즌)
+    const nextGoal = g + 1;
+    if (g > 0 && nextGoal % 10 === 0) {
+      out.push({ icon: "💯", text: `${name} 통산 ${nextGoal}호골 눈앞`, priority: 58 });
+    } else if (g > 0 && nextGoal % 5 === 0) {
+      out.push({ icon: "⚽", text: `${name} 시즌 ${nextGoal}호골 도전`, priority: 56 });
     }
     // 도움 이정표
     if (as > 0 && (as + 1) % 5 === 0) {
       out.push({ icon: "🅰️", text: `${name} 시즌 ${as + 1}호 도움 도전`, priority: 52 });
     }
 
+    // 득점왕 경쟁 (엔트리 내 시즌 최다 득점)
+    if (g > 0 && g === maxGoals) {
+      out.push({ icon: "🥇", text: `${name} 시즌 최다 득점 ${g}골 선두`, priority: 50 });
+    }
+    // 도움왕 경쟁 (엔트리 내 시즌 최다 도움)
+    if (as > 0 && as === maxAssists) {
+      out.push({ icon: "🅰️", text: `${name} 시즌 최다 도움 ${as}개 선두`, priority: 49 });
+    }
+
     // MVP 선두 (MOM 최다이며 2회 이상)
     if (mm >= 2 && mm === maxMom) {
       out.push({ icon: "👑", text: `${name} MOM ${mm}회, 시즌 MVP 선두`, priority: 48 });
+    }
+
+    // 개근 (팀 최근 경기를 연속으로 전부 출전 중)
+    let attendStreak = 0;
+    for (let i = attSets.length - 1; i >= 0 && attSets[i].has(name); i--) attendStreak++;
+    if (attendStreak >= 5) {
+      out.push({ icon: "🎖️", text: `${name} ${attendStreak}경기 연속 출전, 개근 행진`, priority: 46 });
     }
   }
 
@@ -359,12 +382,37 @@ function buildMatchStorylines(
     out.push({ icon: "📈", text: `팀 ${winStreak}연승, ${winStreak + 1}연승 도전`, priority: 64 });
   }
 
+  // 연패 탈출 도전 (2연패 이상)
+  let loseStreak = 0;
+  for (let i = prior.length - 1; i >= 0; i--) {
+    if (prior[i].result === "패") loseStreak++;
+    else break;
+  }
+  if (loseStreak >= 2) {
+    out.push({ icon: "🩹", text: `팀 ${loseStreak}연패 중, 연패 탈출 도전`, priority: 66 });
+  }
+
+  // 최근 5경기 폼
+  const recent = prior.slice(-5);
+  if (recent.length >= 3) {
+    const w = recent.filter((m) => m.result === "승").length;
+    const d = recent.filter((m) => m.result === "무").length;
+    const l = recent.filter((m) => m.result === "패").length;
+    const trend = w >= 3 ? " 상승세" : l >= 3 ? " 반등 필요" : "";
+    out.push({ icon: "📊", text: `최근 ${recent.length}경기 ${w}승 ${d}무 ${l}패${trend}`, priority: 42 });
+  }
+
   // 상대 전적 (같은 상대와의 최근 경기)
   const vsSame = prior.filter((m) => (m.opponent || "").trim() === (target.opponent || "").trim());
   if (vsSame.length > 0 && validScore(vsSame[vsSame.length - 1].ourScore) && validScore(vsSame[vsSame.length - 1].theirScore)) {
     const last = vsSame[vsSame.length - 1];
     const r = last.result === "승" ? "승리" : last.result === "패" ? "패배" : "무승부";
     out.push({ icon: "🔁", text: `지난 vs ${target.opponent} ${last.ourScore}-${last.theirScore} ${r}`, priority: 44 });
+  }
+
+  // N번째 맞대결 (같은 상대와 3번째 이상)
+  if (vsSame.length + 1 >= 3 && (target.opponent || "").trim()) {
+    out.push({ icon: "🆚", text: `${target.opponent}와 ${vsSame.length + 1}번째 맞대결`, priority: 40 });
   }
 
   return out.sort((a, b) => b.priority - a.priority);
@@ -799,6 +847,59 @@ export default function DashboardClient({
     });
   };
 
+  // 주목 포인트 펼치기 상태
+  const [openStories, setOpenStories] = React.useState<Set<number>>(new Set());
+  const toggleStories = (matchId: number) => {
+    buzz();
+    setOpenStories((prev) => {
+      const next = new Set(prev);
+      if (next.has(matchId)) next.delete(matchId); else next.add(matchId);
+      return next;
+    });
+  };
+  // 주목 포인트 블록 렌더 (기본 3개, 펼치면 전부)
+  const renderStorylines = (matchId: number, stories: Storyline[], variant: "next" | "entry") => {
+    if (stories.length === 0) return null;
+    const expanded = openStories.has(matchId);
+    const COLLAPSED = 3;
+    const visible = expanded ? stories : stories.slice(0, COLLAPSED);
+    const hidden = stories.length - COLLAPSED;
+    const box =
+      variant === "next"
+        ? "mt-3 rounded-2xl border border-[#FFB6C1]/40 bg-[#FFF5F7] p-3 dark:border-white/10 dark:bg-white/[0.06]"
+        : "mt-2.5 rounded-xl bg-[#FFF5F7] dark:bg-white/[0.04] px-3 py-2";
+    const titleSize = variant === "next" ? "text-[10px]" : "text-[9px]";
+    const iconSize = variant === "next" ? "h-3 w-3" : "h-2.5 w-2.5";
+    const itemSize = variant === "next" ? "text-[11px] text-gray-700 dark:text-white/85" : "text-[10.5px] text-gray-700 dark:text-gray-200";
+    return (
+      <div className={box}>
+        <p className={`mb-2 flex items-center gap-1.5 font-black tracking-widest text-[#FF8FA3] dark:text-[#FFB6C1] ${titleSize}`}>
+          <Sparkles className={iconSize} /> 주목 포인트
+        </p>
+        <ul className="space-y-1">
+          {visible.map((s, i) => (
+            <li key={i} className={`flex items-center gap-1.5 font-semibold ${itemSize}`}>
+              <span className="shrink-0">{s.icon}</span>
+              <span className="truncate">{s.text}</span>
+            </li>
+          ))}
+        </ul>
+        {hidden > 0 && (
+          <button
+            onClick={() => toggleStories(matchId)}
+            className="mt-2 flex items-center gap-0.5 text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] active:opacity-60"
+          >
+            {expanded ? (
+              <><ChevronUp className="h-3 w-3" /> 접기</>
+            ) : (
+              <><ChevronDown className="h-3 w-3" /> {hidden}개 더보기</>
+            )}
+          </button>
+        )}
+      </div>
+    );
+  };
+
   // 피드백 상태
   const [feedbackMap, setFeedbackMap] = React.useState<Record<number, FeedbackData[]>>({});
   const [openFeedbacks, setOpenFeedbacks] = React.useState<Set<number>>(new Set());
@@ -1228,25 +1329,7 @@ export default function DashboardClient({
                   )}
                 </div>
 
-                {(() => {
-                  const stories = (storylinesByMatch[nextMatch.id] || []).slice(0, 4);
-                  if (stories.length === 0) return null;
-                  return (
-                    <div className="mt-3 rounded-2xl border border-[#FFB6C1]/40 bg-[#FFF5F7] p-3 dark:border-white/10 dark:bg-white/[0.06]">
-                      <p className="mb-2 flex items-center gap-1.5 text-[10px] font-black tracking-widest text-[#FF8FA3] dark:text-[#FFB6C1]">
-                        <Sparkles className="h-3 w-3" /> 주목 포인트
-                      </p>
-                      <ul className="space-y-1">
-                        {stories.map((s, i) => (
-                          <li key={i} className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/85">
-                            <span className="shrink-0">{s.icon}</span>
-                            <span className="truncate">{s.text}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                })()}
+                {renderStorylines(nextMatch.id, storylinesByMatch[nextMatch.id] || [], "next")}
 
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <Link href="/vote" className="flex items-center justify-center rounded-xl bg-[#FF8FA3] py-2.5 text-[11px] font-black text-white">
@@ -2075,25 +2158,7 @@ export default function DashboardClient({
                               })}
                             </div>
                           )}
-                          {(() => {
-                            const stories = (storylinesByMatch[match.id] || []).slice(0, 5);
-                            if (stories.length === 0) return null;
-                            return (
-                              <div className="mt-2.5 rounded-xl bg-[#FFF5F7] dark:bg-white/[0.04] px-3 py-2">
-                                <p className="mb-1.5 flex items-center gap-1 text-[9px] font-black tracking-widest text-[#FF8FA3] dark:text-[#FFB6C1]">
-                                  <Sparkles className="h-2.5 w-2.5" /> 주목 포인트
-                                </p>
-                                <ul className="space-y-1">
-                                  {stories.map((s, i) => (
-                                    <li key={i} className="flex items-center gap-1.5 text-[10.5px] font-semibold text-gray-700 dark:text-gray-200">
-                                      <span className="shrink-0">{s.icon}</span>
-                                      <span className="truncate">{s.text}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            );
-                          })()}
+                          {renderStorylines(match.id, storylinesByMatch[match.id] || [], "entry")}
                         </div>
                       );
                     })()}
