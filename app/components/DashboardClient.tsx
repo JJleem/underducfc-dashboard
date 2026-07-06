@@ -2076,7 +2076,7 @@ export default function DashboardClient({
                             </div>
                           )}
                           {(() => {
-                            const stories = (storylinesByMatch[match.id] || []).slice(0, 3);
+                            const stories = (storylinesByMatch[match.id] || []).slice(0, 5);
                             if (stories.length === 0) return null;
                             return (
                               <div className="mt-2.5 rounded-xl bg-[#FFF5F7] dark:bg-white/[0.04] px-3 py-2">
