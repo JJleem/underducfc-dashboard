@@ -246,6 +246,12 @@ export default function DashboardClient({
   const [accountMenuOpen, setAccountMenuOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState(initialView === "stats" ? "stats" : "matches");
 
+  // 하단 탭(홈/경기/스탯) 이동 시 URL ?tab 변화에 맞춰 내부 탭 동기화
+  // (이미 같은 페이지에 있을 때 탭이 안 바뀌던 문제 해결)
+  React.useEffect(() => {
+    setActiveTab(initialView === "stats" ? "stats" : "matches");
+  }, [initialView]);
+
   // 출석 투표 (요약 카드용, 읽기 전용)
   const attendanceVoteMap = React.useMemo(() => {
     const map: Record<number, AttendanceVoteData[]> = {};
