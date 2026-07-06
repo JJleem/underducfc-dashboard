@@ -287,8 +287,13 @@ function buildMatchStorylines(
 
   // ── 선수별 스토리라인
   const maxMom = Math.max(0, ...attendees.map((n) => mom[n] || 0));
-  const maxGoals = Math.max(0, ...attendees.map((n) => goals[n] || 0));
-  const maxAssists = Math.max(0, ...attendees.map((n) => assists[n] || 0));
+  // 득점왕/도움왕은 엔트리 내부가 아니라 "팀 전체" 기준 1위여야 함
+  const goalVals = Object.values(goals);
+  const assistVals = Object.values(assists);
+  const teamMaxGoals = goalVals.length ? Math.max(...goalVals) : 0;
+  const teamMaxAssists = assistVals.length ? Math.max(...assistVals) : 0;
+  const goalLeaderCount = goalVals.filter((v) => v === teamMaxGoals).length;
+  const assistLeaderCount = assistVals.filter((v) => v === teamMaxAssists).length;
   // 팀의 실제 직전 경기 득점자 (결장 선수에게 "지난 경기"가 잘못 뜨지 않도록)
   const lastMatchScorers = prior.length > 0 ? parseNames(prior[prior.length - 1].goals) : [];
   for (const name of attendees) {
@@ -339,13 +344,13 @@ function buildMatchStorylines(
       out.push({ icon: "🅰️", text: `${name} 시즌 ${as + 1}호 도움 도전`, priority: 52 });
     }
 
-    // 득점왕 경쟁 (엔트리 내 시즌 최다 득점)
-    if (g > 0 && g === maxGoals) {
-      out.push({ icon: "🥇", text: `${name} 시즌 최다 득점 ${g}골 선두`, priority: 50 });
+    // 득점왕 (팀 시즌 최다 득점 1위)
+    if (g > 0 && g === teamMaxGoals) {
+      out.push({ icon: "🥇", text: `${name} 시즌 득점 ${goalLeaderCount === 1 ? "1위" : "공동 1위"} (${g}골)`, priority: 50 });
     }
-    // 도움왕 경쟁 (엔트리 내 시즌 최다 도움)
-    if (as > 0 && as === maxAssists) {
-      out.push({ icon: "🅰️", text: `${name} 시즌 최다 도움 ${as}개 선두`, priority: 49 });
+    // 도움왕 (팀 시즌 최다 도움 1위)
+    if (as > 0 && as === teamMaxAssists) {
+      out.push({ icon: "🅰️", text: `${name} 시즌 도움 ${assistLeaderCount === 1 ? "1위" : "공동 1위"} (${as}개)`, priority: 49 });
     }
 
     // MVP 선두 (MOM 최다이며 2회 이상)
