@@ -225,6 +225,146 @@ interface DashboardClientProps {
   initialView?: "home" | "matches" | "stats";
 }
 
+interface Storyline {
+  icon: string;
+  text: string;
+  priority: number;
+}
+
+// 경기 "주목 포인트" 자동 생성: 대상 경기 이전까지의 기록으로 스토리라인을 만든다
+function buildMatchStorylines(
+  target: MatchData,
+  allMatches: MatchData[],
+  attendees: string[],
+): Storyline[] {
+  const parseNames = (csv?: string) =>
+    (csv || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const isReal = (m: MatchData) => m.type !== "야유회";
+  const validScore = (v: string | number | undefined) =>
+    v !== undefined && v !== null && String(v).trim() !== "" && !Number.isNaN(Number(v));
+  const targetTime = new Date(target.date).getTime();
+
+  // 대상 경기 이전의 완료된 정식 경기만, 날짜(동일 시 id) 순으로 정렬
+  const prior = allMatches
+    .filter((m) => m.id !== target.id && isReal(m) && m.result !== "예정")
+    .filter((m) => {
+      const t = new Date(m.date).getTime();
+      if (Number.isNaN(t)) return false;
+      return t < targetTime || (t === targetTime && m.id < target.id);
+    })
+    .sort((a, b) => {
+      const d = new Date(a.date).getTime() - new Date(b.date).getTime();
+      return d !== 0 ? d : a.id - b.id;
+    });
+
+  const apps: Record<string, number> = {};
+  const goals: Record<string, number> = {};
+  const assists: Record<string, number> = {};
+  const mom: Record<string, number> = {};
+  const seq: Record<string, { goals: number; point: boolean }[]> = {};
+
+  for (const m of prior) {
+    const att = Array.from(new Set(parseNames(m.attendees)));
+    const gs = parseNames(m.goals);
+    const as = parseNames(m.assists);
+    const momName = (m.mom || "").trim();
+    for (const name of att) {
+      const g = gs.filter((n) => n === name).length;
+      const a = as.filter((n) => n === name).length;
+      apps[name] = (apps[name] || 0) + 1;
+      goals[name] = (goals[name] || 0) + g;
+      assists[name] = (assists[name] || 0) + a;
+      (seq[name] ||= []).push({ goals: g, point: g + a > 0 });
+    }
+    if (momName) mom[momName] = (mom[momName] || 0) + 1;
+  }
+
+  const out: Storyline[] = [];
+
+  // ── 선수별 스토리라인
+  const maxMom = Math.max(0, ...attendees.map((n) => mom[n] || 0));
+  for (const name of attendees) {
+    const a = apps[name] || 0;
+    const g = goals[name] || 0;
+    const as = assists[name] || 0;
+    const mm = mom[name] || 0;
+    const s = seq[name] || [];
+
+    if (a === 0) {
+      out.push({ icon: "🎬", text: `${name} 데뷔전`, priority: 92 });
+      continue; // 데뷔전이면 누적 스토리라인은 의미 없음
+    }
+
+    // 연속 공격포인트 (뒤에서부터 연속으로 득점/도움 기록)
+    let streak = 0;
+    for (let i = s.length - 1; i >= 0 && s[i].point; i--) streak++;
+    if (streak >= 2) {
+      out.push({ icon: "🔥", text: `${name} ${streak + 1}경기 연속 공격P 도전`, priority: 78 + streak });
+    }
+
+    // 지난 경기 멀티골
+    if (s.length > 0 && s[s.length - 1].goals >= 2) {
+      out.push({ icon: "⚡", text: `${name} 지난 경기 멀티골, 상승세`, priority: 74 });
+    }
+
+    // 첫 공격포인트 도전
+    if (a >= 3 && g + as === 0) {
+      out.push({ icon: "🎯", text: `${name} 첫 공격포인트 도전`, priority: 66 });
+    }
+
+    // 출전 이정표 (5경기, 이후 10의 배수)
+    const nextApp = a + 1;
+    if (nextApp === 5 || nextApp % 10 === 0) {
+      out.push({ icon: "🎖️", text: `${name} ${nextApp}경기 출전`, priority: 60 });
+    }
+
+    // 득점 이정표 (다음 골이 5의 배수)
+    if (g > 0 && (g + 1) % 5 === 0) {
+      out.push({ icon: "⚽", text: `${name} 시즌 ${g + 1}호골 도전`, priority: 56 });
+    }
+    // 도움 이정표
+    if (as > 0 && (as + 1) % 5 === 0) {
+      out.push({ icon: "🅰️", text: `${name} 시즌 ${as + 1}호 도움 도전`, priority: 52 });
+    }
+
+    // MVP 선두 (MOM 최다이며 2회 이상)
+    if (mm >= 2 && mm === maxMom) {
+      out.push({ icon: "👑", text: `${name} MOM ${mm}회, 시즌 MVP 선두`, priority: 48 });
+    }
+  }
+
+  // ── 팀 스토리라인
+  // 연속 클린시트
+  let cleanStreak = 0;
+  for (let i = prior.length - 1; i >= 0; i--) {
+    if (validScore(prior[i].theirScore) && Number(prior[i].theirScore) === 0) cleanStreak++;
+    else break;
+  }
+  if (cleanStreak >= 1) {
+    out.push({ icon: "🧤", text: `${cleanStreak + 1}경기 연속 클린시트 도전`, priority: 62 });
+  }
+
+  // 연승
+  let winStreak = 0;
+  for (let i = prior.length - 1; i >= 0; i--) {
+    if (prior[i].result === "승") winStreak++;
+    else break;
+  }
+  if (winStreak >= 2) {
+    out.push({ icon: "📈", text: `팀 ${winStreak}연승, ${winStreak + 1}연승 도전`, priority: 64 });
+  }
+
+  // 상대 전적 (같은 상대와의 최근 경기)
+  const vsSame = prior.filter((m) => (m.opponent || "").trim() === (target.opponent || "").trim());
+  if (vsSame.length > 0 && validScore(vsSame[vsSame.length - 1].ourScore) && validScore(vsSame[vsSame.length - 1].theirScore)) {
+    const last = vsSame[vsSame.length - 1];
+    const r = last.result === "승" ? "승리" : last.result === "패" ? "패배" : "무승부";
+    out.push({ icon: "🔁", text: `지난 vs ${target.opponent} ${last.ourScore}-${last.theirScore} ${r}`, priority: 44 });
+  }
+
+  return out.sort((a, b) => b.priority - a.priority);
+}
+
 export default function DashboardClient({
   players,
   matches,
@@ -248,9 +388,11 @@ export default function DashboardClient({
 
   // 하단 탭(홈/경기/스탯) 이동 시 URL ?tab 변화에 맞춰 내부 탭 동기화
   // (이미 같은 페이지에 있을 때 탭이 안 바뀌던 문제 해결)
-  React.useEffect(() => {
+  const [prevInitialView, setPrevInitialView] = React.useState(initialView);
+  if (prevInitialView !== initialView) {
+    setPrevInitialView(initialView);
     setActiveTab(initialView === "stats" ? "stats" : "matches");
-  }, [initialView]);
+  }
 
   // 출석 투표 (요약 카드용, 읽기 전용)
   const attendanceVoteMap = React.useMemo(() => {
@@ -405,6 +547,16 @@ export default function DashboardClient({
       const key = m.date.slice(0, 10);
       if (!map[key]) map[key] = [];
       map[key].push(m);
+    });
+    return map;
+  }, [matchList]);
+
+  // 경기별 주목 포인트 (엔트리 명단 기반 자동 생성)
+  const storylinesByMatch = React.useMemo(() => {
+    const map: Record<number, Storyline[]> = {};
+    matchList.forEach((m) => {
+      const att = (m.attendees || "").split(",").map((s) => s.trim()).filter(Boolean);
+      map[m.id] = buildMatchStorylines(m, matchList, att);
     });
     return map;
   }, [matchList]);
@@ -1070,6 +1222,26 @@ export default function DashboardClient({
                     <p className="text-[10px] font-semibold text-gray-400 dark:text-white/40">아직 등록된 투표가 없습니다.</p>
                   )}
                 </div>
+
+                {(() => {
+                  const stories = (storylinesByMatch[nextMatch.id] || []).slice(0, 4);
+                  if (stories.length === 0) return null;
+                  return (
+                    <div className="mt-3 rounded-2xl border border-[#FFB6C1]/40 bg-[#FFF5F7] p-3 dark:border-white/10 dark:bg-white/[0.06]">
+                      <p className="mb-2 flex items-center gap-1.5 text-[10px] font-black tracking-widest text-[#FF8FA3] dark:text-[#FFB6C1]">
+                        <Sparkles className="h-3 w-3" /> 주목 포인트
+                      </p>
+                      <ul className="space-y-1">
+                        {stories.map((s, i) => (
+                          <li key={i} className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/85">
+                            <span className="shrink-0">{s.icon}</span>
+                            <span className="truncate">{s.text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
 
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <Link href="/vote" className="flex items-center justify-center rounded-xl bg-[#FF8FA3] py-2.5 text-[11px] font-black text-white">
@@ -1898,6 +2070,25 @@ export default function DashboardClient({
                               })}
                             </div>
                           )}
+                          {(() => {
+                            const stories = (storylinesByMatch[match.id] || []).slice(0, 3);
+                            if (stories.length === 0) return null;
+                            return (
+                              <div className="mt-2.5 rounded-xl bg-[#FFF5F7] dark:bg-white/[0.04] px-3 py-2">
+                                <p className="mb-1.5 flex items-center gap-1 text-[9px] font-black tracking-widest text-[#FF8FA3] dark:text-[#FFB6C1]">
+                                  <Sparkles className="h-2.5 w-2.5" /> 주목 포인트
+                                </p>
+                                <ul className="space-y-1">
+                                  {stories.map((s, i) => (
+                                    <li key={i} className="flex items-center gap-1.5 text-[10.5px] font-semibold text-gray-700 dark:text-gray-200">
+                                      <span className="shrink-0">{s.icon}</span>
+                                      <span className="truncate">{s.text}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            );
+                          })()}
                         </div>
                       );
                     })()}
