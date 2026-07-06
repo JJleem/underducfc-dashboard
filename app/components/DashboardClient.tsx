@@ -283,6 +283,8 @@ function buildMatchStorylines(
 
   // ── 선수별 스토리라인
   const maxMom = Math.max(0, ...attendees.map((n) => mom[n] || 0));
+  // 팀의 실제 직전 경기 득점자 (결장 선수에게 "지난 경기"가 잘못 뜨지 않도록)
+  const lastMatchScorers = prior.length > 0 ? parseNames(prior[prior.length - 1].goals) : [];
   for (const name of attendees) {
     const a = apps[name] || 0;
     const g = goals[name] || 0;
@@ -302,14 +304,9 @@ function buildMatchStorylines(
       out.push({ icon: "🔥", text: `${name} ${streak + 1}경기 연속 공격P 도전`, priority: 78 + streak });
     }
 
-    // 지난 경기 멀티골
-    if (s.length > 0 && s[s.length - 1].goals >= 2) {
+    // 지난 경기 멀티골 (팀의 직전 경기에서 실제로 2골 이상)
+    if (lastMatchScorers.filter((n) => n === name).length >= 2) {
       out.push({ icon: "⚡", text: `${name} 지난 경기 멀티골, 상승세`, priority: 74 });
-    }
-
-    // 첫 공격포인트 도전
-    if (a >= 3 && g + as === 0) {
-      out.push({ icon: "🎯", text: `${name} 첫 공격포인트 도전`, priority: 66 });
     }
 
     // 출전 이정표 (5경기, 이후 10의 배수)
