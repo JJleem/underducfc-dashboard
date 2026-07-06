@@ -999,7 +999,7 @@ export default function DashboardClient({
         {nextMatch && dDay !== null && (() => {
           const weather = parseWeather(nextMatch.weather || "");
           return (
-            <section className="relative mb-5 overflow-hidden rounded-[26px] bg-white p-4 text-gray-900 shadow-soft ring-1 ring-gray-200 dark:bg-[#10182f] dark:text-white dark:shadow-[0_16px_36px_rgba(15,23,42,0.22)] dark:ring-white/10">
+            <section className="relative mb-5 transform-gpu overflow-hidden rounded-[26px] bg-white p-4 text-gray-900 shadow-soft ring-1 ring-gray-200 dark:bg-[#10182f] dark:text-white dark:shadow-[0_16px_36px_rgba(15,23,42,0.22)] dark:ring-white/10">
               <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-[#FF8FA3]/20 blur-3xl dark:bg-[#FF8FA3]/25" />
               <div className="relative">
                 <div className="flex items-start justify-between gap-4">
