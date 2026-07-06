@@ -237,8 +237,9 @@ function buildMatchStorylines(
   allMatches: MatchData[],
   attendees: string[],
 ): Storyline[] {
+  // 이름 목록 파싱: 한 셀에 여러 명이 "," 또는 "/"로 묶여 들어올 수 있음 (특히 MOM)
   const parseNames = (csv?: string) =>
-    (csv || "").split(",").map((s) => s.trim()).filter(Boolean);
+    (csv || "").split(/[,/]/).map((s) => s.trim()).filter(Boolean);
   const isReal = (m: MatchData) => m.type !== "야유회";
   const validScore = (v: string | number | undefined) =>
     v !== undefined && v !== null && String(v).trim() !== "" && !Number.isNaN(Number(v));
@@ -270,7 +271,6 @@ function buildMatchStorylines(
     attSets.push(new Set(att));
     const gs = parseNames(m.goals);
     const as = parseNames(m.assists);
-    const momName = (m.mom || "").trim();
     for (const name of att) {
       const g = gs.filter((n) => n === name).length;
       const a = as.filter((n) => n === name).length;
@@ -280,7 +280,8 @@ function buildMatchStorylines(
       lastAppIdx[name] = idx;
       (seq[name] ||= []).push({ goals: g, point: g + a > 0 });
     }
-    if (momName) mom[momName] = (mom[momName] || 0) + 1;
+    // 한 경기에 공동 MOM(여러 명)이 있을 수 있으므로 개별로 집계
+    for (const mn of new Set(parseNames(m.mom))) mom[mn] = (mom[mn] || 0) + 1;
   });
 
   const out: Storyline[] = [];
