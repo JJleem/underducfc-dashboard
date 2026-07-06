@@ -258,7 +258,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
       <AppBottomNav active="home" currentUserName={currentUserName} />
 
       {/* 선수 추가/수정 Drawer */}
-      <Drawer open={modalOpen} onOpenChange={setModalOpen}>
+      <Drawer open={modalOpen} onOpenChange={setModalOpen} repositionInputs={false}>
         <DrawerContent className="bg-white dark:bg-[#161618] max-h-[85dvh]">
           <DrawerHeader className="pb-0">
             <DrawerTitle className="text-[15px] font-bold text-gray-900 dark:text-white">
