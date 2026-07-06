@@ -262,8 +262,9 @@ function buildMatchStorylines(
   const assists: Record<string, number> = {};
   const mom: Record<string, number> = {};
   const seq: Record<string, { goals: number; point: boolean }[]> = {};
+  const lastAppIdx: Record<string, number> = {}; // 선수별 마지막 출전 경기의 prior 인덱스
 
-  for (const m of prior) {
+  prior.forEach((m, idx) => {
     const att = Array.from(new Set(parseNames(m.attendees)));
     const gs = parseNames(m.goals);
     const as = parseNames(m.assists);
@@ -274,10 +275,11 @@ function buildMatchStorylines(
       apps[name] = (apps[name] || 0) + 1;
       goals[name] = (goals[name] || 0) + g;
       assists[name] = (assists[name] || 0) + a;
+      lastAppIdx[name] = idx;
       (seq[name] ||= []).push({ goals: g, point: g + a > 0 });
     }
     if (momName) mom[momName] = (mom[momName] || 0) + 1;
-  }
+  });
 
   const out: Storyline[] = [];
 
@@ -295,6 +297,12 @@ function buildMatchStorylines(
     if (a === 0) {
       out.push({ icon: "🎬", text: `${name} 데뷔전`, priority: 92 });
       continue; // 데뷔전이면 누적 스토리라인은 의미 없음
+    }
+
+    // 복귀 매치 (마지막 출전 후 팀 경기를 3경기 이상 결장하다 복귀)
+    const missed = lastAppIdx[name] !== undefined ? prior.length - 1 - lastAppIdx[name] : 0;
+    if (missed >= 3) {
+      out.push({ icon: "🔙", text: `${name} ${missed}경기 결장 후 복귀`, priority: 82 });
     }
 
     // 연속 공격포인트 (뒤에서부터 연속으로 득점/도움 기록)
