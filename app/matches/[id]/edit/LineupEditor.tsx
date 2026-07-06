@@ -202,6 +202,15 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
   };
 
   const handleSave = async () => {
+    // 배치되지 않은 참석/게스트 선수를 빈 대기 슬롯에 자동으로 채움
+    const leftovers = allPlayers.filter((name) => !assignedPlayers.has(name));
+    const finalSubs = [...subs];
+    let li = 0;
+    for (let i = 0; i < finalSubs.length && li < leftovers.length; i++) {
+      if (!finalSubs[i]) finalSubs[i] = leftovers[li++];
+    }
+    if (li > 0) setSubs(finalSubs);
+
     setSaving(true);
     try {
       const res = await fetch("/api/lineup", {
@@ -212,7 +221,7 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
           quarter,
           formation,
           players: assignments.map((p) => p || ""),
-          subs: subs.map((s) => s || ""),
+          subs: finalSubs.map((s) => s || ""),
           substitutions,
         }),
       });
