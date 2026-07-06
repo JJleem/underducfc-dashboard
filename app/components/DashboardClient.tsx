@@ -1878,13 +1878,14 @@ export default function DashboardClient({
                               {attendees.map((name) => {
                                 const no = rosterMap[name] || "?";
                                 return (
-                                  <span
+                                  <Link
                                     key={name}
-                                    className="flex items-center gap-1 text-[11px] font-bold bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 rounded-lg px-2 py-0.5"
+                                    href={`/players/${encodeURIComponent(name.trim())}`}
+                                    className="flex items-center gap-1 text-[11px] font-bold bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 rounded-lg px-2 py-0.5 active:opacity-60 transition-opacity"
                                   >
                                     <span className="font-black text-[#FF8FA3] dark:text-[#FFB6C1] text-[10px] min-w-[12px] text-center">{no}</span>
                                     {name}
-                                  </span>
+                                  </Link>
                                 );
                               })}
                             </div>
