@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 
-const QUARTERS = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
+const QUARTERS = ["1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
 const FORMATIONS = ["4-3-3", "4-4-2", "4-2-3-1", "3-5-2", "3-4-3", "5-3-2", "4-1-4-1"];
 const MAX_SUBS = 9;
 
@@ -62,6 +62,8 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
   const [saved, setSaved] = useState(false);
   const [guests, setGuests] = useState<string[]>([]);
   const [guestInput, setGuestInput] = useState("");
+  const [moveTarget, setMoveTarget] = useState<string | null>(null);
+  const [moving, setMoving] = useState(false);
 
   // 쿼터 변경 시 기존 라인업 로드
   useEffect(() => {
@@ -201,6 +203,51 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
     }
   };
 
+  const hasCurrentData = assignments.some(Boolean) || subs.some(Boolean);
+
+  const handleMoveQuarter = async (target: string) => {
+    if (!target || target === quarter) return;
+    setMoving(true);
+    try {
+      // 1. 현재 라인업을 타겟 쿼터에 저장
+      const res1 = await fetch("/api/lineup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          matchId: match.id,
+          quarter: target,
+          formation,
+          players: assignments.map((p) => p || ""),
+          subs: subs.map((s) => s || ""),
+          substitutions,
+        }),
+      });
+      if (!res1.ok) throw new Error(await res1.text());
+
+      // 2. 원본 쿼터 비우기
+      const res2 = await fetch("/api/lineup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          matchId: match.id,
+          quarter,
+          formation: "4-3-3",
+          players: Array(11).fill(""),
+          subs: Array(MAX_SUBS).fill(""),
+          substitutions: [],
+        }),
+      });
+      if (!res2.ok) throw new Error(await res2.text());
+
+      setMoveTarget(null);
+      setQuarter(target);
+    } catch (e) {
+      alert("이동 실패: " + (e instanceof Error ? e.message : e));
+    } finally {
+      setMoving(false);
+    }
+  };
+
   const handleSave = async () => {
     // 배치되지 않은 참석/게스트 선수를 빈 대기 슬롯에 자동으로 채움
     const leftovers = allPlayers.filter((name) => !assignedPlayers.has(name));
@@ -297,6 +344,42 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
             );
           })}
         </div>
+
+        {/* 쿼터 이동 */}
+        {hasCurrentData && (
+          <div className="flex items-center gap-2">
+            {!moveTarget ? (
+              <button
+                onClick={() => setMoveTarget("")}
+                className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
+              >
+                <ArrowRightLeft className="w-3.5 h-3.5" />
+                {quarter} → 다른 쿼터로 이동
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-black text-gray-500 dark:text-gray-400">이동할 쿼터:</span>
+                {QUARTERS.filter((q) => q !== quarter).map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => handleMoveQuarter(q)}
+                    disabled={moving}
+                    className="text-[11px] font-black px-3 py-1.5 rounded-xl bg-blue-500 text-white hover:bg-blue-600 transition-all disabled:opacity-50"
+                  >
+                    {q}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setMoveTarget(null)}
+                  className="text-[11px] font-black px-2 py-1.5 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                >
+                  취소
+                </button>
+                {moving && <span className="text-[10px] text-gray-400 animate-pulse">이동 중...</span>}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 포메이션 선택 */}
         <div className="flex items-center gap-2">
