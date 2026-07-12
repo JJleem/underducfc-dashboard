@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendMatch } from "@/app/lib/sheets-write";
+import { getMatches } from "@/app/lib/matches-backend";
 import { sendPushToAll } from "@/app/lib/send-push";
 import { getMatchWeather, serializeWeather } from "@/app/lib/weather";
+
+/** "YYYY-MM-DD" 두 날짜의 절대 일수 차이(UTC 기준으로 파싱해 TZ 영향 제거). */
+function daysBetween(a: string, b: string): number {
+  const ms = Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`);
+  return Math.abs(ms) / 86_400_000;
+}
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -18,6 +25,17 @@ export async function GET(request: NextRequest) {
     nextSaturday.setDate(now.getDate() + daysUntilNextSaturday);
 
     const dateStr = `${nextSaturday.getFullYear()}-${String(nextSaturday.getMonth() + 1).padStart(2, "0")}-${String(nextSaturday.getDate()).padStart(2, "0")}`;
+
+    // 중복 방지: 목표 토요일과 ±3일 이내에 이미 매치가 있으면 건너뛴다.
+    // (예: 예외적으로 금/일요일 경기를 미리 만들어 둔 주 → 토요일 매치 자동 생성 방지)
+    const existing = await getMatches();
+    const clash = existing.find(
+      (m) => m.date && daysBetween(m.date, dateStr) <= 3
+    );
+    if (clash) {
+      console.log(`[cron] 인접 매치(${clash.date}) 존재 → ${dateStr} 생성 건너뜀`);
+      return NextResponse.json({ ok: true, skipped: true, date: dateStr, reason: `nearby match ${clash.date}` });
+    }
 
     // 날씨 조회 시도 (5일 이내면 가능)
     let weatherStr = "";

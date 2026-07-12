@@ -78,6 +78,11 @@ export async function getMatchesRows(): Promise<string[][]> {
   return [HEADER, ...rows];
 }
 
+/** 전체 경기 목록(원본 스키마 그대로). */
+export async function getMatches(): Promise<MatchOut[]> {
+  return udGet<MatchOut[]>("/api/underduck/matches");
+}
+
 /** 단건 조회(없으면 백엔드 404 → underduckFetch가 throw). */
 export async function getMatch(matchId: number): Promise<MatchOut> {
   return udGet<MatchOut>(`/api/underduck/matches/${matchId}`);
