@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateAppData } from "@/app/lib/cache";
 import { appendRoster } from "@/app/lib/sheets-write";
 import { requireAdmin } from "@/app/lib/admin";
 
@@ -17,6 +18,7 @@ export async function POST(req: NextRequest) {
       pos: pos || "MF",
       status: status || "활동",
     });
+    revalidateAppData();
     return NextResponse.json({ ok: true, id });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

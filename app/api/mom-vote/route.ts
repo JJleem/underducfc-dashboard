@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateAppData } from "@/app/lib/cache";
 import { getMomVoteRows } from "../../lib/backend";
 import { appendMomVote, deleteMomVote } from "../../lib/sheets-write";
 import { requireUser } from "@/app/lib/admin";
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
     // 같은 matchId + voterName + voteType 투표가 있으면 삭제 후 재등록
     await deleteMomVote(Number(matchId), voterName.trim(), voteType.trim());
     await appendMomVote({ matchId: Number(matchId), voterName, votedFor, voteType });
+    revalidateAppData();
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
@@ -47,6 +49,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "필수 필드 누락" }, { status: 400 });
     }
     await deleteMomVote(Number(matchId), voterName, voteType);
+    revalidateAppData();
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

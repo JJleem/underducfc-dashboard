@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateAppData } from "@/app/lib/cache";
 import { appendMedia, deleteMediaByUrl } from "@/app/lib/sheets-write";
 import { getMediaRows } from "@/app/lib/backend";
 
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest) {
     const { type, url, title } = await req.json();
     if (!url) return NextResponse.json({ error: "URL 필수" }, { status: 400 });
     await appendMedia({ type: type || "image", url, title: title || "" });
+    revalidateAppData();
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
@@ -47,6 +49,7 @@ export async function DELETE(req: NextRequest) {
     const { url } = await req.json();
     if (!url) return NextResponse.json({ error: "URL 필수" }, { status: 400 });
     await deleteMediaByUrl(url);
+    revalidateAppData();
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

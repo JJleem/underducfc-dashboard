@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateAppData } from "@/app/lib/cache";
 import { getVoteCommentRows } from "../../lib/backend";
 import { appendVoteComment, deleteVoteComment } from "../../lib/sheets-write";
 import { requireUser } from "@/app/lib/admin";
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     await appendVoteComment({ matchId: Number(matchId), kakaoId, nickname, message });
+    revalidateAppData();
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
@@ -64,6 +66,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     await deleteVoteComment(Number(matchId), deleteTarget, timestamp);
+    revalidateAppData();
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

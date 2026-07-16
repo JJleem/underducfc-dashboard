@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateAppData } from "@/app/lib/cache";
 import { getFeedbackRows } from "../../lib/backend";
 import { appendFeedback, deleteFeedback } from "../../lib/sheets-write";
 import { requireUser, isAdmin } from "@/app/lib/admin";
@@ -32,6 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     await appendFeedback({ matchId: Number(matchId), name, message });
+    revalidateAppData();
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
@@ -57,6 +59,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     await deleteFeedback(Number(matchId), timestamp, name, message);
+    revalidateAppData();
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

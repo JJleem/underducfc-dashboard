@@ -8,6 +8,7 @@
 // - 쓰기: sheets-write.ts의 matches 함수들이 이 래퍼를 호출하도록 전환.
 
 import { udGet, udPost, udPatch, udDelete } from "./underduck";
+import { udReadOpts } from "./cache";
 
 /** 백엔드 응답 스키마. match_id = 기존 시트 0-based 인덱스(보존). */
 export interface MatchOut {
@@ -68,7 +69,7 @@ function toSheetRow(m: MatchOut): string[] {
  * 그대로 보존한다(시트의 행 위치 = matchId+2 와 동일한 효과). 빈 자리는 빈 행으로 채운다.
  */
 export async function getMatchesRows(): Promise<string[][]> {
-  const matches = await udGet<MatchOut[]>("/api/underduck/matches");
+  const matches = await udGet<MatchOut[]>("/api/underduck/matches", udReadOpts);
   const maxId = matches.reduce((mx, m) => Math.max(mx, m.match_id), -1);
   const rows: string[][] = [];
   for (const m of matches) rows[m.match_id] = toSheetRow(m);
@@ -85,7 +86,7 @@ export async function getMatches(): Promise<MatchOut[]> {
 
 /** 단건 조회(없으면 백엔드 404 → underduckFetch가 throw). */
 export async function getMatch(matchId: number): Promise<MatchOut> {
-  return udGet<MatchOut>(`/api/underduck/matches/${matchId}`);
+  return udGet<MatchOut>(`/api/underduck/matches/${matchId}`, udReadOpts);
 }
 
 /** 신규 경기 생성. 백엔드가 result="예정"/attendance_status="진행중"/match_id=max+1 자동 부여. */

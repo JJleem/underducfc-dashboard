@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateAppData } from "@/app/lib/cache";
 import { getMomVoteRows } from "../../../lib/backend";
 import { getMatchesRows } from "../../../lib/matches-backend";
 import { writeMatchMom } from "../../../lib/sheets-write";
@@ -77,6 +78,7 @@ export async function POST() {
       finalized.push({ matchId: match.id, mom: momStr });
     }
 
+    revalidateAppData();
     return NextResponse.json({ ok: true, finalized });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

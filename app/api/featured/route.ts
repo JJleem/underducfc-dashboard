@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateAppData } from "@/app/lib/cache";
 import { auth } from "@/auth";
 import { writeFeaturedTitles } from "../../lib/sheets-write";
 
@@ -23,6 +24,7 @@ export async function POST(req: NextRequest) {
 
   try {
     await writeFeaturedTitles(name, ids);
+    revalidateAppData();
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "저장 실패";

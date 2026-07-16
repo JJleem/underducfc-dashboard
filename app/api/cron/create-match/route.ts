@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateAppData } from "@/app/lib/cache";
 import { appendMatch } from "@/app/lib/sheets-write";
 import { getMatches } from "@/app/lib/matches-backend";
 import { sendPushToAll } from "@/app/lib/send-push";
@@ -65,6 +66,7 @@ export async function GET(request: NextRequest) {
       console.error("[push] 투표 알림 실패:", e);
     }
 
+    revalidateAppData();
     return NextResponse.json({ ok: true, date: dateStr, weather: weatherStr || null });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

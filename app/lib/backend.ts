@@ -7,6 +7,7 @@
 // ⚠️ 서버사이드 전용([[underduck.ts]]의 window 가드). route handler / server component에서만.
 
 import { udGet } from "./underduck";
+import { udReadOpts } from "./cache";
 
 const s = (v: unknown): string => (v === null || v === undefined ? "" : String(v));
 const pad = (arr: (string | null)[] | null | undefined, n: number): string[] => {
@@ -21,7 +22,7 @@ interface RosterOut {
   pos: string | null; status: string | null; memo: string | null;
 }
 export async function getRosterRows(): Promise<string[][]> {
-  const rows = await udGet<RosterOut[]>("/api/underduck/roster");
+  const rows = await udGet<RosterOut[]>("/api/underduck/roster", udReadOpts);
   const HEADER = ["no", "name", "pos", "status", "", "memo", "id"];
   return [HEADER, ...rows.map((r) => [s(r.no), s(r.name), s(r.pos), s(r.status), "", s(r.memo), s(r.id)])];
 }
@@ -34,8 +35,8 @@ interface StatOut {
 }
 export async function getStatsRows(): Promise<string[][]> {
   const [stats, roster] = await Promise.all([
-    udGet<StatOut[]>("/api/underduck/stats"),
-    udGet<RosterOut[]>("/api/underduck/roster"),
+    udGet<StatOut[]>("/api/underduck/stats", udReadOpts),
+    udGet<RosterOut[]>("/api/underduck/roster", udReadOpts),
   ]);
   const byName = new Map<string, { no: string; pos: string }>();
   for (const r of roster) {
@@ -55,7 +56,7 @@ interface NoticeOut {
   content: string | null; important: boolean; location: string | null;
 }
 export async function getNoticeRows(): Promise<string[][]> {
-  const n = await udGet<NoticeOut | null>("/api/underduck/notice");
+  const n = await udGet<NoticeOut | null>("/api/underduck/notice", udReadOpts);
   const HEADER = ["date", "title", "content", "important", "location"];
   if (!n) return [HEADER];
   return [HEADER, [s(n.date), s(n.title), s(n.content), n.important ? "Y" : "N", s(n.location)]];
@@ -67,7 +68,7 @@ interface LineupOut {
   players: string[] | null; subs: string[] | null; substitutions: unknown[] | null;
 }
 export async function getLineupRows(): Promise<string[][]> {
-  const rows = await udGet<LineupOut[]>("/api/underduck/lineup");
+  const rows = await udGet<LineupOut[]>("/api/underduck/lineup", udReadOpts);
   const HEADER = ["matchId", "quarter", "formation",
     "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10", "p11",
     "sub1", "sub2", "sub3", "sub4", "sub5", "sub6", "sub7", "sub8", "sub9", "substitutions"];
@@ -84,7 +85,7 @@ interface AttendanceOut {
   nickname: string | null; response: string | null; timestamp: string | null;
 }
 export async function getAttendanceVoteRows(): Promise<string[][]> {
-  const rows = await udGet<AttendanceOut[]>("/api/underduck/attendance");
+  const rows = await udGet<AttendanceOut[]>("/api/underduck/attendance", udReadOpts);
   const HEADER = ["matchId", "kakaoId", "nickname", "response", "timestamp"];
   return [HEADER, ...rows.map((r) => [s(r.match_id), s(r.kakao_id), s(r.nickname), s(r.response), s(r.timestamp)])];
 }
@@ -95,7 +96,7 @@ interface VoteCommentOut {
   nickname: string | null; message: string | null; timestamp: string | null;
 }
 export async function getVoteCommentRows(): Promise<string[][]> {
-  const rows = await udGet<VoteCommentOut[]>("/api/underduck/vote-comment");
+  const rows = await udGet<VoteCommentOut[]>("/api/underduck/vote-comment", udReadOpts);
   const HEADER = ["matchId", "kakaoId", "nickname", "message", "timestamp"];
   return [HEADER, ...rows.map((r) => [s(r.match_id), s(r.kakao_id), s(r.nickname), s(r.message), s(r.timestamp)])];
 }
@@ -105,7 +106,7 @@ interface FeaturedOut {
   player_name: string; title_id1: string | null; title_id2: string | null; title_id3: string | null;
 }
 export async function getFeaturedRows(): Promise<string[][]> {
-  const rows = await udGet<FeaturedOut[]>("/api/underduck/featured");
+  const rows = await udGet<FeaturedOut[]>("/api/underduck/featured", udReadOpts);
   const HEADER = ["선수명", "칭호id", "칭호id", "칭호id"];
   return [HEADER, ...rows.map((r) => [s(r.player_name), s(r.title_id1), s(r.title_id2), s(r.title_id3)])];
 }
@@ -115,7 +116,7 @@ interface FeedbackOut {
   id: number; match_id: number | null; timestamp: string | null; name: string | null; message: string | null;
 }
 export async function getFeedbackRows(): Promise<string[][]> {
-  const rows = await udGet<FeedbackOut[]>("/api/underduck/feedback");
+  const rows = await udGet<FeedbackOut[]>("/api/underduck/feedback", udReadOpts);
   const HEADER = ["matchId", "timestamp", "name", "message"];
   return [HEADER, ...rows.map((r) => [s(r.match_id), s(r.timestamp), s(r.name), s(r.message)])];
 }
@@ -125,7 +126,7 @@ interface MediaOut {
   id: number; type: string | null; url: string | null; title: string | null; uploaded_at: string | null;
 }
 export async function getMediaRows(): Promise<string[][]> {
-  const rows = await udGet<MediaOut[]>("/api/underduck/media");
+  const rows = await udGet<MediaOut[]>("/api/underduck/media", udReadOpts);
   const HEADER = ["type", "url", "title", "uploadedAt"];
   return [HEADER, ...rows.map((r) => [s(r.type), s(r.url), s(r.title), s(r.uploaded_at)])];
 }
@@ -136,7 +137,7 @@ interface MomVoteOut {
   voted_for: string | null; vote_type: string | null; timestamp: string | null;
 }
 export async function getMomVoteRows(): Promise<string[][]> {
-  const rows = await udGet<MomVoteOut[]>("/api/underduck/mom-vote");
+  const rows = await udGet<MomVoteOut[]>("/api/underduck/mom-vote", udReadOpts);
   const HEADER = ["matchId", "voterName", "votedFor", "voteType", "timestamp"];
   return [HEADER, ...rows.map((r) => [s(r.match_id), s(r.voter_name), s(r.voted_for), s(r.vote_type), s(r.timestamp)])];
 }
@@ -147,7 +148,7 @@ interface UserOut {
   joined_at: string | null; last_login: string | null;
 }
 export async function getUsersRows(): Promise<string[][]> {
-  const rows = await udGet<UserOut[]>("/api/underduck/users");
+  const rows = await udGet<UserOut[]>("/api/underduck/users", udReadOpts);
   const HEADER = ["kakaoId", "nickname", "profileImage", "joinedAt", "lastLogin"];
   return [HEADER, ...rows.map((r) => [s(r.kakao_id), s(r.nickname), s(r.profile_image), s(r.joined_at), s(r.last_login)])];
 }

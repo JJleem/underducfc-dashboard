@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateAppData } from "@/app/lib/cache";
 import { updateRoster } from "@/app/lib/sheets-write";
 import { requireAdmin } from "@/app/lib/admin";
 
@@ -21,6 +22,7 @@ export async function PUT(
       pos: pos || "MF",
       status: status || "활동",
     });
+    revalidateAppData();
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateAppData } from "@/app/lib/cache";
 import { revalidatePath } from "next/cache";
 import { addPhotosToMatch, removePhotoFromMatch } from "../../lib/sheets-write";
 import { requireAdmin } from "@/app/lib/admin";
@@ -15,6 +16,7 @@ export async function POST(request: NextRequest) {
 
     await addPhotosToMatch(Number(matchId), urls);
     revalidatePath("/");
+    revalidateAppData();
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
@@ -32,6 +34,7 @@ export async function DELETE(request: NextRequest) {
     }
     await removePhotoFromMatch(Number(matchId), url);
     revalidatePath("/");
+    revalidateAppData();
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

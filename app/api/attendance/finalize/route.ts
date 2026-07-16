@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateAppData } from "@/app/lib/cache";
 import { finalizeAttendance, setAttendanceStatus, writeMatchWeather } from "../../../lib/sheets-write";
 import { requireAdmin } from "@/app/lib/admin";
 import { getMatchesRows } from "@/app/lib/matches-backend";
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
     const id = Number(matchId);
     if (action === "open") {
       await setAttendanceStatus(id, "진행중");
+      revalidateAppData();
       return NextResponse.json({ ok: true, status: "진행중" });
     }
     const attendees = await finalizeAttendance(id);
@@ -40,6 +42,7 @@ export async function POST(request: NextRequest) {
       console.error("[finalize] 날씨 기록 실패 (무시):", e);
     }
 
+    revalidateAppData();
     return NextResponse.json({ ok: true, attendees });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

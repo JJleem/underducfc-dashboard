@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateAppData } from "@/app/lib/cache";
 import { appendMatch } from "@/app/lib/sheets-write";
 import { sendPushToAll } from "@/app/lib/send-push";
 import { requireAdmin } from "@/app/lib/admin";
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest) {
     } catch (e) {
       console.error("[push] match 등록 알림 실패:", e);
     }
+    revalidateAppData();
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
