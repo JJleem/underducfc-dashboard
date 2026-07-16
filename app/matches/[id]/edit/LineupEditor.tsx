@@ -239,9 +239,10 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
       });
       if (!res2.ok) throw new Error(await res2.text());
 
-      // 페이지 새로고침해서 서버 데이터 동기화 (lineups prop 갱신)
+      // 서버 데이터 동기화 (lineups prop 갱신). 쓰기 라우트가 캐시를 무효화하므로
+      // 하드 리로드 대신 소프트 리프레시로 깜빡임 없이 최신 데이터를 받는다.
       setMoveTarget(null);
-      window.location.reload();
+      router.refresh();
     } catch (e) {
       alert("이동 실패: " + (e instanceof Error ? e.message : e));
     } finally {
