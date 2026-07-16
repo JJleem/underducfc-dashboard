@@ -3,7 +3,7 @@
 // 개인 페이지의 카드형과 달리, 여기선 최고등급 상위 N개만 압축 표시.
 
 import { createElement, type CSSProperties } from "react";
-import { EarnedTitle, TierIndex, topTitles } from "../lib/titles";
+import { EarnedTitle, TierIndex, topTitles, isEliteAchievement } from "../lib/titles";
 import { titleIcon } from "../lib/title-icons";
 
 interface TierVis {
@@ -31,26 +31,6 @@ const LEADER_VIS: TierVis = { grad: ["#FFE7A0", "#E0A100"], glow: "rgba(255,200,
 
 // 히든 칭호 — 시안/틸 계열 신비로운 느낌
 const HIDDEN_VIS: TierVis = { grad: ["#67E8F9", "#0E7490"], glow: "rgba(103,232,249,0.55)", icon: "#67E8F9" };
-
-const ELITE_ACHIEVEMENT_IDS = new Set([
-  "multiplayer",
-  "utility",
-  "concrete",
-  "fox",
-  "box2box",
-  "lastman",
-  "sweeperkeeper",
-  "attacking_fullback",
-  "attacking_centerback",
-  "invincible",
-  "unsung",
-  "devotion",
-  "onehit",
-  "loyalty",
-]);
-
-const isEliteAchievement = (id: string) =>
-  ELITE_ACHIEVEMENT_IDS.has(id.replace(/-(?:flat|[0-3])$/, ""));
 
 function visOf(t: EarnedTitle): TierVis {
   if (t.variant === "leader") return LEADER_VIS;

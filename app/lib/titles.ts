@@ -916,16 +916,53 @@ export function buildPlayerRelations(
 
 // ───────────────────────── 정렬(상위 N) ─────────────────────────
 
-/** 라인업/로스터용: 감독 > 리더 > 고등급 > 대표 우선으로 상위 N개 */
+// 딥블루(엘리트) 달성형 — TitleBadges 뱃지 색상과 동일 기준. 희귀도 정렬에도 사용.
+const ELITE_ACHIEVEMENT_IDS = new Set([
+  "multiplayer",
+  "utility",
+  "concrete",
+  "fox",
+  "box2box",
+  "lastman",
+  "sweeperkeeper",
+  "attacking_fullback",
+  "attacking_centerback",
+  "invincible",
+  "unsung",
+  "devotion",
+  "onehit",
+  "loyalty",
+]);
+
+export const isEliteAchievement = (id: string) =>
+  ELITE_ACHIEVEMENT_IDS.has(id.replace(/-(?:flat|[0-3])$/, ""));
+
+/**
+ * 뱃지 희귀도(높을수록 특별). 대표 미지정 시 자동 선택·정렬 기준.
+ * 색상 서열과 일치: 감독 > 리더(골드왕관) > 레전드 tier3 > 히든 > 골드 tier2
+ *                   > 엘리트(블루) > 실버 tier1 > 일반 달성형 > 브론즈 tier0
+ */
+function prestige(t: EarnedTitle): number {
+  if (t.variant === "manager") return 90;
+  if (t.variant === "leader") return 80;
+  if (t.tier === 3) return 70; // 레전드
+  if (t.hidden) return 60; // 히든
+  if (t.tier === 2) return 50; // 골드
+  if (isEliteAchievement(t.id)) return 40; // 엘리트 달성형
+  if (t.tier === 1) return 30; // 실버
+  if (t.tier === null) return 20; // 일반 달성형
+  return 10; // tier 0 브론즈
+}
+
+/** 라인업/로스터용: 희귀도(특별 색상) 높은 순, 동률이면 대표(flagship) 우선으로 상위 N개 */
 export function topTitles(earned: EarnedTitle[], n = 3): EarnedTitle[] {
-  const rank = (t: EarnedTitle) => {
-    if (t.variant === "manager") return 1000;
-    if (t.variant === "leader") return 500 + (t.flagship ? 1 : 0);
-    // 달성형은 중간 등급(2)로 취급, 등급형은 tier 그대로
-    const tierScore = t.tier ?? 2;
-    return tierScore * 10 + (t.flagship ? 1 : 0);
-  };
-  return [...earned].sort((a, b) => rank(b) - rank(a)).slice(0, n);
+  return [...earned]
+    .sort(
+      (a, b) =>
+        prestige(b) - prestige(a) ||
+        (b.flagship ? 1 : 0) - (a.flagship ? 1 : 0)
+    )
+    .slice(0, n);
 }
 
 /** 라인업 표시용 N개: 본인이 고른 대표(featuredIds) 우선, 없으면 자동 상위 N */
