@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { FormationField, type SeasonStat } from "./FormationField";
+import StartingElevenCard from "./StartingElevenCard";
 import { TitleBadges } from "./TitleBadges";
 import SubstitutionEvents from "./SubstitutionEvents";
 import type { EarnedTitle } from "../lib/titles";
@@ -72,7 +73,9 @@ export default function LineupViewer({
   );
   const [activeQuarter, setActiveQuarter] = useState(sortedQuarters[0] || "");
   const [sharing, setSharing] = useState(false);
+  const [savingCard, setSavingCard] = useState(false);
   const captureRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const lineup = lineups.find((item) => item.quarter === activeQuarter) ?? lineups[0];
 
   const share = async () => {
@@ -137,29 +140,147 @@ export default function LineupViewer({
     }
   };
 
+  const saveLineupCard = async () => {
+    if (!lineup || !cardRef.current) return;
+    setSavingCard(true);
+    try {
+      const node = cardRef.current;
+      await document.fonts.ready;
+      await Promise.all(
+        Array.from(node.querySelectorAll("img")).map(async (image) => {
+          if (!image.complete) {
+            await new Promise<void>((resolve) => {
+              image.addEventListener("load", () => resolve(), { once: true });
+              image.addEventListener("error", () => resolve(), { once: true });
+            });
+          }
+          await image.decode?.().catch(() => undefined);
+        })
+      );
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      );
+
+      const bounds = node.getBoundingClientRect();
+      const width = Math.round(bounds.width);
+      const height = Math.round(bounds.height);
+      const blob = await toBlob(node, {
+        cacheBust: true,
+        pixelRatio: 3,
+        width,
+        height,
+        backgroundColor: "#07050A",
+        style: {
+          width: `${width}px`,
+          height: `${height}px`,
+        },
+      });
+      if (!blob) throw new Error("이미지 생성 실패");
+
+      const opponent = match.opponent.replace(/[\\/:*?"<>|]/g, "_");
+      const fileName = `언더덕_${opponent}_${activeQuarter || "라인업"}.png`;
+      const file = new File([blob], fileName, { type: "image/png" });
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "언더덕 STARTING XI",
+        });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = fileName;
+        anchor.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name !== "AbortError") {
+        alert(`이미지 저장 실패: ${error.message}`);
+      }
+    } finally {
+      setSavingCard(false);
+    }
+  };
+
   if (!lineup) return null;
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="group flex w-full items-center justify-between rounded-2xl border border-gray-200 bg-gray-50/70 px-3.5 py-3 text-left transition-colors hover:border-[#FF8FA3]/40 hover:bg-[#FF8FA3]/5 dark:border-white/[0.07] dark:bg-white/[0.03] dark:hover:border-[#FFB6C1]/25"
-        >
-          <div>
-            <p className="text-[11px] font-black text-gray-800 dark:text-gray-100">
-              {lineup.quarter} 라인업 · {lineup.formation}
-            </p>
-            <p className="mt-0.5 text-[9px] font-semibold text-gray-400">
-              선발 {lineup.players.length}명 · 대기 {lineup.subs.length}명
-            </p>
-          </div>
-          <span className="flex items-center gap-1.5 text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
-            라인업 보기
-            <Maximize2 className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
-          </span>
-        </button>
-      </DialogTrigger>
+      <div className="space-y-2">
+        {/* 쿼터 선택 + 우측 이미지 저장 */}
+        <div className="flex items-center gap-2">
+          {sortedQuarters.length > 1 && (
+            <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto pb-0.5">
+              {sortedQuarters.map((quarter) => (
+                <button
+                  key={quarter}
+                  type="button"
+                  onClick={() => setActiveQuarter(quarter)}
+                  className={`shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-black transition-colors ${
+                    activeQuarter === quarter
+                      ? "bg-[#FF8FA3] text-white dark:bg-[#FFB6C1] dark:text-black"
+                      : "bg-black/5 text-gray-500 dark:bg-white/[0.06] dark:text-white/45"
+                  }`}
+                >
+                  {quarter}
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={saveLineupCard}
+            disabled={savingCard}
+            className="ml-auto flex h-7 shrink-0 items-center gap-1 rounded-lg border border-[#FF8FA3]/35 bg-[#FF8FA3]/10 px-2 text-[9px] font-black text-[#e75f7c] transition-opacity disabled:opacity-60 dark:text-[#FFB6C1]"
+          >
+            <Download className={`h-3 w-3 ${savingCard ? "animate-bounce" : ""}`} />
+            {savingCard ? "만드는 중" : "저장"}
+          </button>
+        </div>
+
+        {/* 인라인 발표 카드 프리뷰 (탭하면 다이얼로그 열림) */}
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            className="block min-w-0 w-full overflow-hidden text-left transition-transform active:scale-[0.99]"
+          >
+            <StartingElevenCard
+              ref={cardRef}
+              interactive={false}
+              formation={lineup.formation}
+              players={lineup.players}
+              rosterMap={rosterMap}
+              captainRoles={captainRoles}
+              opponent={match.opponent}
+              date={match.date}
+              time={match.time}
+              location={match.location}
+              subs={lineup.subs}
+            />
+          </button>
+        </DialogTrigger>
+
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            className="group flex w-full items-center justify-between rounded-2xl border border-gray-200 bg-gray-50/70 px-3.5 py-3 text-left transition-colors hover:border-[#FF8FA3]/40 hover:bg-[#FF8FA3]/5 dark:border-white/[0.07] dark:bg-white/[0.03] dark:hover:border-[#FFB6C1]/25"
+          >
+            <div>
+              <p className="text-[11px] font-black text-gray-800 dark:text-gray-100">
+                {lineup.quarter} 라인업 · {lineup.formation}
+              </p>
+              <p className="mt-0.5 text-[9px] font-semibold text-gray-400">
+                선발 {lineup.players.length}명 · 대기 {lineup.subs.length}명
+              </p>
+            </div>
+            <span className="flex items-center gap-1.5 text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+              라인업 보기
+              <Maximize2 className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
+            </span>
+          </button>
+        </DialogTrigger>
+      </div>
 
       <DialogContent className="left-1/2 top-0 h-[100dvh] w-full max-w-md translate-x-[-50%] translate-y-0 gap-0 overflow-y-auto rounded-none border-0 bg-gray-50 p-0 text-gray-900 duration-300 dark:bg-[#070b18] dark:text-white [&>button]:right-4 [&>button]:top-4 [&>button]:z-50 [&>button]:rounded-full [&>button]:bg-black/5 [&>button]:p-2 [&>button]:text-gray-700 dark:[&>button]:bg-white/10 dark:[&>button]:text-white">
         <DialogTitle className="sr-only">경기 라인업</DialogTitle>
