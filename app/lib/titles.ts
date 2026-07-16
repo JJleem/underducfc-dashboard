@@ -965,19 +965,27 @@ export function topTitles(earned: EarnedTitle[], n = 3): EarnedTitle[] {
     .slice(0, n);
 }
 
-/** 라인업 표시용 N개: 본인이 고른 대표(featuredIds) 우선, 없으면 자동 상위 N */
+/**
+ * 라인업 표시용 N개: 본인이 고른 대표(featuredIds)를 순서대로 먼저,
+ * 빈 칸은 이미 고른 걸 제외하고 희귀도 상위 칭호로 자동 채움. 대표가 없으면 전부 자동.
+ */
 export function pickBadges(
   earned: EarnedTitle[],
   featuredIds: string[] | undefined,
   n = 3
 ): EarnedTitle[] {
-  if (featuredIds && featuredIds.length) {
-    const byId = new Map(earned.map((t) => [t.id, t]));
-    const picked = featuredIds
-      .map((id) => byId.get(id))
-      .filter((t): t is EarnedTitle => !!t)
-      .slice(0, n);
-    if (picked.length) return picked;
-  }
-  return topTitles(earned, n);
+  const byId = new Map(earned.map((t) => [t.id, t]));
+  const picked = (featuredIds ?? [])
+    .map((id) => byId.get(id))
+    .filter((t): t is EarnedTitle => !!t)
+    .slice(0, n);
+
+  if (picked.length >= n) return picked;
+
+  const pickedIds = new Set(picked.map((t) => t.id));
+  const fill = topTitles(
+    earned.filter((t) => !pickedIds.has(t.id)),
+    n - picked.length
+  );
+  return [...picked, ...fill];
 }
