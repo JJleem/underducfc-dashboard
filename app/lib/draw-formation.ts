@@ -1,5 +1,7 @@
 // Canvas API로 포메이션 필드를 직접 그려 이미지로 공유 (html2canvas 불필요)
 
+import { playerFaceOnSrc } from "./player-faceons";
+
 const FORMATION_POSITIONS: Record<string, { x: number; y: number }[]> = {
   "4-3-3": [
     { x: 50, y: 88 },
@@ -68,31 +70,24 @@ function getPlayerColor(layerIndex: number, totalLayers: number) {
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
-    img.crossOrigin = "anonymous";
+    // 동일 오리진(/players, /underducklogo.png)이라 crossOrigin 불필요.
+    // 지정하면 <img>가 no-cors로 캐싱해둔 응답과 모드가 어긋나 간헐적으로 로드가 실패한다.
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = src;
   });
 }
 
-async function loadPlayerImage(name: string, no?: string): Promise<HTMLImageElement | null> {
-  const candidates = [
-    `/players/${encodeURIComponent(name)}.png`,
-    `/players/${encodeURIComponent(name)}.webp`,
-    `/players/${encodeURIComponent(name)}.jpg`,
-    ...(no
-      ? [`/players/${no}.png`, `/players/${no}.webp`, `/players/${no}.jpg`]
-      : []),
-  ];
+async function loadPlayerImage(name: string): Promise<HTMLImageElement | null> {
+  // 화면(PlayerFace/FormationField 등)과 같은 소스를 써야 다운받은 이미지가 화면과 일치한다.
+  const src = playerFaceOnSrc(name);
+  if (!src) return null;
 
-  for (const src of candidates) {
-    try {
-      return await loadImage(src);
-    } catch {
-      // 다음 확장자/등번호 이미지 시도
-    }
+  try {
+    return await loadImage(src);
+  } catch {
+    return null;
   }
-  return null;
 }
 
 export async function drawFormationCanvas(
@@ -197,7 +192,7 @@ export async function drawFormationCanvas(
       ? { bg: "#374151", border: "#9CA3AF", text: "#FFFFFF" }
       : getPlayerColor(layerIdx, totalLayers);
 
-    const faceOn = isTbd ? null : await loadPlayerImage(player.trim(), jerseyNo);
+    const faceOn = isTbd ? null : await loadPlayerImage(player.trim());
     const imageW = 50;
     const imageH = 58;
 
