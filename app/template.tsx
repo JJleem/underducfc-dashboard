@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 export default function RouteTemplate({
   children,
@@ -8,11 +8,9 @@ export default function RouteTemplate({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const routeKey = `${pathname}?${searchParams.toString()}`;
 
   return (
-    <div key={routeKey} className="route-enter min-h-full">
+    <div key={pathname} className="route-enter min-h-full">
       {children}
     </div>
   );
