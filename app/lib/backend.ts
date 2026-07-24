@@ -24,6 +24,14 @@ export async function getBoardCommentRows(): Promise<string[][]> {
   return [HEADER, ...rows.map((r) => [s(r.author), s(r.created_at)])];
 }
 
+// ── board 글 (칭호 집계용: author + 받은 좋아요 수) ──
+interface BoardPostRow { author: string | null; like_count: number | null; }
+export async function getBoardPostRows(): Promise<string[][]> {
+  const rows = await udGet<BoardPostRow[]>("/api/underduck/board", udReadOpts);
+  const HEADER = ["author", "like_count"];
+  return [HEADER, ...rows.map((r) => [s(r.author), s(r.like_count)])];
+}
+
 // ── roster ── 시트 컬럼: A=no B=name C=pos D=status (E 미사용) F=memo(주장역할)
 interface RosterOut {
   id: number; no: string | null; name: string | null;

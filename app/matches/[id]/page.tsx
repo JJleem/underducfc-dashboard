@@ -1,4 +1,4 @@
-import { getLineupRows, getRosterRows, getStatsRows, getAttendanceVoteRows, getVoteCommentRows, getFeedbackRows, getFeaturedRows, getBoardCommentRows } from "../../lib/backend";
+import { getLineupRows, getRosterRows, getStatsRows, getAttendanceVoteRows, getVoteCommentRows, getFeedbackRows, getFeaturedRows, getBoardCommentRows, getBoardPostRows } from "../../lib/backend";
 import { getMatchesRows } from "../../lib/matches-backend";
 import { LineupData, MatchData } from "../../components/DashboardClient";
 import MatchDetailClient from "./MatchDetailClient";
@@ -16,7 +16,7 @@ export default async function MatchDetailPage({
   const matchId = Number(id);
   const session = await auth();
 
-  const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult, rawAttendanceResult, rawVoteCommentsResult, rawFeedbacksResult, rawFeaturedResult, rawBoardCommentsResult] = await Promise.allSettled([
+  const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult, rawAttendanceResult, rawVoteCommentsResult, rawFeedbacksResult, rawFeaturedResult, rawBoardCommentsResult, rawBoardPostsResult] = await Promise.allSettled([
     getMatchesRows(),
     getLineupRows(),
     getRosterRows(),
@@ -26,6 +26,7 @@ export default async function MatchDetailPage({
     getFeedbackRows(),
     getFeaturedRows(),
     getBoardCommentRows(),
+    getBoardPostRows(),
   ]);
 
   const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
@@ -37,6 +38,7 @@ export default async function MatchDetailPage({
   const rawFeedbacks = rawFeedbacksResult.status === "fulfilled" ? rawFeedbacksResult.value : [];
   const rawFeatured = rawFeaturedResult.status === "fulfilled" ? rawFeaturedResult.value : [];
   const rawBoardComments = rawBoardCommentsResult.status === "fulfilled" ? rawBoardCommentsResult.value : [];
+  const rawBoardPosts = rawBoardPostsResult.status === "fulfilled" ? rawBoardPostsResult.value : [];
 
   // 이름 → 등번호 맵 (A=등번호, B=이름)
   const rosterMap: Record<string, string> = {};
@@ -117,6 +119,7 @@ export default async function MatchDetailPage({
     rawVoteComments,
     rawFeedbacks,
     rawBoardComments,
+    rawBoardPosts,
   });
   const leaders = evaluateLeaders(contexts);
   const featuredMap: Record<string, string[]> = {};
