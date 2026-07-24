@@ -46,9 +46,18 @@ interface LineupEditorProps {
   lineups: LineupData[];
   attendees: string[];
   rosterMap: Record<string, string>;
+  prefPosMap?: Record<string, string[]>;
 }
 
-export default function LineupEditor({ match, lineups, attendees, rosterMap }: LineupEditorProps) {
+// 선호 포지션 카테고리 색 (GK 주황 / 수비 파랑 / 미드 초록 / 공격 핑크)
+const PREF_POS_COLOR: Record<string, string> = {
+  GK: "#F59E0B",
+  LB: "#3B82F6", CB: "#3B82F6", RB: "#3B82F6",
+  CDM: "#10B981", CM: "#10B981", CAM: "#10B981",
+  LW: "#FF8FA3", RW: "#FF8FA3", ST: "#FF8FA3",
+};
+
+export default function LineupEditor({ match, lineups, attendees, rosterMap, prefPosMap = {} }: LineupEditorProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
 
@@ -713,8 +722,10 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
               {allPlayers.map((name) => {
                 const used = assignedPlayers.has(name);
                 const isGuest = guests.includes(name);
+                const pref = prefPosMap[name] || [];
                 return (
-                  <div key={name} className="relative flex items-center">
+                  <div key={name} className="flex flex-col items-center gap-1">
+                  <div className="relative flex items-center">
                     <button
                       onClick={() => handlePlayerClick(name)}
                       disabled={!activeSlot}
@@ -743,6 +754,21 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap }: L
                       >
                         <X className="w-2.5 h-2.5" />
                       </button>
+                    )}
+                  </div>
+                    {/* 선호 포지션 (라인업 참고용) */}
+                    {pref.length > 0 && (
+                      <div className="flex gap-0.5">
+                        {pref.map((p) => (
+                          <span
+                            key={p}
+                            className="rounded px-1 text-[8px] font-black leading-[1.5]"
+                            style={{ color: PREF_POS_COLOR[p] ?? "#94A3B8", backgroundColor: `${PREF_POS_COLOR[p] ?? "#94A3B8"}1f` }}
+                          >
+                            {p}
+                          </span>
+                        ))}
+                      </div>
                     )}
                   </div>
                 );

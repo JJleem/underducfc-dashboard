@@ -28,10 +28,14 @@ export default async function LineupEditPage({
   const rawRoster = rawRosterResult.status === "fulfilled" ? rawRosterResult.value : [];
 
   const rosterMap: Record<string, string> = {};
+  const prefPosMap: Record<string, string[]> = {};
   rawRoster.slice(1).forEach((row: string[]) => {
     const no = row[0]?.trim();
     const name = row[1]?.trim();
     if (name && no) rosterMap[name] = no;
+    // 선호 포지션 (roster pref_pos = index 7, CSV 최대 3)
+    const pref = (row[7] || "").split(",").map((s) => s.trim()).filter(Boolean);
+    if (name && pref.length) prefPosMap[name] = pref;
   });
 
   const matches: MatchData[] = rawMatches.slice(1).map((row: string[], index: number) => ({
@@ -76,5 +80,5 @@ export default async function LineupEditPage({
     .map((s) => s.trim())
     .filter(Boolean);
 
-  return <LineupEditor match={match} lineups={lineups} attendees={attendees} rosterMap={rosterMap} />;
+  return <LineupEditor match={match} lineups={lineups} attendees={attendees} rosterMap={rosterMap} prefPosMap={prefPosMap} />;
 }
