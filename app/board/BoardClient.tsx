@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ChevronLeft, Plus, MessageCircle, PlayCircle, Youtube, Search, Heart, X } from "lucide-react";
+import { ChevronLeft, Plus, MessageCircle, PlayCircle, Youtube, Search, Heart, X, Loader2, Check } from "lucide-react";
 import { youtubeThumb, youtubeId } from "../lib/youtube";
 import AppBottomNav from "../components/AppBottomNav";
 import type { BoardPost } from "../lib/board";
@@ -24,10 +23,10 @@ export default function BoardClient({
   currentUser: { kakaoId: string; name: string } | null;
   admin: boolean;
 }) {
-  const router = useRouter();
   const [posts, setPosts] = useState(initial);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("popular");
+  const [toast, setToast] = useState<string | null>(null);
 
   // 글쓰기 모달
   const [writing, setWriting] = useState(false);
@@ -37,6 +36,12 @@ export default function BoardClient({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const canSubmit = title.trim() && youtubeId(url);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -64,8 +69,12 @@ export default function BoardClient({
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error || "등록에 실패했습니다.");
       }
+      const created: BoardPost = await res.json();
+      // 낙관적 반영: 서버 재요청 없이 목록에 즉시 추가
+      setPosts((prev) => [created, ...prev]);
       setTitle(""); setUrl(""); setBody(""); setWriting(false);
-      router.refresh();
+      setToast("게시글이 등록되었어요");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
       setError(e instanceof Error ? e.message : "등록에 실패했습니다.");
     } finally {
@@ -247,11 +256,18 @@ export default function BoardClient({
             <button
               onClick={submit}
               disabled={!canSubmit || submitting}
-              className="mt-1 w-full rounded-xl bg-[#FF8FA3] py-3 text-sm font-black text-white active:opacity-80 disabled:opacity-40 dark:bg-[#FFB6C1] dark:text-black"
+              className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#FF8FA3] py-3 text-sm font-black text-white active:opacity-80 disabled:opacity-40 dark:bg-[#FFB6C1] dark:text-black"
             >
-              {submitting ? "등록 중…" : "등록"}
+              {submitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> 올리는 중…</>) : "등록"}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* 토스트 */}
+      {toast && (
+        <div className="fixed bottom-24 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-gray-900/90 px-4 py-2 text-xs font-bold text-white shadow-lg dark:bg-white/90 dark:text-black">
+          <Check className="h-3.5 w-3.5" /> {toast}
         </div>
       )}
 
