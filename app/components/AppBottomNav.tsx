@@ -15,7 +15,7 @@ export default function AppBottomNav({
 }) {
   const items = [
     { key: "home" as const, label: "홈", icon: Home, href: "/" },
-    { key: "matches" as const, label: "경기", icon: CalendarDays, href: "/?tab=matches#match-list" },
+    { key: "matches" as const, label: "경기", icon: CalendarDays, href: "/?tab=matches" },
     { key: "vote" as const, label: "투표", icon: Vote, href: "/vote" },
     { key: "board" as const, label: "전술", icon: Youtube, href: "/board" },
     { key: "stats" as const, label: "스탯", icon: BarChart3, href: "/?tab=stats" },

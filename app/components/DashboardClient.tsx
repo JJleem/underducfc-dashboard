@@ -453,6 +453,26 @@ export default function DashboardClient({
     setActiveTab(initialView === "stats" ? "stats" : "matches");
   }
 
+  // 하단 탭 이동 시 해당 섹션으로 부드럽게 스크롤.
+  // (해시 앵커가 소프트 내비게이션에서 안 먹히던 문제 대체 — 경기→최근경기 목록, 스탯→팀 통산전적)
+  const firstViewRun = React.useRef(true);
+  React.useEffect(() => {
+    const isFirst = firstViewRun.current;
+    firstViewRun.current = false;
+    if (initialView === "home") {
+      // 홈 재진입은 최상단으로. 최초 로드는 브라우저 위치 유지.
+      if (!isFirst) window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const targetId = initialView === "stats" ? "team-record" : "match-list";
+    // 탭 콘텐츠가 커밋·레이아웃된 뒤(더블 rAF) 스크롤.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }),
+    );
+  }, [initialView]);
+
   // 출석 투표 (요약 카드용, 읽기 전용)
   const attendanceVoteMap = React.useMemo(() => {
     const map: Record<number, AttendanceVoteData[]> = {};
@@ -855,13 +875,22 @@ export default function DashboardClient({
 
   // 주목 포인트 펼치기 상태
   const [openStories, setOpenStories] = React.useState<Set<number>>(new Set());
-  const toggleStories = (matchId: number) => {
+  const toggleStories = (matchId: number, btn?: HTMLElement | null) => {
     buzz();
+    // 토글로 버튼 위쪽 리스트 높이가 변해 화면이 튀는 것 방지:
+    // 토글 전후 버튼의 뷰포트 위치를 측정해 그 차이만큼 스크롤 보정(앵커링).
+    const prevTop = btn ? btn.getBoundingClientRect().top : null;
     setOpenStories((prev) => {
       const next = new Set(prev);
       if (next.has(matchId)) next.delete(matchId); else next.add(matchId);
       return next;
     });
+    if (btn && prevTop !== null) {
+      requestAnimationFrame(() => {
+        const delta = btn.getBoundingClientRect().top - prevTop;
+        if (delta !== 0) window.scrollBy(0, delta);
+      });
+    }
   };
   // 주목 포인트 블록 렌더 (기본 3개, 펼치면 전부)
   const renderStorylines = (matchId: number, stories: Storyline[], variant: "next" | "entry") => {
@@ -892,7 +921,7 @@ export default function DashboardClient({
         </ul>
         {hidden > 0 && (
           <button
-            onClick={() => toggleStories(matchId)}
+            onClick={(e) => toggleStories(matchId, e.currentTarget)}
             className="mt-2 flex items-center gap-0.5 text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] active:opacity-60"
           >
             {expanded ? (
@@ -2631,6 +2660,7 @@ export default function DashboardClient({
 
           {/* 선수 스탯 탭 */}
           <TabsContent value="stats" className="outline-none animate-tab">
+            <div id="team-record" className="scroll-mt-24" />
             {/* 💡 하나의 통합된 전광판 스타일 카드 (모바일 화면 깨짐 완벽 방지) */}
             <Card className="mb-6 bg-white dark:bg-[#161618] border-gray-200 dark:border-white/10 rounded-3xl shadow-soft overflow-hidden flex flex-col">
               {/* 상단 섹션: 전적 및 승률 (배경색을 살짝 다르게 주어 분리감 형성) */}
