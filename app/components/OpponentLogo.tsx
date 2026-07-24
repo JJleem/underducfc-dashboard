@@ -20,7 +20,7 @@ export default function OpponentLogo({
       <div
         className={`relative w-14 h-14 bg-white dark:bg-black rounded-full flex items-center justify-center border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden ${className}`}
       >
-        <Image src={logo} alt={name || "상대팀"} fill className="object-contain p-1.5" />
+        <Image src={logo} alt={name || "상대팀"} fill className="object-cover" />
       </div>
     );
   }
