@@ -16,6 +16,14 @@ const pad = (arr: (string | null)[] | null | undefined, n: number): string[] => 
   return x;
 };
 
+// ── board 댓글 (칭호 집계용: author만 필요) ──
+interface BoardCommentRow { author: string | null; created_at: string | null; }
+export async function getBoardCommentRows(): Promise<string[][]> {
+  const rows = await udGet<BoardCommentRow[]>("/api/underduck/board/comments/all", udReadOpts);
+  const HEADER = ["author", "created_at"];
+  return [HEADER, ...rows.map((r) => [s(r.author), s(r.created_at)])];
+}
+
 // ── roster ── 시트 컬럼: A=no B=name C=pos D=status (E 미사용) F=memo(주장역할)
 interface RosterOut {
   id: number; no: string | null; name: string | null;

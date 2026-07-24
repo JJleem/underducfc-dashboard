@@ -14,6 +14,7 @@ import {
   getVoteCommentRows,
   getFeaturedRows,
   getFeedbackRows,
+  getBoardCommentRows,
 } from "../../lib/backend";
 import {
   buildContexts,
@@ -63,6 +64,8 @@ export default async function PlayerPage({
   try { rawFeatured = await getFeaturedRows(); } catch { rawFeatured = []; }
   let rawFeedbacks: string[][] = [];
   try { rawFeedbacks = await getFeedbackRows(); } catch { rawFeedbacks = []; }
+  let rawBoardComments: string[][] = [];
+  try { rawBoardComments = await getBoardCommentRows(); } catch { rawBoardComments = []; }
 
   const isManager = name === MANAGER_NAME;
 
@@ -95,7 +98,7 @@ export default async function PlayerPage({
 
   // 칭호
   const contexts = buildContexts({
-    rawStats, rawMatches, rawLineups, rawRoster, rawAttendanceVotes, rawVoteComments, rawFeedbacks,
+    rawStats, rawMatches, rawLineups, rawRoster, rawAttendanceVotes, rawVoteComments, rawFeedbacks, rawBoardComments,
   });
   const leaders = evaluateLeaders(contexts);
   const ctx = contexts.get(name);

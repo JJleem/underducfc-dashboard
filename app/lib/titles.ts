@@ -193,6 +193,7 @@ export interface RawSheets {
   rawAttendanceVotes?: string[][];
   rawVoteComments?: string[][];
   rawFeedbacks?: string[][];
+  rawBoardComments?: string[][]; // 전술게시판 댓글 (author, created_at)
 }
 
 interface MatchInfo {
@@ -215,6 +216,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
   const rawVotes = sheets.rawAttendanceVotes ?? [];
   const rawComments = sheets.rawVoteComments ?? [];
   const rawFeedbacks = sheets.rawFeedbacks ?? [];
+  const rawBoardComments = sheets.rawBoardComments ?? [];
 
   // 주장 역할
   const captainRoles: Record<string, string> = {};
@@ -330,6 +332,14 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       firstCommentByNick.set(earliest.nick, (firstCommentByNick.get(earliest.nick) ?? 0) + 1);
     });
   }
+
+  // 전술게시판 댓글도 수다왕/활동왕에 합산 (경기 무관 → 오프너는 제외).
+  // author는 백엔드에서 실명 정규화되어 저장됨 → 이름으로 바로 집계.
+  rawBoardComments.slice(1).forEach((r) => {
+    const nick = (r[0] || "").trim();
+    if (!nick) return;
+    commentsByNick.set(nick, (commentsByNick.get(nick) ?? 0) + 1);
+  });
 
   // ── 선수별 컨텍스트 빌드 (stats 시트의 선수 = 정식 명단)
   const contexts = new Map<string, PlayerContext>();
