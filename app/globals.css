@@ -120,12 +120,94 @@ body {
   animation: udk-pulse-ring 1.5s ease-out infinite;
 }
 
-/* ── 촉각 피드백: 누르면 살짝 들어가는 느낌 ─────────── */
-:where(button, a, [role="button"]) {
-  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+/* ── 인터랙션 피드백 ─────────────────────────────
+   모든 링크를 똑같이 축소하지 않고 컨트롤의 역할에 맞춰 반응한다. */
+:where(button, [role="button"], .press-control) {
+  transition:
+    transform 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.16s ease,
+    background-color 0.16s ease,
+    color 0.16s ease,
+    opacity 0.16s ease;
 }
-:where(button, a, [role="button"]):active {
-  transform: scale(0.97);
+
+:where(button, [role="button"], .press-control):active {
+  transform: scale(0.98);
+}
+
+.press-cta {
+  transition:
+    transform 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.16s ease,
+    filter 0.16s ease;
+}
+.press-cta:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: none !important;
+  filter: saturate(0.94);
+}
+
+.press-icon:active {
+  transform: scale(0.92);
+}
+
+.press-card {
+  transition:
+    transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+.press-card:active {
+  transform: translateY(1px) scale(0.992);
+  box-shadow: 0 1px 3px rgba(17, 17, 26, 0.08) !important;
+}
+
+/* route template이 바뀔 때 콘텐츠가 같은 표면 위에서 이어지는 느낌 */
+@keyframes udk-route-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.route-enter {
+  animation: udk-route-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}
+
+/* 스켈레톤의 밝은 띠가 천천히 지나가며 로딩 위치를 예고한다. */
+@keyframes udk-shimmer {
+  0% {
+    background-position: 180% 0;
+  }
+  100% {
+    background-position: -80% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background-image: linear-gradient(
+    100deg,
+    rgba(148, 163, 184, 0.09) 15%,
+    rgba(255, 255, 255, 0.72) 38%,
+    rgba(148, 163, 184, 0.09) 62%
+  );
+  background-size: 220% 100%;
+  animation: udk-shimmer 1.55s ease-in-out infinite;
+}
+.dark .skeleton-shimmer {
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.035) 15%,
+    rgba(255, 255, 255, 0.09) 38%,
+    rgba(255, 255, 255, 0.035) 62%
+  );
 }
 
 /* ── 부드러운 다층 그림자(depth) ────────────────── */
@@ -154,10 +236,15 @@ body {
   .animate-rise,
   .animate-fade,
   .animate-tab,
-  .pulse-ring {
+  .pulse-ring,
+  .route-enter,
+  .skeleton-shimmer {
     animation: none;
   }
-  :where(button, a, [role="button"]):active {
+  :where(button, [role="button"], .press-control):active,
+  .press-cta:active,
+  .press-icon:active,
+  .press-card:active {
     transform: none;
   }
   html {

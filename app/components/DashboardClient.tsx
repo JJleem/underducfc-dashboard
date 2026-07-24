@@ -1170,7 +1170,7 @@ export default function DashboardClient({
             href="/titles"
             aria-label="칭호 도감"
             title="칭호 도감"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3]/10 text-[#FF8FA3] transition-colors hover:bg-[#FF8FA3]/20 dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
+            className="press-icon flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3]/10 text-[#FF8FA3] transition-colors hover:bg-[#FF8FA3]/20 dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
           >
             <Trophy className="h-4 w-4" />
           </Link>
@@ -1249,7 +1249,7 @@ export default function DashboardClient({
           )}
           <button
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 transition-all"
+            className="press-icon relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 transition-all"
           >
             <Moon className="block dark:hidden w-4 h-4 text-gray-700" />
             <Sun className="hidden dark:block w-4 h-4 text-[#FFB6C1]" />
@@ -1283,10 +1283,10 @@ export default function DashboardClient({
             </p>
           </div>
           <div className="absolute right-0 top-1/2 flex -translate-y-1/2 flex-col gap-1.5">
-            <Link href="/roster" aria-label="팀원 명단" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white shadow-sm dark:bg-white/10 dark:text-[#FFB6C1]">
+            <Link href="/roster" aria-label="팀원 명단" className="press-icon flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white shadow-sm dark:bg-white/10 dark:text-[#FFB6C1]">
               <Users className="h-4 w-4" />
             </Link>
-            <Link href="/media" aria-label="콘텐츠" className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
+            <Link href="/media" aria-label="콘텐츠" className="press-icon flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
               <Film className="h-4 w-4" />
             </Link>
           </div>
@@ -1366,10 +1366,10 @@ export default function DashboardClient({
                 {renderStorylines(nextMatch.id, storylinesByMatch[nextMatch.id] || [], "next")}
 
                 <div className="mt-3 grid grid-cols-2 gap-2">
-                  <Link href="/vote" className="flex items-center justify-center rounded-xl bg-[#FF8FA3] py-2.5 text-[11px] font-black text-white">
+                  <Link href="/vote" className="press-cta flex items-center justify-center rounded-xl bg-[#FF8FA3] py-2.5 text-[11px] font-black text-white shadow-sm">
                     {myNextVote ? "투표 확인하기" : "출석 투표하기"}
                   </Link>
-                  <Link href={`/matches/${nextMatch.id}`} className="flex items-center justify-center rounded-xl bg-gray-100 py-2.5 text-[11px] font-black text-gray-700 dark:bg-white/10 dark:text-white/85">
+                  <Link href={`/matches/${nextMatch.id}`} className="press-cta flex items-center justify-center rounded-xl bg-gray-100 py-2.5 text-[11px] font-black text-gray-700 dark:bg-white/10 dark:text-white/85">
                     경기 상세 보기
                   </Link>
                 </div>
