@@ -217,7 +217,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
                 </div>
 
                 {/* 카드 그리드 */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   {group.map((player, index) => {
                     const rawNo = (player[0] || "").trim();
                     const hasNo = !!rawNo && rawNo !== "-" && !isNaN(parseInt(rawNo));
@@ -244,8 +244,8 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
                           {/* 큰 등번호 (시그니처) */}
                           {hasNo && (
                             <span
-                              className="pointer-events-none absolute -top-2 right-1 select-none font-black leading-none tabular-nums"
-                              style={{ fontSize: "84px", color: `${color}33` }}
+                              className="pointer-events-none absolute -top-1 right-0.5 select-none font-black leading-none tabular-nums"
+                              style={{ fontSize: "58px", color: `${color}33` }}
                             >
                               {rawNo}
                             </span>
@@ -255,17 +255,16 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
                           <SquadPhoto name={name} accent={color} />
 
                           {/* 하단 그라데이션 + 텍스트 */}
-                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent px-3 pb-2.5 pt-9">
-                            <div className="flex items-center gap-1.5">
-                              <span className="truncate text-[14px] font-black text-white">{name}</span>
-                              {isC && <span className="shrink-0 rounded bg-emerald-400 px-1 py-px text-[8px] font-black text-black">C</span>}
-                              {isVC && <span className="shrink-0 rounded bg-amber-400 px-1 py-px text-[8px] font-black text-black">VC</span>}
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent px-2 pb-2 pt-8">
+                            <div className="flex items-center gap-1">
+                              <span className="truncate text-[12px] font-black leading-tight text-white">{name}</span>
+                              {isC && <span className="shrink-0 rounded bg-emerald-400 px-1 py-px text-[7px] font-black text-black">C</span>}
+                              {isVC && <span className="shrink-0 rounded bg-amber-400 px-1 py-px text-[7px] font-black text-black">VC</span>}
                             </div>
-                            <div className="mt-1 flex items-center gap-1.5">
-                              <span className="rounded px-1.5 py-0.5 text-[9px] font-black text-white" style={{ background: color }}>{player[2] || "-"}</span>
-                              {hasNo && <span className="text-[10px] font-bold tabular-nums text-white/70">#{rawNo}</span>}
-                              {isInjured && <span className="text-[10px] font-black text-red-300">부상</span>}
-                              {isInactive && <span className="text-[10px] font-black text-white/50">비활동</span>}
+                            <div className="mt-1 flex flex-wrap items-center gap-1">
+                              <span className="rounded px-1 py-0.5 text-[8px] font-black text-white" style={{ background: color }}>{player[2] || "-"}</span>
+                              {isInjured && <span className="text-[9px] font-black text-red-300">부상</span>}
+                              {isInactive && <span className="text-[9px] font-black text-white/50">비활동</span>}
                             </div>
                           </div>
                         </Link>
@@ -274,7 +273,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
                         {isAdmin && (
                           <button
                             onClick={() => openEdit(player)}
-                            className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/45 text-white/90 backdrop-blur-sm active:opacity-70"
+                            className="absolute left-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/45 text-white/90 backdrop-blur-sm active:opacity-70"
                             aria-label="선수 수정"
                           >
                             <Pencil className="h-3.5 w-3.5" />
