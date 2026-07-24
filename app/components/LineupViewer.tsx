@@ -146,35 +146,59 @@ export default function LineupViewer({
     try {
       const node = cardRef.current;
       await document.fonts.ready;
+
+      // 캡처 전에 모든 이미지를 dataURL로 직접 인라인한다.
+      // html-to-image는 캡처 시점에 각 img를 새로 네트워크 fetch(+cacheBust)하는데,
+      // 선수 11명+ 동시 요청 중 일부가 실패/타임아웃하면 그 선수 사진만 랜덤 누락됐다.
+      // 미리 dataURL로 박아두면 html-to-image가 더 fetch할 게 없어 누락이 사라진다.
+      // (face-on은 same-origin `/players/*.webp` 이라 fetch 안전)
+      const imgs = Array.from(node.querySelectorAll("img"));
+      const originalSrcs = imgs.map((img) => img.getAttribute("src") || "");
       await Promise.all(
-        Array.from(node.querySelectorAll("img")).map(async (image) => {
-          if (!image.complete) {
-            await new Promise<void>((resolve) => {
-              image.addEventListener("load", () => resolve(), { once: true });
-              image.addEventListener("error", () => resolve(), { once: true });
+        imgs.map(async (img, i) => {
+          const src = originalSrcs[i];
+          if (!src || src.startsWith("data:")) return;
+          try {
+            const res = await fetch(src, { cache: "force-cache" });
+            const imgBlob = await res.blob();
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+              const fr = new FileReader();
+              fr.onload = () => resolve(fr.result as string);
+              fr.onerror = () => reject(new Error("read fail"));
+              fr.readAsDataURL(imgBlob);
             });
+            img.src = dataUrl;
+            await img.decode?.().catch(() => undefined);
+          } catch {
+            /* 실패 시 원본 src 유지 (html-to-image가 재시도) */
           }
-          await image.decode?.().catch(() => undefined);
         })
       );
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
       );
 
-      const bounds = node.getBoundingClientRect();
-      const width = Math.round(bounds.width);
-      const height = Math.round(bounds.height);
-      const blob = await toBlob(node, {
-        cacheBust: true,
-        pixelRatio: 3,
-        width,
-        height,
-        backgroundColor: "#07050A",
-        style: {
-          width: `${width}px`,
-          height: `${height}px`,
-        },
-      });
+      let blob: Blob | null = null;
+      try {
+        const bounds = node.getBoundingClientRect();
+        const width = Math.round(bounds.width);
+        const height = Math.round(bounds.height);
+        blob = await toBlob(node, {
+          pixelRatio: 3,
+          width,
+          height,
+          backgroundColor: "#07050A",
+          style: {
+            width: `${width}px`,
+            height: `${height}px`,
+          },
+        });
+      } finally {
+        // 라이브 DOM 원상 복구
+        imgs.forEach((img, i) => {
+          if (originalSrcs[i] && img.getAttribute("src") !== originalSrcs[i]) img.src = originalSrcs[i];
+        });
+      }
       if (!blob) throw new Error("이미지 생성 실패");
 
       const opponent = match.opponent.replace(/[\\/:*?"<>|]/g, "_");
