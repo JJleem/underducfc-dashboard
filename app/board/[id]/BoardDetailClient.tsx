@@ -9,11 +9,20 @@ import { youtubeEmbed } from "../../lib/youtube";
 import AppBottomNav from "../../components/AppBottomNav";
 import type { BoardPost, BoardComment } from "../../lib/board";
 
+// 한국시간(KST) 기준 날짜 + 시:분:초
 function fmt(ts: string | null): string {
   if (!ts) return "";
   const d = new Date(ts);
   if (isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+  return d.toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
 }
 
 export default function BoardDetailClient({
@@ -172,7 +181,10 @@ export default function BoardDetailClient({
                   </div>
                 )}
                 <div className="flex-1 rounded-2xl bg-gray-100 px-3 py-2 dark:bg-white/5">
-                  <p className="text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">{c.author}</p>
+                  <div className="flex items-baseline gap-1.5">
+                    <p className="text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">{c.author}</p>
+                    <span className="text-[9px] text-gray-400 tabular-nums">{fmt(c.createdAt)}</span>
+                  </div>
                   <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-gray-800 dark:text-gray-200">{c.message}</p>
                 </div>
                 {canDeleteComment(c) && (
