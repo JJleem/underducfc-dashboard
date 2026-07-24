@@ -237,7 +237,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
           </div>
         )}
       </main>
-      <AppBottomNav active="matches" currentUserName={currentUserName} />
+      <AppBottomNav active="home" currentUserName={currentUserName} />
 
       {/* 라이트박스 */}
       {lightbox && (

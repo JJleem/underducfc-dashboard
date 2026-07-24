@@ -288,7 +288,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
           })}
         </div>
       </main>
-      <AppBottomNav active="home" currentUserName={currentUserName} />
+      <AppBottomNav active="roster" currentUserName={currentUserName} />
 
       {/* 선수 추가/수정 Drawer */}
       <Drawer open={modalOpen} onOpenChange={setModalOpen} repositionInputs={false}>

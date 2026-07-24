@@ -3679,7 +3679,7 @@ export default function DashboardClient({
         </button>
       )}
       <AppBottomNav
-        active={activeTab === "stats" ? "stats" : initialView === "home" ? "home" : "matches"}
+        active={activeTab === "stats" ? "stats" : "home"}
         currentUserName={currentUser?.name}
       />
     </div>

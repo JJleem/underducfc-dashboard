@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, CalendarDays, Home, UserRound, Vote, Youtube } from "lucide-react";
+import { BarChart3, Users, Home, UserRound, Vote, Youtube } from "lucide-react";
 import { signIn } from "next-auth/react";
 
-type NavKey = "home" | "matches" | "vote" | "stats" | "board" | "my";
+type NavKey = "home" | "roster" | "vote" | "stats" | "board" | "my";
 
 export default function AppBottomNav({
   active,
@@ -15,7 +15,7 @@ export default function AppBottomNav({
 }) {
   const items = [
     { key: "home" as const, label: "홈", icon: Home, href: "/" },
-    { key: "matches" as const, label: "경기", icon: CalendarDays, href: "/?tab=matches" },
+    { key: "roster" as const, label: "명단", icon: Users, href: "/roster" },
     { key: "vote" as const, label: "투표", icon: Vote, href: "/vote" },
     { key: "board" as const, label: "전술", icon: Youtube, href: "/board" },
     { key: "stats" as const, label: "스탯", icon: BarChart3, href: "/?tab=stats" },
