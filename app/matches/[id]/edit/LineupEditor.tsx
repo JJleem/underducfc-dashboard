@@ -718,7 +718,7 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap, pre
               matches 시트 L열에 참석자를 입력하거나 게스트를 추가하세요
             </p>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-wrap gap-2">
               {allPlayers.map((name) => {
                 const used = assignedPlayers.has(name);
                 const isGuest = guests.includes(name);
