@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, CalendarDays, Home, UserRound, Vote } from "lucide-react";
+import { BarChart3, CalendarDays, Home, UserRound, Vote, Youtube } from "lucide-react";
 import { signIn } from "next-auth/react";
 
-type NavKey = "home" | "matches" | "vote" | "stats" | "my";
+type NavKey = "home" | "matches" | "vote" | "stats" | "board" | "my";
 
 export default function AppBottomNav({
   active,
@@ -17,6 +17,7 @@ export default function AppBottomNav({
     { key: "home" as const, label: "홈", icon: Home, href: "/" },
     { key: "matches" as const, label: "경기", icon: CalendarDays, href: "/?tab=matches#match-list" },
     { key: "vote" as const, label: "투표", icon: Vote, href: "/vote" },
+    { key: "board" as const, label: "전술", icon: Youtube, href: "/board" },
     { key: "stats" as const, label: "스탯", icon: BarChart3, href: "/?tab=stats" },
   ];
 
@@ -25,7 +26,7 @@ export default function AppBottomNav({
       aria-label="주요 메뉴"
       className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md border-t border-gray-200/80 bg-white/92 px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-1.5 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#101013]/92 dark:shadow-[0_-12px_30px_rgba(0,0,0,0.3)]"
     >
-      <div className="grid grid-cols-5">
+      <div className="grid grid-cols-6">
         {items.map(({ key, label, icon: Icon, href }) => {
           const selected = active === key;
           return (

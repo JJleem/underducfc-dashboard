@@ -19,12 +19,13 @@ const pad = (arr: (string | null)[] | null | undefined, n: number): string[] => 
 // ── roster ── 시트 컬럼: A=no B=name C=pos D=status (E 미사용) F=memo(주장역할)
 interface RosterOut {
   id: number; no: string | null; name: string | null;
-  pos: string | null; status: string | null; memo: string | null;
+  pos: string | null; status: string | null; memo: string | null; pref_pos: string | null;
 }
 export async function getRosterRows(): Promise<string[][]> {
   const rows = await udGet<RosterOut[]>("/api/underduck/roster", udReadOpts);
-  const HEADER = ["no", "name", "pos", "status", "", "memo", "id"];
-  return [HEADER, ...rows.map((r) => [s(r.no), s(r.name), s(r.pos), s(r.status), "", s(r.memo), s(r.id)])];
+  // index: 0 no,1 name,2 pos,3 status,4(미사용),5 memo,6 id,7 pref_pos
+  const HEADER = ["no", "name", "pos", "status", "", "memo", "id", "pref_pos"];
+  return [HEADER, ...rows.map((r) => [s(r.no), s(r.name), s(r.pos), s(r.status), "", s(r.memo), s(r.id), s(r.pref_pos)])];
 }
 
 // ── stats ── 시트 컬럼: A=no B=name C=pos D=apps E=goals F=assists G=mom

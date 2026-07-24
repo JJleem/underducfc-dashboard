@@ -26,6 +26,7 @@ import {
 } from "../../lib/titles";
 import PlayerTitleCards from "../../components/PlayerTitleCards";
 import FeaturedEditor from "../../components/FeaturedEditor";
+import PrefPosEditor from "../../components/PrefPosEditor";
 import PlayerAvatar from "../../components/PlayerAvatar";
 import PlayerFace from "../../components/PlayerFace";
 import AppBottomNav from "../../components/AppBottomNav";
@@ -80,6 +81,7 @@ export default async function PlayerPage({
   const no = rosterRow?.[0]?.trim() || "-";
   const registeredPos = rosterRow?.[2]?.trim().toUpperCase() || "-";
   const role = rosterRow?.[5]?.trim().toUpperCase();
+  const prefPos = (rosterRow?.[7] || "").split(",").map((s) => s.trim()).filter(Boolean);
 
   // 스탯
   const statRow = rawStats.slice(1).find((r) => (r[1] || "").trim() === name);
@@ -250,6 +252,14 @@ export default async function PlayerPage({
             ))}
           </div>
         </div>
+
+        {/* 선호 포지션 */}
+        {rosterRow && (
+          <section className="px-4 mt-4">
+            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2.5">선호 포지션</p>
+            <PrefPosEditor initial={prefPos} canEdit={canEdit} />
+          </section>
+        )}
 
         {/* 최고의 듀오 */}
         {relations.bestDuo && (
