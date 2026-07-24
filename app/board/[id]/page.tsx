@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { isAdmin } from "../../lib/admin";
-import { getBoardPost, listBoardComments } from "../../lib/board";
+import { getBoardPost, listBoardComments, getMyLikedPostIds } from "../../lib/board";
 import BoardDetailClient from "./BoardDetailClient";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +27,15 @@ export default async function BoardDetailPage({
         name: session.user.name ?? "",
       }
     : null;
+
+  if (currentUser?.kakaoId) {
+    try {
+      const liked = await getMyLikedPostIds(currentUser.kakaoId);
+      post.likedByMe = liked.has(post.id);
+    } catch {
+      /* 무시 */
+    }
+  }
 
   return (
     <BoardDetailClient

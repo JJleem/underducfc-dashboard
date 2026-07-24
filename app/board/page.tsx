@@ -1,7 +1,7 @@
 // 전술게시판 — 유튜브 링크 공유 게시판 목록.
 import { auth } from "@/auth";
 import { isAdmin } from "../lib/admin";
-import { listBoardPosts } from "../lib/board";
+import { listBoardPosts, getMyLikedPostIds } from "../lib/board";
 import BoardClient from "./BoardClient";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +20,16 @@ export default async function BoardPage() {
     posts = await listBoardPosts();
   } catch {
     posts = [];
+  }
+
+  // 로그인 시 내가 좋아요한 글 표시
+  if (currentUser?.kakaoId) {
+    try {
+      const liked = await getMyLikedPostIds(currentUser.kakaoId);
+      posts = posts.map((p) => ({ ...p, likedByMe: liked.has(p.id) }));
+    } catch {
+      /* 좋아요 조회 실패는 무시 */
+    }
   }
 
   return (

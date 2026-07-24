@@ -10,6 +10,8 @@ export interface BoardPost {
   body: string | null;
   createdAt: string | null;
   commentCount: number;
+  likeCount: number;
+  likedByMe: boolean;
 }
 
 export interface BoardComment {
@@ -23,7 +25,8 @@ export interface BoardComment {
 
 interface PostRow {
   id: number; kakao_id: string | null; author: string | null; title: string | null;
-  youtube_url: string | null; body: string | null; created_at: string | null; comment_count: number;
+  youtube_url: string | null; body: string | null; created_at: string | null;
+  comment_count: number; like_count: number;
 }
 interface CommentRow {
   id: number; post_id: number | null; kakao_id: string | null; author: string | null;
@@ -39,6 +42,8 @@ const toPost = (r: PostRow): BoardPost => ({
   body: r.body,
   createdAt: r.created_at,
   commentCount: r.comment_count ?? 0,
+  likeCount: r.like_count ?? 0,
+  likedByMe: false,
 });
 
 const toComment = (r: CommentRow): BoardComment => ({
@@ -100,4 +105,24 @@ export async function createBoardComment(
 
 export async function deleteBoardComment(commentId: number): Promise<void> {
   await udDelete(`/api/underduck/board/comments/${commentId}`);
+}
+
+export async function toggleBoardLike(
+  postId: number,
+  kakaoId: string,
+): Promise<{ liked: boolean; likeCount: number }> {
+  const r = await udPost<{ liked: boolean; like_count: number }>(
+    `/api/underduck/board/${postId}/like`,
+    { kakao_id: kakaoId },
+  );
+  return { liked: r.liked, likeCount: r.like_count };
+}
+
+/** 특정 사용자가 좋아요한 post_id 집합. */
+export async function getMyLikedPostIds(kakaoId: string): Promise<Set<number>> {
+  const ids = await udGet<number[]>(
+    `/api/underduck/board/my-likes?kakao_id=${encodeURIComponent(kakaoId)}`,
+    { cache: "no-store" },
+  );
+  return new Set(ids);
 }

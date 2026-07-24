@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ChevronLeft, Trash2, Send } from "lucide-react";
+import { ChevronLeft, Trash2, Send, Heart, MessageCircle } from "lucide-react";
 import { youtubeEmbed } from "../../lib/youtube";
 import AppBottomNav from "../../components/AppBottomNav";
 import type { BoardPost, BoardComment } from "../../lib/board";
@@ -31,7 +31,26 @@ export default function BoardDetailClient({
   const [comments, setComments] = useState(initialComments);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [liked, setLiked] = useState(post.likedByMe);
+  const [likeCount, setLikeCount] = useState(post.likeCount);
   const embed = youtubeEmbed(post.youtubeUrl);
+
+  async function toggleLike() {
+    if (!currentUser) { signIn("kakao"); return; }
+    const before = { liked, likeCount };
+    setLiked((v) => !v);
+    setLikeCount((n) => n + (liked ? -1 : 1));
+    try {
+      const res = await fetch(`/api/board/${post.id}/like`, { method: "POST" });
+      if (!res.ok) throw new Error();
+      const j = await res.json();
+      setLiked(j.liked);
+      setLikeCount(j.likeCount);
+    } catch {
+      setLiked(before.liked);
+      setLikeCount(before.likeCount);
+    }
+  }
 
   const canDeletePost = currentUser && (currentUser.kakaoId === post.kakaoId || admin);
   const canDeleteComment = (c: BoardComment) =>
@@ -114,6 +133,23 @@ export default function BoardDetailClient({
         {post.body && (
           <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-300">{post.body}</p>
         )}
+
+        {/* 좋아요 / 댓글 수 */}
+        <div className="mt-4 flex items-center gap-2 border-y border-gray-100 py-2.5 dark:border-white/5">
+          <button
+            onClick={toggleLike}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-black transition-colors ${
+              liked
+                ? "bg-[#FF8FA3]/10 text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
+                : "bg-gray-100 text-gray-500 active:opacity-70 dark:bg-white/5 dark:text-gray-400"
+            }`}
+          >
+            <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} /> {likeCount}
+          </button>
+          <span className="flex items-center gap-1.5 px-1 text-[13px] font-bold text-gray-400">
+            <MessageCircle className="h-4 w-4" /> {comments.length}
+          </span>
+        </div>
 
         {/* 댓글 */}
         <div className="mt-6 border-t border-gray-100 pt-4 dark:border-white/5">
