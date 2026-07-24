@@ -718,13 +718,13 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap, pre
               matches 시트 L열에 참석자를 입력하거나 게스트를 추가하세요
             </p>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-x-4 gap-y-3">
               {allPlayers.map((name) => {
                 const used = assignedPlayers.has(name);
                 const isGuest = guests.includes(name);
                 const pref = prefPosMap[name] || [];
                 return (
-                  <div key={name} className="flex flex-col items-center gap-1">
+                  <div key={name} className="flex flex-col items-center gap-1 rounded-xl px-1 py-1 bg-gray-50/70 dark:bg-white/[0.02]">
                   <div className="relative flex items-center">
                     <button
                       onClick={() => handlePlayerClick(name)}
