@@ -62,6 +62,7 @@ import type { EarnedTitle } from "../lib/titles";
 import type { SubstitutionEvent } from "../lib/lineup";
 import AppBottomNav from "./AppBottomNav";
 import LineupViewer from "./LineupViewer";
+import OpponentLogo from "./OpponentLogo";
 import PlayerFace from "./PlayerFace";
 
 // 숫자가 0에서 목표값까지 부드럽게 올라가는 카운트업 (전광판 느낌)
@@ -2116,10 +2117,8 @@ export default function DashboardClient({
                             />
                           </div>
                         ) : (
-                          // 💡 2. 외부 경기일 때: 상대팀 로고 대신 플레이스홀더 표시
-                          <div className="w-14 h-14 bg-gray-100 dark:bg-white/5 rounded-full mb-2 flex items-center justify-center border border-gray-200 dark:border-white/10 text-[11px] font-bold text-gray-400 shrink-0">
-                            상대팀
-                          </div>
+                          // 💡 2. 외부 경기일 때: 상대팀 로고 (없으면 이니셜 플레이스홀더)
+                          <OpponentLogo name={match.opponent} className="mb-2" />
                         )}
 
                         {/* 팀명 표시 */}

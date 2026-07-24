@@ -10,6 +10,7 @@ import { Sun, Moon } from "lucide-react";
 import { MatchData, LineupData } from "../../components/DashboardClient";
 import AppBottomNav from "../../components/AppBottomNav";
 import LineupViewer from "../../components/LineupViewer";
+import OpponentLogo from "../../components/OpponentLogo";
 import { parseWeather, weatherEmoji } from "../../lib/weather";
 import type { EarnedTitle } from "../../lib/titles";
 
@@ -112,9 +113,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
                     <Image src="/underducklogo.png" alt="언더덕 B" fill className="object-cover" />
                   </div>
                 ) : (
-                  <div className="w-14 h-14 bg-gray-100 dark:bg-white/5 rounded-full mb-2 flex items-center justify-center border border-gray-200 dark:border-white/10 text-[11px] font-bold text-gray-400 shrink-0">
-                    상대팀
-                  </div>
+                  <OpponentLogo name={match.opponent} className="mb-2" />
                 )}
                 <span className="font-bold text-sm text-center truncate max-w-[80px]">
                   {isInternal ? "언더덕 B" : match.opponent}
