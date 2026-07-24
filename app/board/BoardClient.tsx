@@ -8,8 +8,9 @@ import { youtubeThumb, youtubeId } from "../lib/youtube";
 import AppBottomNav from "../components/AppBottomNav";
 import type { BoardPost } from "../lib/board";
 
-type Sort = "popular" | "likes" | "comments";
+type Sort = "latest" | "popular" | "likes" | "comments";
 const SORTS: { key: Sort; label: string }[] = [
+  { key: "latest", label: "최신순" },
   { key: "popular", label: "인기순" },
   { key: "likes", label: "좋아요순" },
   { key: "comments", label: "댓글순" },
@@ -25,7 +26,7 @@ export default function BoardClient({
 }) {
   const [posts, setPosts] = useState(initial);
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<Sort>("popular");
+  const [sort, setSort] = useState<Sort>("latest");
   const [toast, setToast] = useState<string | null>(null);
 
   // 글쓰기 모달
@@ -50,6 +51,7 @@ export default function BoardClient({
           [p.title, p.author, p.body ?? ""].some((f) => f.toLowerCase().includes(q)),
         )
       : posts;
+    if (sort === "latest") return [...filtered].sort((a, b) => b.id - a.id);
     const score = (p: BoardPost) =>
       sort === "likes" ? p.likeCount : sort === "comments" ? p.commentCount : p.likeCount + p.commentCount;
     return [...filtered].sort((a, b) => score(b) - score(a) || b.id - a.id);
