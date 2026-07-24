@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BarChart3, Users, Home, UserRound, Vote, Youtube } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { motion } from "motion/react";
+import type { MouseEvent } from "react";
 
 type NavKey = "home" | "roster" | "vote" | "stats" | "board" | "my";
 
@@ -25,6 +26,15 @@ export default function AppBottomNav({
     0,
     [...items.map((item) => item.key), "my" as const].indexOf(active),
   );
+  const handleNavClick = (
+    event: MouseEvent<HTMLAnchorElement>,
+    key: NavKey,
+  ) => {
+    if (key !== "home" || active !== "home") return;
+    event.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    navigator.vibrate?.(8);
+  };
 
   return (
     <nav
@@ -46,6 +56,7 @@ export default function AppBottomNav({
             <Link
               key={key}
               href={href}
+              onClick={(event) => handleNavClick(event, key)}
               aria-current={selected ? "page" : undefined}
               className={`relative z-10 flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-extrabold transition-colors ${
                 selected
