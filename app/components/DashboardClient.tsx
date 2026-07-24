@@ -16,7 +16,6 @@ import {
 import {
   Trophy,
   CalendarDays,
-  Menu,
   Sun,
   Moon,
   MapPin,
@@ -1284,8 +1283,8 @@ export default function DashboardClient({
             </p>
           </div>
           <div className="absolute right-0 top-1/2 flex -translate-y-1/2 flex-col gap-1.5">
-            <Link href="/roster" aria-label="로스터" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white shadow-sm dark:bg-white/10 dark:text-[#FFB6C1]">
-              <Menu className="h-4 w-4" />
+            <Link href="/roster" aria-label="팀원 명단" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white shadow-sm dark:bg-white/10 dark:text-[#FFB6C1]">
+              <Users className="h-4 w-4" />
             </Link>
             <Link href="/media" aria-label="콘텐츠" className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
               <Film className="h-4 w-4" />

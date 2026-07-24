@@ -13,6 +13,7 @@ import {
   Plus,
   Pencil,
   Loader2,
+  ChevronRight,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Badge } from "../components/ui/badge";
@@ -185,6 +186,11 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
                 style={{ animationDelay: `${Math.min(index, 10) * 50}ms` }}
                 className="animate-rise flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-[#161618] border border-gray-200/70 dark:border-white/[0.06] shadow-soft hover:border-gray-300 dark:hover:border-white/15 transition-colors"
               >
+                {/* 카드 본체 → 선수 프로필로 이동 */}
+                <Link
+                  href={`/players/${encodeURIComponent(name.trim())}`}
+                  className="flex flex-1 items-center gap-4 min-w-0 active:opacity-70"
+                >
                 {/* 유니폼 등번호 아바타 */}
                 <div className="relative flex items-center justify-center w-14 h-16 rounded-xl overflow-hidden shadow-sm ring-1 ring-gray-200 dark:ring-white/10 shrink-0 bg-white">
                   <Image
@@ -240,7 +246,8 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
                     </span>
                   </div>
                 </div>
-                {isAdmin && (
+                </Link>
+                {isAdmin ? (
                   <button
                     onClick={() => openEdit(player)}
                     className="self-start shrink-0 p-2 -mr-1 -mt-1 rounded-full text-gray-400 hover:text-[#FF8FA3] hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
@@ -248,6 +255,8 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
                   >
                     <Pencil className="w-4 h-4" />
                   </button>
+                ) : (
+                  <ChevronRight className="w-5 h-5 shrink-0 text-gray-300 dark:text-gray-600" />
                 )}
               </div>
             );
