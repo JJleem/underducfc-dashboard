@@ -4,26 +4,61 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  UserCircle,
   Sun,
   Moon,
   ArrowLeft,
-  ShieldCheck,
-  Star,
   Plus,
   Pencil,
   Loader2,
-  ChevronRight,
+  User,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Badge } from "../components/ui/badge";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "../components/ui/drawer";
 import AppBottomNav from "../components/AppBottomNav";
+import { playerFaceOnSrc } from "../lib/player-faceons";
 
 interface RosterClientProps {
   players: string[][];
   isAdmin?: boolean;
   currentUserName?: string | null;
+}
+
+// 포지션 그룹 메타 (앱 포지션 색 체계와 동일). 골키퍼 주황 / 수비 파랑 / 미드 초록 / 공격 핑크.
+const POS_META: Record<string, { label: string; en: string; color: string }> = {
+  GK: { label: "골키퍼", en: "GOALKEEPERS", color: "#F59E0B" },
+  DF: { label: "수비수", en: "DEFENDERS", color: "#3B82F6" },
+  MF: { label: "미드필더", en: "MIDFIELDERS", color: "#10B981" },
+  FW: { label: "공격수", en: "FORWARDS", color: "#FF8FA3" },
+  ETC: { label: "기타", en: "OTHERS", color: "#94A3B8" },
+};
+const POS_ORDER = ["GK", "DF", "MF", "FW", "ETC"];
+
+// 스쿼드 카드 페이스온: 파일이 있으면 사진, 없거나 실패하면 실루엣.
+function SquadPhoto({ name, accent }: { name: string; accent: string }) {
+  const src = playerFaceOnSrc(name);
+  const [failed, setFailed] = React.useState(false);
+  const showPhoto = src && !failed;
+  return (
+    <>
+      {!showPhoto && (
+        <User
+          className="absolute bottom-4 left-1/2 -translate-x-1/2"
+          style={{ width: "48%", height: "48%", color: accent }}
+          strokeWidth={1.3}
+        />
+      )}
+      {showPhoto && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src!}
+          alt={name}
+          loading="lazy"
+          onError={() => setFailed(true)}
+          className="absolute inset-0 h-full w-full object-contain object-bottom drop-shadow-[0_6px_10px_rgba(0,0,0,0.5)]"
+        />
+      )}
+    </>
+  );
 }
 
 export default function RosterClient({ players: initialPlayers, isAdmin = false, currentUserName }: RosterClientProps) {
@@ -93,18 +128,28 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
     }
   };
 
-  const getPosBadgeStyle = (pos: string) => {
-    const p = pos.toUpperCase().trim();
-    if (p === "GK")
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/70 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800";
-    if (p === "DF")
-      return "bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-200 border border-blue-200 dark:border-blue-800";
-    if (p === "MF")
-      return "bg-green-100 text-green-800 dark:bg-green-950/70 dark:text-green-200 border border-green-200 dark:border-green-800";
-    if (p === "FW")
-      return "bg-red-100 text-red-800 dark:bg-red-950/70 dark:text-red-200 border border-red-200 dark:border-red-800";
-    return "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10";
+  const byNumber = (a: string[], b: string[]) => {
+    const nA = parseInt(a[0]);
+    const nB = parseInt(b[0]);
+    const hasA = !isNaN(nA) && a[0]?.trim() !== "" && a[0] !== "-";
+    const hasB = !isNaN(nB) && b[0]?.trim() !== "" && b[0] !== "-";
+    if (hasA && hasB) return nA - nB;
+    if (hasA) return -1;
+    if (hasB) return 1;
+    return 0;
   };
+
+  // 포지션별로 묶고 각 그룹은 등번호순 정렬
+  const grouped = React.useMemo(() => {
+    const g: Record<string, string[][]> = {};
+    for (const p of playerList) {
+      const raw = (p[2] || "").toUpperCase().trim();
+      const key = ["GK", "DF", "MF", "FW"].includes(raw) ? raw : "ETC";
+      (g[key] ||= []).push(p);
+    }
+    for (const k of Object.keys(g)) g[k].sort(byNumber);
+    return g;
+  }, [playerList]);
 
   return (
     <div className="min-h-[100dvh] bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors duration-300">
@@ -144,124 +189,104 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
           </div>
         </div>
 
-        {/* 선수 리스트 카드 */}
-        <div className="flex flex-col gap-3">
-          {/* 선수 추가 버튼 (관리자 전용) */}
-          {isAdmin && (
-            <button
-              onClick={openAdd}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-dashed border-gray-300 dark:border-white/15 text-gray-500 dark:text-gray-400 text-[13px] font-semibold hover:border-[#FFB6C1] hover:text-[#FF8FA3] dark:hover:text-[#FFB6C1] transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              선수 추가하기
-            </button>
-          )}
+        {/* 관리자: 선수 추가 */}
+        {isAdmin && (
+          <button
+            onClick={openAdd}
+            className="mb-6 w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-dashed border-gray-300 dark:border-white/15 text-gray-500 dark:text-gray-400 text-[13px] font-semibold hover:border-[#FFB6C1] hover:text-[#FF8FA3] dark:hover:text-[#FFB6C1] transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            선수 추가하기
+          </button>
+        )}
 
-          {[...playerList].sort((a, b) => {
-            const nA = parseInt(a[0]);
-            const nB = parseInt(b[0]);
-            const hasA = !isNaN(nA) && a[0]?.trim() !== "" && a[0] !== "-";
-            const hasB = !isNaN(nB) && b[0]?.trim() !== "" && b[0] !== "-";
-            if (hasA && hasB) return nA - nB;
-            if (hasA) return -1;
-            if (hasB) return 1;
-            return 0;
-          }).map((player, index) => {
-            const rawNo = player[0]?.trim();
-            const hasNo = rawNo && rawNo !== "-" && !isNaN(parseInt(rawNo));
-            const no = hasNo ? rawNo : "미정";
-            const name = player[1] || "무명";
-            const pos = player[2] || "SUB";
-            const status = player[3] || "활동";
-            const etc = player[5]?.toLowerCase().trim() || "";
-
-            const isC = etc === "c";
-            const isVC = etc === "vc";
-            const isInjured = status === "부상";
-            const disabled = status === "비활동";
-
+        {/* 포지션별 스쿼드 그리드 */}
+        <div className="space-y-7">
+          {POS_ORDER.map((key) => {
+            const group = grouped[key];
+            if (!group || group.length === 0) return null;
+            const meta = POS_META[key];
             return (
-              <div
-                key={index}
-                style={{ animationDelay: `${Math.min(index, 10) * 50}ms` }}
-                className="animate-rise flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-[#161618] border border-gray-200/70 dark:border-white/[0.06] shadow-soft hover:border-gray-300 dark:hover:border-white/15 transition-colors"
-              >
-                {/* 카드 본체 → 선수 프로필로 이동 */}
-                <Link
-                  href={`/players/${encodeURIComponent(name.trim())}`}
-                  className="flex flex-1 items-center gap-4 min-w-0 active:opacity-70"
-                >
-                {/* 유니폼 등번호 아바타 */}
-                <div className="relative flex items-center justify-center w-14 h-16 rounded-xl overflow-hidden shadow-sm ring-1 ring-gray-200 dark:ring-white/10 shrink-0 bg-white">
-                  <Image
-                    src="/uniform.png"
-                    alt="Uniform"
-                    fill
-                    className="object-cover object-center opacity-95 scale-125 translate-y-1"
-                  />
-                  <span
-                    className="absolute z-10 font-extrabold tracking-tight top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pr-1.5 pb-1"
-                    style={{
-                      fontSize: hasNo ? "26px" : "16px",
-                      color: "#FF8FA3",
-                      textShadow: "0 1px 2px rgba(0,0,0,0.35)",
-                    }}
-                  >
-                    {hasNo ? rawNo : "?"}
-                  </span>
+              <section key={key}>
+                {/* 그룹 헤더 */}
+                <div className="mb-3 flex items-baseline gap-2 px-0.5">
+                  <span className="h-3.5 w-1 self-center rounded-full" style={{ background: meta.color }} />
+                  <h2 className="text-[11px] font-black uppercase tracking-[0.18em] text-gray-800 dark:text-gray-100">{meta.en}</h2>
+                  <span className="text-[11px] font-bold text-gray-400">{meta.label}</span>
+                  <span className="ml-auto text-[12px] font-black tabular-nums" style={{ color: meta.color }}>{group.length}</span>
                 </div>
 
-                {/* 선수 정보 */}
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-xl text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                          {name}
-                          {isC && (
-                            <Badge className="bg-green-100 text-green-700 dark:bg-green-950/70 dark:text-green-200 border-none px-1.5 py-0 rounded text-[9px] font-black h-4">
-                              C
-                            </Badge>
+                {/* 카드 그리드 */}
+                <div className="grid grid-cols-2 gap-3">
+                  {group.map((player, index) => {
+                    const rawNo = (player[0] || "").trim();
+                    const hasNo = !!rawNo && rawNo !== "-" && !isNaN(parseInt(rawNo));
+                    const name = player[1] || "무명";
+                    const status = player[3] || "활동";
+                    const etc = (player[5] || "").toLowerCase().trim();
+                    const isC = etc === "c";
+                    const isVC = etc === "vc";
+                    const isInjured = status === "부상";
+                    const isInactive = status === "비활동";
+                    const color = meta.color;
+
+                    return (
+                      <div
+                        key={player[6] || index}
+                        style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
+                        className="animate-rise relative"
+                      >
+                        <Link
+                          href={`/players/${encodeURIComponent(name.trim())}`}
+                          className={`group relative block aspect-[3/4] overflow-hidden rounded-2xl border border-gray-200/70 dark:border-white/[0.06] shadow-soft transition-transform active:scale-[0.98] ${isInactive ? "opacity-55" : ""}`}
+                          style={{ background: `linear-gradient(155deg, ${color}26 0%, ${color}0d 42%, transparent 72%)` }}
+                        >
+                          {/* 큰 등번호 (시그니처) */}
+                          {hasNo && (
+                            <span
+                              className="pointer-events-none absolute -top-2 right-1 select-none font-black leading-none tabular-nums"
+                              style={{ fontSize: "84px", color: `${color}33` }}
+                            >
+                              {rawNo}
+                            </span>
                           )}
-                          {isVC && (
-                            <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-950/70 dark:text-orange-200 border-none px-1.5 py-0 rounded text-[9px] font-black h-4">
-                              VC
-                            </Badge>
-                          )}
-                        </span>
+
+                          {/* 페이스온 */}
+                          <SquadPhoto name={name} accent={color} />
+
+                          {/* 하단 그라데이션 + 텍스트 */}
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent px-3 pb-2.5 pt-9">
+                            <div className="flex items-center gap-1.5">
+                              <span className="truncate text-[14px] font-black text-white">{name}</span>
+                              {isC && <span className="shrink-0 rounded bg-emerald-400 px-1 py-px text-[8px] font-black text-black">C</span>}
+                              {isVC && <span className="shrink-0 rounded bg-amber-400 px-1 py-px text-[8px] font-black text-black">VC</span>}
+                            </div>
+                            <div className="mt-1 flex items-center gap-1.5">
+                              <span className="rounded px-1.5 py-0.5 text-[9px] font-black text-white" style={{ background: color }}>{player[2] || "-"}</span>
+                              {hasNo && <span className="text-[10px] font-bold tabular-nums text-white/70">#{rawNo}</span>}
+                              {isInjured && <span className="text-[10px] font-black text-red-300">부상</span>}
+                              {isInactive && <span className="text-[10px] font-black text-white/50">비활동</span>}
+                            </div>
+                          </div>
+                        </Link>
+
+                        {/* 관리자 편집 (링크와 분리) */}
+                        {isAdmin && (
+                          <button
+                            onClick={() => openEdit(player)}
+                            className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/45 text-white/90 backdrop-blur-sm active:opacity-70"
+                            aria-label="선수 수정"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </div>
-                      <Badge className="bg-[#FFB6C1]/15 dark:bg-white/5 text-[#FF8FA3] dark:text-[#FFB6C1] border-none px-2 py-0 text-[11px] font-bold tabular-nums w-fit">
-                        {hasNo ? `No.${rawNo}` : "미정"}
-                      </Badge>
-                    </div>
-                    <Badge className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded ${getPosBadgeStyle(pos)}`}>
-                      {pos}
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 mt-2">
-                    <span className={`w-1.5 h-1.5 rounded-full ${isInjured || disabled ? "bg-red-500" : "bg-emerald-500"}`} />
-                    <span className={`text-xs font-bold ${isInjured || disabled ? "text-red-500" : "text-gray-500 dark:text-gray-400"}`}>
-                      {status}
-                    </span>
-                  </div>
+                    );
+                  })}
                 </div>
-                </Link>
-                {isAdmin ? (
-                  <button
-                    onClick={() => openEdit(player)}
-                    className="self-start shrink-0 p-2 -mr-1 -mt-1 rounded-full text-gray-400 hover:text-[#FF8FA3] hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
-                    aria-label="선수 수정"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <ChevronRight className="w-5 h-5 shrink-0 text-gray-300 dark:text-gray-600" />
-                )}
-              </div>
+              </section>
             );
           })}
-
         </div>
       </main>
       <AppBottomNav active="home" currentUserName={currentUserName} />
