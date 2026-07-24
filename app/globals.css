@@ -171,14 +171,13 @@ body {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
+    transform: none;
+    filter: none;
   }
 }
 
 .route-enter {
   animation: udk-route-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
-  will-change: opacity, transform;
 }
 
 /* 스켈레톤의 밝은 띠가 천천히 지나가며 로딩 위치를 예고한다. */
