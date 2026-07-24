@@ -10,6 +10,9 @@ export const OPPONENT_LOGOS: Record<string, string> = {
   "NSW fc": "/opponent-logos/nsw-fc.jpg",
   "fc 델카": "/opponent-logos/fc-delka.jpg",
   "보타닉fc": "/opponent-logos/botanic-fc.jpg",
+  "YDP fc": "/opponent-logos/ydp-fc.jpg",
+  "신선fc": "/opponent-logos/sinseon-fc.jpg",
+  "원 유나이티드": "/opponent-logos/won-united.jpg",
 };
 
 /** 팀명으로 로고 경로를 찾는다. 없으면 null. */
