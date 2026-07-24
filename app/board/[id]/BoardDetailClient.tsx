@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ChevronLeft, Trash2, Send, Heart, MessageCircle } from "lucide-react";
+import { ChevronLeft, Trash2, Send, Heart, MessageCircle, User } from "lucide-react";
 import { youtubeEmbed } from "../../lib/youtube";
 import AppBottomNav from "../../components/AppBottomNav";
 import type { BoardPost, BoardComment } from "../../lib/board";
@@ -21,11 +21,13 @@ export default function BoardDetailClient({
   comments: initialComments,
   currentUser,
   admin,
+  rosterMap,
 }: {
   post: BoardPost;
   comments: BoardComment[];
   currentUser: { kakaoId: string; name: string } | null;
   admin: boolean;
+  rosterMap: Record<string, string>;
 }) {
   const router = useRouter();
   const [comments, setComments] = useState(initialComments);
@@ -135,7 +137,7 @@ export default function BoardDetailClient({
         )}
 
         {/* 좋아요 / 댓글 수 */}
-        <div className="mt-4 flex items-center gap-2 border-y border-gray-100 py-2.5 dark:border-white/5">
+        <div className="mt-4 flex items-center gap-2 border-t border-gray-100 pt-2.5 dark:border-white/5">
           <button
             onClick={toggleLike}
             className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-black transition-colors ${
@@ -155,8 +157,20 @@ export default function BoardDetailClient({
         <div className="mt-6 border-t border-gray-100 pt-4 dark:border-white/5">
           <p className="mb-3 text-sm font-black">댓글 {comments.length}</p>
           <ul className="space-y-3">
-            {comments.map((c) => (
+            {comments.map((c) => {
+              const no = rosterMap[(c.author || "").trim()];
+              return (
               <li key={c.id} className="flex items-start gap-2">
+                {/* 등번호 배지 (피드백 댓글과 동일 스타일) */}
+                {no ? (
+                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#FFB6C1]/40 bg-[#FFB6C1]/20">
+                    <span className="text-[8px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">#{no}</span>
+                  </div>
+                ) : (
+                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-white/5">
+                    <User className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                  </div>
+                )}
                 <div className="flex-1 rounded-2xl bg-gray-100 px-3 py-2 dark:bg-white/5">
                   <p className="text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">{c.author}</p>
                   <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-gray-800 dark:text-gray-200">{c.message}</p>
@@ -167,7 +181,8 @@ export default function BoardDetailClient({
                   </button>
                 )}
               </li>
-            ))}
+              );
+            })}
             {comments.length === 0 && (
               <li className="py-4 text-center text-xs text-gray-400">첫 댓글을 남겨보세요</li>
             )}
