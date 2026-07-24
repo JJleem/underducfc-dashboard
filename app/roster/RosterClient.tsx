@@ -263,6 +263,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
                             </div>
                             <div className="mt-1 flex flex-wrap items-center gap-1">
                               <span className="rounded px-1 py-0.5 text-[8px] font-black text-white" style={{ background: color }}>{player[2] || "-"}</span>
+                              <span className="text-[10px] font-black tabular-nums text-white/85">{hasNo ? `#${rawNo}` : "#-"}</span>
                               {isInjured && <span className="text-[9px] font-black text-red-300">부상</span>}
                               {isInactive && <span className="text-[9px] font-black text-white/50">비활동</span>}
                             </div>
