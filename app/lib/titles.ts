@@ -67,6 +67,7 @@ export interface PlayerContext {
   firstVoteCount: number; // 한 경기 최초 투표 횟수
   firstCommentCount: number; // 한 경기 최초 댓글 횟수
   likesReceived: number; // 전술게시판: 내가 올린 글이 받은 좋아요 총합
+  likesGiven: number; // 전술게시판: 내가 누른 좋아요 수
 
   // 히든 칭호용
   isFirstBlood: boolean; // 시즌 첫 경기 득점자
@@ -196,6 +197,7 @@ export interface RawSheets {
   rawFeedbacks?: string[][];
   rawBoardComments?: string[][]; // 전술게시판 댓글 (author, created_at)
   rawBoardPosts?: string[][]; // 전술게시판 글 (author, like_count)
+  rawBoardLikeGivers?: string[][]; // 전술게시판 좋아요 누른 사람 (name, count)
 }
 
 interface MatchInfo {
@@ -220,6 +222,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
   const rawFeedbacks = sheets.rawFeedbacks ?? [];
   const rawBoardComments = sheets.rawBoardComments ?? [];
   const rawBoardPosts = sheets.rawBoardPosts ?? [];
+  const rawBoardLikeGivers = sheets.rawBoardLikeGivers ?? [];
 
   // 주장 역할
   const captainRoles: Record<string, string> = {};
@@ -350,6 +353,14 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     const nick = (r[0] || "").trim();
     if (!nick) return;
     likesReceivedByNick.set(nick, (likesReceivedByNick.get(nick) ?? 0) + (Number(r[1]) || 0));
+  });
+
+  // 전술게시판 좋아요(누른 사람 기준) — 히든 "좋아요 요정". name은 백엔드에서 실명 정규화됨.
+  const likesGivenByNick = new Map<string, number>();
+  rawBoardLikeGivers.slice(1).forEach((r) => {
+    const nick = (r[0] || "").trim();
+    if (!nick) return;
+    likesGivenByNick.set(nick, (likesGivenByNick.get(nick) ?? 0) + (Number(r[1]) || 0));
   });
 
   // ── 선수별 컨텍스트 빌드 (stats 시트의 선수 = 정식 명단)
@@ -524,6 +535,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     const firstVoteCount = firstVoteByNick.get(name) ?? 0;
     const firstCommentCount = firstCommentByNick.get(name) ?? 0;
     const likesReceived = likesReceivedByNick.get(name) ?? 0;
+    const likesGiven = likesGivenByNick.get(name) ?? 0;
 
     // 히든: 퍼스트 블러드 — 개인의 첫 경기(데뷔전)에서 득점했는가
     const firstPlayedMatch = matches.find((m) => {
@@ -594,6 +606,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       firstVoteCount,
       firstCommentCount,
       likesReceived,
+      likesGiven,
       isFirstBlood,
       goalPerGame,
       bestDuoAssists,
@@ -688,6 +701,7 @@ export const TITLES: TitleDef[] = [
   { id: "scoring_wall", name: "벽이 골도 넣네", icon: "brick-wall", category: "히든", state: "live", hidden: true, flat: true, desc: "센터백 15경기+ & 공격P 10+", check: (c) => c.centerbackGames >= 15 && c.points >= 10 },
   { id: "football_master", name: "축구 도사", icon: "sparkles", category: "히든", state: "live", hidden: true, flat: true, desc: "3개 포지션 각 10경기+ & 공격P 20+", check: (c) => Object.values(c.posCounts).filter((count) => count >= 10).length >= 3 && c.points >= 20 },
   { id: "tactics_influencer", name: "전술 인플루언서", icon: "flame", category: "히든", state: "live", hidden: true, flat: true, desc: "전술게시판 글 좋아요 10개+", check: (c) => c.likesReceived >= 10 },
+  { id: "like_fairy", name: "좋아요 요정", icon: "party-popper", category: "히든", state: "live", hidden: true, flat: true, desc: "전술게시판 좋아요 15번+ 누르기", check: (c) => c.likesGiven >= 15 },
 ];
 
 // ───────────────────────── 평가 ─────────────────────────
