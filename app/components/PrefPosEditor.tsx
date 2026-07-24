@@ -8,6 +8,15 @@ import { Check, Pencil, X } from "lucide-react";
 const POSITIONS = ["GK", "LB", "CB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"] as const;
 const MAX = 3;
 
+// 포지션 카테고리별 색(앱 posColor와 동일): GK 주황 / 수비 파랑 / 미드 초록 / 공격 핑크.
+const POS_COLOR: Record<string, string> = {
+  GK: "#F59E0B",
+  LB: "#3B82F6", CB: "#3B82F6", RB: "#3B82F6",
+  CDM: "#10B981", CM: "#10B981", CAM: "#10B981",
+  LW: "#FF8FA3", RW: "#FF8FA3", ST: "#FF8FA3",
+};
+const posColor = (p: string) => POS_COLOR[p] ?? "#94A3B8";
+
 export default function PrefPosEditor({
   initial,
   canEdit,
@@ -52,7 +61,8 @@ export default function PrefPosEditor({
           initial.map((p) => (
             <span
               key={p}
-              className="rounded-lg bg-[#FF8FA3]/10 px-2.5 py-1 text-[11px] font-black text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
+              style={{ color: posColor(p), backgroundColor: `${posColor(p)}1a` }}
+              className="rounded-lg px-2.5 py-1 text-[11px] font-black"
             >
               {p}
             </span>
@@ -90,9 +100,10 @@ export default function PrefPosEditor({
               key={p}
               onClick={() => toggle(p)}
               disabled={disabled}
+              style={on ? { backgroundColor: posColor(p), color: "#fff" } : undefined}
               className={`rounded-lg px-2.5 py-1.5 text-[11px] font-black transition-colors ${
                 on
-                  ? "bg-[#FF8FA3] text-white dark:bg-[#FFB6C1] dark:text-black"
+                  ? ""
                   : disabled
                     ? "bg-gray-50 text-gray-300 dark:bg-white/5 dark:text-gray-600"
                     : "bg-gray-100 text-gray-600 active:opacity-70 dark:bg-white/5 dark:text-gray-300"
