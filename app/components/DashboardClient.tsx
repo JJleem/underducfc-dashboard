@@ -62,6 +62,7 @@ import type { SubstitutionEvent } from "../lib/lineup";
 import AppBottomNav from "./AppBottomNav";
 import LineupViewer from "./LineupViewer";
 import OpponentLogo from "./OpponentLogo";
+import { getOpponentLogo } from "../lib/opponent-logos";
 import PlayerFace from "./PlayerFace";
 
 // 숫자가 0에서 목표값까지 부드럽게 올라가는 카운트업 (전광판 느낌)
@@ -1305,7 +1306,19 @@ export default function DashboardClient({
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-[9px] font-black tracking-[0.18em] text-[#FF8FA3] dark:text-[#FFB6C1]">NEXT MATCH</p>
-                    <h2 className="mt-1 truncate text-[19px] font-black">vs {nextMatch.opponent}</h2>
+                    {(() => {
+                      const oppLogo = getOpponentLogo(nextMatch.opponent);
+                      return (
+                        <h2 className="mt-1 flex items-center gap-1.5 text-[19px] font-black">
+                          <span className="shrink-0">vs</span>
+                          {oppLogo && (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img src={oppLogo} alt="" className="h-5 w-5 shrink-0 rounded-full bg-white object-contain ring-1 ring-black/5" />
+                          )}
+                          <span className="min-w-0 truncate">{nextMatch.opponent}</span>
+                        </h2>
+                      );
+                    })()}
                     <p className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 dark:text-white/55">
                       <CalendarDays className="h-3 w-3" />
                       {nextMatch.date} · {nextMatch.time}
