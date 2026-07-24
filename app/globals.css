@@ -162,20 +162,6 @@ body {
   box-shadow: 0 1px 3px rgba(17, 17, 26, 0.08) !important;
 }
 
-/* route template이 바뀔 때 콘텐츠가 같은 표면 위에서 이어지는 느낌 */
-@keyframes udk-route-enter {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.route-enter {
-  animation: udk-route-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
 /* 스켈레톤의 밝은 띠가 천천히 지나가며 로딩 위치를 예고한다. */
 @keyframes udk-shimmer {
   0% {
@@ -232,7 +218,6 @@ body {
   .animate-fade,
   .animate-tab,
   .pulse-ring,
-  .route-enter,
   .skeleton-shimmer {
     animation: none;
   }
