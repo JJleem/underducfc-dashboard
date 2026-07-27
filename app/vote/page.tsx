@@ -15,7 +15,7 @@ export default async function VotePage() {
         image: session.user.image ?? "",
       }
     : null;
-  const admin = isAdmin(currentUser?.kakaoId);
+  const admin = isAdmin(session?.user);
 
   // O열(출석 투표 상태)까지 포함해서 fetch
   const rawMatches = await getMatchesRows();

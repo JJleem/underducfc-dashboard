@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateAppData } from "@/app/lib/cache";
 import { getFeedbackRows } from "../../lib/backend";
 import { appendFeedback, deleteFeedback } from "../../lib/sheets-write";
-import { requireUser, isAdmin } from "@/app/lib/admin";
+import { requireUser, currentIsAdmin } from "@/app/lib/admin";
 import { auth } from "@/auth";
 
 export async function GET() {
@@ -54,7 +54,7 @@ export async function DELETE(request: NextRequest) {
     const session = await auth();
     const userName = session?.user?.name;
     const kakaoId = (session?.user as { kakaoId?: string } | undefined)?.kakaoId ?? null;
-    if (!isAdmin(kakaoId) && name !== userName) {
+    if (!(await currentIsAdmin()) && name !== userName) {
       return NextResponse.json({ error: "본인의 댓글만 삭제할 수 있습니다." }, { status: 403 });
     }
 

@@ -53,7 +53,7 @@ export default async function BoardDetailPage({
       post={post}
       comments={comments}
       currentUser={currentUser}
-      admin={isAdmin(currentUser?.kakaoId)}
+      admin={isAdmin(session?.user)}
       rosterMap={rosterMap}
     />
   );

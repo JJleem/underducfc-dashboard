@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin, currentKakaoId } from "@/app/lib/admin";
+import { currentIsAdmin, currentKakaoId } from "@/app/lib/admin";
 import { getBoardPost, deleteBoardPost } from "@/app/lib/board";
 
 export async function DELETE(
@@ -16,7 +16,7 @@ export async function DELETE(
     if (!post) return NextResponse.json({ error: "글을 찾을 수 없습니다." }, { status: 404 });
 
     // 작성자 본인 또는 관리자만 삭제 가능.
-    if (post.kakaoId !== kakaoId && !isAdmin(kakaoId)) {
+    if (post.kakaoId !== kakaoId && !(await currentIsAdmin())) {
       return NextResponse.json({ error: "삭제 권한이 없습니다." }, { status: 403 });
     }
 

@@ -36,7 +36,7 @@ export default async function BoardPage() {
     <BoardClient
       posts={posts}
       currentUser={currentUser}
-      admin={isAdmin(currentUser?.kakaoId)}
+      admin={isAdmin(session?.user)}
     />
   );
 }

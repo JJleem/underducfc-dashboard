@@ -48,7 +48,7 @@ export default async function TeamDashboardPage({
         image: session.user.image ?? "",
       }
     : null;
-  const admin = isAdmin(currentUser?.kakaoId);
+  const admin = isAdmin(session?.user);
 
   // 시트 하나가 일시 실패해도 홈 전체가 Runtime Error로 죽지 않게 병렬 안전 로딩
   const sheetResults = await Promise.allSettled([

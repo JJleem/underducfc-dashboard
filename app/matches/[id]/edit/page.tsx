@@ -3,7 +3,7 @@ import { getMatchesRows } from "../../../lib/matches-backend";
 import { LineupData, MatchData } from "../../../components/DashboardClient";
 import LineupEditor from "./LineupEditor";
 import { notFound, redirect } from "next/navigation";
-import { currentKakaoId, isAdmin } from "../../../lib/admin";
+import { currentIsAdmin } from "../../../lib/admin";
 import { parseSubstitutions } from "../../../lib/lineup";
 
 export default async function LineupEditPage({
@@ -12,7 +12,7 @@ export default async function LineupEditPage({
   params: Promise<{ id: string }>;
 }) {
   // 라인업 편집은 관리자 전용
-  if (!isAdmin(await currentKakaoId())) redirect("/");
+  if (!(await currentIsAdmin())) redirect("/");
 
   const { id } = await params;
   const matchId = Number(id);

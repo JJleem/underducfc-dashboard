@@ -1,6 +1,6 @@
 // app/roster/page.tsx
 import { getRosterRows } from "../lib/backend";
-import { currentKakaoId, isAdmin } from "../lib/admin";
+import { currentIsAdmin } from "../lib/admin";
 import RosterClient from "./RosterClient";
 import { auth } from "@/auth";
 
@@ -8,7 +8,7 @@ export default async function RosterPage() {
   // 구글 시트에서 로스터 데이터를 가져옵니다.
   const rows = await getRosterRows();
   const players = rows.slice(1); // 첫 줄(헤더) 제외
-  const admin = isAdmin(await currentKakaoId());
+  const admin = await currentIsAdmin();
   const session = await auth();
 
   // 클라이언트 컴포넌트로 데이터를 넘겨서 렌더링합니다.

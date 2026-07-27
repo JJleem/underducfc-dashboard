@@ -4,7 +4,7 @@
 //   함수 시그니처는 그대로라 API 라우트/호출부는 변경 불필요.
 // ⚠️ 서버사이드 전용([[underduck.ts]] window 가드).
 
-import { udGet, udPost, udPut, udDelete } from "./underduck";
+import { udGet, udPost, udPut, udDelete, underduckFetch } from "./underduck";
 import { createMatch, patchMatch, addMatchPhotos, removeMatchPhoto } from "./matches-backend";
 
 const s = (v: unknown): string => (v === null || v === undefined ? "" : String(v));
@@ -267,10 +267,16 @@ export async function upsertUser(user: {
   nickname: string;
   profileImage: string;
 }): Promise<void> {
-  await udPost("/api/underduck/users", {
-    kakao_id: user.kakaoId,
-    nickname: user.nickname,
-    profile_image: user.profileImage,
+  // 로그인 과정에서 호출된다. 이 시점엔 세션이 아직 없고, 신원 헤더를 붙이려 하면
+  // auth() → jwt 콜백 → 이 함수 로 재귀가 돈다. 그래서 anonymous.
+  await underduckFetch("/api/underduck/users", {
+    method: "POST",
+    anonymous: true,
+    body: {
+      kakao_id: user.kakaoId,
+      nickname: user.nickname,
+      profile_image: user.profileImage,
+    },
   });
 }
 

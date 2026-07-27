@@ -29,6 +29,37 @@ interface UnderduckRequest {
   /** 기본 no-store. `next`를 넘기면 cache 대신 next 옵션이 적용된다. */
   cache?: RequestCache;
   next?: NextFetchOptions;
+  /**
+   * 신원 헤더를 붙이지 않는다. 로그인 과정에서 부르는 호출에만 쓴다
+   * (세션이 아직 없거나, auth() → jwt 콜백 → 이 함수로 재귀가 도는 경로).
+   */
+  anonymous?: boolean;
+}
+
+/**
+ * 세션 신원을 헤더로 만든다.
+ *
+ * 백엔드의 공유 시크릿은 "어느 서비스가 불렀나"만 증명한다. "어떤 사용자가, 무슨
+ * 권한으로"는 이 헤더로 전달하고, 백엔드는 요청 **본문**의 kakao_id 대신 이 값으로
+ * 소유권·관리자 검사를 한다(본문은 클라이언트가 조작할 수 있으므로).
+ *
+ * `@/auth`가 (sheets-write 경유로) 이 모듈을 다시 import 하므로 정적 순환이 생긴다.
+ * 동적 import로 끊는다.
+ */
+async function identityHeaders(): Promise<Record<string, string>> {
+  try {
+    const { auth } = await import("@/auth");
+    const session = await auth();
+    const user = session?.user as { kakaoId?: string; isAdmin?: boolean } | undefined;
+    if (!user?.kakaoId) return {};
+    return {
+      "X-Underduck-User": user.kakaoId,
+      "X-Underduck-Role": user.isAdmin ? "admin" : "member",
+    };
+  } catch {
+    // 세션을 읽을 수 없는 문맥(빌드 타임 렌더링 등)에서는 신원 없이 진행한다.
+    return {};
+  }
 }
 
 /**
@@ -37,7 +68,7 @@ interface UnderduckRequest {
  */
 export async function underduckFetch<T = unknown>(
   path: string,
-  { method = "GET", body, cache = "no-store", next }: UnderduckRequest = {},
+  { method = "GET", body, cache = "no-store", next, anonymous }: UnderduckRequest = {},
 ): Promise<T> {
   const base = process.env.UNDERDUCK_API_BASE;
   const secret = process.env.UNDERDUCK_API_SECRET;
@@ -51,8 +82,15 @@ export async function underduckFetch<T = unknown>(
   const normalized = path.startsWith("/") ? path : `/${path}`;
   const url = `${base.replace(/\/$/, "")}${normalized}`;
 
+  // 신원 헤더는 **쓰기에만** 붙인다.
+  // 읽기(GET)는 udReadOpts의 next.revalidate로 캐싱되는데, 사용자마다 달라지는 헤더를
+  // 얹으면 fetch 캐시 키가 사용자별로 쪼개지고 정적 렌더링이 동적으로 바뀐다.
+  // 권한 검사가 필요한 건 쓰기·삭제이므로 읽기는 지금 그대로 둔다.
+  const needsIdentity = !anonymous && method !== "GET";
+
   const headers: Record<string, string> = {
     "X-Underduck-Secret": secret,
+    ...(needsIdentity ? await identityHeaders() : {}),
   };
   if (body !== undefined) headers["Content-Type"] = "application/json";
 
@@ -91,6 +129,29 @@ export async function underduckFetch<T = unknown>(
   if (response.status === 204) return undefined as T;
   const text = await response.text();
   return (text ? JSON.parse(text) : undefined) as T;
+}
+
+/**
+ * 값이 백엔드 가명 ID(pid)인가. pid = HMAC-SHA256 hex 64자.
+ * 카카오 원본 ID는 10자리 안팎의 숫자라 겹치지 않는다.
+ */
+export function isPseudonym(value?: string | null): boolean {
+  return !!value && /^[0-9a-f]{64}$/.test(value);
+}
+
+/**
+ * 카카오 원본 ID → 백엔드 가명 ID(pid).
+ *
+ * 백엔드는 kakao_id를 원본으로 저장하지 않고 pid로만 다룬다. 프론트도 세션에 pid를
+ * 담아야 소유권 비교(`currentUser.kakaoId === post.kakaoId`)가 성립한다.
+ * 세션을 수립하는 도중에 부르므로 신원 헤더를 붙이지 않는다(재귀 방지).
+ */
+export async function resolvePseudonym(rawKakaoId: string): Promise<string> {
+  const { kakao_id } = await underduckFetch<{ kakao_id: string }>(
+    `/api/underduck/users/resolve?kakao_id=${encodeURIComponent(rawKakaoId)}`,
+    { anonymous: true },
+  );
+  return kakao_id;
 }
 
 /** GET. 읽기는 server component에서 `next: { revalidate }`로 캐싱 제어 가능. */

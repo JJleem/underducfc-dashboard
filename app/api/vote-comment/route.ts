@@ -4,7 +4,7 @@ import { getVoteCommentRows } from "../../lib/backend";
 import { appendVoteComment, deleteVoteComment } from "../../lib/sheets-write";
 import { requireUser } from "@/app/lib/admin";
 import { auth } from "@/auth";
-import { isAdmin } from "@/app/lib/admin";
+import { currentIsAdmin } from "@/app/lib/admin";
 
 export async function GET() {
   try {
@@ -61,7 +61,7 @@ export async function DELETE(request: NextRequest) {
     const { matchId, timestamp, targetKakaoId } = await request.json();
     // 본인 또는 관리자만 삭제 가능
     const deleteTarget = targetKakaoId || kakaoId;
-    if (deleteTarget !== kakaoId && !isAdmin(kakaoId)) {
+    if (deleteTarget !== kakaoId && !(await currentIsAdmin())) {
       return NextResponse.json({ error: "권한 없음" }, { status: 403 });
     }
 
