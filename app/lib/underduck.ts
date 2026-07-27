@@ -145,11 +145,14 @@ export function isPseudonym(value?: string | null): boolean {
  * 백엔드는 kakao_id를 원본으로 저장하지 않고 pid로만 다룬다. 프론트도 세션에 pid를
  * 담아야 소유권 비교(`currentUser.kakaoId === post.kakaoId`)가 성립한다.
  * 세션을 수립하는 도중에 부르므로 신원 헤더를 붙이지 않는다(재귀 방지).
+ *
+ * 원본 ID는 반드시 **본문**으로 보낸다. 쿼리스트링에 실으면 nginx access log에
+ * 평문으로 남아, DB에서 원본을 없앤 의미가 사라진다.
  */
 export async function resolvePseudonym(rawKakaoId: string): Promise<string> {
   const { kakao_id } = await underduckFetch<{ kakao_id: string }>(
-    `/api/underduck/users/resolve?kakao_id=${encodeURIComponent(rawKakaoId)}`,
-    { anonymous: true },
+    "/api/underduck/users/resolve",
+    { method: "POST", body: { kakao_id: rawKakaoId }, anonymous: true },
   );
   return kakao_id;
 }
