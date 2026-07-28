@@ -95,8 +95,27 @@ export default function LineupEditor({
   // 게시판 불러오기
   const [importing, setImporting] = useState(false);
   const [importNote, setImportNote] = useState<string | null>(null);
-  // 불러올 글을 고른 뒤 어느 쿼터로 넣을지 정하는 중간 단계
+  // 작성자 전술 → 원본 쿼터 → 적용할 경기 쿼터의 3단계 선택
+  const [selectedImportPostId, setSelectedImportPostId] = useState<number | null>(null);
   const [pendingImport, setPendingImport] = useState<BoardLineupOption | null>(null);
+  const groupedBoardLineups = Array.from(
+    boardLineups.reduce((groups, option) => {
+      const current = groups.get(option.postId);
+      if (current) current.options.push(option);
+      else groups.set(option.postId, {
+        postId: option.postId,
+        author: option.author,
+        title: option.title,
+        options: [option],
+      });
+      return groups;
+    }, new Map<number, {
+      postId: number;
+      author: string;
+      title: string;
+      options: BoardLineupOption[];
+    }>()).values(),
+  );
 
   // 쿼터 변경 시 기존 라인업 로드
   useEffect(() => {
@@ -183,6 +202,7 @@ export default function LineupEditor({
     setActiveSlot(null);
     setSwapFrom(null);
     setImporting(false);
+    setSelectedImportPostId(null);
     setPendingImport(null);
     // 누가 빠졌는지 이름까지 알려줘야 대체자를 바로 떠올릴 수 있다
     const dropped = src.players.slice(0, 11).filter((n) => n && !attending.has(n));
@@ -494,11 +514,15 @@ export default function LineupEditor({
           <div className="space-y-2">
             {!importing ? (
               <button
-                onClick={() => setImporting(true)}
+                onClick={() => {
+                  setImporting(true);
+                  setSelectedImportPostId(null);
+                  setPendingImport(null);
+                }}
                 className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-[11px] font-black text-gray-500 transition-all hover:bg-gray-100 dark:border-white/10 dark:text-gray-400 dark:hover:bg-white/5"
               >
                 <ClipboardList className="h-3.5 w-3.5" />
-                게시판에서 불러오기 ({boardLineups.length})
+                게시판에서 불러오기 ({groupedBoardLineups.length})
               </button>
             ) : (
               <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
@@ -507,7 +531,11 @@ export default function LineupEditor({
                     불러올 전술
                   </p>
                   <button
-                    onClick={() => { setImporting(false); setPendingImport(null); }}
+                    onClick={() => {
+                      setImporting(false);
+                      setSelectedImportPostId(null);
+                      setPendingImport(null);
+                    }}
                     aria-label="닫기"
                     className="flex h-5 w-5 items-center justify-center rounded-full bg-black/5 text-gray-400 dark:bg-white/10"
                   >
@@ -551,33 +579,90 @@ export default function LineupEditor({
                       </button>
                     </div>
                   </div>
+                ) : selectedImportPostId !== null ? (
+                  <div className="space-y-2">
+                    {(() => {
+                      const selectedPost = groupedBoardLineups.find(
+                        (group) => group.postId === selectedImportPostId,
+                      );
+                      if (!selectedPost) return null;
+                      return (
+                        <>
+                          <div className="flex items-center justify-between rounded-xl bg-[#FF8FA3]/10 px-3 py-2">
+                            <div className="min-w-0">
+                              <p className="truncate text-[12px] font-black text-[#d94e6c] dark:text-[#FFB6C1]">
+                                {selectedPost.author}님의 전술
+                              </p>
+                              <p className="truncate text-[10px] text-gray-400">
+                                {selectedPost.title}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => setSelectedImportPostId(null)}
+                              className="shrink-0 rounded-lg px-2 py-1 text-[10px] font-black text-gray-400"
+                            >
+                              다른 전술
+                            </button>
+                          </div>
+                          <p className="text-[10px] font-semibold text-gray-400">
+                            불러올 원본 쿼터를 선택하세요
+                          </p>
+                          <div className="grid grid-cols-2 gap-1.5">
+                            {selectedPost.options.map((option) => {
+                              const usable = option.quarter.players.filter(
+                                (name) => name && attendees.includes(name),
+                              ).length;
+                              return (
+                                <button
+                                  key={`${option.postId}-${option.quarter.quarter}`}
+                                  onClick={() => setPendingImport(option)}
+                                  className="rounded-xl border border-gray-200 px-3 py-2 text-left transition-all hover:border-[#FF8FA3]/60 active:scale-[0.98] dark:border-white/10"
+                                >
+                                  <span className="block text-[12px] font-black">
+                                    {option.quarter.quarter}
+                                  </span>
+                                  <span className="mt-0.5 block text-[10px] text-gray-400">
+                                    {option.quarter.formation} · 참석 {usable}/11
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
                 ) : (
                 <>
                 <p className="mb-2 text-[10px] font-semibold leading-relaxed text-gray-400">
                   배치·전술·개인 전술을 가져옵니다. 이 경기에 참석하지 않는 선수 자리는 비워둡니다.
                 </p>
                 <div className="space-y-1.5">
-                  {boardLineups.map((option) => {
-                    const usable = option.quarter.players.filter((n) => n && attendees.includes(n)).length;
+                  {groupedBoardLineups.map((group) => {
+                    const bestUsable = Math.max(
+                      ...group.options.map((option) =>
+                        option.quarter.players.filter((name) => name && attendees.includes(name)).length
+                      ),
+                    );
                     return (
                       <button
-                        key={`${option.postId}-${option.quarter.quarter}`}
-                        onClick={() => setPendingImport(option)}
+                        key={group.postId}
+                        onClick={() => setSelectedImportPostId(group.postId)}
                         className="flex w-full items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-left transition-all hover:border-[#FF8FA3]/50 dark:border-white/10"
                       >
                         <span className="shrink-0 rounded-lg bg-[#FF8FA3]/15 px-2 py-1 text-[11px] font-black text-[#e75f7c] dark:text-[#FFB6C1]">
-                          {option.quarter.quarter}
+                          {group.options.length}쿼터
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[12px] font-black">
-                            {option.author}님의 {option.quarter.quarter}
+                            {group.author}님의 전술
                           </span>
                           <span className="block truncate text-[10px] text-gray-400">
-                            {option.quarter.formation} · {option.title}
+                            {group.title}
                           </span>
                         </span>
                         <span className="shrink-0 rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-black text-gray-500 dark:bg-white/10 dark:text-gray-300">
-                          참석 {usable}/11
+                          최대 {bestUsable}/11
                         </span>
                       </button>
                     );
