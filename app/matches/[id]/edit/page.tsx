@@ -29,15 +29,18 @@ export default async function LineupEditPage({
   const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
   const rawLineups = rawLineupsResult.status === "fulfilled" ? rawLineupsResult.value : [];
   const rawRoster = rawRosterResult.status === "fulfilled" ? rawRosterResult.value : [];
-  // 게시판에서 불러오기용 — 라인업이 붙은 글만
+  // 게시판에서 불러오기용 — 글 하나가 쿼터별 안을 가지므로
+  // "임재준님의 2쿼터"처럼 (작성자 × 쿼터) 단위로 펼쳐서 넘긴다.
   const boardLineups = (boardResult.status === "fulfilled" ? boardResult.value : [])
     .filter((p) => p.lineup)
-    .map((p) => ({
-      id: p.id,
-      title: p.title,
-      author: p.author,
-      lineup: p.lineup!,
-    }));
+    .flatMap((p) =>
+      p.lineup!.quarters.map((q) => ({
+        postId: p.id,
+        title: p.title,
+        author: p.author,
+        quarter: q,
+      })),
+    );
 
   const rosterMap: Record<string, string> = {};
   const prefPosMap: Record<string, string[]> = {};

@@ -403,9 +403,17 @@ export default function LineupPitch({
                   <button
                     onClick={() => onSwapRequest(slot)}
                     aria-label="자리 바꾸기"
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white/70"
+                    aria-pressed={swapSlot === slot}
+                    className={`flex h-6 shrink-0 items-center gap-1 rounded-lg px-1.5 transition-all ${
+                      swapSlot === slot
+                        ? "bg-[#FF8FA3] text-white ring-2 ring-[#FF8FA3]/45"
+                        : "bg-white/10 text-white/70"
+                    }`}
                   >
                     <ArrowRightLeft className="h-3 w-3" />
+                    {swapSlot === slot && (
+                      <span className="text-[9px] font-black">상대 탭</span>
+                    )}
                   </button>
                 )}
                 {onCloseSlot && (

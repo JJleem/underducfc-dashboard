@@ -2,13 +2,19 @@
 import { udGet, udPost, udDelete } from "./underduck";
 import { instructionCells, parsePositions } from "./positions";
 
-/** 전술 글에 붙는 선발 11명 라인업. 유튜브 글이면 null. */
-export interface BoardLineup {
+/** 전술 글의 쿼터 하나 — 선발 11명 배치. */
+export interface BoardLineupQuarter {
+  quarter: string; // "1Q" ~ "4Q"
   formation: string;
   positions: string; // "x,y;…" 직렬화 형식 ([[positions.ts]])
   players: string[]; // 11칸 (빈 자리는 "")
   instructions: string; // "id,id;…" 직렬화 형식
   tactic: string;
+}
+
+/** 전술 글 본체. 한 사람이 쿼터별로 여러 안을 낼 수 있다. 유튜브 글이면 null. */
+export interface BoardLineup {
+  quarters: BoardLineupQuarter[];
 }
 
 export interface BoardPost {
@@ -35,12 +41,16 @@ export interface BoardComment {
   createdAt: string | null;
 }
 
-interface LineupRow {
+interface LineupQuarterRow {
+  quarter?: string | null;
   formation?: string | null;
   positions?: number[][] | null;
   players?: string[] | null;
   instructions?: string[] | null;
   tactic?: string | null;
+}
+interface LineupRow {
+  quarters?: LineupQuarterRow[] | null;
 }
 interface PostRow {
   id: number; kakao_id: string | null; author: string | null; title: string | null;
@@ -52,13 +62,16 @@ interface PostRow {
 // 백엔드는 좌표를 [[x,y],…], 개인 전술을 ["id,id",…]로 준다.
 // 프론트는 [[positions.ts]]의 문자열 형식을 쓰므로 여기서 한 번만 변환한다.
 const toLineup = (r: LineupRow | null): BoardLineup | null => {
-  if (!r) return null;
+  if (!r?.quarters?.length) return null;
   return {
-    formation: r.formation ?? "",
-    positions: r.positions?.length ? r.positions.map(([x, y]) => `${x},${y}`).join(";") : "",
-    players: [...(r.players ?? []), ...Array(11).fill("")].slice(0, 11),
-    instructions: r.instructions?.length ? r.instructions.join(";") : "",
-    tactic: r.tactic ?? "",
+    quarters: r.quarters.map((q, i) => ({
+      quarter: q.quarter || `${i + 1}Q`,
+      formation: q.formation ?? "",
+      positions: q.positions?.length ? q.positions.map(([x, y]) => `${x},${y}`).join(";") : "",
+      players: [...(q.players ?? []), ...Array(11).fill("")].slice(0, 11),
+      instructions: q.instructions?.length ? q.instructions.join(";") : "",
+      tactic: q.tactic ?? "",
+    })),
   };
 };
 interface CommentRow {
@@ -124,11 +137,14 @@ export async function createBoardPost(input: {
     body: input.body ?? null,
     lineup: input.lineup
       ? {
-          formation: input.lineup.formation,
-          positions: parsePositions(input.lineup.positions)?.map((p) => [p.x, p.y]) ?? null,
-          players: input.lineup.players,
-          instructions: instructionCells(input.lineup.instructions),
-          tactic: input.lineup.tactic || null,
+          quarters: input.lineup.quarters.map((q) => ({
+            quarter: q.quarter,
+            formation: q.formation,
+            positions: parsePositions(q.positions)?.map((p) => [p.x, p.y]) ?? null,
+            players: q.players,
+            instructions: instructionCells(q.instructions),
+            tactic: q.tactic || null,
+          })),
         }
       : null,
   });

@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Check, RotateCcw, Save, Move } from "lucide-react";
+import { ArrowLeft, Check, RotateCcw, Save, Move, Plus, Trash2 } from "lucide-react";
 import LineupPitch from "../../components/LineupPitch";
 import {
   FORMATION_PRESETS,
@@ -22,6 +22,27 @@ import {
 import type { BoardPost } from "../../lib/board";
 
 const FORMATIONS = ["4-3-3", "4-4-2", "4-2-3-1", "3-5-2", "3-4-3", "5-3-2", "4-1-4-1"];
+const QUARTER_NAMES = ["1Q", "2Q", "3Q", "4Q"];
+const MAX_QUARTERS = QUARTER_NAMES.length;
+
+/** 편집 중인 쿼터 하나 */
+interface QuarterDraft {
+  quarter: string;
+  formation: string;
+  positions: Point[];
+  assignments: (string | null)[];
+  instructions: string[][];
+  tactic: string;
+}
+
+const emptyQuarter = (quarter: string): QuarterDraft => ({
+  quarter,
+  formation: FORMATIONS[0],
+  positions: FORMATION_PRESETS[FORMATIONS[0]],
+  assignments: Array(11).fill(null),
+  instructions: Array.from({ length: 11 }, () => []),
+  tactic: "",
+});
 
 // 선호 포지션 카테고리 색 (GK 주황 / 수비 파랑 / 미드 초록 / 공격 핑크)
 const PREF_POS_COLOR: Record<string, string> = {
@@ -45,29 +66,63 @@ export default function BoardLineupClient({
   existing: BoardPost | null;
 }) {
   const router = useRouter();
-  const saved = existing?.lineup ?? null;
 
   const [title, setTitle] = useState(existing?.title ?? "");
   const [body, setBody] = useState(existing?.body ?? "");
-  const [formation, setFormation] = useState(saved?.formation || FORMATIONS[0]);
-  const [positions, setPositions] = useState<Point[]>(
-    parsePositions(saved?.positions) ?? FORMATION_PRESETS[FORMATIONS[0]]
-  );
-  const [assignments, setAssignments] = useState<(string | null)[]>(() => {
-    const arr = Array<string | null>(11).fill(null);
-    saved?.players.forEach((p, i) => { if (i < 11) arr[i] = p || null; });
-    return arr;
+  // 쿼터별 안 (최대 4개). 저장된 글이 있으면 그대로 불러온다.
+  const [quarters, setQuarters] = useState<QuarterDraft[]>(() => {
+    const saved = existing?.lineup?.quarters ?? [];
+    if (!saved.length) return [emptyQuarter("1Q")];
+    return saved.map((q) => ({
+      quarter: q.quarter,
+      formation: q.formation || FORMATIONS[0],
+      positions: parsePositions(q.positions) ?? FORMATION_PRESETS[FORMATIONS[0]],
+      assignments: (() => {
+        const arr = Array<string | null>(11).fill(null);
+        q.players.forEach((p, i) => { if (i < 11) arr[i] = p || null; });
+        return arr;
+      })(),
+      instructions: parseInstructions(q.instructions),
+      tactic: q.tactic ?? "",
+    }));
   });
-  const [instructions, setInstructions] = useState<string[][]>(
-    parseInstructions(saved?.instructions)
-  );
-  const [tactic, setTactic] = useState(saved?.tactic ?? "");
+  const [active, setActive] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [swapFrom, setSwapFrom] = useState<number | null>(null);
   const [liveShape, setLiveShape] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+
+  const cur = quarters[active];
+  const { formation, positions, assignments, instructions, tactic } = cur;
+  /** 현재 쿼터만 갱신 */
+  const patch = (p: Partial<QuarterDraft>) =>
+    setQuarters((prev) => prev.map((q, i) => (i === active ? { ...q, ...p } : q)));
+  const setPositions = (next: Point[]) => patch({ positions: next });
+  const setInstructions = (
+    next: string[][] | ((prev: string[][]) => string[][])
+  ) => patch({ instructions: typeof next === "function" ? next(instructions) : next });
+  const setAssignments = (
+    updater: (prev: (string | null)[]) => (string | null)[]
+  ) => patch({ assignments: updater(assignments) });
+  const setTactic = (next: string) => patch({ tactic: next });
+
+  const addQuarter = () => {
+    if (quarters.length >= MAX_QUARTERS) return;
+    const used = new Set(quarters.map((q) => q.quarter));
+    const next = QUARTER_NAMES.find((q) => !used.has(q)) ?? `${quarters.length + 1}Q`;
+    setQuarters((prev) => [...prev, emptyQuarter(next)]);
+    setActive(quarters.length);
+    setSelected(null);
+  };
+
+  const removeQuarter = (index: number) => {
+    if (quarters.length <= 1) return;
+    setQuarters((prev) => prev.filter((_, i) => i !== index));
+    setActive((prev) => (prev >= index && prev > 0 ? prev - 1 : prev));
+    setSelected(null);
+  };
 
   const shapeName = liveShape ?? formationOf(positions);
   const matchesPreset = (name: string) => {
@@ -79,8 +134,7 @@ export default function BoardLineupClient({
   const filled = placed.size;
 
   const handleFormationChange = (f: string) => {
-    setFormation(f);
-    setPositions(FORMATION_PRESETS[f] ?? FORMATION_PRESETS[FORMATIONS[0]]);
+    patch({ formation: f, positions: FORMATION_PRESETS[f] ?? FORMATION_PRESETS[FORMATIONS[0]] });
     setSelected(null);
   };
 
@@ -130,7 +184,14 @@ export default function BoardLineupClient({
 
   async function submit() {
     if (!title.trim()) { setError("제목을 입력해주세요."); return; }
-    if (filled < 11) { setError(`선발 11명을 채워주세요. (현재 ${filled}명)`); return; }
+    const incomplete = quarters.find(
+      (q) => new Set(q.assignments.filter(Boolean)).size < 11
+    );
+    if (incomplete) {
+      setError(`${incomplete.quarter} 선발 11명을 채워주세요.`);
+      setActive(quarters.indexOf(incomplete));
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
@@ -141,11 +202,14 @@ export default function BoardLineupClient({
           title: title.trim(),
           body: body.trim() || null,
           lineup: {
-            formation: shapeName,
-            positions: serializePositions(positions),
-            players: assignments.map((p) => p || ""),
-            instructions: serializeInstructions(instructions),
-            tactic,
+            quarters: quarters.map((q) => ({
+              quarter: q.quarter,
+              formation: formationOf(q.positions),
+              positions: serializePositions(q.positions),
+              players: q.assignments.map((p) => p || ""),
+              instructions: serializeInstructions(q.instructions),
+              tactic: q.tactic,
+            })),
           },
         }),
       });
@@ -201,6 +265,46 @@ export default function BoardLineupClient({
             className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-[13px] outline-none focus:border-[#FF8FA3] dark:border-white/10 dark:bg-white/5"
           />
           <p className="px-1 text-[11px] font-bold text-gray-400">작성자 · {author}</p>
+        </div>
+
+        {/* 쿼터 탭 — 한 사람이 쿼터별로 다른 안을 낼 수 있다 */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          {quarters.map((q, i) => {
+            const done = new Set(q.assignments.filter(Boolean)).size >= 11;
+            return (
+              <button
+                key={q.quarter}
+                onClick={() => { setActive(i); setSelected(null); }}
+                className={`flex shrink-0 items-center gap-1 rounded-xl px-3 py-1.5 text-[11px] font-black transition-all ${
+                  active === i
+                    ? "bg-[#FF8FA3] text-white"
+                    : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
+                }`}
+              >
+                {q.quarter}
+                <span className={`text-[8px] ${done ? "opacity-70" : "text-amber-500"}`}>
+                  {done ? "●" : "미완성"}
+                </span>
+              </button>
+            );
+          })}
+          {quarters.length < MAX_QUARTERS && (
+            <button
+              onClick={addQuarter}
+              className="flex shrink-0 items-center gap-1 rounded-xl border border-dashed border-gray-300 px-2.5 py-1.5 text-[11px] font-black text-gray-400 dark:border-white/15"
+            >
+              <Plus className="h-3 w-3" /> 쿼터
+            </button>
+          )}
+          {quarters.length > 1 && (
+            <button
+              onClick={() => removeQuarter(active)}
+              aria-label="현재 쿼터 삭제"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
 
         {/* 포메이션 — 이름은 실제 배치에서 계산된다 */}
@@ -264,7 +368,7 @@ export default function BoardLineupClient({
             <div className="flex items-center gap-2.5">
               {isCustom && (
                 <button
-                  onClick={() => setPositions(FORMATION_PRESETS[formation] ?? FORMATION_PRESETS[FORMATIONS[0]])}
+                  onClick={() => patch({ positions: FORMATION_PRESETS[formation] ?? FORMATION_PRESETS[FORMATIONS[0]] })}
                   className="flex items-center gap-1 text-[10px] font-bold text-[#FF8FA3] hover:opacity-75"
                 >
                   <Move className="h-3 w-3" /> 배치 복귀
@@ -272,8 +376,10 @@ export default function BoardLineupClient({
               )}
               <button
                 onClick={() => {
-                  setAssignments(Array(11).fill(null));
-                  setInstructions(Array.from({ length: 11 }, () => []));
+                  patch({
+                    assignments: Array(11).fill(null),
+                    instructions: Array.from({ length: 11 }, () => []),
+                  });
                   setSelected(null);
                 }}
                 className="flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"

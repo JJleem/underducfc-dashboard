@@ -7,7 +7,7 @@ import { useTheme } from "next-themes";
 import { MatchData, LineupData } from "../../../components/DashboardClient";
 import type { SubstitutionEvent } from "../../../lib/lineup";
 import LineupPitch from "../../../components/LineupPitch";
-import type { BoardLineup } from "../../../lib/board";
+import type { BoardLineupQuarter } from "../../../lib/board";
 import {
   FORMATION_PRESETS,
   formationOf,
@@ -37,12 +37,12 @@ interface ActiveSlot {
   index: number;
 }
 
-/** 게시판 전술 글에서 불러오기 위한 최소 정보 */
+/** 게시판에서 불러올 수 있는 후보 = 글쓴이의 쿼터 하나 ("임재준님의 2쿼터") */
 export interface BoardLineupOption {
-  id: number;
+  postId: number;
   title: string;
   author: string;
-  lineup: BoardLineup;
+  quarter: BoardLineupQuarter;
 }
 
 interface LineupEditorProps {
@@ -153,7 +153,6 @@ export default function LineupEditor({
    * (게시판은 활동 인원 전체로 짜므로 참석자가 다를 수밖에 없다)
    */
   const importFromBoard = (option: BoardLineupOption, targetQuarter: string) => {
-    const src = option.lineup;
     // 다른 쿼터로 가져오면 그 쿼터로 이동한다.
     // 쿼터 전환 useEffect가 기존 저장분을 덮어쓰지 않도록 먼저 전환하고 다음 틱에 채운다.
     if (targetQuarter !== quarter) {
@@ -167,7 +166,7 @@ export default function LineupEditor({
   };
 
   const applyBoardLineup = (option: BoardLineupOption) => {
-    const src = option.lineup;
+    const src = option.quarter;
     const nextPositions =
       parsePositions(src.positions) ?? FORMATION_PRESETS[src.formation] ?? FORMATION_PRESETS[FORMATIONS[0]];
     const attending = new Set(attendees);
@@ -189,8 +188,8 @@ export default function LineupEditor({
     const dropped = src.players.slice(0, 11).filter((n) => n && !attending.has(n));
     setImportNote(
       dropped.length > 0
-        ? `${option.author}님 전술을 가져왔어요. 불참으로 빠진 ${dropped.length}자리: ${dropped.join(", ")}`
-        : `${option.author}님 전술을 가져왔어요.`
+        ? `${option.author}님의 ${src.quarter} 전술을 가져왔어요. 불참으로 빠진 ${dropped.length}자리: ${dropped.join(", ")}`
+        : `${option.author}님의 ${src.quarter} 전술을 가져왔어요.`
     );
   };
 
@@ -518,9 +517,11 @@ export default function LineupEditor({
                 {pendingImport ? (
                   <div className="space-y-2">
                     <div className="rounded-xl border border-gray-200 px-3 py-2 dark:border-white/10">
-                      <p className="truncate text-[12px] font-black">{pendingImport.title}</p>
-                      <p className="text-[10px] text-gray-400">
-                        {pendingImport.author} · {pendingImport.lineup.formation}
+                      <p className="truncate text-[12px] font-black">
+                        {pendingImport.author}님의 {pendingImport.quarter.quarter}
+                      </p>
+                      <p className="truncate text-[10px] text-gray-400">
+                        {pendingImport.quarter.formation} · {pendingImport.title}
                       </p>
                     </div>
                     <p className="text-[10px] font-semibold text-gray-400">어느 쿼터로 가져올까요?</p>
@@ -531,7 +532,11 @@ export default function LineupEditor({
                           <button
                             key={q}
                             onClick={() => importFromBoard(pendingImport, q)}
-                            className="rounded-xl bg-blue-500 px-3 py-1.5 text-[11px] font-black text-white transition-all hover:bg-blue-600"
+                            className={`rounded-xl px-3 py-1.5 text-[11px] font-black text-white transition-all ${
+                              q === pendingImport.quarter.quarter
+                                ? "bg-[#FF8FA3] hover:opacity-85"
+                                : "bg-blue-500 hover:bg-blue-600"
+                            }`}
                           >
                             {q}
                             {hasData && <span className="ml-1 text-[8px] opacity-70">덮어씀</span>}
@@ -553,17 +558,22 @@ export default function LineupEditor({
                 </p>
                 <div className="space-y-1.5">
                   {boardLineups.map((option) => {
-                    const usable = option.lineup.players.filter((n) => n && attendees.includes(n)).length;
+                    const usable = option.quarter.players.filter((n) => n && attendees.includes(n)).length;
                     return (
                       <button
-                        key={option.id}
+                        key={`${option.postId}-${option.quarter.quarter}`}
                         onClick={() => setPendingImport(option)}
                         className="flex w-full items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-left transition-all hover:border-[#FF8FA3]/50 dark:border-white/10"
                       >
+                        <span className="shrink-0 rounded-lg bg-[#FF8FA3]/15 px-2 py-1 text-[11px] font-black text-[#e75f7c] dark:text-[#FFB6C1]">
+                          {option.quarter.quarter}
+                        </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[12px] font-black">{option.title}</span>
-                          <span className="block text-[10px] text-gray-400">
-                            {option.author} · {option.lineup.formation}
+                          <span className="block truncate text-[12px] font-black">
+                            {option.author}님의 {option.quarter.quarter}
+                          </span>
+                          <span className="block truncate text-[10px] text-gray-400">
+                            {option.quarter.formation} · {option.title}
                           </span>
                         </span>
                         <span className="shrink-0 rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-black text-gray-500 dark:bg-white/10 dark:text-gray-300">

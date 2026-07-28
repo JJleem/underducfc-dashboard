@@ -48,6 +48,9 @@ export default function BoardDetailClient({
   const embed = youtubeEmbed(post.youtubeUrl);
   // 내 전술 글이면 수정 버튼을 노출 (전술 글은 1인 1개라 항상 /board/lineup으로 간다)
   const isMyLineup = !!post.lineup && !!currentUser && post.kakaoId === currentUser.kakaoId;
+  // 전술 글은 쿼터별 안을 가질 수 있다 (최대 4개)
+  const [quarterIdx, setQuarterIdx] = useState(0);
+  const shownQuarter = post.lineup?.quarters[quarterIdx] ?? post.lineup?.quarters[0] ?? null;
 
   async function toggleLike() {
     if (!currentUser) { signIn("kakao"); return; }
@@ -124,16 +127,38 @@ export default function BoardDetailClient({
       <div className="px-4 pt-4">
         {/* 전술 글이면 라인업, 아니면 영상 */}
         {post.lineup ? (
-          <FormationField
-            lineup={{
-              formation: post.lineup.formation,
-              players: post.lineup.players,
-              positions: post.lineup.positions,
-              tactic: post.lineup.tactic,
-              instructions: post.lineup.instructions,
-            }}
-            rosterMap={rosterMap}
-          />
+          <div className="space-y-2">
+            {/* 쿼터가 2개 이상이면 탭으로 전환 */}
+            {post.lineup.quarters.length > 1 && (
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+                {post.lineup.quarters.map((q, i) => (
+                  <button
+                    key={q.quarter}
+                    onClick={() => setQuarterIdx(i)}
+                    className={`shrink-0 rounded-xl px-3 py-1.5 text-[11px] font-black transition-colors ${
+                      quarterIdx === i
+                        ? "bg-[#FF8FA3] text-white dark:bg-[#FFB6C1] dark:text-black"
+                        : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
+                    }`}
+                  >
+                    {q.quarter} · {q.formation}
+                  </button>
+                ))}
+              </div>
+            )}
+            {shownQuarter && (
+              <FormationField
+                lineup={{
+                  formation: shownQuarter.formation,
+                  players: shownQuarter.players,
+                  positions: shownQuarter.positions,
+                  tactic: shownQuarter.tactic,
+                  instructions: shownQuarter.instructions,
+                }}
+                rosterMap={rosterMap}
+              />
+            )}
+          </div>
         ) : (
         <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black">
           {embed ? (

@@ -191,10 +191,18 @@ export default function BoardClient({
                     <div className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-white/5">
                       {p.lineup ? (
                         <>
-                          <LineupMini formation={p.lineup.formation} positions={p.lineup.positions} />
+                          <LineupMini
+                            formation={p.lineup.quarters[0]?.formation ?? ""}
+                            positions={p.lineup.quarters[0]?.positions}
+                          />
                           <span className="absolute bottom-1 left-1 rounded bg-black/65 px-1 text-[9px] font-black text-white">
-                            {p.lineup.formation}
+                            {p.lineup.quarters[0]?.formation}
                           </span>
+                          {p.lineup.quarters.length > 1 && (
+                            <span className="absolute right-1 top-1 rounded bg-[#FF8FA3] px-1 text-[9px] font-black text-white">
+                              {p.lineup.quarters.length}쿼터
+                            </span>
+                          )}
                         </>
                       ) : thumb ? (
                         <>

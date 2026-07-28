@@ -31,9 +31,21 @@ export async function POST(request: NextRequest) {
 
     // 전술 글이면 라인업이, 유튜브 글이면 링크가 있어야 한다.
     if (lineup) {
-      const players: string[] = Array.isArray(lineup.players) ? lineup.players : [];
-      if (players.filter((p) => p?.trim()).length < 11) {
-        return NextResponse.json({ error: "선발 11명을 모두 채워주세요." }, { status: 400 });
+      const quarters = Array.isArray(lineup.quarters) ? lineup.quarters : [];
+      if (quarters.length === 0) {
+        return NextResponse.json({ error: "쿼터를 하나 이상 만들어주세요." }, { status: 400 });
+      }
+      if (quarters.length > 4) {
+        return NextResponse.json({ error: "쿼터는 최대 4개까지입니다." }, { status: 400 });
+      }
+      for (const q of quarters) {
+        const players: string[] = Array.isArray(q.players) ? q.players : [];
+        if (players.filter((p) => p?.trim()).length < 11) {
+          return NextResponse.json(
+            { error: `${q.quarter ?? ""} 선발 11명을 모두 채워주세요.` },
+            { status: 400 },
+          );
+        }
       }
     } else {
       if (!youtubeUrl?.trim()) {
@@ -52,11 +64,14 @@ export async function POST(request: NextRequest) {
       body: body?.trim() || null,
       lineup: lineup
         ? {
-            formation: String(lineup.formation || ""),
-            positions: String(lineup.positions || ""),
-            players: (lineup.players as string[]).map((p) => String(p || "").trim()),
-            instructions: String(lineup.instructions || ""),
-            tactic: String(lineup.tactic || ""),
+            quarters: (lineup.quarters as Record<string, unknown>[]).map((q, i) => ({
+              quarter: String(q.quarter || `${i + 1}Q`),
+              formation: String(q.formation || ""),
+              positions: String(q.positions || ""),
+              players: (q.players as string[]).map((p) => String(p || "").trim()),
+              instructions: String(q.instructions || ""),
+              tactic: String(q.tactic || ""),
+            })),
           }
         : null,
     });
