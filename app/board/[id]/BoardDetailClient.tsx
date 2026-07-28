@@ -159,7 +159,7 @@ export default function BoardDetailClient({
               />
             )}
           </div>
-        ) : (
+        ) : post.youtubeUrl ? (
         <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black">
           {embed ? (
             <iframe
@@ -175,6 +175,11 @@ export default function BoardDetailClient({
             </a>
           )}
         </div>
+        ) : (
+          // 라인업도 영상도 없는 글 (예전 구조로 저장돼 내용이 비어버린 경우)
+          <div className="flex aspect-video w-full items-center justify-center rounded-2xl border border-dashed border-gray-200 text-[12px] font-bold text-gray-400 dark:border-white/10">
+            내용을 불러올 수 없어요
+          </div>
         )}
 
         {/* 제목/작성자/본문 */}
