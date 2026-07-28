@@ -22,14 +22,12 @@ export default function InstructionArrows({
   role,
   radius = 25,
   size = 12,
-  layout = "radial",
 }: {
   instructions: string[];
   role: Role;
   /** 마커 중심에서 화살표까지 거리(px) */
   radius?: number;
   size?: number;
-  layout?: "radial" | "inline";
 }) {
   const arrows = arrowsForSlot(instructions, role);
   if (arrows.length === 0) return null;
@@ -45,20 +43,13 @@ export default function InstructionArrows({
             height={size * 1.55}
             viewBox="0 0 14 22"
             aria-hidden
-            className={
-              layout === "inline"
-                ? "pointer-events-none relative block shrink-0"
-                : "pointer-events-none absolute z-0"
-            }
+            className="pointer-events-none absolute z-0"
             style={{
-              left: layout === "inline" ? undefined : "50%",
-              top: layout === "inline" ? undefined : "50%",
-              transform:
-                layout === "inline"
-                  ? `rotate(${angle}deg)`
-                  : `translate(-50%,-50%) translate(${x * radius}px, ${y * radius}px) rotate(${angle}deg)`,
+              left: "50%",
+              top: "50%",
+              transform: `translate(-50%,-50%) translate(${x * radius}px, ${y * radius}px) rotate(${angle}deg)`,
               overflow: "visible",
-              opacity: layout === "inline" ? 0.9 : 0.68,
+              opacity: 0.68,
               filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.4))",
             }}
           >

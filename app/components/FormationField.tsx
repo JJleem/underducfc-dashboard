@@ -75,7 +75,7 @@ function useDisplayToggle(key: string, initial: boolean) {
   return [on, toggle] as const;
 }
 
-// 중계 카메라 틸트 각도 — 필드는 이 각도로 눕고, 선수 카드는 역회전해 일어선다
+// 경기 상세의 토큰 모드는 중계 시점, 전술게시판 face-on은 평면 전술판으로 보여준다.
 const TILT = 30;
 
 // 틸트 뷰에서는 상단(원정 골대 쪽)이 원근으로 압축돼 보여서
@@ -200,7 +200,7 @@ export function FormationField({
         boxShadow: "var(--pitch-frame-shadow)",
       }}
     >
-      <div className="relative w-full" style={{ paddingBottom: mode === "faceon" ? "145%" : "112%" }}>
+      <div className="relative w-full" style={{ paddingBottom: mode === "faceon" ? "190%" : "112%" }}>
         {/* 밤하늘 별 (다크 전용) */}
         <div
           className="absolute inset-0 pointer-events-none hidden dark:block"
@@ -233,15 +233,21 @@ export function FormationField({
         {/* 3D 무대 */}
         <div
           className="absolute inset-0"
-          style={{ perspective: "1200px", perspectiveOrigin: "50% 25%" }}
+          style={{
+            perspective: mode === "faceon" ? "none" : "1200px",
+            perspectiveOrigin: "50% 25%",
+          }}
         >
-          {/* 기울어진 피치 평면 */}
+          {/* face-on은 평면 전술판, token은 기존 중계 카메라 시점 */}
           <div
             className="absolute"
             style={{
-              left: "6%", right: "6%", bottom: "4%", height: "124%",
+              left: mode === "faceon" ? "4%" : "6%",
+              right: mode === "faceon" ? "4%" : "6%",
+              bottom: mode === "faceon" ? "3%" : "4%",
+              height: mode === "faceon" ? "94%" : "124%",
               transformOrigin: "50% 100%",
-              transform: `rotateX(${TILT}deg)`,
+              transform: mode === "faceon" ? "none" : `rotateX(${TILT}deg)`,
               transformStyle: "preserve-3d",
               borderRadius: 14,
               background:
@@ -336,7 +342,7 @@ export function FormationField({
                     className="absolute"
                     style={{
                       left: `${pos.x}%`,
-                      top: `${adjustY(pos.y)}%`,
+                      top: `${mode === "faceon" ? pos.y : adjustY(pos.y)}%`,
                       transformStyle: "preserve-3d",
                       zIndex: isSel ? 30 : 10,
                     }}
@@ -350,12 +356,26 @@ export function FormationField({
                         background: "radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, transparent 70%)",
                       }}
                     />
+                    {/* 전술게시판에서는 화살표를 카드가 아닌 잔디 위 이동 경로로 둔다. */}
+                    {mode === "faceon" && showTactic && !isTbd && (
+                      <div className="pointer-events-none absolute z-[1]" style={{ left: 0, top: 0 }}>
+                        <InstructionArrows
+                          instructions={visibleInstructions}
+                          role={role}
+                          radius={38}
+                          size={17}
+                        />
+                      </div>
+                    )}
                     {/* 역회전으로 일어서는 선수 카드 (빌보드) */}
                     <div
                       className="absolute"
                       style={{
                         left: 0, bottom: 0,
-                        transform: `translateX(-50%) rotateX(-${TILT}deg)`,
+                        transform:
+                          mode === "faceon"
+                            ? "translateX(-50%)"
+                            : `translateX(-50%) rotateX(-${TILT}deg)`,
                         transformOrigin: "50% 100%",
                       }}
                     >
@@ -548,14 +568,6 @@ export function FormationField({
                                   textShadow: "0 1px 2px rgba(0,0,0,0.85)",
                                 }}
                               >
-                                {mode === "faceon" && (
-                                  <InstructionArrows
-                                    instructions={[id]}
-                                    role={role}
-                                    size={6}
-                                    layout="inline"
-                                  />
-                                )}
                                 {instructionShort(id)}
                               </span>
                             ))}
@@ -572,9 +584,9 @@ export function FormationField({
                             <TitleBadges
                               titles={playerTitles[name]}
                               size={mode === "faceon" ? 13 : 13}
-                              max={mode === "faceon" ? 1 : 3}
+                              max={3}
                               gap={mode === "faceon" ? 1 : 2}
-                              direction={mode === "faceon" ? "column" : "row"}
+                              direction={mode === "faceon" ? "stack" : "row"}
                             />
                           </div>
                         ) : null}

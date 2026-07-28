@@ -111,15 +111,32 @@ export function TitleBadges({
   size?: number;
   max?: number;
   gap?: number;
-  direction?: "row" | "column";
+  direction?: "row" | "column" | "stack";
 }) {
   // titles는 이미 표시 순서로 정해진 목록(대표 칭호 우선). 재정렬 없이 자른다.
   const list = titles.slice(0, max);
   if (!list.length) return null;
   return (
-    <span style={{ display: "inline-flex", flexDirection: direction, gap, alignItems: "center" }}>
-      {list.map((t) => (
-        <TitleBadge key={t.id} title={t} size={size} />
+    <span
+      style={{
+        display: "inline-flex",
+        flexDirection: direction === "column" ? "column" : "row",
+        gap: direction === "stack" ? 0 : gap,
+        alignItems: "center",
+      }}
+    >
+      {list.map((t, index) => (
+        <span
+          key={t.id}
+          style={{
+            display: "inline-flex",
+            marginLeft: direction === "stack" && index > 0 ? -Math.round(size * 0.42) : 0,
+            position: "relative",
+            zIndex: list.length - index,
+          }}
+        >
+          <TitleBadge title={t} size={size} />
+        </span>
       ))}
     </span>
   );
