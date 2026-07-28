@@ -44,7 +44,9 @@ export default function InstructionArrows({
         const glowId = `${gradientId}-glow`;
         const isVertical = dir === "up" || dir === "down";
         const isDiagonal = dir === "upLeft" || dir === "upRight";
-        const baseLength = radius * (isVertical ? 1.45 : isDiagonal ? 1.18 : 1);
+        const baseLength = radius * (
+          dir === "down" ? 1.75 : isVertical ? 1.45 : isDiagonal ? 1.3 : 1
+        );
         const horizontalRoom =
           dir === "left" || dir === "upLeft"
             ? positionX === undefined ? 1 : positionX / 23

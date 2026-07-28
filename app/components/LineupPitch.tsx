@@ -13,7 +13,6 @@ import {
   MAX_INSTRUCTIONS,
   POSITION_ZONES,
   formationOf,
-  instructionAllowed,
   instructionShort,
   instructionsFor,
   roleColor,
@@ -174,13 +173,7 @@ export default function LineupPitch({
     onPositionsChange(
       positions.map((p, idx) => (idx === state.index ? state.latest : p))
     );
-    // 포지션이 바뀌면 더 이상 맞지 않는 개인 전술은 해제한다
-    const role = roleFromPoint(state.latest);
-    onInstructionsChange(
-      instructions.map((ids, idx) =>
-        idx === state.index ? ids.filter((id) => instructionAllowed(id, role)) : ids
-      )
-    );
+    // 개인 전술은 포지션이 바뀌어도 선수에게 그대로 유지된다.
   };
 
   const panelSlot =
@@ -196,6 +189,20 @@ export default function LineupPitch({
           background: "linear-gradient(180deg,#1c6a36 0%,#185e2f 33%,#1c6a36 66%,#185e2f 100%)",
         }}
       >
+        {swapSlot !== null && (
+          <div className="pointer-events-none absolute left-1/2 top-2 z-40 -translate-x-1/2">
+            <div
+              className="rounded-full px-3 py-1.5 text-[10px] font-black text-white"
+              style={{
+                background: "rgba(225,29,72,0.96)",
+                border: "1px solid rgba(255,255,255,0.7)",
+                boxShadow: "0 4px 14px rgba(0,0,0,0.45)",
+              }}
+            >
+              교체할 다른 선수를 탭하세요
+            </div>
+          </div>
+        )}
         {/* 비네팅: 가장자리를 살짝 어둡게 해 입체감 */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -282,7 +289,7 @@ export default function LineupPitch({
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,
                 transform: "translate(-50%,-50%)",
-                zIndex: isDragging ? 20 : 10,
+                zIndex: isDragging ? 30 : isSwapSource ? 25 : 10,
                 touchAction: "none",
               }}
               onPointerDown={handlePointerDown(i)}
@@ -296,6 +303,17 @@ export default function LineupPitch({
               >
                 {role}
               </span>
+              {isSwapSource && (
+                <span
+                  className="pointer-events-none absolute left-1/2 top-[-18px] z-20 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[8px] font-black text-white"
+                  style={{
+                    background: "#E11D48",
+                    boxShadow: "0 2px 8px rgba(225,29,72,0.55)",
+                  }}
+                >
+                  교체 선택
+                </span>
+              )}
               {/* 개인 전술 방향 — 원 주변에 작게 */}
               <span
                 className="pointer-events-none absolute z-0"
@@ -355,6 +373,9 @@ export default function LineupPitch({
           const pos = positions[slot];
           const role = roleFromPoint(pos);
           const current = instructions[slot];
+          const allowed = instructionsFor(role);
+          const allowedIds = new Set(allowed.map((ins) => ins.id));
+          const retained = current.filter((id) => !allowedIds.has(id));
           // 아래쪽 선수는 위로, 위쪽 선수는 아래로 펼쳐 필드 밖으로 안 나가게 한다
           const below = pos.y < 62;
           return (
@@ -380,7 +401,23 @@ export default function LineupPitch({
                   {role}
                 </span>
                 <div className="flex flex-1 gap-1 overflow-x-auto scrollbar-none">
-                  {instructionsFor(role).map((ins) => {
+                  {retained.map((id) => (
+                    <button
+                      key={id}
+                      onClick={() =>
+                        onInstructionsChange(
+                          instructions.map((ids, i) =>
+                            i === slot ? ids.filter((currentId) => currentId !== id) : ids
+                          )
+                        )
+                      }
+                      className="shrink-0 rounded-lg bg-amber-500/25 px-2 py-1 text-[10px] font-black text-amber-200 ring-1 ring-amber-300/35"
+                      title="이전 포지션에서 설정한 개인 전술"
+                    >
+                      {instructionShort(id)} · 유지
+                    </button>
+                  ))}
+                  {allowed.map((ins) => {
                     const on = current.includes(ins.id);
                     const full = current.length >= MAX_INSTRUCTIONS;
                     return (

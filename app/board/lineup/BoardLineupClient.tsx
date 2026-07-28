@@ -11,10 +11,8 @@ import {
   FORMATION_PRESETS,
   TACTICS,
   formationOf,
-  instructionAllowed,
   parseInstructions,
   parsePositions,
-  roleFromPoint,
   serializeInstructions,
   serializePositions,
   type Point,
@@ -136,11 +134,13 @@ export default function BoardLineupClient({
   const handleFormationChange = (f: string) => {
     patch({ formation: f, positions: FORMATION_PRESETS[f] ?? FORMATION_PRESETS[FORMATIONS[0]] });
     setSelected(null);
+    setSwapFrom(null);
   };
 
   /** 선수 풀에서 선수를 탭 → 선택된 슬롯에 배치 (이미 배치돼 있으면 그 자리는 비운다) */
   const placePlayer = (name: string) => {
     if (selected === null) return;
+    setSwapFrom(null);
     setAssignments((prev) => {
       const next = prev.map((p) => (p === name ? null : p));
       next[selected] = name;
@@ -152,6 +152,7 @@ export default function BoardLineupClient({
 
   const clearSlot = () => {
     if (selected === null) return;
+    setSwapFrom(null);
     setAssignments((prev) => prev.map((p, i) => (i === selected ? null : p)));
     setInstructions((prev) => prev.map((ids, i) => (i === selected ? [] : ids)));
   };
@@ -165,13 +166,11 @@ export default function BoardLineupClient({
           next[index] = prev[swapFrom];
           return next;
         });
-        // 개인 전술도 선수를 따라가되, 새 자리에 맞지 않는 지시는 뺀다
+        // 개인 전술은 포지션이 달라져도 선수와 함께 그대로 이동한다.
         setInstructions((prev) => {
           const next = [...prev];
-          const keep = (ids: string[], slot: number) =>
-            ids.filter((id) => instructionAllowed(id, roleFromPoint(positions[slot])));
-          next[swapFrom] = keep(prev[index], swapFrom);
-          next[index] = keep(prev[swapFrom], index);
+          next[swapFrom] = prev[index];
+          next[index] = prev[swapFrom];
           return next;
         });
       }
@@ -411,7 +410,9 @@ export default function BoardLineupClient({
             onInstructionsChange={setInstructions}
             onLiveShape={setLiveShape}
             onDragStart={() => setSwapFrom(null)}
-            onSwapRequest={setSwapFrom}
+            onSwapRequest={(slot) =>
+              setSwapFrom((prev) => (prev === slot ? null : slot))
+            }
             onCloseSlot={() => setSelected(null)}
           />
         </div>

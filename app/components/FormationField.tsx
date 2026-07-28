@@ -11,7 +11,6 @@ import InstructionArrows from "./InstructionArrows";
 import {
   FORMATION_PRESETS,
   groupOfRole,
-  instructionAllowed,
   instructionLabel,
   instructionShort,
   isCustomShape,
@@ -85,6 +84,14 @@ const adjustY = (y: number) => y * 0.9 + 12;
 // CSV 문자열에서 해당 이름 등장 횟수 (멀티골/멀티어시 카운트)
 const countNames = (csv: string | undefined, name: string) =>
   csv ? csv.split(",").map((s) => s.trim()).filter((s) => s === name).length : 0;
+
+const visibleInstructionsForRole = (ids: string[], role: string) =>
+  ids.filter(
+    (id) =>
+      id !== "inverted" ||
+      role === "LB" ||
+      role === "RB"
+  );
 
 const buzz = () => {
   try {
@@ -342,9 +349,7 @@ export function FormationField({
                   const pos = positions?.[i];
                   if (!pos || !player || player.trim() === "미정") return null;
                   const role = roles[i];
-                  const visibleInstructions = instructions[i].filter((id) =>
-                    instructionAllowed(id, role)
-                  );
+                  const visibleInstructions = visibleInstructionsForRole(instructions[i], role);
                   if (!visibleInstructions.length) return null;
                   return (
                     <div
@@ -375,9 +380,7 @@ export function FormationField({
                 const pos = positions?.[i];
                 if (!pos || !player) return null;
                 const role = roles[i];
-                const visibleInstructions = instructions[i].filter((id) =>
-                  instructionAllowed(id, role)
-                );
+                const visibleInstructions = visibleInstructionsForRole(instructions[i], role);
                 const group = groupOfRole(role);
                 const color = GROUP_COLOR[group];
                 const isTbd = player.trim() === "미정";
@@ -533,33 +536,38 @@ export function FormationField({
                               }}
                             />
                           )}
-                          {goalCount > 0 && (
+                          {(assistCount > 0 || goalCount > 0) && (
                             <div
-                              className="absolute flex items-center justify-center font-black"
-                              style={{
-                                bottom: -4, right: -8,
-                                height: 14, minWidth: 14, padding: "0 2px",
-                                borderRadius: 7, fontSize: 8,
-                                background: "rgba(255,255,255,0.95)", color: "#111",
-                                boxShadow: "0 1px 4px rgba(0,0,0,0.45)",
-                              }}
+                              className="absolute flex items-center gap-0.5"
+                              style={{ bottom: -4, right: -8 }}
                             >
-                              ⚽{goalCount > 1 ? `×${goalCount}` : ""}
-                            </div>
-                          )}
-                          {assistCount > 0 && (
-                            <div
-                              className="absolute flex items-center justify-center font-black"
-                              style={{
-                                bottom: -4, left: -8,
-                                height: 14, minWidth: 14, padding: "0 3px",
-                                borderRadius: 7, fontSize: 8,
-                                background: "#0EA5E9", color: "#fff",
-                                border: "1px solid rgba(255,255,255,0.5)",
-                                boxShadow: "0 1px 4px rgba(0,0,0,0.45)",
-                              }}
-                            >
-                              A{assistCount > 1 ? `×${assistCount}` : ""}
+                              {assistCount > 0 && (
+                                <div
+                                  className="flex items-center justify-center font-black"
+                                  style={{
+                                    height: 14, minWidth: 14, padding: "0 3px",
+                                    borderRadius: 7, fontSize: 8,
+                                    background: "#0EA5E9", color: "#fff",
+                                    border: "1px solid rgba(255,255,255,0.5)",
+                                    boxShadow: "0 1px 4px rgba(0,0,0,0.45)",
+                                  }}
+                                >
+                                  A{assistCount > 1 ? `×${assistCount}` : ""}
+                                </div>
+                              )}
+                              {goalCount > 0 && (
+                                <div
+                                  className="flex items-center justify-center font-black"
+                                  style={{
+                                    height: 14, minWidth: 14, padding: "0 2px",
+                                    borderRadius: 7, fontSize: 8,
+                                    background: "rgba(255,255,255,0.95)", color: "#111",
+                                    boxShadow: "0 1px 4px rgba(0,0,0,0.45)",
+                                  }}
+                                >
+                                  ⚽{goalCount > 1 ? `×${goalCount}` : ""}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
