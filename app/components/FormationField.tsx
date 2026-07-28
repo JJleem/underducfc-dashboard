@@ -111,8 +111,8 @@ function FaceOnMarker({
     <div
       className="relative flex items-end justify-center"
       style={{
-        width: 48,
-        height: 56,
+        width: 44,
+        height: 51,
       }}
     >
       <div
@@ -132,7 +132,7 @@ function FaceOnMarker({
           fetchPriority="high"
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
-          className={`absolute inset-0 h-[56px] w-[48px] object-contain object-bottom drop-shadow-[0_4px_4px_rgba(0,0,0,0.75)] transition-opacity duration-150 ${
+          className={`absolute inset-0 h-[51px] w-[44px] object-contain object-bottom drop-shadow-[0_4px_4px_rgba(0,0,0,0.75)] transition-opacity duration-150 ${
             loaded ? "opacity-100" : "opacity-0"
           }`}
         />
@@ -378,18 +378,18 @@ export function FormationField({
                         className="relative flex flex-col items-center justify-end cursor-pointer"
                         style={{
                           transformOrigin: "50% 100%",
-                          width: mode === "faceon" ? 72 : undefined,
-                          height: mode === "faceon" ? 108 : undefined,
+                          width: mode === "faceon" ? 68 : undefined,
+                          height: mode === "faceon" ? 98 : undefined,
                         }}
                       >
                         <div className="relative">
                           {/* 개인 전술 방향 — 전술 토글이 켜져 있을 때만 */}
-                          {showTactic && !isTbd && (
+                          {showTactic && !isTbd && mode !== "faceon" && (
                             <InstructionArrows
                               instructions={visibleInstructions}
                               role={role}
-                              radius={mode === "faceon" ? 35 : 27}
-                              size={mode === "faceon" ? 15 : 12}
+                              radius={27}
+                              size={12}
                             />
                           )}
                           {mode === "faceon" && !isTbd ? (
@@ -540,7 +540,7 @@ export function FormationField({
                             {visibleInstructions.map((id) => instructionShort(id) && (
                               <span
                                 key={id}
-                                className="rounded px-1 py-0.5 text-[7px] font-black leading-none text-white whitespace-nowrap"
+                                className="flex items-center gap-0.5 rounded px-1 py-0.5 text-[7px] font-black leading-none text-white whitespace-nowrap"
                                 style={{
                                   background: "rgba(190,24,93,0.94)",
                                   border: "1px solid rgba(255,255,255,0.55)",
@@ -548,6 +548,14 @@ export function FormationField({
                                   textShadow: "0 1px 2px rgba(0,0,0,0.85)",
                                 }}
                               >
+                                {mode === "faceon" && (
+                                  <InstructionArrows
+                                    instructions={[id]}
+                                    role={role}
+                                    size={6}
+                                    layout="inline"
+                                  />
+                                )}
                                 {instructionShort(id)}
                               </span>
                             ))}
@@ -564,7 +572,7 @@ export function FormationField({
                             <TitleBadges
                               titles={playerTitles[name]}
                               size={mode === "faceon" ? 13 : 13}
-                              max={3}
+                              max={mode === "faceon" ? 1 : 3}
                               gap={mode === "faceon" ? 1 : 2}
                               direction={mode === "faceon" ? "column" : "row"}
                             />
