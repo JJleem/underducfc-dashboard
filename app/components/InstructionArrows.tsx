@@ -45,7 +45,7 @@ export default function InstructionArrows({
         const isVertical = dir === "up" || dir === "down";
         const isDiagonal = dir === "upLeft" || dir === "upRight";
         const baseLength = radius * (
-          dir === "down" ? 1.75 : isVertical ? 1.45 : isDiagonal ? 1.3 : 1
+          dir === "down" ? 1.75 : isVertical ? 1.45 : isDiagonal ? 1.43 : 1
         );
         const horizontalRoom =
           dir === "left" || dir === "upLeft"
