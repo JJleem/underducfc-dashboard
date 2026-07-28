@@ -354,12 +354,15 @@ export function FormationField({
                     />
                     {/* 전술게시판에서는 화살표를 카드가 아닌 잔디 위 이동 경로로 둔다. */}
                     {mode === "faceon" && showTactic && !isTbd && (
-                      <div className="pointer-events-none absolute z-[1]" style={{ left: 0, top: 0 }}>
+                      <div
+                        className="pointer-events-none absolute z-[1]"
+                        style={{ left: 0, top: -56 }}
+                      >
                         <InstructionArrows
                           instructions={visibleInstructions}
                           role={role}
-                          radius={54}
-                          size={18}
+                          radius={64}
+                          size={17}
                         />
                       </div>
                     )}
