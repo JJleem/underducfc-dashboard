@@ -224,7 +224,12 @@ export default function BoardClient({
                       )}
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col">
-                      <p className="line-clamp-2 text-sm font-black leading-snug">{p.title}</p>
+                      <p
+                        className="truncate text-[13px] font-black leading-snug"
+                        title={p.title}
+                      >
+                        {p.title}
+                      </p>
                       <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-gray-500 dark:text-gray-400">
                         {p.author}
                         {p.updatedAt && (
