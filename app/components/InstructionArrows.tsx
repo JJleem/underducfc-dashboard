@@ -71,7 +71,7 @@ export default function InstructionArrows({
                     repeatCount="indefinite"
                   />
                 </stop>
-                <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.92" />
+                <stop offset="100%" stopColor={TONE_COLOR[tone]} stopOpacity="1" />
               </linearGradient>
               <filter id={glowId} x="-100%" y="-20%" width="300%" height="140%">
                 <feGaussianBlur stdDeviation="2.2" />
