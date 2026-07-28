@@ -264,26 +264,49 @@ export function FormationField({
 
             <svg
               className="absolute inset-0 w-full h-full"
-              viewBox="0 0 100 145"
+              viewBox={mode === "faceon" ? "0 0 100 190" : "0 0 100 145"}
               preserveAspectRatio="none"
               fill="none"
             >
-              <rect x="4" y="4" width="92" height="137" stroke="rgba(255,255,255,0.55)" strokeWidth="0.8" />
-              <line x1="4" y1="72.5" x2="96" y2="72.5" stroke="rgba(255,255,255,0.55)" strokeWidth="0.6" />
-              <circle cx="50" cy="72.5" r="13" stroke="rgba(255,255,255,0.55)" strokeWidth="0.6" />
-              <circle cx="50" cy="72.5" r="1" fill="rgba(255,255,255,0.55)" />
-              <rect x="22" y="4" width="56" height="22" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
-              <rect x="34" y="4" width="32" height="10" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
-              <circle cx="50" cy="18" r="0.8" fill="rgba(255,255,255,0.45)" />
-              <rect x="22" y="119" width="56" height="22" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
-              <rect x="34" y="131" width="32" height="10" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
-              <circle cx="50" cy="127" r="0.8" fill="rgba(255,255,255,0.45)" />
-              <rect x="40" y="1.5" width="20" height="2.5" stroke="rgba(255,255,255,0.75)" strokeWidth="0.8" />
-              <rect x="40" y="141" width="20" height="2.5" stroke="rgba(255,255,255,0.75)" strokeWidth="0.8" />
-              <path d="M4,8 A4,4 0 0,0 8,4" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
-              <path d="M92,8 A4,4 0 0,1 96,4" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
-              <path d="M4,137 A4,4 0 0,1 8,141" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
-              <path d="M92,137 A4,4 0 0,0 96,141" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+              {mode === "faceon" ? (
+                <>
+                  <rect x="3" y="3" width="94" height="184" stroke="rgba(255,255,255,0.55)" strokeWidth="0.8" />
+                  <line x1="3" y1="95" x2="97" y2="95" stroke="rgba(255,255,255,0.55)" strokeWidth="0.6" />
+                  <circle cx="50" cy="95" r="13" stroke="rgba(255,255,255,0.55)" strokeWidth="0.6" />
+                  <circle cx="50" cy="95" r="1" fill="rgba(255,255,255,0.55)" />
+                  <rect x="22" y="3" width="56" height="29" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
+                  <rect x="34" y="3" width="32" height="12" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
+                  <circle cx="50" cy="21" r="0.8" fill="rgba(255,255,255,0.45)" />
+                  <rect x="22" y="158" width="56" height="29" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
+                  <rect x="34" y="175" width="32" height="12" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
+                  <circle cx="50" cy="169" r="0.8" fill="rgba(255,255,255,0.45)" />
+                  <rect x="40" y="0.8" width="20" height="2.2" stroke="rgba(255,255,255,0.75)" strokeWidth="0.8" />
+                  <rect x="40" y="187" width="20" height="2.2" stroke="rgba(255,255,255,0.75)" strokeWidth="0.8" />
+                  <path d="M3,9 A6,6 0 0,0 9,3" stroke="rgba(255,255,255,0.4)" strokeWidth="0.55" />
+                  <path d="M91,3 A6,6 0 0,0 97,9" stroke="rgba(255,255,255,0.4)" strokeWidth="0.55" />
+                  <path d="M3,181 A6,6 0 0,1 9,187" stroke="rgba(255,255,255,0.4)" strokeWidth="0.55" />
+                  <path d="M91,187 A6,6 0 0,1 97,181" stroke="rgba(255,255,255,0.4)" strokeWidth="0.55" />
+                </>
+              ) : (
+                <>
+                  <rect x="4" y="4" width="92" height="137" stroke="rgba(255,255,255,0.55)" strokeWidth="0.8" />
+                  <line x1="4" y1="72.5" x2="96" y2="72.5" stroke="rgba(255,255,255,0.55)" strokeWidth="0.6" />
+                  <circle cx="50" cy="72.5" r="13" stroke="rgba(255,255,255,0.55)" strokeWidth="0.6" />
+                  <circle cx="50" cy="72.5" r="1" fill="rgba(255,255,255,0.55)" />
+                  <rect x="22" y="4" width="56" height="22" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
+                  <rect x="34" y="4" width="32" height="10" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
+                  <circle cx="50" cy="18" r="0.8" fill="rgba(255,255,255,0.45)" />
+                  <rect x="22" y="119" width="56" height="22" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
+                  <rect x="34" y="131" width="32" height="10" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
+                  <circle cx="50" cy="127" r="0.8" fill="rgba(255,255,255,0.45)" />
+                  <rect x="40" y="1.5" width="20" height="2.5" stroke="rgba(255,255,255,0.75)" strokeWidth="0.8" />
+                  <rect x="40" y="141" width="20" height="2.5" stroke="rgba(255,255,255,0.75)" strokeWidth="0.8" />
+                  <path d="M4,8 A4,4 0 0,0 8,4" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+                  <path d="M92,8 A4,4 0 0,1 96,4" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+                  <path d="M4,137 A4,4 0 0,1 8,141" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+                  <path d="M92,137 A4,4 0 0,0 96,141" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+                </>
+              )}
             </svg>
 
             {/* 잔디에 깔린 중앙 로고 */}
@@ -338,6 +361,8 @@ export function FormationField({
                         role={role}
                         radius={64}
                         size={17}
+                        positionX={pos.x}
+                        positionY={Math.max(0, pos.y - 8)}
                       />
                     </div>
                   );
@@ -411,7 +436,7 @@ export function FormationField({
                         }}
                         initial={{ opacity: 0, scale: 0 }}
                         animate={{
-                          opacity: selectedName === null || isSel ? 1 : 0.35,
+                          opacity: 1,
                           scale: isSel ? 1.3 : 1,
                         }}
                         transition={{
@@ -542,7 +567,7 @@ export function FormationField({
                           <div className="mt-1 flex items-center justify-center gap-1" style={{ maxWidth: 88 }}>
                             {!isTbd && showRoles && (
                               <span
-                                className="shrink-0 rounded px-1 py-0.5 text-[10px] font-black leading-none text-white"
+                                className="shrink-0 rounded px-1 py-0.5 text-[9px] font-black leading-none text-white"
                                 style={{
                                   background: color.bg,
                                   border: `1px solid ${color.border}`,
@@ -606,7 +631,7 @@ export function FormationField({
                           >
                             <TitleBadges
                               titles={playerTitles[name]}
-                              size={mode === "faceon" ? 13 : 13}
+                              size={mode === "faceon" ? 11 : 13}
                               max={3}
                               gap={mode === "faceon" ? 1 : 2}
                               direction={mode === "faceon" ? "column" : "row"}

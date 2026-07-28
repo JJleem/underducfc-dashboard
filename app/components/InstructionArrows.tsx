@@ -21,12 +21,17 @@ export default function InstructionArrows({
   role,
   radius = 25,
   size = 12,
+  positionX,
+  positionY,
 }: {
   instructions: string[];
   role: Role;
   /** 마커 중심에서 화살표까지 거리(px) */
   radius?: number;
   size?: number;
+  /** 필드 경계 근처 화살표 길이 자동 축소용 좌표(0~100) */
+  positionX?: number;
+  positionY?: number;
 }) {
   const arrows = arrowsForSlot(instructions, role);
   if (arrows.length === 0) return null;
@@ -39,7 +44,21 @@ export default function InstructionArrows({
         const glowId = `${gradientId}-glow`;
         const isVertical = dir === "up" || dir === "down";
         const isDiagonal = dir === "upLeft" || dir === "upRight";
-        const arrowLength = radius * (isVertical ? 1.45 : isDiagonal ? 1.18 : 1);
+        const baseLength = radius * (isVertical ? 1.45 : isDiagonal ? 1.18 : 1);
+        const horizontalRoom =
+          dir === "left" || dir === "upLeft"
+            ? positionX === undefined ? 1 : positionX / 23
+            : dir === "right" || dir === "upRight"
+              ? positionX === undefined ? 1 : (100 - positionX) / 23
+              : 1;
+        const verticalRoom =
+          dir === "up" || dir === "upLeft" || dir === "upRight"
+            ? positionY === undefined ? 1 : positionY / 18
+            : dir === "down"
+              ? positionY === undefined ? 1 : (100 - positionY) / 18
+              : 1;
+        const edgeScale = Math.max(0.4, Math.min(1, horizontalRoom, verticalRoom));
+        const arrowLength = baseLength * edgeScale;
         return (
           <svg
             key={dir}
