@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ChevronLeft, Trash2, Send, Heart, MessageCircle, User, Pencil } from "lucide-react";
+import { ChevronLeft, Trash2, Send, Heart, MessageCircle, Eye, User, Pencil } from "lucide-react";
 import { youtubeEmbed } from "../../lib/youtube";
 import { FormationField, type SeasonStat } from "../../components/FormationField";
 import type { EarnedTitle } from "../../lib/titles";
@@ -52,12 +52,29 @@ export default function BoardDetailClient({
   const [busy, setBusy] = useState(false);
   const [liked, setLiked] = useState(post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount);
+  const [viewCount, setViewCount] = useState(post.viewCount);
   const embed = youtubeEmbed(post.youtubeUrl);
   // 내 전술 글이면 수정 버튼을 노출 (전술 글은 1인 1개라 항상 /board/lineup으로 간다)
   const isMyLineup = !!post.lineup && !!currentUser && post.kakaoId === currentUser.kakaoId;
   // 전술 글은 쿼터별 안을 가질 수 있다 (최대 4개)
   const [quarterIdx, setQuarterIdx] = useState(0);
   const shownQuarter = post.lineup?.quarters[quarterIdx] ?? post.lineup?.quarters[0] ?? null;
+
+  useEffect(() => {
+    const key = `ud:board:viewed:${post.id}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      // 저장소 접근이 막혀도 상세 보기는 정상 동작한다.
+    }
+    fetch(`/api/board/${post.id}/view`, { method: "POST" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (typeof data?.viewCount === "number") setViewCount(data.viewCount);
+      })
+      .catch(() => {});
+  }, [post.id]);
 
   async function toggleLike() {
     if (!currentUser) { signIn("kakao"); return; }
@@ -226,6 +243,9 @@ export default function BoardDetailClient({
           </button>
           <span className="flex items-center gap-1.5 px-1 text-[13px] font-bold text-gray-400">
             <MessageCircle className="h-4 w-4" /> {comments.length}
+          </span>
+          <span className="flex items-center gap-1.5 px-1 text-[13px] font-bold text-gray-400">
+            <Eye className="h-4 w-4" /> {viewCount}
           </span>
         </div>
 

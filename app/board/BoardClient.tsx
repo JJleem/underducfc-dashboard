@@ -3,16 +3,17 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { ChevronLeft, Plus, MessageCircle, PlayCircle, Youtube, Search, Heart, X, Loader2, Check, ClipboardList, Pencil } from "lucide-react";
+import { ChevronLeft, Plus, MessageCircle, PlayCircle, Youtube, Search, Heart, Eye, X, Loader2, Check, ClipboardList, Pencil } from "lucide-react";
 import { youtubeThumb, youtubeId } from "../lib/youtube";
 import AppBottomNav from "../components/AppBottomNav";
 import type { BoardPost } from "../lib/board";
 import LineupMini from "../components/LineupMini";
 
-type Sort = "latest" | "popular" | "likes" | "comments";
+type Sort = "latest" | "popular" | "views" | "likes" | "comments";
 const SORTS: { key: Sort; label: string }[] = [
   { key: "latest", label: "최신순" },
   { key: "popular", label: "인기순" },
+  { key: "views", label: "조회순" },
   { key: "likes", label: "좋아요순" },
   { key: "comments", label: "댓글순" },
 ];
@@ -63,7 +64,13 @@ export default function BoardClient({
     if (sort === "latest")
       return [...filtered].sort((a, b) => freshness(b) - freshness(a) || b.id - a.id);
     const score = (p: BoardPost) =>
-      sort === "likes" ? p.likeCount : sort === "comments" ? p.commentCount : p.likeCount + p.commentCount;
+      sort === "views"
+        ? p.viewCount
+        : sort === "likes"
+          ? p.likeCount
+          : sort === "comments"
+            ? p.commentCount
+            : p.likeCount + p.commentCount + p.viewCount;
     return [...filtered].sort((a, b) => score(b) - score(a) || b.id - a.id);
   }, [posts, query, sort]);
 
@@ -242,6 +249,9 @@ export default function BoardClient({
                         </button>
                         <span className="flex items-center gap-1">
                           <MessageCircle className="h-3.5 w-3.5" /> {p.commentCount}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3.5 w-3.5" /> {p.viewCount}
                         </span>
                       </div>
                     </div>

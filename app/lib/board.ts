@@ -29,6 +29,7 @@ export interface BoardPost {
   lineup: BoardLineup | null;
   commentCount: number;
   likeCount: number;
+  viewCount: number;
   likedByMe: boolean;
 }
 
@@ -56,7 +57,7 @@ interface PostRow {
   id: number; kakao_id: string | null; author: string | null; title: string | null;
   youtube_url: string | null; body: string | null; created_at: string | null;
   updated_at: string | null; lineup: LineupRow | null;
-  comment_count: number; like_count: number;
+  comment_count: number; like_count: number; view_count?: number | null;
 }
 
 // 백엔드는 좌표를 [[x,y],…], 개인 전술을 ["id,id",…]로 준다.
@@ -91,6 +92,7 @@ const toPost = (r: PostRow): BoardPost => ({
   lineup: toLineup(r.lineup ?? null),
   commentCount: r.comment_count ?? 0,
   likeCount: r.like_count ?? 0,
+  viewCount: r.view_count ?? 0,
   likedByMe: false,
 });
 
@@ -185,6 +187,15 @@ export async function toggleBoardLike(
     { kakao_id: kakaoId },
   );
   return { liked: r.liked, likeCount: r.like_count };
+}
+
+/** 상세 진입 조회수 증가. 백엔드는 증가 후 최신 누적값을 돌려준다. */
+export async function incrementBoardView(postId: number): Promise<number> {
+  const r = await udPost<{ view_count: number }>(
+    `/api/underduck/board/${postId}/view`,
+    {},
+  );
+  return r.view_count ?? 0;
 }
 
 /** 특정 사용자가 좋아요한 post_id 집합. */
