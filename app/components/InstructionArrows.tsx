@@ -1,6 +1,5 @@
 "use client";
-// 개인 전술의 움직임 방향을 마커 주변에 표시한다.
-// 얼굴 이미지 위에서도 방향을 한눈에 읽을 수 있게 선과 화살촉을 함께 그린다.
+// 개인 전술의 움직임 방향을 마커 주변에 은은한 이동 궤적으로 표시한다.
 import { arrowsForSlot, type ArrowDir, type Role } from "../lib/positions";
 
 const TONE_COLOR = {
@@ -44,45 +43,26 @@ export default function InstructionArrows({
             height={size * 1.55}
             viewBox="0 0 14 22"
             aria-hidden
-            className="pointer-events-none absolute"
+            className="pointer-events-none absolute z-0"
             style={{
               left: "50%",
               top: "50%",
               transform: `translate(-50%,-50%) translate(${x * radius}px, ${y * radius}px) rotate(${angle}deg)`,
-              zIndex: 30,
               overflow: "visible",
-              filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.95))",
+              opacity: 0.68,
+              filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.45))",
             }}
           >
+            <defs>
+              <linearGradient id={`arrow-${tone}-${dir}`} x1="7" y1="21" x2="7" y2="1">
+                <stop offset="0%" stopColor={TONE_COLOR[tone]} stopOpacity="0.15" />
+                <stop offset="58%" stopColor={TONE_COLOR[tone]} stopOpacity="0.72" />
+                <stop offset="100%" stopColor={TONE_COLOR[tone]} stopOpacity="1" />
+              </linearGradient>
+            </defs>
             <path
-              d="M7 20 V6"
-              fill="none"
-              stroke="rgba(2,6,23,0.9)"
-              strokeWidth="5"
-              strokeLinecap="round"
-            />
-            <path
-              d="M7 20 V6"
-              fill="none"
-              stroke={TONE_COLOR[tone]}
-              strokeWidth="2.8"
-              strokeLinecap="round"
-            />
-            <path
-              d="M2 7.5 L7 1.5 L12 7.5"
-              fill="none"
-              stroke="rgba(2,6,23,0.9)"
-              strokeWidth="5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M2 7.5 L7 1.5 L12 7.5"
-              fill="none"
-              stroke={TONE_COLOR[tone]}
-              strokeWidth="2.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              d="M5 21 V8 H1.5 L7 1 L12.5 8 H9 V21 Z"
+              fill={`url(#arrow-${tone}-${dir})`}
             />
           </svg>
         );

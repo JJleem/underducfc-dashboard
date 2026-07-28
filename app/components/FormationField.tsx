@@ -11,6 +11,7 @@ import InstructionArrows from "./InstructionArrows";
 import {
   FORMATION_PRESETS,
   groupOfRole,
+  instructionAllowed,
   instructionLabel,
   instructionShort,
   isCustomShape,
@@ -110,8 +111,8 @@ function FaceOnMarker({
     <div
       className="relative flex items-end justify-center"
       style={{
-        width: 54,
-        height: 62,
+        width: 48,
+        height: 56,
       }}
     >
       <div
@@ -131,7 +132,7 @@ function FaceOnMarker({
           fetchPriority="high"
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
-          className={`absolute inset-0 h-[62px] w-[54px] object-contain object-bottom drop-shadow-[0_5px_5px_rgba(0,0,0,0.85)] transition-opacity duration-150 ${
+          className={`absolute inset-0 h-[56px] w-[48px] object-contain object-bottom drop-shadow-[0_4px_4px_rgba(0,0,0,0.75)] transition-opacity duration-150 ${
             loaded ? "opacity-100" : "opacity-0"
           }`}
         />
@@ -309,6 +310,9 @@ export function FormationField({
                 const pos = positions?.[i];
                 if (!pos || !player) return null;
                 const role = roles[i];
+                const visibleInstructions = instructions[i].filter((id) =>
+                  instructionAllowed(id, role)
+                );
                 const group = groupOfRole(role);
                 const color = GROUP_COLOR[group];
                 const isTbd = player.trim() === "미정";
@@ -375,20 +379,18 @@ export function FormationField({
                         style={{
                           transformOrigin: "50% 100%",
                           width: mode === "faceon" ? 72 : undefined,
-                          height: mode === "faceon" ? 88 : undefined,
+                          height: mode === "faceon" ? 108 : undefined,
                         }}
                       >
                         <div className="relative">
                           {/* 개인 전술 방향 — 전술 토글이 켜져 있을 때만 */}
                           {showTactic && !isTbd && (
-                            <div className="pointer-events-none absolute inset-0 z-30">
-                              <InstructionArrows
-                                instructions={instructions[i]}
-                                role={role}
-                                radius={mode === "faceon" ? 39 : 27}
-                                size={mode === "faceon" ? 15 : 12}
-                              />
-                            </div>
+                            <InstructionArrows
+                              instructions={visibleInstructions}
+                              role={role}
+                              radius={mode === "faceon" ? 35 : 27}
+                              size={mode === "faceon" ? 15 : 12}
+                            />
                           )}
                           {mode === "faceon" && !isTbd ? (
                             <FaceOnMarker
@@ -531,23 +533,18 @@ export function FormationField({
                             {isSel ? name : name.length > 4 ? name.slice(0, 4) : name}
                           </div>
                         )}
-                        {showTactic && !isTbd && instructions[i].some(instructionShort) && (
-                          // faceon은 마커 높이가 고정이라 절대배치로 띄운다 (레이아웃 안 밀림)
+                        {showTactic && !isTbd && visibleInstructions.some(instructionShort) && (
                           <div
-                            className={`flex items-center justify-center gap-0.5 ${
-                              mode === "faceon"
-                                ? "absolute bottom-[-25px] left-1/2 -translate-x-1/2 z-30"
-                                : "mt-0.5"
-                            }`}
+                            className="mt-1 flex min-h-[13px] items-center justify-center gap-0.5"
                           >
-                            {instructions[i].map((id) => instructionShort(id) && (
+                            {visibleInstructions.map((id) => instructionShort(id) && (
                               <span
                                 key={id}
-                                className="rounded px-1.5 py-0.5 text-[8px] font-black leading-none text-white whitespace-nowrap"
+                                className="rounded px-1 py-0.5 text-[7px] font-black leading-none text-white whitespace-nowrap"
                                 style={{
-                                  background: "rgba(190,24,93,0.96)",
-                                  border: "1px solid rgba(255,255,255,0.7)",
-                                  boxShadow: "0 2px 5px rgba(0,0,0,0.65)",
+                                  background: "rgba(190,24,93,0.94)",
+                                  border: "1px solid rgba(255,255,255,0.55)",
+                                  boxShadow: "0 1px 3px rgba(0,0,0,0.55)",
                                   textShadow: "0 1px 2px rgba(0,0,0,0.85)",
                                 }}
                               >
