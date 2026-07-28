@@ -2,6 +2,11 @@
 // 선수 위치에서 뻗는 점선 이동 경로. 전술판의 잔디 레이어에서만 보인다.
 import { arrowsForSlot, type ArrowDir, type Role } from "../lib/positions";
 
+const TONE_COLOR = {
+  attack: "#FF8FA3",
+  defense: "#7DB8FF",
+} as const;
+
 const DIR: Record<ArrowDir, number> = {
   up: 0,
   down: 180,
@@ -28,8 +33,9 @@ export default function InstructionArrows({
 
   return (
     <>
-      {arrows.map(({ dir }) => {
+      {arrows.map(({ dir, tone }) => {
         const angle = DIR[dir];
+        const gradientId = `instruction-arrow-${tone}-${dir}`;
         return (
           <svg
             key={dir}
@@ -44,26 +50,29 @@ export default function InstructionArrows({
               transform: `translate(-50%,-100%) rotate(${angle}deg)`,
               transformOrigin: "50% 100%",
               overflow: "visible",
-              opacity: 0.78,
-              filter: "drop-shadow(0 1px 0 rgba(255,255,255,0.18))",
+              opacity: 0.48,
+              filter: `drop-shadow(0 0 2px ${TONE_COLOR[tone]}55)`,
             }}
           >
+            <defs>
+              <linearGradient id={gradientId} x1="8" y1="45" x2="8" y2="4">
+                <stop offset="0%" stopColor={TONE_COLOR[tone]} stopOpacity="0" />
+                <stop offset="52%" stopColor={TONE_COLOR[tone]} stopOpacity="0.48" />
+                <stop offset="100%" stopColor={TONE_COLOR[tone]} stopOpacity="0.95" />
+              </linearGradient>
+            </defs>
             <path
-              d="M8 45 V10"
-              fill="none"
-              stroke="#071A10"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeDasharray="2 4"
-            />
-            <path
-              d="M3.5 11 L8 4 L12.5 11"
-              fill="none"
-              stroke="#071A10"
-              strokeWidth="2.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+              d="M5.75 46 V12 H2 L8 3 L14 12 H10.25 V46 Z"
+              fill={`url(#${gradientId})`}
+            >
+              <animate
+                attributeName="opacity"
+                values="0.72;1;0.72"
+                dur="2.8s"
+                begin="1.8s"
+                repeatCount="indefinite"
+              />
+            </path>
           </svg>
         );
       })}

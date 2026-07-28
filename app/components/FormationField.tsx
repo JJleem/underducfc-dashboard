@@ -307,6 +307,44 @@ export function FormationField({
               transition={{ duration: 1.1, delay: 0.4, ease: "easeInOut" }}
             />
 
+            {/* 모든 화살표를 선수보다 먼저 그려 어떤 카드 정보도 덮지 않게 한다. */}
+            {mode === "faceon" && showTactic && (
+              <motion.div
+                className="pointer-events-none absolute inset-0 z-[5]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.75, delay: entered ? 0 : 1.05, ease: "easeOut" }}
+              >
+                {lineup.players.map((player, i) => {
+                  const pos = positions?.[i];
+                  if (!pos || !player || player.trim() === "미정") return null;
+                  const role = roles[i];
+                  const visibleInstructions = instructions[i].filter((id) =>
+                    instructionAllowed(id, role)
+                  );
+                  if (!visibleInstructions.length) return null;
+                  return (
+                    <div
+                      key={`arrows-${i}`}
+                      className="absolute"
+                      style={{
+                        left: `${pos.x}%`,
+                        top: `${pos.y}%`,
+                        transform: "translate(-50%, -56px)",
+                      }}
+                    >
+                      <InstructionArrows
+                        instructions={visibleInstructions}
+                        role={role}
+                        radius={64}
+                        size={17}
+                      />
+                    </div>
+                  );
+                })}
+              </motion.div>
+            )}
+
             <AnimatePresence>
               {lineup.players.map((player, i) => {
                 const pos = positions?.[i];
@@ -352,23 +390,9 @@ export function FormationField({
                         background: "radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, transparent 70%)",
                       }}
                     />
-                    {/* 전술게시판에서는 화살표를 카드가 아닌 잔디 위 이동 경로로 둔다. */}
-                    {mode === "faceon" && showTactic && !isTbd && (
-                      <div
-                        className="pointer-events-none absolute z-[1]"
-                        style={{ left: 0, top: -56 }}
-                      >
-                        <InstructionArrows
-                          instructions={visibleInstructions}
-                          role={role}
-                          radius={64}
-                          size={17}
-                        />
-                      </div>
-                    )}
                     {/* 역회전으로 일어서는 선수 카드 (빌보드) */}
                     <div
-                      className="absolute"
+                      className="absolute z-10"
                       style={{
                         left: 0, bottom: 0,
                         transform:
