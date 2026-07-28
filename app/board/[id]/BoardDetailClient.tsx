@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { ChevronLeft, Trash2, Send, Heart, MessageCircle, User, Pencil } from "lucide-react";
 import { youtubeEmbed } from "../../lib/youtube";
-import { FormationField } from "../../components/FormationField";
+import { FormationField, type SeasonStat } from "../../components/FormationField";
+import type { EarnedTitle } from "../../lib/titles";
 import AppBottomNav from "../../components/AppBottomNav";
 import type { BoardPost, BoardComment } from "../../lib/board";
 
@@ -32,12 +33,18 @@ export default function BoardDetailClient({
   currentUser,
   admin,
   rosterMap,
+  captainRoles = {},
+  playerStats,
+  playerTitles = {},
 }: {
   post: BoardPost;
   comments: BoardComment[];
   currentUser: { kakaoId: string; name: string } | null;
   admin: boolean;
   rosterMap: Record<string, string>;
+  captainRoles?: Record<string, string>;
+  playerStats?: Record<string, SeasonStat>;
+  playerTitles?: Record<string, EarnedTitle[]>;
 }) {
   const router = useRouter();
   const [comments, setComments] = useState(initialComments);
@@ -127,10 +134,10 @@ export default function BoardDetailClient({
       <div className="px-4 pt-4">
         {/* 전술 글이면 라인업, 아니면 영상 */}
         {post.lineup ? (
-          <div className="space-y-2">
+          <div className="-mx-4 space-y-2">
             {/* 쿼터가 2개 이상이면 탭으로 전환 */}
             {post.lineup.quarters.length > 1 && (
-              <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+              <div className="flex gap-1.5 overflow-x-auto px-4 pb-0.5">
                 {post.lineup.quarters.map((q, i) => (
                   <button
                     key={q.quarter}
@@ -156,6 +163,10 @@ export default function BoardDetailClient({
                   instructions: shownQuarter.instructions,
                 }}
                 rosterMap={rosterMap}
+                captainRoles={captainRoles}
+                playerStats={playerStats}
+                playerTitles={playerTitles}
+                mode="faceon"
               />
             )}
           </div>
