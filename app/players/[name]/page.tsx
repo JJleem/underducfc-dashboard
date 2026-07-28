@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
 import { auth } from "@/auth";
 import { getMatchesRows } from "../../lib/matches-backend";
 import {
@@ -33,6 +32,7 @@ import PrefPosEditor from "../../components/PrefPosEditor";
 import PlayerAvatar from "../../components/PlayerAvatar";
 import PlayerFace from "../../components/PlayerFace";
 import AppBottomNav from "../../components/AppBottomNav";
+import PlayerProfileBackButton from "../../components/PlayerProfileBackButton";
 
 export const dynamic = "force-dynamic";
 
@@ -178,9 +178,7 @@ export default async function PlayerPage({
       <div className="max-w-md mx-auto pb-28">
         {/* 상단 바 */}
         <div className="sticky top-0 z-10 flex items-center gap-2 px-4 py-3 bg-gray-50/80 dark:bg-[#0a0a0c]/80 backdrop-blur border-b border-gray-200/60 dark:border-white/[0.06]">
-          <Link href="/" className="flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10">
-            <ChevronLeft className="w-4 h-4" />
-          </Link>
+          <PlayerProfileBackButton />
           <span className="text-[12px] font-black tracking-widest text-gray-400">PLAYER</span>
         </div>
 
