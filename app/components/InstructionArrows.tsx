@@ -36,11 +36,15 @@ export default function InstructionArrows({
       {arrows.map(({ dir, tone }) => {
         const angle = DIR[dir];
         const gradientId = `instruction-arrow-${tone}-${dir}`;
+        const glowId = `${gradientId}-glow`;
+        const isVertical = dir === "up" || dir === "down";
+        const isDiagonal = dir === "upLeft" || dir === "upRight";
+        const arrowLength = radius * (isVertical ? 1.45 : isDiagonal ? 1.18 : 1);
         return (
           <svg
             key={dir}
             width={size}
-            height={radius}
+            height={arrowLength}
             viewBox="0 0 16 48"
             aria-hidden
             className="pointer-events-none absolute z-0"
@@ -50,26 +54,44 @@ export default function InstructionArrows({
               transform: `translate(-50%,-100%) rotate(${angle}deg)`,
               transformOrigin: "50% 100%",
               overflow: "visible",
-              opacity: 0.48,
-              filter: `drop-shadow(0 0 2px ${TONE_COLOR[tone]}55)`,
+              opacity: 0.72,
+              filter: `drop-shadow(0 0 3px ${TONE_COLOR[tone]}77)`,
             }}
           >
             <defs>
               <linearGradient id={gradientId} x1="8" y1="45" x2="8" y2="4">
                 <stop offset="0%" stopColor={TONE_COLOR[tone]} stopOpacity="0" />
-                <stop offset="52%" stopColor={TONE_COLOR[tone]} stopOpacity="0.48" />
-                <stop offset="100%" stopColor={TONE_COLOR[tone]} stopOpacity="0.95" />
+                <stop offset="42%" stopColor={TONE_COLOR[tone]} stopOpacity="0.38" />
+                <stop offset="76%" stopColor={TONE_COLOR[tone]} stopOpacity="0.82">
+                  <animate
+                    attributeName="stop-opacity"
+                    values="0.5;1;0.5"
+                    dur="2.2s"
+                    begin="1.5s"
+                    repeatCount="indefinite"
+                  />
+                </stop>
+                <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.92" />
               </linearGradient>
+              <filter id={glowId} x="-100%" y="-20%" width="300%" height="140%">
+                <feGaussianBlur stdDeviation="2.2" />
+              </filter>
             </defs>
+            <path
+              d="M5.75 46 V12 H2 L8 3 L14 12 H10.25 V46 Z"
+              fill={TONE_COLOR[tone]}
+              opacity="0.22"
+              filter={`url(#${glowId})`}
+            />
             <path
               d="M5.75 46 V12 H2 L8 3 L14 12 H10.25 V46 Z"
               fill={`url(#${gradientId})`}
             >
               <animate
                 attributeName="opacity"
-                values="0.72;1;0.72"
-                dur="2.8s"
-                begin="1.8s"
+                values="0.62;1;0.72"
+                dur="2.2s"
+                begin="1.5s"
                 repeatCount="indefinite"
               />
             </path>

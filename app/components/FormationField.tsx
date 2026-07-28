@@ -476,12 +476,12 @@ export function FormationField({
                               C
                             </div>
                           )}
-                          {showRoles && !isTbd && (
+                          {showRoles && !isTbd && mode !== "faceon" && (
                             <div
                               className="absolute flex items-center justify-center font-black tracking-tight"
                               style={{
                                 top: -7,
-                                right: mode === "faceon" ? 2 : -11,
+                                right: -11,
                                 height: 13,
                                 padding: "0 3px",
                                 borderRadius: 4,
@@ -540,7 +540,7 @@ export function FormationField({
                         </div>
                         {mode === "faceon" ? (
                           <div className="mt-1 flex items-center justify-center gap-1" style={{ maxWidth: 88 }}>
-                            {!isTbd && (
+                            {!isTbd && showRoles && (
                               <span
                                 className="shrink-0 rounded px-1 py-0.5 text-[10px] font-black leading-none text-white"
                                 style={{
@@ -549,7 +549,7 @@ export function FormationField({
                                   textShadow: "0 1px 2px rgba(0,0,0,0.7)",
                                 }}
                               >
-                                {isGuest ? "G" : jerseyNo}
+                                {role}
                               </span>
                             )}
                             <span
