@@ -289,8 +289,10 @@ export interface Instruction {
   roles?: Role[];
 }
 
-// 윙을 뺀 중앙 최전방 (타겟터처럼 중앙 스트라이커 전용 지시에 쓴다)
+// 윙을 뺀 중앙 최전방 (타겟터·침투처럼 중앙 스트라이커 전용 지시에 쓴다)
 const CENTRAL_FORWARDS: Role[] = ["LS", "ST", "RS", "LF", "CF", "RF"];
+const WINGERS: Role[] = ["LW", "RW"];
+const DEF_MIDS: Role[] = ["LDM", "CDM", "RDM"];
 
 export const INSTRUCTIONS: Record<PosGroup, Instruction[]> = {
   GK: [
@@ -307,16 +309,19 @@ export const INSTRUCTIONS: Record<PosGroup, Instruction[]> = {
   MF: [
     { id: "join_attack", label: "공격 가담", short: "공격가담" },
     { id: "join_defense", label: "수비 가담", short: "수비가담" },
+    { id: "side_cover", label: "사이드 커버", short: "사이드", roles: DEF_MIDS },
+    { id: "center_cover", label: "중앙 커버", short: "중앙커버", roles: DEF_MIDS },
     { id: "stay_central", label: "중앙 유지", short: "중앙유지" },
     { id: "press_high", label: "전방 압박", short: "전방압박" },
     { id: "free_roam", label: "자유 이동", short: "자유이동" },
   ],
   FW: [
     { id: "target_man", label: "타겟터", short: "타겟터", roles: CENTRAL_FORWARDS },
-    { id: "run_behind", label: "침투", short: "침투" },
+    // 침투는 중앙 공격수, 윙어는 대각선으로 파고드는 "안으로 침투하기"를 쓴다
+    { id: "run_behind", label: "침투", short: "침투", roles: CENTRAL_FORWARDS },
+    { id: "cut_inside", label: "안으로 침투하기", short: "안으로", roles: WINGERS },
     { id: "drop_deep", label: "내려서 받기", short: "내려받기" },
     { id: "stay_wide", label: "측면 벌리기", short: "측면벌림" },
-    { id: "cut_inside", label: "안으로 파고들기", short: "컷인" },
     { id: "press_forward", label: "압박 수행", short: "압박" },
   ],
 };
@@ -348,6 +353,82 @@ export function instructionLabel(id?: string | null): string | null {
 
 export function instructionShort(id?: string | null): string | null {
   return findInstruction(id)?.short ?? null;
+}
+
+// ── 개인 전술 방향 표시 ──
+// 방향이 뜻을 갖는 지시만 마커에 작은 화살표로 보여준다.
+// 공격 방향 움직임은 핑크, 수비 방향은 파랑.
+
+export type ArrowDir = "up" | "down" | "left" | "right" | "upLeft" | "upRight";
+export type ArrowTone = "attack" | "defense";
+
+export interface InstructionArrow {
+  dir: ArrowDir;
+  tone: ArrowTone;
+}
+
+const LEFT_SIDE: Role[] = ["LB", "LWB", "LDM", "LM", "LAM", "LW", "LF", "LS"];
+
+/** 이 지시를 이 포지션에서 걸었을 때 그려줄 화살표 (없으면 빈 배열) */
+export function instructionArrows(id: string, role: Role): InstructionArrow[] {
+  const isLeft = LEFT_SIDE.includes(role);
+  const attack = (dir: ArrowDir): InstructionArrow[] => [{ dir, tone: "attack" }];
+  const defend = (dir: ArrowDir): InstructionArrow[] => [{ dir, tone: "defense" }];
+
+  switch (id) {
+    // 수비 → 전진
+    case "overlap":
+      return attack("up");
+    // 인버티드 풀백은 미드필드 안쪽으로 접혀 들어간다
+    case "inverted":
+      return attack(isLeft ? "right" : "left");
+
+    // 수비형 미드의 커버 범위
+    case "side_cover":
+      return role === "CDM"
+        ? [{ dir: "left", tone: "defense" }, { dir: "right", tone: "defense" }]
+        : defend(isLeft ? "left" : "right");
+    case "center_cover":
+      // 중앙(CDM)은 이미 가운데라 뒤로 내려가 커버한다
+      return role === "CDM" ? defend("down") : defend(isLeft ? "right" : "left");
+
+    // 미드필더 가담
+    case "join_attack":
+      return attack("up");
+    case "join_defense":
+      return defend("down");
+
+    // 최전방
+    case "run_behind":
+      return attack("up");
+    case "drop_deep":
+      return attack("down");
+    case "stay_wide":
+      // 중앙 공격수는 양옆, 좌우로 치우친 선수는 자기 쪽으로
+      return role === "ST" || role === "CF"
+        ? [{ dir: "left", tone: "attack" }, { dir: "right", tone: "attack" }]
+        : attack(isLeft ? "left" : "right");
+    // 윙어가 대각선으로 골대를 향해 파고든다
+    case "cut_inside":
+      return attack(isLeft ? "upRight" : "upLeft");
+
+    default:
+      return [];
+  }
+}
+
+/** 슬롯의 지시들을 화살표 목록으로 (같은 방향은 하나로 합친다) */
+export function arrowsForSlot(ids: string[], role: Role): InstructionArrow[] {
+  const seen = new Set<ArrowDir>();
+  const out: InstructionArrow[] = [];
+  ids.forEach((id) => {
+    instructionArrows(id, role).forEach((a) => {
+      if (seen.has(a.dir)) return;
+      seen.add(a.dir);
+      out.push(a);
+    });
+  });
+  return out;
 }
 
 /** 선수 한 명에게 걸 수 있는 개인 전술 최대 개수 */

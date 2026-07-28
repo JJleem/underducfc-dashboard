@@ -7,6 +7,7 @@
 // 상태는 전부 부모가 들고, 이 컴포넌트는 드래그 진행 상태만 내부에 둔다.
 import React, { useRef, useState } from "react";
 import Image from "next/image";
+import InstructionArrows from "./InstructionArrows";
 import { ArrowRightLeft, X } from "lucide-react";
 import {
   MAX_INSTRUCTIONS,
@@ -294,6 +295,12 @@ export default function LineupPitch({
                 style={{ background: color, boxShadow: "0 1px 3px rgba(0,0,0,0.5)" }}
               >
                 {role}
+              </span>
+              {/* 개인 전술 방향 — 원 주변에 작게 */}
+              <span className="pointer-events-none absolute" style={{ left: "50%", top: 25 }}>
+                {hasPlayer && !isTbd && (
+                  <InstructionArrows instructions={instructions[i]} role={role} />
+                )}
               </span>
               <div
                 className={`flex items-center justify-center rounded-full font-black transition-all ${isActive || isSwapSource ? "pulse-ring" : ""}`}

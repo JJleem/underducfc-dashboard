@@ -282,9 +282,19 @@ export default function BoardLineupClient({
                 }`}
               >
                 {q.quarter}
-                <span className={`text-[8px] ${done ? "opacity-70" : "text-amber-500"}`}>
-                  {done ? "●" : "미완성"}
-                </span>
+                {done ? (
+                  <span className="text-[8px] opacity-70">●</span>
+                ) : (
+                  <span
+                    className={`rounded px-1 text-[8px] font-black leading-[1.6] ${
+                      active === i
+                        ? "bg-white/25 text-white"
+                        : "bg-amber-500 text-white"
+                    }`}
+                  >
+                    미완성
+                  </span>
+                )}
               </button>
             );
           })}

@@ -7,6 +7,7 @@ import { Crown, ExternalLink, X } from "lucide-react";
 import { TitleBadges } from "./TitleBadges";
 import type { EarnedTitle } from "../lib/titles";
 import { playerFaceOnSrc } from "../lib/player-faceons";
+import InstructionArrows from "./InstructionArrows";
 import {
   FORMATION_PRESETS,
   groupOfRole,
@@ -378,6 +379,15 @@ export function FormationField({
                         }}
                       >
                         <div className="relative">
+                          {/* 개인 전술 방향 — 전술 토글이 켜져 있을 때만 */}
+                          {showTactic && !isTbd && (
+                            <InstructionArrows
+                              instructions={instructions[i]}
+                              role={role}
+                              radius={mode === "faceon" ? 30 : 24}
+                              size={mode === "faceon" ? 10 : 9}
+                            />
+                          )}
                           {mode === "faceon" && !isTbd ? (
                             <FaceOnMarker
                               name={name}
