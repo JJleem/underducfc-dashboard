@@ -104,7 +104,6 @@ function FaceOnMarker({
   isGuest: boolean;
 }) {
   const src = playerFaceOnSrc(name);
-  const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
 
   return (
@@ -115,14 +114,14 @@ function FaceOnMarker({
         height: 51,
       }}
     >
-      <div
-        className={`mb-1 flex h-10 w-10 items-center justify-center rounded-full font-black transition-opacity duration-150 ${
-          loaded ? "opacity-0" : "opacity-100"
-        }`}
-        style={{ backgroundColor: color.bg, color: color.text }}
-      >
-        {isGuest ? "G" : no}
-      </div>
+      {(!src || failed) && (
+        <div
+          className="mb-1 flex h-10 w-10 items-center justify-center rounded-full font-black"
+          style={{ backgroundColor: color.bg, color: color.text }}
+        >
+          {isGuest ? "G" : no}
+        </div>
+      )}
       {src && !failed && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -130,11 +129,8 @@ function FaceOnMarker({
           alt={name}
           loading="eager"
           fetchPriority="high"
-          onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
-          className={`absolute inset-0 h-[51px] w-[44px] object-contain object-bottom drop-shadow-[0_4px_4px_rgba(0,0,0,0.75)] transition-opacity duration-150 ${
-            loaded ? "opacity-100" : "opacity-0"
-          }`}
+          className="absolute inset-0 h-[51px] w-[44px] object-contain object-bottom drop-shadow-[0_4px_4px_rgba(0,0,0,0.75)]"
         />
       )}
     </div>
@@ -362,8 +358,8 @@ export function FormationField({
                         <InstructionArrows
                           instructions={visibleInstructions}
                           role={role}
-                          radius={38}
-                          size={17}
+                          radius={54}
+                          size={18}
                         />
                       </div>
                     )}
@@ -586,7 +582,7 @@ export function FormationField({
                               size={mode === "faceon" ? 13 : 13}
                               max={3}
                               gap={mode === "faceon" ? 1 : 2}
-                              direction={mode === "faceon" ? "stack" : "row"}
+                              direction={mode === "faceon" ? "column" : "row"}
                             />
                           </div>
                         ) : null}

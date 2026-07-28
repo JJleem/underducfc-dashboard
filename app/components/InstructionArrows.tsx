@@ -1,5 +1,5 @@
 "use client";
-// 개인 전술의 움직임 방향을 마커 주변에 은은한 이동 궤적으로 표시한다.
+// 선수 위치에서 뻗는 점선 이동 경로. 전술판의 잔디 레이어에서만 보인다.
 import { arrowsForSlot, type ArrowDir, type Role } from "../lib/positions";
 
 const TONE_COLOR = {
@@ -7,14 +7,13 @@ const TONE_COLOR = {
   defense: "#7DB8FF",
 } as const;
 
-// 마커 중심 기준 배치 (회전각, x·y 오프셋 비율)
-const DIR: Record<ArrowDir, { angle: number; x: number; y: number }> = {
-  up: { angle: 0, x: 0, y: -1 },
-  down: { angle: 180, x: 0, y: 1 },
-  left: { angle: -90, x: -1, y: 0 },
-  right: { angle: 90, x: 1, y: 0 },
-  upLeft: { angle: -45, x: -0.72, y: -0.72 },
-  upRight: { angle: 45, x: 0.72, y: -0.72 },
+const DIR: Record<ArrowDir, number> = {
+  up: 0,
+  down: 180,
+  left: -90,
+  right: 90,
+  upLeft: -45,
+  upRight: 45,
 };
 
 export default function InstructionArrows({
@@ -35,34 +34,47 @@ export default function InstructionArrows({
   return (
     <>
       {arrows.map(({ dir, tone }) => {
-        const { angle, x, y } = DIR[dir];
+        const angle = DIR[dir];
         return (
           <svg
             key={dir}
             width={size}
-            height={size * 1.55}
-            viewBox="0 0 14 22"
+            height={radius}
+            viewBox="0 0 16 48"
             aria-hidden
             className="pointer-events-none absolute z-0"
             style={{
               left: "50%",
               top: "50%",
-              transform: `translate(-50%,-50%) translate(${x * radius}px, ${y * radius}px) rotate(${angle}deg)`,
+              transform: `translate(-50%,-100%) rotate(${angle}deg)`,
+              transformOrigin: "50% 100%",
               overflow: "visible",
-              opacity: 0.68,
+              opacity: 0.72,
               filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.4))",
             }}
           >
             <defs>
-              <linearGradient id={`arrow-${tone}-${dir}`} x1="7" y1="21" x2="7" y2="1">
-                <stop offset="0%" stopColor={TONE_COLOR[tone]} stopOpacity="0.15" />
-                <stop offset="58%" stopColor={TONE_COLOR[tone]} stopOpacity="0.72" />
+              <linearGradient id={`arrow-${tone}-${dir}`} x1="8" y1="46" x2="8" y2="2">
+                <stop offset="0%" stopColor={TONE_COLOR[tone]} stopOpacity="0.3" />
+                <stop offset="58%" stopColor={TONE_COLOR[tone]} stopOpacity="0.78" />
                 <stop offset="100%" stopColor={TONE_COLOR[tone]} stopOpacity="1" />
               </linearGradient>
             </defs>
             <path
-              d="M5 21 V8 H1.5 L7 1 L12.5 8 H9 V21 Z"
-              fill={`url(#arrow-${tone}-${dir})`}
+              d="M8 44 V9"
+              fill="none"
+              stroke={`url(#arrow-${tone}-${dir})`}
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeDasharray="3 4"
+            />
+            <path
+              d="M3.5 10 L8 3 L12.5 10"
+              fill="none"
+              stroke={TONE_COLOR[tone]}
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
           </svg>
         );
