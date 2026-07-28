@@ -1,13 +1,25 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Sun, Moon, RotateCcw, Save, Check, UserPlus, X, ArrowRightLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Sun, Moon, RotateCcw, Save, Check, UserPlus, X, ArrowRightLeft, Plus, Trash2, Move, ClipboardList } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { useTheme } from "next-themes";
 import { MatchData, LineupData } from "../../../components/DashboardClient";
-import { FORMATION_POSITIONS } from "../../../components/FormationField";
 import type { SubstitutionEvent } from "../../../lib/lineup";
+import LineupPitch from "../../../components/LineupPitch";
+import type { BoardLineup } from "../../../lib/board";
+import {
+  FORMATION_PRESETS,
+  formationOf,
+  TACTICS,
+  instructionAllowed,
+  parseInstructions,
+  parsePositions,
+  roleFromPoint,
+  serializeInstructions,
+  serializePositions,
+  type Point,
+} from "../../../lib/positions";
 import {
   Select,
   SelectContent,
@@ -20,25 +32,17 @@ const QUARTERS = ["1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
 const FORMATIONS = ["4-3-3", "4-4-2", "4-2-3-1", "3-5-2", "3-4-3", "5-3-2", "4-1-4-1"];
 const MAX_SUBS = 9;
 
-function getLayerColor(index: number, formation: string): string {
-  if (index === 0) return "#F59E0B";
-  const layers = formation.split("-").map(Number);
-  const totalLayers = layers.length;
-  let count = 1;
-  for (let i = 0; i < layers.length; i++) {
-    if (index < count + layers[i]) {
-      if (i === 0) return "#3B82F6";
-      if (i === totalLayers - 1) return "#FF8FA3";
-      return "#10B981";
-    }
-    count += layers[i];
-  }
-  return "#10B981";
-}
-
 interface ActiveSlot {
   type: "player" | "sub";
   index: number;
+}
+
+/** 게시판 전술 글에서 불러오기 위한 최소 정보 */
+export interface BoardLineupOption {
+  id: number;
+  title: string;
+  author: string;
+  lineup: BoardLineup;
 }
 
 interface LineupEditorProps {
@@ -47,6 +51,7 @@ interface LineupEditorProps {
   attendees: string[];
   rosterMap: Record<string, string>;
   prefPosMap?: Record<string, string[]>;
+  boardLineups?: BoardLineupOption[];
 }
 
 // 선호 포지션 카테고리 색 (GK 주황 / 수비 파랑 / 미드 초록 / 공격 핑크)
@@ -57,28 +62,51 @@ const PREF_POS_COLOR: Record<string, string> = {
   LW: "#FF8FA3", RW: "#FF8FA3", ST: "#FF8FA3",
 };
 
-export default function LineupEditor({ match, lineups, attendees, rosterMap, prefPosMap = {} }: LineupEditorProps) {
+export default function LineupEditor({
+  match,
+  lineups,
+  attendees,
+  rosterMap,
+  prefPosMap = {},
+  boardLineups = [],
+}: LineupEditorProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
 
   const [quarter, setQuarter] = useState(QUARTERS[0]);
   const [formation, setFormation] = useState(FORMATIONS[0]);
+  const [positions, setPositions] = useState<Point[]>(FORMATION_PRESETS[FORMATIONS[0]]);
+  const [tactic, setTactic] = useState("");
+  const [instructions, setInstructions] = useState<string[][]>(() => Array.from({ length: 11 }, () => []));
   const [assignments, setAssignments] = useState<(string | null)[]>(Array(11).fill(null));
   const [subs, setSubs] = useState<(string | null)[]>(Array(MAX_SUBS).fill(null));
   const [substitutions, setSubstitutions] = useState<SubstitutionEvent[]>([]);
   const [activeSlot, setActiveSlot] = useState<ActiveSlot | null>(null);
+  // "자리 바꾸기"를 누른 슬롯. 다음에 탭하는 슬롯과 선수를 맞바꾼다.
+  const [swapFrom, setSwapFrom] = useState<ActiveSlot | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [guests, setGuests] = useState<string[]>([]);
   const [guestInput, setGuestInput] = useState("");
   const [moveTarget, setMoveTarget] = useState<string | null>(null);
   const [moving, setMoving] = useState(false);
+  // 드래그 중 LineupPitch가 알려주는 실시간 포메이션 이름 (끝나면 null)
+  const [liveShape, setLiveShape] = useState<string | null>(null);
+  // 게시판 불러오기
+  const [importing, setImporting] = useState(false);
+  const [importNote, setImportNote] = useState<string | null>(null);
+  // 불러올 글을 고른 뒤 어느 쿼터로 넣을지 정하는 중간 단계
+  const [pendingImport, setPendingImport] = useState<BoardLineupOption | null>(null);
 
   // 쿼터 변경 시 기존 라인업 로드
   useEffect(() => {
     const existing = lineups.find((l) => l.quarter === quarter);
     if (existing) {
-      setFormation(existing.formation || FORMATIONS[0]);
+      const f = existing.formation || FORMATIONS[0];
+      setFormation(f);
+      setPositions(parsePositions(existing.positions) ?? FORMATION_PRESETS[f] ?? FORMATION_PRESETS[FORMATIONS[0]]);
+      setTactic(existing.tactic || "");
+      setInstructions(parseInstructions(existing.instructions));
       const arr = Array(11).fill(null);
       existing.players.forEach((p, i) => { arr[i] = p || null; });
       setAssignments(arr);
@@ -90,6 +118,9 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap, pre
       setAssignments(Array(11).fill(null));
       setSubs(Array(MAX_SUBS).fill(null));
       setSubstitutions([]);
+      setPositions(FORMATION_PRESETS[formation] ?? FORMATION_PRESETS[FORMATIONS[0]]);
+      setTactic("");
+      setInstructions(Array.from({ length: 11 }, () => []));
     }
     setActiveSlot(null);
   }, [quarter]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -97,8 +128,70 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap, pre
   // 포메이션 변경 시 배치 초기화
   const handleFormationChange = (f: string) => {
     setFormation(f);
+    setPositions(FORMATION_PRESETS[f] ?? FORMATION_PRESETS[FORMATIONS[0]]);
     setAssignments(Array(11).fill(null));
+    setInstructions(Array.from({ length: 11 }, () => []));
     setActiveSlot(null);
+  };
+
+  const matchesPreset = (name: string) => {
+    const preset = FORMATION_PRESETS[name];
+    return !!preset && positions.every((p, i) => p.x === preset[i].x && p.y === preset[i].y);
+  };
+  const isCustom = !matchesPreset(formation);
+
+  // 드래그 중에는 필드가 알려주는 실시간 이름을, 아니면 현재 좌표에서 계산한 이름을 쓴다
+  const shapeName = liveShape ?? formationOf(positions);
+
+  const resetPositions = () => {
+    setPositions(FORMATION_PRESETS[formation] ?? FORMATION_PRESETS[FORMATIONS[0]]);
+  };
+
+  /**
+   * 게시판 전술 글 불러오기.
+   * 배치·팀 전술·개인 전술은 그대로 가져오고, 선수는 이 경기 참석자에 있는 사람만 앉힌다.
+   * (게시판은 활동 인원 전체로 짜므로 참석자가 다를 수밖에 없다)
+   */
+  const importFromBoard = (option: BoardLineupOption, targetQuarter: string) => {
+    const src = option.lineup;
+    // 다른 쿼터로 가져오면 그 쿼터로 이동한다.
+    // 쿼터 전환 useEffect가 기존 저장분을 덮어쓰지 않도록 먼저 전환하고 다음 틱에 채운다.
+    if (targetQuarter !== quarter) {
+      setQuarter(targetQuarter);
+      setTimeout(() => applyBoardLineup(option), 0);
+      setImporting(false);
+      setPendingImport(null);
+      return;
+    }
+    applyBoardLineup(option);
+  };
+
+  const applyBoardLineup = (option: BoardLineupOption) => {
+    const src = option.lineup;
+    const nextPositions =
+      parsePositions(src.positions) ?? FORMATION_PRESETS[src.formation] ?? FORMATION_PRESETS[FORMATIONS[0]];
+    const attending = new Set(attendees);
+    const nextAssignments = src.players
+      .slice(0, 11)
+      .map((name) => (name && attending.has(name) ? name : null));
+    while (nextAssignments.length < 11) nextAssignments.push(null);
+
+    setFormation(src.formation || FORMATIONS[0]);
+    setPositions(nextPositions);
+    setTactic(src.tactic || "");
+    setInstructions(parseInstructions(src.instructions));
+    setAssignments(nextAssignments);
+    setActiveSlot(null);
+    setSwapFrom(null);
+    setImporting(false);
+    setPendingImport(null);
+    // 누가 빠졌는지 이름까지 알려줘야 대체자를 바로 떠올릴 수 있다
+    const dropped = src.players.slice(0, 11).filter((n) => n && !attending.has(n));
+    setImportNote(
+      dropped.length > 0
+        ? `${option.author}님 전술을 가져왔어요. 불참으로 빠진 ${dropped.length}자리: ${dropped.join(", ")}`
+        : `${option.author}님 전술을 가져왔어요.`
+    );
   };
 
   const addGuest = () => {
@@ -128,52 +221,53 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap, pre
     ...subs.filter(Boolean),
   ] as string[]);
 
+  /** 두 슬롯의 선수를 맞바꾼다 (선발↔선발, 대기↔대기, 선발↔대기 모두) */
+  const swapSlots = (a: ActiveSlot, b: ActiveSlot) => {
+    const playerAt = (s: ActiveSlot) =>
+      s.type === "player" ? assignments[s.index] : subs[s.index];
+    const nextA = [...assignments];
+    const nextS = [...subs];
+    const put = (s: ActiveSlot, name: string | null) => {
+      if (s.type === "player") nextA[s.index] = name;
+      else nextS[s.index] = name;
+    };
+    const av = playerAt(a);
+    const bv = playerAt(b);
+    put(a, bv);
+    put(b, av);
+    setAssignments(nextA);
+    setSubs(nextS);
+
+    // 선발 자리끼리 바뀌면 개인 전술도 선수를 따라간다
+    if (a.type === "player" && b.type === "player") {
+      setInstructions((prev) => {
+        const next = [...prev];
+        const keep = (ids: string[], slot: number) =>
+          ids.filter((id) => instructionAllowed(id, roleFromPoint(positions[slot])));
+        next[a.index] = keep(prev[b.index], a.index);
+        next[b.index] = keep(prev[a.index], b.index);
+        return next;
+      });
+    }
+  };
+
   const handleSlotClick = (type: "player" | "sub", index: number) => {
-    // 같은 슬롯 → 해제
-    if (activeSlot?.type === type && activeSlot.index === index) {
+    // 자리 바꾸기 대기 중이면 → 이번 탭이 상대 슬롯
+    if (swapFrom) {
+      if (!(swapFrom.type === type && swapFrom.index === index)) {
+        swapSlots(swapFrom, { type, index });
+      }
+      setSwapFrom(null);
       setActiveSlot(null);
       return;
     }
 
-    // activeSlot이 없으면 → 선택
-    if (!activeSlot) {
-      setActiveSlot({ type, index });
+    // 같은 슬롯 → 해제, 아니면 선택 (선발 슬롯이면 개인 전술 카드가 열린다)
+    if (activeSlot?.type === type && activeSlot.index === index) {
+      setActiveSlot(null);
       return;
     }
-
-    // activeSlot이 있고 다른 슬롯 → 두 슬롯 선수 스왑
-    const activePlayer =
-      activeSlot.type === "player" ? assignments[activeSlot.index] : subs[activeSlot.index];
-    const targetPlayer = type === "player" ? assignments[index] : subs[index];
-
-    if (activeSlot.type === "player" && type === "player") {
-      const next = [...assignments];
-      next[activeSlot.index] = targetPlayer;
-      next[index] = activePlayer;
-      setAssignments(next);
-    } else if (activeSlot.type === "sub" && type === "sub") {
-      const next = [...subs];
-      next[activeSlot.index] = targetPlayer;
-      next[index] = activePlayer;
-      setSubs(next);
-    } else if (activeSlot.type === "player" && type === "sub") {
-      const nextA = [...assignments];
-      const nextS = [...subs];
-      nextA[activeSlot.index] = targetPlayer;
-      nextS[index] = activePlayer;
-      setAssignments(nextA);
-      setSubs(nextS);
-    } else {
-      // sub → player
-      const nextA = [...assignments];
-      const nextS = [...subs];
-      nextS[activeSlot.index] = targetPlayer;
-      nextA[index] = activePlayer;
-      setAssignments(nextA);
-      setSubs(nextS);
-    }
-
-    setActiveSlot(null);
+    setActiveSlot({ type, index });
   };
 
   const handlePlayerClick = (name: string) => {
@@ -225,10 +319,13 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap, pre
         body: JSON.stringify({
           matchId: match.id,
           quarter: target,
-          formation,
+          formation: shapeName,
           players: assignments.map((p) => p || ""),
           subs: subs.map((s) => s || ""),
           substitutions,
+          positions: serializePositions(positions),
+          tactic,
+          instructions: serializeInstructions(instructions),
         }),
       });
       if (!res1.ok) throw new Error(await res1.text());
@@ -277,10 +374,13 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap, pre
         body: JSON.stringify({
           matchId: match.id,
           quarter,
-          formation,
+          formation: shapeName,
           players: assignments.map((p) => p || ""),
           subs: finalSubs.map((s) => s || ""),
           substitutions,
+          positions: serializePositions(positions),
+          tactic,
+          instructions: serializeInstructions(instructions),
         }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -295,8 +395,6 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap, pre
       setSaving(false);
     }
   };
-
-  const positions = FORMATION_POSITIONS[formation] || [];
 
   return (
     <div className="min-h-dvh bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto shadow-2xl overflow-hidden">
@@ -392,16 +490,119 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap, pre
           </div>
         )}
 
-        {/* 포메이션 선택 */}
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-black text-gray-500 dark:text-gray-400 shrink-0">포메이션</span>
+        {/* 게시판에서 불러오기 */}
+        {boardLineups.length > 0 && (
+          <div className="space-y-2">
+            {!importing ? (
+              <button
+                onClick={() => setImporting(true)}
+                className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-[11px] font-black text-gray-500 transition-all hover:bg-gray-100 dark:border-white/10 dark:text-gray-400 dark:hover:bg-white/5"
+              >
+                <ClipboardList className="h-3.5 w-3.5" />
+                게시판에서 불러오기 ({boardLineups.length})
+              </button>
+            ) : (
+              <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-300">
+                    불러올 전술
+                  </p>
+                  <button
+                    onClick={() => { setImporting(false); setPendingImport(null); }}
+                    aria-label="닫기"
+                    className="flex h-5 w-5 items-center justify-center rounded-full bg-black/5 text-gray-400 dark:bg-white/10"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+                {pendingImport ? (
+                  <div className="space-y-2">
+                    <div className="rounded-xl border border-gray-200 px-3 py-2 dark:border-white/10">
+                      <p className="truncate text-[12px] font-black">{pendingImport.title}</p>
+                      <p className="text-[10px] text-gray-400">
+                        {pendingImport.author} · {pendingImport.lineup.formation}
+                      </p>
+                    </div>
+                    <p className="text-[10px] font-semibold text-gray-400">어느 쿼터로 가져올까요?</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {QUARTERS.map((q) => {
+                        const hasData = lineups.some((l) => l.quarter === q);
+                        return (
+                          <button
+                            key={q}
+                            onClick={() => importFromBoard(pendingImport, q)}
+                            className="rounded-xl bg-blue-500 px-3 py-1.5 text-[11px] font-black text-white transition-all hover:bg-blue-600"
+                          >
+                            {q}
+                            {hasData && <span className="ml-1 text-[8px] opacity-70">덮어씀</span>}
+                          </button>
+                        );
+                      })}
+                      <button
+                        onClick={() => setPendingImport(null)}
+                        className="rounded-xl px-2 py-1.5 text-[11px] font-black text-gray-400"
+                      >
+                        뒤로
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                <>
+                <p className="mb-2 text-[10px] font-semibold leading-relaxed text-gray-400">
+                  배치·전술·개인 전술을 가져옵니다. 이 경기에 참석하지 않는 선수 자리는 비워둡니다.
+                </p>
+                <div className="space-y-1.5">
+                  {boardLineups.map((option) => {
+                    const usable = option.lineup.players.filter((n) => n && attendees.includes(n)).length;
+                    return (
+                      <button
+                        key={option.id}
+                        onClick={() => setPendingImport(option)}
+                        className="flex w-full items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-left transition-all hover:border-[#FF8FA3]/50 dark:border-white/10"
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[12px] font-black">{option.title}</span>
+                          <span className="block text-[10px] text-gray-400">
+                            {option.author} · {option.lineup.formation}
+                          </span>
+                        </span>
+                        <span className="shrink-0 rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-black text-gray-500 dark:bg-white/10 dark:text-gray-300">
+                          참석 {usable}/11
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                </>
+                )}
+              </div>
+            )}
+            {importNote && (
+              <p className="rounded-xl bg-[#FF8FA3]/10 px-3 py-2 text-[11px] font-bold text-[#e75f7c] dark:text-[#FFB6C1]">
+                {importNote}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* 포메이션 — 이름은 실제 배치에서 계산되므로 드래그하면 같이 바뀐다 */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-black text-gray-500 dark:text-gray-400 shrink-0">포메이션</span>
+            <span className="rounded-lg bg-gray-900 px-2 py-1 text-[13px] font-black leading-none text-white dark:bg-white dark:text-black">
+              {shapeName}
+            </span>
+            {isCustom && (
+              <span className="text-[10px] font-black text-[#FF8FA3]">커스텀 배치</span>
+            )}
+          </div>
           <div className="flex gap-1.5 overflow-x-auto pb-1">
             {FORMATIONS.map((f) => (
               <button
                 key={f}
                 onClick={() => handleFormationChange(f)}
                 className={`flex-shrink-0 text-[10px] font-black px-2.5 py-1 rounded-lg transition-all ${
-                  formation === f
+                  matchesPreset(f)
                     ? "bg-gray-900 dark:bg-white text-white dark:text-black"
                     : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400"
                 }`}
@@ -412,116 +613,110 @@ export default function LineupEditor({ match, lineups, attendees, rosterMap, pre
           </div>
         </div>
 
-        {/* 포메이션 필드 (슬롯 클릭으로 배치) */}
+        {/* 전술 선택 */}
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-black text-gray-500 dark:text-gray-400 shrink-0">전술</span>
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
+            {TACTICS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTactic(tactic === t.id ? "" : t.id)}
+                title={t.desc}
+                className={`flex-shrink-0 text-[10px] font-black px-2.5 py-1 rounded-lg transition-all ${
+                  tactic === t.id
+                    ? "bg-[#FF8FA3] text-white"
+                    : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 포메이션 필드 (탭으로 배치, 드래그로 위치 조정) */}
         <div>
           <div className="flex items-center justify-between mb-2 px-1">
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-              {activeSlot?.type === "player"
-                ? `슬롯 ${activeSlot.index + 1} 선택됨 → 다른 슬롯 탭 시 스왑`
+              {swapFrom
+                ? "바꿀 상대 슬롯을 탭하세요"
+                : activeSlot?.type === "player"
+                ? assignments[activeSlot.index]
+                  ? `${assignments[activeSlot.index]} 선택됨 → 아래에서 개인 전술 설정`
+                  : `빈 슬롯 ${activeSlot.index + 1} 선택됨 → 선수 목록에서 탭`
                 : activeSlot?.type === "sub"
-                ? `대기 슬롯 ${activeSlot.index + 1} 선택됨 → 다른 슬롯 탭 시 스왑`
-                : "슬롯을 탭해서 선택하세요"}
+                ? `대기 슬롯 ${activeSlot.index + 1} 선택됨 → 선수 목록에서 탭`
+                : "탭 = 선수 선택·개인 전술 · 끌면 위치 이동"}
             </span>
-            <button
-              onClick={() => { setAssignments(Array(11).fill(null)); setSubs(Array(MAX_SUBS).fill(null)); setActiveSlot(null); }}
-              className="flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-            >
-              <RotateCcw className="w-3 h-3" /> 초기화
-            </button>
-          </div>
-
-          {/* 필드 */}
-          <div
-            className="relative w-full rounded-2xl overflow-hidden shadow-soft ring-1 ring-black/10 dark:ring-white/10"
-            style={{
-              paddingBottom: "138%",
-              background: "linear-gradient(180deg,#1c6a36 0%,#185e2f 33%,#1c6a36 66%,#185e2f 100%)",
-            }}
-          >
-            {/* 비네팅: 가장자리를 살짝 어둡게 해 입체감 */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: "radial-gradient(125% 80% at 50% 38%, transparent 58%, rgba(0,0,0,0.28) 100%)", zIndex: 6 }}
-            />
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 138" preserveAspectRatio="none" fill="none">
-              <rect x="3" y="3" width="94" height="132" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
-              <line x1="3" y1="69" x2="97" y2="69" stroke="rgba(255,255,255,0.5)" strokeWidth="0.6" />
-              <circle cx="50" cy="69" r="12" stroke="rgba(255,255,255,0.5)" strokeWidth="0.6" />
-              <rect x="22" y="3" width="56" height="20" stroke="rgba(255,255,255,0.4)" strokeWidth="0.6" />
-              <rect x="34" y="3" width="32" height="9" stroke="rgba(255,255,255,0.4)" strokeWidth="0.6" />
-              <rect x="22" y="115" width="56" height="20" stroke="rgba(255,255,255,0.4)" strokeWidth="0.6" />
-              <rect x="34" y="126" width="32" height="9" stroke="rgba(255,255,255,0.4)" strokeWidth="0.6" />
-              <rect x="41" y="1" width="18" height="2" stroke="rgba(255,255,255,0.7)" strokeWidth="0.7" />
-              <rect x="41" y="135" width="18" height="2" stroke="rgba(255,255,255,0.7)" strokeWidth="0.7" />
-            </svg>
-
-            {/* 중앙 로고 */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 5 }}>
-              <div className="relative w-20 h-20 rounded-full overflow-hidden opacity-[0.13]">
-                <Image src="/underducklogo.png" alt="" fill className="object-cover" />
-              </div>
-            </div>
-
-            {positions.map((pos, i) => {
-              const player = assignments[i];
-              const isActive = activeSlot?.type === "player" && activeSlot.index === i;
-              const color = getLayerColor(i, formation);
-              const isTbd = player === "미정";
-              const jerseyNo = player ? rosterMap[player] : null;
-              const displayLabel = isTbd ? "?" : jerseyNo ?? (player ? "G" : String(i + 1));
-              const hasPlayer = !!player;
-
-              return (
-                <div
-                  key={i}
-                  className="absolute flex flex-col items-center cursor-pointer"
-                  style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: "translate(-50%,-50%)", zIndex: 10 }}
-                  onClick={() => handleSlotClick("player", i)}
+            <div className="flex items-center gap-2.5">
+              {swapFrom && (
+                <button
+                  onClick={() => setSwapFrom(null)}
+                  className="flex items-center gap-1 text-[10px] font-black text-gray-500 hover:text-gray-700 dark:text-gray-300"
                 >
-                  <div
-                    className={`flex items-center justify-center rounded-full font-black transition-all ${isActive ? "pulse-ring" : ""}`}
-                    style={{
-                      width: 36, height: 36,
-                      fontSize: hasPlayer ? (displayLabel.length > 2 ? 9 : 13) : 11,
-                      backgroundColor: isTbd ? "#374151" : hasPlayer ? color : "rgba(255,255,255,0.15)",
-                      border: isActive
-                        ? "2.5px solid #FBBF24"
-                        : hasPlayer
-                        ? "2.5px solid rgba(255,255,255,0.6)"
-                        : "2px dashed rgba(255,255,255,0.4)",
-                      color: hasPlayer ? (color === "#F59E0B" && !isTbd ? "#78350F" : "#fff") : "rgba(255,255,255,0.6)",
-                      boxShadow: isActive ? "0 0 0 3px rgba(251,191,36,0.4)" : "0 2px 6px rgba(0,0,0,0.4)",
-                    }}
-                  >
-                    {displayLabel}
-                  </div>
-                  {hasPlayer && (
-                    <div
-                      className="mt-0.5 text-[7px] font-black text-white text-center max-w-[40px] truncate"
-                      style={{ textShadow: "0 1px 3px rgba(0,0,0,1)" }}
-                    >
-                      {isTbd ? "미정" : player}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                  <X className="w-3 h-3" /> 바꾸기 취소
+                </button>
+              )}
+              {isCustom && (
+                <button
+                  onClick={resetPositions}
+                  className="flex items-center gap-1 text-[10px] font-bold text-[#FF8FA3] hover:opacity-75"
+                >
+                  <Move className="w-3 h-3" /> 배치 복귀
+                </button>
+              )}
+              <button
+                onClick={() => { setAssignments(Array(11).fill(null)); setSubs(Array(MAX_SUBS).fill(null)); setActiveSlot(null); }}
+                className="flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <RotateCcw className="w-3 h-3" /> 초기화
+              </button>
+            </div>
           </div>
+
+          <LineupPitch
+            positions={positions}
+            players={assignments}
+            instructions={instructions}
+            rosterMap={rosterMap}
+            selectedSlot={activeSlot?.type === "player" ? activeSlot.index : null}
+            swapSlot={swapFrom?.type === "player" ? swapFrom.index : null}
+            onSlotTap={(i) => handleSlotClick("player", i)}
+            onPositionsChange={setPositions}
+            onInstructionsChange={setInstructions}
+            onLiveShape={setLiveShape}
+            onDragStart={() => setSwapFrom(null)}
+            onSwapRequest={(i) => setSwapFrom({ type: "player", index: i })}
+            onCloseSlot={() => setActiveSlot(null)}
+          />
         </div>
 
         {/* 대기 선수 슬롯 */}
         <div>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">대기 선수</p>
+          <div className="mb-2 flex items-center gap-2">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">대기 선수</p>
+            {activeSlot?.type === "sub" && subs[activeSlot.index] && !swapFrom && (
+              <button
+                onClick={() => setSwapFrom({ type: "sub", index: activeSlot.index })}
+                className="flex items-center gap-1 rounded-lg bg-gray-900 px-2 py-1 text-[10px] font-black text-white dark:bg-white dark:text-black"
+              >
+                <ArrowRightLeft className="h-3 w-3" /> 자리 바꾸기
+              </button>
+            )}
+          </div>
           <div className="flex gap-2 flex-wrap">
             {Array.from({ length: MAX_SUBS }).map((_, i) => {
               const sub = subs[i];
               const isActive = activeSlot?.type === "sub" && activeSlot.index === i;
+              const isSwapSource = swapFrom?.type === "sub" && swapFrom.index === i;
               return (
                 <button
                   key={i}
                   onClick={() => handleSlotClick("sub", i)}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-black transition-all border ${
-                    isActive
+                    isSwapSource
+                      ? "border-[#FF8FA3] bg-[#FF8FA3]/10 text-[#e75f7c] dark:text-[#FFB6C1]"
+                      : isActive
                       ? "border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300"
                       : sub
                       ? "border-gray-300 dark:border-white/20 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-200"

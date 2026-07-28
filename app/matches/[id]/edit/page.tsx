@@ -5,6 +5,7 @@ import LineupEditor from "./LineupEditor";
 import { notFound, redirect } from "next/navigation";
 import { currentIsAdmin } from "../../../lib/admin";
 import { parseSubstitutions } from "../../../lib/lineup";
+import { listBoardPosts } from "../../../lib/board";
 
 export default async function LineupEditPage({
   params,
@@ -17,15 +18,26 @@ export default async function LineupEditPage({
   const { id } = await params;
   const matchId = Number(id);
 
-  const [rawMatchesResult, rawLineupsResult, rawRosterResult] = await Promise.allSettled([
-    getMatchesRows(),
-    getLineupRows(),
-    getRosterRows(),
-  ]);
+  const [rawMatchesResult, rawLineupsResult, rawRosterResult, boardResult] =
+    await Promise.allSettled([
+      getMatchesRows(),
+      getLineupRows(),
+      getRosterRows(),
+      listBoardPosts(),
+    ]);
 
   const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
   const rawLineups = rawLineupsResult.status === "fulfilled" ? rawLineupsResult.value : [];
   const rawRoster = rawRosterResult.status === "fulfilled" ? rawRosterResult.value : [];
+  // 게시판에서 불러오기용 — 라인업이 붙은 글만
+  const boardLineups = (boardResult.status === "fulfilled" ? boardResult.value : [])
+    .filter((p) => p.lineup)
+    .map((p) => ({
+      id: p.id,
+      title: p.title,
+      author: p.author,
+      lineup: p.lineup!,
+    }));
 
   const rosterMap: Record<string, string> = {};
   const prefPosMap: Record<string, string[]> = {};
@@ -66,12 +78,15 @@ export default async function LineupEditPage({
         row[3] || "", row[4] || "", row[5] || "", row[6] || "",
         row[7] || "", row[8] || "", row[9] || "", row[10] || "",
         row[11] || "", row[12] || "", row[13] || "",
-      ].filter(Boolean),
+      ],
       subs: [
         row[14] || "", row[15] || "", row[16] || "", row[17] || "", row[18] || "",
         row[19] || "", row[20] || "", row[21] || "", row[22] || "",
       ].filter(Boolean),
       substitutions: parseSubstitutions(row[23]),
+      positions: row[24] || "",
+      tactic: row[25] || "",
+      instructions: row[26] || "",
     }))
     .filter((l: LineupData) => l.matchId === matchId);
 
@@ -80,5 +95,14 @@ export default async function LineupEditPage({
     .map((s) => s.trim())
     .filter(Boolean);
 
-  return <LineupEditor match={match} lineups={lineups} attendees={attendees} rosterMap={rosterMap} prefPosMap={prefPosMap} />;
+  return (
+    <LineupEditor
+      match={match}
+      lineups={lineups}
+      attendees={attendees}
+      rosterMap={rosterMap}
+      prefPosMap={prefPosMap}
+      boardLineups={boardLineups}
+    />
+  );
 }

@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   if (denied) return denied;
   try {
     const body = await request.json();
-    const { matchId, quarter, formation, players, subs, substitutions } = body;
+    const { matchId, quarter, formation, players, subs, substitutions, positions, tactic, instructions } = body;
 
     if (matchId === undefined || !quarter || !formation) {
       return NextResponse.json({ error: "필수 필드 누락" }, { status: 400 });
@@ -22,6 +22,9 @@ export async function POST(request: NextRequest) {
       players: players || [],
       subs: subs || [],
       substitutions: substitutions || [],
+      positions: positions || "",
+      tactic: tactic || "",
+      instructions: instructions || "",
     });
 
     revalidatePath(`/matches/${matchId}`);

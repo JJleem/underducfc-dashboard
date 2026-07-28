@@ -171,9 +171,14 @@ export interface LineupData {
   matchId: number;
   quarter: string; // "예상" | "1Q" | "2Q" | "3Q" | "4Q" | "5Q" | "6Q"
   formation: string; // "4-3-3" | "4-4-2" | "3-5-2" | "4-2-3-1" 등
-  players: string[]; // p1~p11
+  // p1~p11 — 슬롯 순서를 유지한 11칸 고정 배열. 빈 자리는 "".
+  // 좌표·개인 전술이 슬롯 인덱스로 매칭되므로 절대 압축하면 안 된다.
+  players: string[];
   subs: string[]; // 대기 선수 sub1~sub5
   substitutions: SubstitutionEvent[]; // 실제 교체 OUT → IN
+  positions?: string; // 자유 배치 좌표 "x,y;…" (11개). 빈 값이면 포메이션 프리셋
+  tactic?: string; // 팀 전술 id (app/lib/positions.ts TACTICS)
+  instructions?: string; // 슬롯별 개인 전술 id "id;id;;…"
 }
 
 export interface MatchData {

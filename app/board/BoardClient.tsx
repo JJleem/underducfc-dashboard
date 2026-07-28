@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { ChevronLeft, Plus, MessageCircle, PlayCircle, Youtube, Search, Heart, X, Loader2, Check } from "lucide-react";
+import { ChevronLeft, Plus, MessageCircle, PlayCircle, Youtube, Search, Heart, X, Loader2, Check, ClipboardList, Pencil } from "lucide-react";
 import { youtubeThumb, youtubeId } from "../lib/youtube";
 import AppBottomNav from "../components/AppBottomNav";
 import type { BoardPost } from "../lib/board";
+import LineupMini from "../components/LineupMini";
 
 type Sort = "latest" | "popular" | "likes" | "comments";
 const SORTS: { key: Sort; label: string }[] = [
@@ -29,7 +30,8 @@ export default function BoardClient({
   const [sort, setSort] = useState<Sort>("latest");
   const [toast, setToast] = useState<string | null>(null);
 
-  // 글쓰기 모달
+  // 글쓰기: 먼저 종류를 고르고(유튜브/전술), 유튜브면 모달을 연다
+  const [choosing, setChoosing] = useState(false);
   const [writing, setWriting] = useState(false);
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
@@ -44,6 +46,10 @@ export default function BoardClient({
     return () => clearTimeout(t);
   }, [toast]);
 
+  const myLineupPost = currentUser
+    ? posts.find((p) => p.lineup && p.kakaoId === currentUser.kakaoId) ?? null
+    : null;
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     const filtered = q
@@ -51,7 +57,11 @@ export default function BoardClient({
           [p.title, p.author, p.body ?? ""].some((f) => f.toLowerCase().includes(q)),
         )
       : posts;
-    if (sort === "latest") return [...filtered].sort((a, b) => b.id - a.id);
+    // 최신순은 수정 시각 우선 (백엔드 정렬과 동일) — 수정한 전술 글이 위로 올라온다
+    const freshness = (p: BoardPost) =>
+      new Date(p.updatedAt ?? p.createdAt ?? 0).getTime();
+    if (sort === "latest")
+      return [...filtered].sort((a, b) => freshness(b) - freshness(a) || b.id - a.id);
     const score = (p: BoardPost) =>
       sort === "likes" ? p.likeCount : sort === "comments" ? p.commentCount : p.likeCount + p.commentCount;
     return [...filtered].sort((a, b) => score(b) - score(a) || b.id - a.id);
@@ -135,7 +145,7 @@ export default function BoardClient({
             />
           </div>
           <button
-            onClick={() => (currentUser ? setWriting(true) : signIn("kakao"))}
+            onClick={() => (currentUser ? setChoosing(true) : signIn("kakao"))}
             aria-label="글쓰기"
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FF8FA3] text-white shadow-sm active:opacity-80 dark:bg-[#FFB6C1] dark:text-black"
           >
@@ -179,19 +189,35 @@ export default function BoardClient({
                     className="flex gap-3 rounded-2xl border border-gray-200 bg-white p-3 active:opacity-80 dark:border-white/10 dark:bg-[#161618]"
                   >
                     <div className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-white/5">
-                      {thumb ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={thumb} alt="" className="h-full w-full object-cover" />
+                      {p.lineup ? (
+                        <>
+                          <LineupMini formation={p.lineup.formation} positions={p.lineup.positions} />
+                          <span className="absolute bottom-1 left-1 rounded bg-black/65 px-1 text-[9px] font-black text-white">
+                            {p.lineup.formation}
+                          </span>
+                        </>
+                      ) : thumb ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={thumb} alt="" className="h-full w-full object-cover" />
+                          <PlayCircle className="absolute inset-0 m-auto h-8 w-8 text-white/90 drop-shadow" />
+                        </>
                       ) : (
                         <div className="flex h-full items-center justify-center">
                           <Youtube className="h-6 w-6 text-gray-400" />
                         </div>
                       )}
-                      <PlayCircle className="absolute inset-0 m-auto h-8 w-8 text-white/90 drop-shadow" />
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col">
                       <p className="line-clamp-2 text-sm font-black leading-snug">{p.title}</p>
-                      <p className="mt-0.5 truncate text-[11px] text-gray-500 dark:text-gray-400">{p.author}</p>
+                      <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-gray-500 dark:text-gray-400">
+                        {p.author}
+                        {p.updatedAt && (
+                          <span className="flex items-center gap-0.5 text-[10px] font-bold text-[#FF8FA3] dark:text-[#FFB6C1]">
+                            <Pencil className="h-2.5 w-2.5" /> 수정됨
+                          </span>
+                        )}
+                      </p>
                       {p.body && (
                         <p className="mt-1 line-clamp-1 text-[11px] text-gray-400 dark:text-gray-500">{p.body}</p>
                       )}
@@ -218,6 +244,48 @@ export default function BoardClient({
           </ul>
         )}
       </div>
+
+      {/* 글 종류 선택 */}
+      {choosing && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
+          onClick={() => setChoosing(false)}
+        >
+          <div
+            className="w-full max-w-md space-y-2.5 rounded-t-3xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-[#161618] sm:rounded-3xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-1 flex items-center justify-between">
+              <h2 className="text-base font-black">무엇을 올릴까요?</h2>
+              <button onClick={() => setChoosing(false)} className="p-1 text-gray-400 active:opacity-60" aria-label="닫기">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <button
+              onClick={() => { setChoosing(false); setWriting(true); }}
+              className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 p-3.5 text-left active:opacity-70 dark:border-white/10"
+            >
+              <Youtube className="h-6 w-6 shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+              <span>
+                <span className="block text-sm font-black">유튜브 영상 공유</span>
+                <span className="block text-[11px] text-gray-400">경기 영상이나 전술 참고 영상</span>
+              </span>
+            </button>
+            <Link
+              href="/board/lineup"
+              className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 p-3.5 text-left active:opacity-70 dark:border-white/10"
+            >
+              <ClipboardList className="h-6 w-6 shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+              <span>
+                <span className="block text-sm font-black">전술 짜기</span>
+                <span className="block text-[11px] text-gray-400">
+                  {myLineupPost ? "이미 올린 전술을 수정합니다" : "선발 11명·포메이션·개인 전술"}
+                </span>
+              </span>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* 글쓰기 모달 */}
       {writing && (

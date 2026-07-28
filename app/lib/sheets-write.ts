@@ -6,6 +6,7 @@
 
 import { udGet, udPost, udPut, udDelete, underduckFetch } from "./underduck";
 import { createMatch, patchMatch, addMatchPhotos, removeMatchPhoto } from "./matches-backend";
+import { instructionCells, parsePositions } from "./positions";
 
 const s = (v: unknown): string => (v === null || v === undefined ? "" : String(v));
 
@@ -211,6 +212,9 @@ export async function writeLineup({
   players,
   subs,
   substitutions,
+  positions,
+  tactic,
+  instructions,
 }: {
   matchId: number;
   quarter: string;
@@ -218,6 +222,9 @@ export async function writeLineup({
   players: string[];
   subs: string[];
   substitutions: { out: string; in: string; time?: string }[];
+  positions?: string;
+  tactic?: string;
+  instructions?: string;
 }) {
   const playerCells = [...players, ...Array(Math.max(0, 11 - players.length)).fill("")].slice(0, 11);
   const subCells = subs.filter(Boolean);
@@ -229,6 +236,9 @@ export async function writeLineup({
     }))
     .filter((event) => event.out || event.in);
 
+  // "x,y;x,y;…" → [[x,y], …]. 11개가 온전히 파싱될 때만 보낸다(아니면 프리셋 사용).
+  const parsedPositions = parsePositions(positions ?? null);
+
   await udPut("/api/underduck/lineup", {
     match_id: matchId,
     quarter,
@@ -236,6 +246,9 @@ export async function writeLineup({
     players: playerCells,
     subs: subCells,
     substitutions: cleanSubstitutions,
+    positions: parsedPositions ? parsedPositions.map((p) => [p.x, p.y]) : null,
+    tactic: tactic || null,
+    instructions: instructions ? instructionCells(instructions) : null,
   });
 }
 

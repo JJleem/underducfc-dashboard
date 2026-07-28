@@ -9,6 +9,15 @@
 // 임계값(숫자)은 전부 TITLES 안에 모여 있고, TITLES_SPEC.md 와 1:1로 대응됩니다.
 // 숫자만 바꾸면 등급 컷이 바뀝니다 — 구조/로직은 건드릴 필요 없음.
 
+import {
+  CENTERBACK_ROLES,
+  FORMATION_PRESETS,
+  FULLBACK_ROLES,
+  groupOfRole,
+  parsePositions,
+  rolesFor,
+} from "./positions";
+
 // ───────────────────────── 타입 ─────────────────────────
 
 export type PosGroup = "GK" | "DF" | "MF" | "FW";
@@ -147,8 +156,8 @@ function namesOf(csv: string): string[] {
     .filter(Boolean);
 }
 
-/** 포메이션 슬롯 인덱스 → 포지션 그룹 (FormationField getLayerIndex 와 동일 규칙) */
-function slotToPos(index: number, formation: string): PosGroup {
+/** 예전 규칙: 포메이션 레이어 산술로 슬롯 → 포지션 그룹 */
+function legacySlotToPos(index: number, formation: string): PosGroup {
   if (index === 0) return "GK";
   const layers = formation.split("-").map(Number).filter((n) => !isNaN(n));
   if (!layers.length) return "MF";
@@ -165,6 +174,40 @@ function slotToPos(index: number, formation: string): PosGroup {
   if (layer === 1) return "DF";
   if (layer === totalLayers) return "FW";
   return "MF";
+}
+
+/**
+ * 라인업 한 행의 11칸 포지션 그룹.
+ * 자유 배치 좌표가 있으면 좌표로, 없으면 포메이션 프리셋 좌표로 판정한다.
+ * 프리셋 판정 결과는 legacySlotToPos와 7포메이션 × 11칸 전부 동일하다.
+ * 프리셋에 없는 포메이션 문자열(과거 데이터)은 예전 산술을 그대로 쓴다.
+ */
+function groupsOfRow(r: string[]): PosGroup[] {
+  const formation = r[2] || "";
+  if (parsePositions(r[24]) || FORMATION_PRESETS[formation]) {
+    return rolesFor(formation, r[24]).map(groupOfRole);
+  }
+  return Array.from({ length: 11 }, (_, slot) => legacySlotToPos(slot, formation));
+}
+
+/**
+ * 풀백·센터백은 예전에 "포메이션 첫 숫자 + 슬롯 인덱스"로 판정했다.
+ * 좌표가 없는 과거 라인업은 그 규칙을 그대로 유지해야 누적 경기 수가 변하지 않는다.
+ * (예: 5-3-2의 좌우 윙백은 예전 규칙에선 풀백으로 세지 않았다)
+ * 좌표를 직접 찍어 저장한 라인업만 좌표 기준으로 판정한다.
+ */
+function defenderSlots(r: string[], kind: "fullback" | "centerback"): boolean[] {
+  const formation = r[2] || "";
+  if (parsePositions(r[24])) {
+    const set = kind === "fullback" ? FULLBACK_ROLES : CENTERBACK_ROLES;
+    return rolesFor(formation, r[24]).map((role) => set.includes(role));
+  }
+  const first = Number(formation.split("-")[0]);
+  const slots =
+    kind === "fullback"
+      ? first === 4 ? [1, 4] : []
+      : first === 3 ? [1, 2, 3] : first === 4 ? [2, 3] : first === 5 ? [2, 3, 4] : [];
+  return Array.from({ length: 11 }, (_, slot) => slots.includes(slot));
 }
 
 interface WeatherParsed {
@@ -263,7 +306,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     const matchId = Number(r[0]);
     if (isNaN(matchId)) return;
     const quarter = r[1] || "";
-    const formation = r[2] || "";
+    const groups = groupsOfRow(r);
     if (!matchQuarters.has(matchId)) matchQuarters.set(matchId, new Set());
     matchQuarters.get(matchId)!.add(quarter);
 
@@ -276,7 +319,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     for (let slot = 0; slot < 11; slot++) {
       const name = (r[3 + slot] || "").trim();
       if (!name || name === "미정") continue;
-      const pos = slotToPos(slot, formation);
+      const pos = groups[slot];
       if (!posMap.has(name)) posMap.set(name, new Set());
       posMap.get(name)!.add(pos);
       if (!qMap.has(name)) qMap.set(name, new Set());
@@ -383,10 +426,10 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       if (set) set.forEach((p) => (posCounts[p] += 1));
     });
     lineupRows.forEach((r) => {
-      const formation = r[2] || "";
+      const groups = groupsOfRow(r);
       for (let slot = 0; slot < 11; slot++) {
         if ((r[3 + slot] || "").trim() === name) {
-          posLineupCounts[slotToPos(slot, formation)] += 1;
+          posLineupCounts[groups[slot]] += 1;
         }
       }
     });
@@ -397,9 +440,9 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     const fullbackMatchIds = new Set<number>();
     lineupRows.forEach((r) => {
       const matchId = Number(r[0]);
-      const firstLayer = Number((r[2] || "").split("-")[0]);
-      if (isNaN(matchId) || firstLayer !== 4) return;
-      if ((r[4] || "").trim() === name || (r[7] || "").trim() === name) {
+      if (isNaN(matchId)) return;
+      const isFullback = defenderSlots(r, "fullback");
+      if (isFullback.some((yes, slot) => yes && (r[3 + slot] || "").trim() === name)) {
         fullbackMatchIds.add(matchId);
       }
     });
@@ -407,14 +450,9 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     const centerbackMatchIds = new Set<number>();
     lineupRows.forEach((r) => {
       const matchId = Number(r[0]);
-      const firstLayer = Number((r[2] || "").split("-")[0]);
       if (isNaN(matchId)) return;
-      const centerbackSlots =
-        firstLayer === 3 ? [1, 2, 3]
-        : firstLayer === 4 ? [2, 3]
-        : firstLayer === 5 ? [2, 3, 4]
-        : [];
-      if (centerbackSlots.some((slot) => (r[3 + slot] || "").trim() === name)) {
+      const isCenterback = defenderSlots(r, "centerback");
+      if (isCenterback.some((yes, slot) => yes && (r[3 + slot] || "").trim() === name)) {
         centerbackMatchIds.add(matchId);
       }
     });

@@ -91,16 +91,22 @@ export async function getNoticeRows(): Promise<string[][]> {
 interface LineupOut {
   id: number; match_id: number | null; quarter: string | null; formation: string | null;
   players: string[] | null; subs: string[] | null; substitutions: unknown[] | null;
+  positions: number[][] | null; tactic: string | null; instructions: string[] | null;
 }
 export async function getLineupRows(): Promise<string[][]> {
   const rows = await udGet<LineupOut[]>("/api/underduck/lineup", udReadOpts);
   const HEADER = ["matchId", "quarter", "formation",
     "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10", "p11",
-    "sub1", "sub2", "sub3", "sub4", "sub5", "sub6", "sub7", "sub8", "sub9", "substitutions"];
+    "sub1", "sub2", "sub3", "sub4", "sub5", "sub6", "sub7", "sub8", "sub9", "substitutions",
+    "positions", "tactic", "instructions"];
   return [HEADER, ...rows.map((r) => [
     s(r.match_id), s(r.quarter), s(r.formation),
     ...pad(r.players, 11), ...pad(r.subs, 9),
     r.substitutions && r.substitutions.length ? JSON.stringify(r.substitutions) : "",
+    // 자유 배치 좌표는 "x,y;x,y;…" 로 직렬화 (없으면 빈칸 → 프리셋 폴백)
+    r.positions?.length ? r.positions.map(([x, y]) => `${x},${y}`).join(";") : "",
+    s(r.tactic),
+    r.instructions?.length ? r.instructions.map(s).join(";") : "",
   ])];
 }
 

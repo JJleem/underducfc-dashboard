@@ -7,10 +7,25 @@ import { Crown, ExternalLink, X } from "lucide-react";
 import { TitleBadges } from "./TitleBadges";
 import type { EarnedTitle } from "../lib/titles";
 import { playerFaceOnSrc } from "../lib/player-faceons";
+import {
+  FORMATION_PRESETS,
+  groupOfRole,
+  instructionLabel,
+  instructionShort,
+  isCustomShape,
+  parseInstructions,
+  positionsFor,
+  roleFromPoint,
+  tacticOf,
+  type PosGroup,
+} from "../lib/positions";
 
 export interface LineupForField {
   formation: string;
   players: string[];
+  positions?: string; // 자유 배치 좌표 (없으면 포메이션 프리셋)
+  tactic?: string;
+  instructions?: string; // 슬롯별 개인 전술
 }
 
 export interface SeasonStat {
@@ -21,69 +36,41 @@ export interface SeasonStat {
   pos?: string;
 }
 
-export const FORMATION_POSITIONS: Record<string, { x: number; y: number }[]> = {
-  "4-3-3": [
-    { x: 50, y: 88 },
-    { x: 12, y: 70 }, { x: 36, y: 70 }, { x: 64, y: 70 }, { x: 88, y: 70 },
-    { x: 22, y: 48 }, { x: 50, y: 46 }, { x: 78, y: 48 },
-    { x: 16, y: 22 }, { x: 50, y: 18 }, { x: 84, y: 22 },
-  ],
-  "4-4-2": [
-    { x: 50, y: 88 },
-    { x: 12, y: 70 }, { x: 36, y: 70 }, { x: 64, y: 70 }, { x: 88, y: 70 },
-    { x: 12, y: 48 }, { x: 36, y: 48 }, { x: 64, y: 48 }, { x: 88, y: 48 },
-    { x: 34, y: 22 }, { x: 66, y: 22 },
-  ],
-  "3-5-2": [
-    { x: 50, y: 88 },
-    { x: 22, y: 70 }, { x: 50, y: 70 }, { x: 78, y: 70 },
-    { x: 8, y: 50 }, { x: 28, y: 50 }, { x: 50, y: 48 }, { x: 72, y: 50 }, { x: 92, y: 50 },
-    { x: 34, y: 22 }, { x: 66, y: 22 },
-  ],
-  "4-2-3-1": [
-    { x: 50, y: 88 },
-    { x: 12, y: 72 }, { x: 36, y: 72 }, { x: 64, y: 72 }, { x: 88, y: 72 },
-    { x: 32, y: 56 }, { x: 68, y: 56 },
-    { x: 14, y: 38 }, { x: 50, y: 36 }, { x: 86, y: 38 },
-    { x: 50, y: 18 },
-  ],
-  "3-4-3": [
-    { x: 50, y: 88 },
-    { x: 22, y: 70 }, { x: 50, y: 70 }, { x: 78, y: 70 },
-    { x: 12, y: 50 }, { x: 36, y: 50 }, { x: 64, y: 50 }, { x: 88, y: 50 },
-    { x: 16, y: 22 }, { x: 50, y: 18 }, { x: 84, y: 22 },
-  ],
-  "5-3-2": [
-    { x: 50, y: 88 },
-    { x: 8, y: 70 }, { x: 26, y: 70 }, { x: 50, y: 70 }, { x: 74, y: 70 }, { x: 92, y: 70 },
-    { x: 22, y: 48 }, { x: 50, y: 46 }, { x: 78, y: 48 },
-    { x: 34, y: 22 }, { x: 66, y: 22 },
-  ],
-  "4-1-4-1": [
-    { x: 50, y: 88 },
-    { x: 12, y: 74 }, { x: 36, y: 74 }, { x: 64, y: 74 }, { x: 88, y: 74 },
-    { x: 50, y: 60 },
-    { x: 10, y: 44 }, { x: 34, y: 44 }, { x: 66, y: 44 }, { x: 90, y: 44 },
-    { x: 50, y: 18 },
-  ],
+/** @deprecated 좌표 정의는 app/lib/positions.ts 로 옮겼다. 남은 호출부 호환용 별칭. */
+export const FORMATION_POSITIONS = FORMATION_PRESETS;
+
+const GROUP_COLOR: Record<PosGroup, { bg: string; border: string; text: string }> = {
+  GK: { bg: "#F59E0B", border: "#FDE68A", text: "#78350F" },
+  DF: { bg: "#3B82F6", border: "#93C5FD", text: "#FFFFFF" },
+  MF: { bg: "#10B981", border: "#6EE7B7", text: "#FFFFFF" },
+  FW: { bg: "#FF8FA3", border: "#FFB6C1", text: "#FFFFFF" },
 };
 
-function getLayerIndex(playerIndex: number, formation: string): number {
-  if (playerIndex === 0) return 0;
-  const layers = formation.split("-").map(Number);
-  let count = 1;
-  for (let i = 0; i < layers.length; i++) {
-    if (playerIndex < count + layers[i]) return i + 1;
-    count += layers[i];
-  }
-  return layers.length;
-}
+// 등장 스태거 순서 (뒤에서 앞으로)
+const GROUP_ORDER: Record<PosGroup, number> = { GK: 0, DF: 1, MF: 2, FW: 3 };
 
-function getPlayerColor(layerIndex: number, totalLayers: number) {
-  if (layerIndex === 0) return { bg: "#F59E0B", border: "#FDE68A", text: "#78350F" };
-  if (layerIndex === 1) return { bg: "#3B82F6", border: "#93C5FD", text: "#FFFFFF" };
-  if (layerIndex === totalLayers) return { bg: "#FF8FA3", border: "#FFB6C1", text: "#FFFFFF" };
-  return { bg: "#10B981", border: "#6EE7B7", text: "#FFFFFF" };
+const SHOW_ROLES_KEY = "ud:lineup:showRoles";
+const SHOW_TACTIC_KEY = "ud:lineup:showTactic";
+
+/** 표시 토글 — 새로고침해도 유지되도록 localStorage에 저장 */
+function useDisplayToggle(key: string, initial: boolean) {
+  const [on, setOn] = useState(initial);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved !== null) setOn(saved === "1");
+    } catch { /* 접근 불가 시 기본값 */ }
+  }, [key]);
+  const toggle = () => {
+    setOn((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(key, next ? "1" : "0");
+      } catch { /* 무시 */ }
+      return next;
+    });
+  };
+  return [on, toggle] as const;
 }
 
 // 중계 카메라 틸트 각도 — 필드는 이 각도로 눕고, 선수 카드는 역회전해 일어선다
@@ -169,8 +156,13 @@ export function FormationField({
   playerTitles?: Record<string, EarnedTitle[]>;
   mode?: "token" | "faceon";
 }) {
-  const positions = FORMATION_POSITIONS[lineup.formation];
-  const totalLayers = lineup.formation.split("-").length;
+  const positions = positionsFor(lineup.formation, lineup.positions);
+  const roles = positions.map(roleFromPoint);
+  const tactic = tacticOf(lineup.tactic);
+  const instructions = parseInstructions(lineup.instructions);
+  const shapeIsCustom = isCustomShape(lineup.formation, lineup.positions);
+  const [showRoles, toggleRoles] = useDisplayToggle(SHOW_ROLES_KEY, true);
+  const [showTactic, toggleTactic] = useDisplayToggle(SHOW_TACTIC_KEY, true);
   const [selected, setSelected] = useState<string | null>(null);
   // 등장 스태거는 마운트 직후 한 번만 — 이후 탭/쿼터 전환엔 딜레이 없음
   const [entered, setEntered] = useState(false);
@@ -191,6 +183,12 @@ export function FormationField({
   const momNames = (matchInfo?.mom || "").split(/[,/]/).map((s) => s.trim()).filter(Boolean);
   const selectedName = selected && fieldNames.includes(selected) ? selected : null;
   const selectedStat = selectedName ? playerStats?.[selectedName] : undefined;
+  const selectedSlot = selectedName ? fieldNames.indexOf(selectedName) : -1;
+  const selectedRole = selectedSlot >= 0 ? roles[selectedSlot] : null;
+  const selectedInstructions =
+    selectedSlot >= 0
+      ? instructions[selectedSlot].map(instructionLabel).filter(Boolean)
+      : [];
 
   return (
     <div
@@ -309,8 +307,9 @@ export function FormationField({
               {lineup.players.map((player, i) => {
                 const pos = positions?.[i];
                 if (!pos || !player) return null;
-                const layerIdx = getLayerIndex(i, lineup.formation);
-                const color = getPlayerColor(layerIdx, totalLayers);
+                const role = roles[i];
+                const group = groupOfRole(role);
+                const color = GROUP_COLOR[group];
                 const isTbd = player.trim() === "미정";
                 const jerseyNo = rosterMap[player.trim()];
                 const isGuest = !jerseyNo && !isTbd;
@@ -369,7 +368,7 @@ export function FormationField({
                         }}
                         transition={{
                           type: "spring", stiffness: 320, damping: 22,
-                          delay: entered ? 0 : 0.15 + layerIdx * 0.12,
+                          delay: entered ? 0 : 0.15 + GROUP_ORDER[group] * 0.12,
                         }}
                         className="relative flex flex-col items-center justify-end cursor-pointer"
                         style={{
@@ -418,6 +417,26 @@ export function FormationField({
                               }}
                             >
                               C
+                            </div>
+                          )}
+                          {showRoles && !isTbd && (
+                            <div
+                              className="absolute flex items-center justify-center font-black tracking-tight"
+                              style={{
+                                top: -7,
+                                right: mode === "faceon" ? 2 : -11,
+                                height: 13,
+                                padding: "0 3px",
+                                borderRadius: 4,
+                                fontSize: 8,
+                                lineHeight: 1,
+                                color: "#fff",
+                                background: color.bg,
+                                border: "1px solid rgba(255,255,255,0.5)",
+                                boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
+                              }}
+                            >
+                              {role}
                             </div>
                           )}
                           {isMom && (
@@ -500,6 +519,29 @@ export function FormationField({
                             {isSel ? name : name.length > 4 ? name.slice(0, 4) : name}
                           </div>
                         )}
+                        {showTactic && !isTbd && instructions[i].some(instructionShort) && (
+                          // faceon은 마커 높이가 고정이라 절대배치로 띄운다 (레이아웃 안 밀림)
+                          <div
+                            className={`flex flex-col items-center gap-px ${
+                              mode === "faceon"
+                                ? "absolute bottom-[-9px] left-1/2 -translate-x-1/2 z-20"
+                                : "mt-0.5"
+                            }`}
+                          >
+                            {instructions[i].map((id) => instructionShort(id) && (
+                              <span
+                                key={id}
+                                className="rounded-sm px-1 text-[7px] font-black leading-[1.5] text-white whitespace-nowrap"
+                                style={{
+                                  background: "rgba(255,143,163,0.92)",
+                                  textShadow: "0 1px 2px rgba(0,0,0,0.7)",
+                                }}
+                              >
+                                {instructionShort(id)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                         {!isTbd && playerTitles?.[name]?.length ? (
                           <div
                             className={
@@ -525,6 +567,36 @@ export function FormationField({
             </AnimatePresence>
           </div>
         </div>
+
+        {/* 전술 배지 */}
+        {showTactic && (tactic || shapeIsCustom) && (
+          <div className="absolute left-3 top-3 z-40 flex items-center gap-1.5">
+            {tactic && (
+              <span
+                className="rounded-lg px-2 py-1 text-[9px] font-black leading-none text-white"
+                style={{
+                  background: "rgba(3,8,26,0.82)",
+                  border: "1px solid rgba(255,182,193,0.35)",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                }}
+                title={tactic.desc}
+              >
+                <span className="text-[#FFB6C1]">전술</span> {tactic.label}
+              </span>
+            )}
+            {shapeIsCustom && (
+              <span
+                className="rounded-lg px-2 py-1 text-[9px] font-black leading-none text-white/70"
+                style={{
+                  background: "rgba(3,8,26,0.72)",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                }}
+              >
+                커스텀 배치
+              </span>
+            )}
+          </div>
+        )}
 
         {/* 선수 탭 시 시즌 스탯 패널 */}
         <AnimatePresence>
@@ -555,6 +627,22 @@ export function FormationField({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[12px] font-black text-white truncate">{selectedName}</span>
+                  {selectedRole && (
+                    <span
+                      className="shrink-0 rounded px-1 text-[8px] font-black text-white"
+                      style={{ background: GROUP_COLOR[groupOfRole(selectedRole)].bg }}
+                    >
+                      {selectedRole}
+                    </span>
+                  )}
+                  {selectedInstructions.map((label) => (
+                    <span
+                      key={label}
+                      className="shrink-0 rounded bg-white/10 px-1 text-[8px] font-black text-white/75"
+                    >
+                      {label}
+                    </span>
+                  ))}
                   {selectedName === actingCaptain && (
                     <span className="text-[8px] font-black px-1 rounded bg-amber-400 text-amber-950">C</span>
                   )}
@@ -598,12 +686,32 @@ export function FormationField({
       </div>
 
       <div
-        className="flex items-center justify-between px-4 py-2.5"
+        className="flex flex-wrap items-center justify-between gap-y-2 px-4 py-2.5"
         style={{ background: "var(--pitch-bar)", borderTop: "1px solid var(--pitch-bar-border)" }}
       >
-        <span className="text-[9px] font-black tracking-[0.25em] text-gray-500 dark:text-white/50">
-          STARTING XI
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-black tracking-[0.25em] text-gray-500 dark:text-white/50">
+            STARTING XI
+          </span>
+          {[
+            { label: "포지션", on: showRoles, toggle: toggleRoles },
+            { label: "전술", on: showTactic, toggle: toggleTactic },
+          ].map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={item.toggle}
+              aria-pressed={item.on}
+              className={`rounded-md px-1.5 py-0.5 text-[9px] font-black transition-colors ${
+                item.on
+                  ? "bg-[#FF8FA3]/15 text-[#FF8FA3] dark:text-[#FFB6C1]"
+                  : "text-gray-400 dark:text-white/30"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
         <div className="flex items-center gap-3">
           {[
             { label: "GK", color: "#F59E0B" },

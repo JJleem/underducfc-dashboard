@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ChevronLeft, Trash2, Send, Heart, MessageCircle, User } from "lucide-react";
+import { ChevronLeft, Trash2, Send, Heart, MessageCircle, User, Pencil } from "lucide-react";
 import { youtubeEmbed } from "../../lib/youtube";
+import { FormationField } from "../../components/FormationField";
 import AppBottomNav from "../../components/AppBottomNav";
 import type { BoardPost, BoardComment } from "../../lib/board";
 
@@ -45,6 +46,8 @@ export default function BoardDetailClient({
   const [liked, setLiked] = useState(post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const embed = youtubeEmbed(post.youtubeUrl);
+  // 내 전술 글이면 수정 버튼을 노출 (전술 글은 1인 1개라 항상 /board/lineup으로 간다)
+  const isMyLineup = !!post.lineup && !!currentUser && post.kakaoId === currentUser.kakaoId;
 
   async function toggleLike() {
     if (!currentUser) { signIn("kakao"); return; }
@@ -119,7 +122,19 @@ export default function BoardDetailClient({
       </header>
 
       <div className="px-4 pt-4">
-        {/* 영상 */}
+        {/* 전술 글이면 라인업, 아니면 영상 */}
+        {post.lineup ? (
+          <FormationField
+            lineup={{
+              formation: post.lineup.formation,
+              players: post.lineup.players,
+              positions: post.lineup.positions,
+              tactic: post.lineup.tactic,
+              instructions: post.lineup.instructions,
+            }}
+            rosterMap={rosterMap}
+          />
+        ) : (
         <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black">
           {embed ? (
             <iframe
@@ -135,11 +150,22 @@ export default function BoardDetailClient({
             </a>
           )}
         </div>
+        )}
 
         {/* 제목/작성자/본문 */}
         <h2 className="mt-3 text-lg font-black leading-snug">{post.title}</h2>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          {post.author} · {fmt(post.createdAt)}
+        <p className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-gray-500 dark:text-gray-400">
+          <span>{post.author} · {fmt(post.createdAt)}</span>
+          {post.updatedAt && (
+            <span className="font-bold text-[#FF8FA3] dark:text-[#FFB6C1]">
+              · {fmt(post.updatedAt)} 수정됨
+            </span>
+          )}
+          {isMyLineup && (
+            <Link href="/board/lineup" className="ml-auto flex items-center gap-1 rounded-lg bg-gray-100 px-2 py-1 font-black text-gray-600 dark:bg-white/10 dark:text-gray-200">
+              <Pencil className="h-3 w-3" /> 수정
+            </Link>
+          )}
         </p>
         {post.body && (
           <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-300">{post.body}</p>

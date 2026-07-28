@@ -295,7 +295,7 @@ export default function LineupViewer({
                 {lineup.quarter} 라인업 · {lineup.formation}
               </p>
               <p className="mt-0.5 text-[9px] font-semibold text-gray-400">
-                선발 {lineup.players.length}명 · 대기 {lineup.subs.length}명
+                선발 {lineup.players.filter(Boolean).length}명 · 대기 {lineup.subs.length}명
               </p>
             </div>
             <span className="flex items-center gap-1.5 text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
