@@ -293,6 +293,7 @@ export interface Instruction {
 const CENTRAL_FORWARDS: Role[] = ["LS", "ST", "RS", "LF", "CF", "RF"];
 const WINGERS: Role[] = ["LW", "RW"];
 const DEF_MIDS: Role[] = ["LDM", "CDM", "RDM"];
+const FULL_BACKS: Role[] = ["LB", "RB"];
 
 export const INSTRUCTIONS: Record<PosGroup, Instruction[]> = {
   GK: [
@@ -301,7 +302,8 @@ export const INSTRUCTIONS: Record<PosGroup, Instruction[]> = {
   ],
   DF: [
     { id: "overlap", label: "오버랩핑", short: "오버랩" },
-    { id: "inverted", label: "인버티드", short: "인버티드" },
+    // 인버티드는 측면 풀백 전용. LCB·CB·RCB에는 노출하지 않는다.
+    { id: "inverted", label: "인버티드", short: "인버티드", roles: FULL_BACKS },
     { id: "hold", label: "위치 고수", short: "위치고수" },
     { id: "press", label: "강한 압박", short: "압박" },
     { id: "stay_back", label: "공격 가담 자제", short: "공격자제" },
@@ -381,7 +383,7 @@ export function instructionArrows(id: string, role: Role): InstructionArrow[] {
       return attack("up");
     // 인버티드 풀백은 미드필드 안쪽으로 접혀 들어간다
     case "inverted":
-      return attack(isLeft ? "right" : "left");
+      return FULL_BACKS.includes(role) ? attack(isLeft ? "right" : "left") : [];
 
     // 수비형 미드의 커버 범위
     case "side_cover":

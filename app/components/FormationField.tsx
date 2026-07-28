@@ -381,12 +381,14 @@ export function FormationField({
                         <div className="relative">
                           {/* 개인 전술 방향 — 전술 토글이 켜져 있을 때만 */}
                           {showTactic && !isTbd && (
-                            <InstructionArrows
-                              instructions={instructions[i]}
-                              role={role}
-                              radius={mode === "faceon" ? 30 : 24}
-                              size={mode === "faceon" ? 10 : 9}
-                            />
+                            <div className="pointer-events-none absolute inset-0 z-30">
+                              <InstructionArrows
+                                instructions={instructions[i]}
+                                role={role}
+                                radius={mode === "faceon" ? 39 : 27}
+                                size={mode === "faceon" ? 15 : 12}
+                              />
+                            </div>
                           )}
                           {mode === "faceon" && !isTbd ? (
                             <FaceOnMarker
@@ -532,19 +534,21 @@ export function FormationField({
                         {showTactic && !isTbd && instructions[i].some(instructionShort) && (
                           // faceon은 마커 높이가 고정이라 절대배치로 띄운다 (레이아웃 안 밀림)
                           <div
-                            className={`flex flex-col items-center gap-px ${
+                            className={`flex items-center justify-center gap-0.5 ${
                               mode === "faceon"
-                                ? "absolute bottom-[-9px] left-1/2 -translate-x-1/2 z-20"
+                                ? "absolute bottom-[-25px] left-1/2 -translate-x-1/2 z-30"
                                 : "mt-0.5"
                             }`}
                           >
                             {instructions[i].map((id) => instructionShort(id) && (
                               <span
                                 key={id}
-                                className="rounded-sm px-1 text-[7px] font-black leading-[1.5] text-white whitespace-nowrap"
+                                className="rounded px-1.5 py-0.5 text-[8px] font-black leading-none text-white whitespace-nowrap"
                                 style={{
-                                  background: "rgba(255,143,163,0.92)",
-                                  textShadow: "0 1px 2px rgba(0,0,0,0.7)",
+                                  background: "rgba(190,24,93,0.96)",
+                                  border: "1px solid rgba(255,255,255,0.7)",
+                                  boxShadow: "0 2px 5px rgba(0,0,0,0.65)",
+                                  textShadow: "0 1px 2px rgba(0,0,0,0.85)",
                                 }}
                               >
                                 {instructionShort(id)}

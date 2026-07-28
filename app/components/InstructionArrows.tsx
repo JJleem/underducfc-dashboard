@@ -1,6 +1,6 @@
 "use client";
-// 개인 전술의 움직임 방향을 마커 주변에 작은 화살표로 표시한다.
-// 배치를 읽는 걸 방해하면 안 되므로 작고 반투명하게 — 눈에 띄되 주인공은 아니다.
+// 개인 전술의 움직임 방향을 마커 주변에 표시한다.
+// 얼굴 이미지 위에서도 방향을 한눈에 읽을 수 있게 선과 화살촉을 함께 그린다.
 import { arrowsForSlot, type ArrowDir, type Role } from "../lib/positions";
 
 const TONE_COLOR = {
@@ -22,7 +22,7 @@ export default function InstructionArrows({
   instructions,
   role,
   radius = 25,
-  size = 9,
+  size = 12,
 }: {
   instructions: string[];
   role: Role;
@@ -41,19 +41,49 @@ export default function InstructionArrows({
           <svg
             key={dir}
             width={size}
-            height={size}
-            viewBox="0 0 10 10"
+            height={size * 1.55}
+            viewBox="0 0 14 22"
             aria-hidden
             className="pointer-events-none absolute"
             style={{
               left: "50%",
               top: "50%",
               transform: `translate(-50%,-50%) translate(${x * radius}px, ${y * radius}px) rotate(${angle}deg)`,
-              opacity: 0.9,
-              filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.75))",
+              zIndex: 30,
+              overflow: "visible",
+              filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.95))",
             }}
           >
-            <path d="M5 0.8 L8.6 8.4 L5 6.4 L1.4 8.4 Z" fill={TONE_COLOR[tone]} />
+            <path
+              d="M7 20 V6"
+              fill="none"
+              stroke="rgba(2,6,23,0.9)"
+              strokeWidth="5"
+              strokeLinecap="round"
+            />
+            <path
+              d="M7 20 V6"
+              fill="none"
+              stroke={TONE_COLOR[tone]}
+              strokeWidth="2.8"
+              strokeLinecap="round"
+            />
+            <path
+              d="M2 7.5 L7 1.5 L12 7.5"
+              fill="none"
+              stroke="rgba(2,6,23,0.9)"
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M2 7.5 L7 1.5 L12 7.5"
+              fill="none"
+              stroke={TONE_COLOR[tone]}
+              strokeWidth="2.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         );
       })}
