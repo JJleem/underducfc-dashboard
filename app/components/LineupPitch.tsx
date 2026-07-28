@@ -291,19 +291,22 @@ export default function LineupPitch({
               onPointerCancel={endDrag}
             >
               <span
-                className="mb-0.5 rounded px-1 text-[8px] font-black leading-[1.4] text-white"
+                className="relative z-10 mb-0.5 rounded px-1 text-[8px] font-black leading-[1.4] text-white"
                 style={{ background: color, boxShadow: "0 1px 3px rgba(0,0,0,0.5)" }}
               >
                 {role}
               </span>
               {/* 개인 전술 방향 — 원 주변에 작게 */}
-              <span className="pointer-events-none absolute" style={{ left: "50%", top: 25 }}>
+              <span
+                className="pointer-events-none absolute z-0"
+                style={{ left: "50%", top: 25 }}
+              >
                 {hasPlayer && !isTbd && (
                   <InstructionArrows instructions={instructions[i]} role={role} />
                 )}
               </span>
               <div
-                className={`flex items-center justify-center rounded-full font-black transition-all ${isActive || isSwapSource ? "pulse-ring" : ""}`}
+                className={`relative z-10 flex items-center justify-center rounded-full font-black transition-all ${isActive || isSwapSource ? "pulse-ring" : ""}`}
                 style={{
                   width: 36, height: 36,
                   fontSize: hasPlayer ? (displayLabel.length > 2 ? 9 : 13) : 11,
@@ -327,7 +330,7 @@ export default function LineupPitch({
               </div>
               {hasPlayer && (
                 <div
-                  className="mt-0.5 text-[7px] font-black text-white text-center max-w-[40px] truncate"
+                  className="relative z-10 mt-0.5 text-[7px] font-black text-white text-center max-w-[40px] truncate"
                   style={{ textShadow: "0 1px 3px rgba(0,0,0,1)" }}
                 >
                   {isTbd ? "미정" : player}
@@ -336,7 +339,7 @@ export default function LineupPitch({
               {hasPlayer && instructions[i].map((id) => instructionShort(id) && (
                 <div
                   key={id}
-                  className="mt-px rounded-sm px-0.5 text-[6px] font-black leading-[1.5] text-white whitespace-nowrap"
+                  className="relative z-10 mt-px rounded-sm px-0.5 text-[6px] font-black leading-[1.5] text-white whitespace-nowrap"
                   style={{ background: "rgba(255,143,163,0.9)", boxShadow: "0 1px 2px rgba(0,0,0,0.6)" }}
                 >
                   {instructionShort(id)}
