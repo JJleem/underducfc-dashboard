@@ -403,6 +403,7 @@ export default function LineupEditor({
         }),
       });
       if (!res.ok) throw new Error(await res.text());
+      router.refresh(); // 대시보드·경기상세의 캐시된 라인업에도 반영되게
       setSaved(true);
       setTimeout(() => {
         setSaved(false);

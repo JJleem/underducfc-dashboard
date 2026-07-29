@@ -15,6 +15,7 @@ import {
 import { useTheme } from "next-themes";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "../components/ui/drawer";
 import { playerFaceOnSrc } from "../lib/player-faceons";
+import { useRouter } from "next/navigation";
 
 interface RosterClientProps {
   players: string[][];
@@ -61,6 +62,7 @@ function SquadPhoto({ name, accent }: { name: string; accent: string }) {
 
 export default function RosterClient({ players: initialPlayers, isAdmin = false }: RosterClientProps) {
   const { resolvedTheme, setTheme } = useTheme();
+  const router = useRouter();
   const [playerList, setPlayerList] = React.useState<string[][]>(initialPlayers);
 
   const [modalOpen, setModalOpen] = React.useState(false);
@@ -99,6 +101,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
           body: JSON.stringify(form),
         });
         if (!res.ok) throw new Error("등록 실패");
+        router.refresh();
         const data = await res.json().catch(() => ({}));
         const newId = data?.id != null ? String(data.id) : "";
         setPlayerList((prev) => [...prev, [form.no || "-", form.name, form.pos, form.status, "", "", newId]]);
@@ -110,6 +113,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
           body: JSON.stringify(form),
         });
         if (!res.ok) throw new Error("수정 실패");
+        router.refresh();
         setPlayerList((prev) =>
           prev.map((p) =>
             p[6] === editId

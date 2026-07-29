@@ -83,6 +83,7 @@ export default function BoardDetailClient({
     try {
       const res = await fetch(`/api/board/${post.id}/like`, { method: "POST" });
       if (!res.ok) throw new Error();
+      router.refresh(); // 목록 탭의 캐시된 좋아요 수에도 반영되게
       const j = await res.json();
       setLiked(j.liked);
       setLikeCount(j.likeCount);
@@ -110,6 +111,7 @@ export default function BoardDetailClient({
         throw new Error(j.error || "댓글 등록 실패");
       }
       const created: BoardComment = await res.json();
+      router.refresh();
       setComments((prev) => [...prev, created]);
       setMessage("");
     } catch (e) {
@@ -122,14 +124,20 @@ export default function BoardDetailClient({
   async function removeComment(cid: number) {
     if (!confirm("댓글을 삭제할까요?")) return;
     const res = await fetch(`/api/board/${post.id}/comments/${cid}`, { method: "DELETE" });
-    if (res.ok) setComments((prev) => prev.filter((c) => c.id !== cid));
+    if (res.ok) {
+      router.refresh();
+      setComments((prev) => prev.filter((c) => c.id !== cid));
+    }
     else alert("삭제 실패");
   }
 
   async function removePost() {
     if (!confirm("이 글을 삭제할까요?")) return;
     const res = await fetch(`/api/board/${post.id}`, { method: "DELETE" });
-    if (res.ok) router.push("/board");
+    if (res.ok) {
+      router.refresh();
+      router.push("/board");
+    }
     else alert("삭제 실패");
   }
 

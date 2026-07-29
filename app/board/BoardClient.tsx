@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { ChevronLeft, Plus, MessageCircle, PlayCircle, Youtube, Search, Heart, Eye, X, Loader2, Check, ClipboardList, Pencil } from "lucide-react";
 import { youtubeThumb, youtubeId } from "../lib/youtube";
@@ -28,6 +29,7 @@ export default function BoardClient({
   const [posts, setPosts] = useState(initial);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("latest");
+  const router = useRouter();
   const [toast, setToast] = useState<string | null>(null);
 
   // 글쓰기: 먼저 종류를 고르고(유튜브/전술), 유튜브면 모달을 연다
@@ -88,6 +90,7 @@ export default function BoardClient({
         throw new Error(j.error || "등록에 실패했습니다.");
       }
       const created: BoardPost = await res.json();
+      router.refresh(); // 다른 탭의 캐시된 화면에도 반영되게
       // 낙관적 반영: 서버 재요청 없이 목록에 즉시 추가
       setPosts((prev) => [created, ...prev]);
       setTitle(""); setUrl(""); setBody(""); setWriting(false);
@@ -117,6 +120,7 @@ export default function BoardClient({
       const res = await fetch(`/api/board/${post.id}/like`, { method: "POST" });
       if (!res.ok) throw new Error();
       const { liked, likeCount } = await res.json();
+      router.refresh();
       setPosts((prev) =>
         prev.map((p) => (p.id === post.id ? { ...p, likedByMe: liked, likeCount } : p)),
       );

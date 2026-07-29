@@ -19,6 +19,7 @@ import {
   Droplets,
 } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { weatherEmoji } from "../lib/weather";
 
@@ -169,6 +170,9 @@ export default function VoteClient({
   const [closedMatchIds, setClosedMatchIds] = useState<Set<number>>(
     new Set(allVoteMatches.filter((match) => match.attendanceStatus === "마감").map((match) => match.id))
   );
+  // 쓰기 후 클라이언트 Router Cache 무효화용 (staleTimes.dynamic 활성 상태)
+  const router = useRouter();
+
   const activeMatches = allVoteMatches
     .filter((match) => match.result === "예정" && match.type !== "야유회" && !closedMatchIds.has(match.id))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -206,6 +210,7 @@ export default function VoteClient({
         body: JSON.stringify({ matchId, response }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "투표 실패");
+      router.refresh(); // 다른 탭의 캐시된 화면에도 반영되게
       setSavedVote({ matchId, response });
       window.setTimeout(() => {
         setSavedVote((current) =>
@@ -247,6 +252,7 @@ export default function VoteClient({
         body: JSON.stringify({ matchId, message: msg }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "댓글 실패");
+      router.refresh();
     } catch (e) {
       setComments(before);
       setCommentInput((prev) => ({ ...prev, [matchId]: msg }));
@@ -264,6 +270,7 @@ export default function VoteClient({
         body: JSON.stringify({ matchId, targetKakaoId, timestamp }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "삭제 실패");
+      router.refresh();
       setComments((prev) =>
         prev.filter(
           (c) => !(c.matchId === matchId && c.kakaoId === targetKakaoId && c.timestamp === timestamp)
@@ -283,6 +290,7 @@ export default function VoteClient({
         body: JSON.stringify({ matchId }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "마감 실패");
+      router.refresh();
       setClosedMatchIds((current) => new Set(current).add(matchId));
       setExpandedPast(true);
     } catch (e) {
@@ -299,6 +307,7 @@ export default function VoteClient({
         body: JSON.stringify({ matchId, action: "open" }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "다시 열기 실패");
+      router.refresh();
       setClosedMatchIds((current) => {
         const next = new Set(current);
         next.delete(matchId);

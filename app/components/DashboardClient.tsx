@@ -513,6 +513,7 @@ export default function DashboardClient({
         body: JSON.stringify(noticeEditForm),
       });
       if (!res.ok) throw new Error("저장 실패");
+      router.refresh(); // 다른 탭의 캐시된 화면에도 반영되게
       setLocalNotice({ id: 0, ...noticeEditForm });
       setNoticeEditModal(false);
     } catch (e) {
@@ -543,6 +544,7 @@ export default function DashboardClient({
         body: JSON.stringify(addMatchForm),
       });
       if (!res.ok) throw new Error("등록 실패");
+      router.refresh();
       const newMatch: MatchData = {
         id: matchList.length,
         date: addMatchForm.date,
@@ -693,6 +695,7 @@ export default function DashboardClient({
         body: JSON.stringify({ date: editDate, time: editTime, location: editLocation, opponent: editOpponent, type: editType, result: editResult, ourScore: editOurScore, theirScore: editTheirScore, goals: goalsStr, assists: assistsStr, attendees: attendeesStr }),
       });
       if (!res.ok) throw new Error("저장 실패");
+      router.refresh();
       setMatchList((prev) =>
         prev.map((m) =>
           m.id === matchEditModal
@@ -774,6 +777,7 @@ export default function DashboardClient({
         body: JSON.stringify({ matchId, urls: uploadedUrls }),
       });
       if (saveRes.ok) {
+        router.refresh();
         setLocalPhotoMap((prev) => ({
           ...prev,
           [matchId]: [...(prev[matchId] || []), ...uploadedUrls],
@@ -840,6 +844,7 @@ export default function DashboardClient({
         body: JSON.stringify({ matchId, voterName: voterName.trim(), votedFor, voteType }),
       });
       if (!res.ok) throw new Error("투표 저장 실패");
+      router.refresh();
       setMomVoteMap((prev) => {
         const filtered = (prev[matchId] || []).filter(
           (v) => !(v.voterName === voterName.trim() && v.voteType === voteType)
@@ -862,6 +867,7 @@ export default function DashboardClient({
       body: JSON.stringify({ matchId, voterName: voterName.trim(), voteType }),
     });
     if (res.ok) {
+      router.refresh();
       setMomVoteMap((prev) => ({
         ...prev,
         [matchId]: (prev[matchId] || []).filter(
@@ -972,6 +978,7 @@ export default function DashboardClient({
       body: JSON.stringify({ matchId, url }),
     });
     if (res.ok) {
+      router.refresh();
       setLocalPhotoMap((prev) => ({
         ...prev,
         [matchId]: (prev[matchId] || []).filter((u) => u !== url),
@@ -988,6 +995,7 @@ export default function DashboardClient({
       body: JSON.stringify({ matchId, timestamp: fb.timestamp, name: fb.name, message: fb.message }),
     });
     if (res.ok) {
+      router.refresh();
       setFeedbackMap((prev) => ({
         ...prev,
         [matchId]: (prev[matchId] || []).filter(
@@ -1018,6 +1026,7 @@ export default function DashboardClient({
         body: JSON.stringify({ matchId, name, message: form.message }),
       });
       if (res.ok) {
+        router.refresh();
         const newFb: FeedbackData = {
           matchId,
           timestamp: new Date().toISOString(),

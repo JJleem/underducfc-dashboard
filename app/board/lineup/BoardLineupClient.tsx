@@ -214,6 +214,7 @@ export default function BoardLineupClient({
       });
       if (!res.ok) throw new Error((await res.json()).error ?? "저장 실패");
       const post = await res.json();
+      router.refresh();
       setDone(true);
       setTimeout(() => router.push(`/board/${post.id}`), 800);
     } catch (e) {

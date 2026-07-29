@@ -2,6 +2,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Sun,
@@ -30,6 +31,7 @@ interface MediaClientProps {
 
 export default function MediaClient({ media }: MediaClientProps) {
   const { resolvedTheme, setTheme } = useTheme();
+  const router = useRouter();
 
   // 미디어 콘텐츠
   const [mediaList, setMediaList] = React.useState<MediaData[]>(media);
@@ -99,6 +101,7 @@ export default function MediaClient({ media }: MediaClientProps) {
         body: JSON.stringify({ type: resourceType, url: uploadData.secure_url, title: mediaUploadTitle }),
       });
       if (!saveRes.ok) throw new Error("저장 실패");
+      router.refresh();
       setMediaList((prev) => [
         { id: prev.length, type: resourceType as "video" | "image", url: uploadData.secure_url, title: mediaUploadTitle, uploadedAt: new Date().toISOString() },
         ...prev,
@@ -121,6 +124,7 @@ export default function MediaClient({ media }: MediaClientProps) {
         headers: { "Content-Type": "application/json", "x-admin-pin": adminPinRef.current },
         body: JSON.stringify({ url }),
       });
+      router.refresh();
       setMediaList((prev) => prev.filter((item) => item.url !== url));
     } catch {
       alert("삭제 실패");
