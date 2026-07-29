@@ -225,7 +225,7 @@ export default function BoardLineupClient({
 
   return (
     <div className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100 font-sans max-w-md mx-auto shadow-2xl">
-      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white/70 px-4 py-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/70">
+      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white/70 px-4 safe-header-py-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/70">
         <Link href="/board" className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
           <ArrowLeft className="h-4 w-4" />
           <span className="text-sm font-extrabold">{existing ? "내 전술 수정" : "전술 짜기"}</span>

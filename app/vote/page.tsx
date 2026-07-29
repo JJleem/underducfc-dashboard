@@ -17,26 +17,17 @@ export default async function VotePage() {
     : null;
   const admin = isAdmin(session?.user);
 
-  // O열(출석 투표 상태)까지 포함해서 fetch
-  const rawMatches = await getMatchesRows();
-  let rawAttendanceVotes: string[][] = [];
-  try {
-    rawAttendanceVotes = await getAttendanceVoteRows();
-  } catch {
-    rawAttendanceVotes = [];
-  }
-  let rawVoteComments: string[][] = [];
-  try {
-    rawVoteComments = await getVoteCommentRows();
-  } catch {
-    rawVoteComments = [];
-  }
-  let rawUsers: string[][] = [];
-  try {
-    rawUsers = await getUsersRows();
-  } catch {
-    rawUsers = [];
-  }
+  // O열(출석 투표 상태)까지 포함해서 fetch.
+  // 4개가 서로 독립이라 병렬로 받는다(직렬이면 왕복이 그대로 누적됨).
+  // matches는 기존처럼 실패 시 throw, 나머지 3개는 빈 배열로 폴백.
+  const optional = (): string[][] => [];
+  const [rawMatches, rawAttendanceVotes, rawVoteComments, rawUsers]: string[][][] =
+    await Promise.all([
+      getMatchesRows(),
+      getAttendanceVoteRows().catch(optional),
+      getVoteCommentRows().catch(optional),
+      getUsersRows().catch(optional),
+    ]);
 
   const normalizeTime = (raw: string): string => {
     if (!raw) return "미정";

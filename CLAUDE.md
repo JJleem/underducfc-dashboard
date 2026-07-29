@@ -28,7 +28,16 @@ CLOUDINARY_API_SECRET=
 
 ## Architecture
 
-**Google Sheets is the database.** All persistent data lives in a single spreadsheet with named sheets:
+> **⚠️ 현재 DB는 Google Sheets가 아닙니다.** 실제 저장소는 별도 **FastAPI + Postgres 백엔드**이고,
+> 서버사이드 전용 클라이언트는 `app/lib/underduck.ts`(`udGet`, `X-Underduck-Secret` 헤더)입니다.
+> 렌더 읽기는 `app/lib/backend.ts` / `app/lib/matches-backend.ts`가 `udGet`으로 백엔드를 호출한 뒤,
+> 기존 파서를 그대로 쓰기 위해 응답을 아래 시트 레이아웃(`string[][]`)으로 환원해 돌려줍니다.
+> 즉 **아래 표는 이제 "저장 위치"가 아니라 "행/열 레이아웃 계약"으로만 유효합니다.**
+>
+> `app/lib/google-sheets.ts` / `app/lib/sheets-write.ts`는 마이그레이션 잔재로, 아직 일부
+> `app/api/*` 라우트가 참조합니다. 새 코드는 `udGet`을 쓰고, 이 두 파일은 건드리지 마세요.
+
+**(레거시) Google Sheets 레이아웃** — 위 주의사항 참고. 데이터 형태 참조용:
 
 | Sheet      | Range   | Purpose                                               |
 | ---------- | ------- | ----------------------------------------------------- |

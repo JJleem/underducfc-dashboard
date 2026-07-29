@@ -4,7 +4,6 @@ import { LineupData, MatchData } from "../../components/DashboardClient";
 import MatchDetailClient from "./MatchDetailClient";
 import { notFound } from "next/navigation";
 import { parseSubstitutions } from "../../lib/lineup";
-import { auth } from "@/auth";
 import { buildContexts, evaluatePlayer, evaluateLeaders, managerTitle, pickBadges, MANAGER_NAME, type EarnedTitle } from "../../lib/titles";
 
 export default async function MatchDetailPage({
@@ -14,7 +13,6 @@ export default async function MatchDetailPage({
 }) {
   const { id } = await params;
   const matchId = Number(id);
-  const session = await auth();
 
   const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult, rawAttendanceResult, rawVoteCommentsResult, rawFeedbacksResult, rawFeaturedResult, rawBoardCommentsResult, rawBoardPostsResult, rawBoardLikeGiversResult] = await Promise.allSettled([
     getMatchesRows(),
@@ -153,7 +151,6 @@ export default async function MatchDetailPage({
       captainRoles={captainRoles}
       playerStats={playerStats}
       playerTitles={playerTitles}
-      currentUserName={session?.user?.name}
     />
   );
 }

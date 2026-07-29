@@ -59,7 +59,7 @@ import { parseWeather, weatherEmoji } from "../lib/weather";
 import { TitleBadges } from "./TitleBadges";
 import type { EarnedTitle } from "../lib/titles";
 import type { SubstitutionEvent } from "../lib/lineup";
-import AppBottomNav from "./AppBottomNav";
+import { useReportNavTab } from "./AppBottomNav";
 import LineupViewer from "./LineupViewer";
 import OpponentLogo from "./OpponentLogo";
 import { getOpponentLogo } from "../lib/opponent-logos";
@@ -457,6 +457,10 @@ export default function DashboardClient({
     setPrevInitialView(initialView);
     setActiveTab(initialView === "stats" ? "stats" : "matches");
   }
+
+  // 탭바가 레이아웃으로 올라갔으므로, 인페이지 탭(경기/스탯) 상태를 탭바에 알려준다.
+  // URL이 안 바뀌는 탭 전환에도 하단 스탯 하이라이트가 따라오게 하기 위함.
+  useReportNavTab(activeTab === "stats" ? "stats" : "home");
 
   // 하단 탭 이동 시 해당 섹션으로 부드럽게 스크롤.
   // (해시 앵커가 소프트 내비게이션에서 안 먹히던 문제 대체 — 경기→최근경기 목록, 스탯→팀 통산전적)
@@ -1166,7 +1170,7 @@ export default function DashboardClient({
   return (
     <div className="min-h-dvh bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors duration-300">
       {/* 📱 앱 헤더 */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-3.5 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-5 safe-header-py-35 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
         <span className="flex items-center gap-2 text-[15px] font-extrabold tracking-tight text-gray-900 dark:text-white uppercase">
           <span className="w-1.5 h-1.5 rounded-full bg-[#FF8FA3]" />
           UNDERDUCK
@@ -1553,23 +1557,24 @@ export default function DashboardClient({
                     onMonthChange={setCalendarMonth}
                     showOutsideDays
                     classNames={{
-                      months: "flex flex-col w-full",
+                      months: "relative flex flex-col w-full",
                       month: "flex flex-col gap-1 w-full",
-                      caption: "flex justify-center py-1.5 relative items-center",
+                      // v9는 Nav를 month_caption 밖(Months 직속)에 렌더한다.
+                      // 캡션과 같은 높이(h-8)로 상단에 겹쳐 깔아 기존 배치를 유지.
+                      month_caption: "flex h-8 justify-center items-center",
                       caption_label: "text-sm font-black text-gray-800 dark:text-white",
-                      nav: "flex items-center gap-1",
-                      nav_button: "size-7 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5 opacity-70 hover:opacity-100 transition-opacity",
-                      nav_button_previous: "absolute left-0",
-                      nav_button_next: "absolute right-0",
-                      table: "w-full border-collapse",
-                      head_row: "flex",
-                      head_cell: "flex-1 text-center text-[10px] font-bold text-gray-400 dark:text-gray-500 py-1",
-                      row: "flex w-full",
-                      cell: "flex-1 p-0 flex items-center justify-center py-0.5",
-                      day: "flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer",
-                      day_outside: "opacity-25",
-                      day_disabled: "opacity-20 cursor-default",
-                      day_hidden: "invisible",
+                      nav: "absolute inset-x-0 top-0 z-10 flex h-8 items-center justify-between",
+                      button_previous: "size-7 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5 opacity-70 hover:opacity-100 transition-opacity",
+                      button_next: "size-7 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5 opacity-70 hover:opacity-100 transition-opacity",
+                      month_grid: "w-full border-collapse",
+                      weekdays: "flex",
+                      weekday: "flex-1 text-center text-[10px] font-bold text-gray-400 dark:text-gray-500 py-1",
+                      week: "flex w-full",
+                      day: "flex-1 p-0 flex items-center justify-center py-0.5",
+                      day_button: "flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer",
+                      outside: "opacity-25",
+                      disabled: "opacity-20 cursor-default",
+                      hidden: "invisible",
                     }}
                     onDayClick={(date) => {
                       const key = toMatchDateStr(date);
@@ -1579,34 +1584,36 @@ export default function DashboardClient({
                       }
                     }}
                     components={{
-                      IconLeft: () => <ChevronLeft className="size-4" />,
-                      IconRight: () => <ChevronRight className="size-4" />,
-                      DayContent: (props: { date: Date }) => {
-                        const { date } = props;
+                      Chevron: ({ orientation }) =>
+                        orientation === "right" ? (
+                          <ChevronRight className="size-4" />
+                        ) : (
+                          <ChevronLeft className="size-4" />
+                        ),
+                      // v9에서 DayContent가 삭제돼 DayButton으로 옮겼다.
+                      // 버튼 속성(onClick·tabIndex·focus 처리)은 그대로 넘기고 내용만 교체.
+                      DayButton: ({ day, modifiers, children, ...buttonProps }) => {
+                        const date = day.date;
                         const dateStr = toMatchDateStr(date);
                         const dayMatches = matchesByDate[dateStr] ?? [];
-                        const isToday = dateStr === toMatchDateStr(new Date());
+                        const isToday = modifiers.today;
                         const isEvent = SPECIAL_EVENTS.some((e) => e.date === dateStr);
 
-                        if (dayMatches.length > 0) {
-                          const circleStyle = getMatchCircleStyle(dayMatches[0].result);
-                          return (
-                            <div className={`w-8 h-8 flex items-center justify-center rounded-full text-[12px] font-black ${circleStyle} ${isToday ? "ring-2 ring-offset-1 ring-[#FF8FA3] dark:ring-offset-[#161618]" : ""}`}>
-                              {date.getDate()}
-                            </div>
-                          );
-                        }
-                        if (isEvent) {
-                          return (
-                            <div className={`w-8 h-8 flex items-center justify-center rounded-full text-[12px] font-black bg-sky-400 text-white ${isToday ? "ring-2 ring-offset-1 ring-sky-400 dark:ring-offset-[#161618]" : ""}`}>
-                              {date.getDate()}
-                            </div>
-                          );
-                        }
+                        const circleClass =
+                          dayMatches.length > 0
+                            ? `font-black ${getMatchCircleStyle(dayMatches[0].result)} ${isToday ? "ring-2 ring-offset-1 ring-[#FF8FA3] dark:ring-offset-[#161618]" : ""}`
+                            : isEvent
+                              ? `font-black bg-sky-400 text-white ${isToday ? "ring-2 ring-offset-1 ring-sky-400 dark:ring-offset-[#161618]" : ""}`
+                              : isToday
+                                ? "font-black text-[#FF8FA3] dark:text-[#FFB6C1] bg-[#FF8FA3]/10"
+                                : "font-medium text-gray-600 dark:text-gray-400";
+
                         return (
-                          <div className={`w-8 h-8 flex items-center justify-center rounded-full text-[12px] ${isToday ? "font-black text-[#FF8FA3] dark:text-[#FFB6C1] bg-[#FF8FA3]/10" : "font-medium text-gray-600 dark:text-gray-400"}`}>
-                            {date.getDate()}
-                          </div>
+                          <button {...buttonProps}>
+                            <div className={`w-8 h-8 flex items-center justify-center rounded-full text-[12px] ${circleClass}`}>
+                              {children}
+                            </div>
+                          </button>
                         );
                       },
                     }}
@@ -3042,28 +3049,6 @@ export default function DashboardClient({
                     mode="single"
                     selected={editDate ? new Date(editDate + "T12:00:00") : undefined}
                     onSelect={(date) => { if (date) setEditDate(toMatchDateStr(date)); }}
-                    className="rounded-2xl border border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 w-full p-3"
-                    classNames={{
-                      months: "w-full",
-                      month: "w-full space-y-2",
-                      caption: "flex justify-center relative items-center mb-1",
-                      caption_label: "text-[13px] font-black text-gray-800 dark:text-white",
-                      nav: "flex items-center gap-1",
-                      nav_button: "h-7 w-7 flex items-center justify-center rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 transition-colors",
-                      nav_button_previous: "absolute left-0",
-                      nav_button_next: "absolute right-0",
-                      table: "w-full border-collapse",
-                      head_row: "flex w-full",
-                      head_cell: "flex-1 text-center text-[11px] font-black text-gray-400 dark:text-gray-500 pb-1",
-                      row: "flex w-full mt-0.5",
-                      cell: "flex-1 p-0.5 [&:has([aria-selected])]:bg-transparent",
-                      day: "w-full h-9 text-[12px] font-bold text-gray-800 dark:text-gray-200 rounded-xl hover:bg-gray-200 dark:hover:bg-white/10 transition-colors",
-                      day_selected: "!bg-[#FF8FA3] dark:!bg-[#FFB6C1] !text-white dark:!text-black font-black hover:!bg-[#FF8FA3] dark:hover:!bg-[#FFB6C1]",
-                      day_today: "border-2 border-[#FF8FA3] dark:border-[#FFB6C1] text-[#FF8FA3] dark:text-[#FFB6C1] font-black",
-                      day_outside: "text-gray-300 dark:text-gray-700 opacity-50",
-                      day_disabled: "text-gray-200 dark:text-gray-800",
-                      day_hidden: "invisible",
-                    }}
                   />
                   {editDate && (
                     <p className="text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] mt-1.5 text-center">{editDate} 선택됨</p>
@@ -3364,28 +3349,6 @@ export default function DashboardClient({
                 onSelect={(date) => {
                   if (date) setNoticeEditForm((p) => ({ ...p, date: toMatchDateStr(date) }));
                 }}
-                className="rounded-2xl border border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 w-full p-3"
-                classNames={{
-                  months: "w-full",
-                  month: "w-full space-y-2",
-                  caption: "flex justify-center relative items-center mb-1",
-                  caption_label: "text-[13px] font-black text-gray-800 dark:text-white",
-                  nav: "flex items-center gap-1",
-                  nav_button: "h-7 w-7 flex items-center justify-center rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 transition-colors",
-                  nav_button_previous: "absolute left-0",
-                  nav_button_next: "absolute right-0",
-                  table: "w-full border-collapse",
-                  head_row: "flex w-full",
-                  head_cell: "flex-1 text-center text-[11px] font-black text-gray-400 dark:text-gray-500 pb-1",
-                  row: "flex w-full mt-0.5",
-                  cell: "flex-1 p-0.5 [&:has([aria-selected])]:bg-transparent",
-                  day: "w-full h-9 text-[12px] font-bold text-gray-800 dark:text-gray-200 rounded-xl hover:bg-gray-200 dark:hover:bg-white/10 transition-colors",
-                  day_selected: "!bg-[#FF8FA3] dark:!bg-[#FFB6C1] !text-white dark:!text-black font-black hover:!bg-[#FF8FA3] dark:hover:!bg-[#FFB6C1]",
-                  day_today: "border-2 border-[#FF8FA3] dark:border-[#FFB6C1] text-[#FF8FA3] dark:text-[#FFB6C1] font-black",
-                  day_outside: "text-gray-300 dark:text-gray-700 opacity-50",
-                  day_disabled: "text-gray-200 dark:text-gray-800",
-                  day_hidden: "invisible",
-                }}
               />
               {noticeEditForm.date && (
                 <p className="text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] mt-1.5 text-center">{noticeEditForm.date} 선택됨</p>
@@ -3467,28 +3430,6 @@ export default function DashboardClient({
                 selected={addMatchForm.date ? new Date(addMatchForm.date + "T12:00:00") : undefined}
                 onSelect={(date) => {
                   if (date) setAddMatchForm((p) => ({ ...p, date: toMatchDateStr(date) }));
-                }}
-                className="rounded-2xl border border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 w-full p-3"
-                classNames={{
-                  months: "w-full",
-                  month: "w-full space-y-2",
-                  caption: "flex justify-center relative items-center mb-1",
-                  caption_label: "text-[13px] font-black text-gray-800 dark:text-white",
-                  nav: "flex items-center gap-1",
-                  nav_button: "h-7 w-7 flex items-center justify-center rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 transition-colors",
-                  nav_button_previous: "absolute left-0",
-                  nav_button_next: "absolute right-0",
-                  table: "w-full border-collapse",
-                  head_row: "flex w-full",
-                  head_cell: "flex-1 text-center text-[11px] font-black text-gray-400 dark:text-gray-500 pb-1",
-                  row: "flex w-full mt-0.5",
-                  cell: "flex-1 p-0.5 [&:has([aria-selected])]:bg-transparent",
-                  day: "w-full h-9 text-[12px] font-bold text-gray-800 dark:text-gray-200 rounded-xl hover:bg-gray-200 dark:hover:bg-white/10 transition-colors",
-                  day_selected: "!bg-[#FF8FA3] dark:!bg-[#FFB6C1] !text-white dark:!text-black font-black hover:!bg-[#FF8FA3] dark:hover:!bg-[#FFB6C1]",
-                  day_today: "border-2 border-[#FF8FA3] dark:border-[#FFB6C1] text-[#FF8FA3] dark:text-[#FFB6C1] font-black",
-                  day_outside: "text-gray-300 dark:text-gray-700 opacity-50",
-                  day_disabled: "text-gray-200 dark:text-gray-800",
-                  day_hidden: "invisible",
                 }}
               />
               {addMatchForm.date && (
@@ -3696,10 +3637,6 @@ export default function DashboardClient({
           <ChevronUp className="w-5 h-5 text-[#FF8FA3] dark:text-[#FFB6C1]" />
         </button>
       )}
-      <AppBottomNav
-        active={activeTab === "stats" ? "stats" : "home"}
-        currentUserName={currentUser?.name}
-      />
     </div>
   );
 }

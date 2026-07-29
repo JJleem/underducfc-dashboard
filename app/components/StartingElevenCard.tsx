@@ -283,7 +283,7 @@ const StartingElevenCard = forwardRef<
       <div className="relative z-10 h-[104px]">
         <span className="absolute left-0 top-0 flex items-center gap-1.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/underducklogo.png" alt="" className="h-[18px] w-[18px] object-contain" />
+          <img src="/icons/icon-192.png" alt="" className="h-[18px] w-[18px] object-contain" />
           <span className="text-[7px] font-black italic tracking-[-0.04em] text-white/80">
             UNDERDUCK
           </span>
@@ -347,7 +347,7 @@ const StartingElevenCard = forwardRef<
           UNDERDUCK FC
         </span>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/underducklogo.png" alt="" className="h-3.5 w-3.5 object-contain" />
+        <img src="/icons/icon-192.png" alt="" className="h-3.5 w-3.5 object-contain" />
       </div>
     </div>
   );

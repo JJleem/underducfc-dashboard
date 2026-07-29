@@ -107,6 +107,21 @@ body {
   }
 }
 
+/* 라우트 전환용. 짧게(180ms) — 길면 "느려졌다"로 읽힌다. */
+@keyframes udk-page {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page {
+  animation: udk-page 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 .animate-rise {
   animation: udk-rise 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -201,6 +216,29 @@ body {
     0 14px 34px -14px rgba(0, 0, 0, 0.7);
 }
 
+/* ── iOS PWA safe-area: 상단 고정 헤더 ─────────────────
+   viewport(viewportFit: "cover") 때문에 화면이 상태바 아래까지 확장된다.
+   헤더 배경은 화면 끝까지 이어지게 두고, 내용만 상태바 높이만큼 밀어 가림을 막는다.
+   기존 py-* 를 그대로 두고 pt-* 를 덧붙이면 어느 쪽이 이길지 순서에 의존하므로,
+   세로 패딩을 calc()로 한 번에 지정한다. standalone이 아니면 env()는 0 → 기존과 동일. */
+.safe-header-py-3 {
+  padding-top: calc(0.75rem + env(safe-area-inset-top));
+  padding-bottom: 0.75rem;
+}
+.safe-header-py-35 {
+  padding-top: calc(0.875rem + env(safe-area-inset-top));
+  padding-bottom: 0.875rem;
+}
+/* 고정 높이 헤더용: 높이에 상태바를 더하고 그만큼 위를 비운다. */
+.safe-header-h-14 {
+  height: calc(3.5rem + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+}
+.safe-header-h-61 {
+  height: calc(61px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+}
+
 /* iOS PWA: 입력 시 자동 확대 방지
    iOS Safari는 font-size < 16px 인 input/textarea/select를 포커스할 때 자동 확대함.
    @supports (-webkit-touch-callout: none) 은 iOS/iPadOS 전용 selector. */
@@ -214,6 +252,7 @@ body {
 
 /* 접근성: 모션 최소화 선호 시 비활성 */
 @media (prefers-reduced-motion: reduce) {
+  .animate-page,
   .animate-rise,
   .animate-fade,
   .animate-tab,

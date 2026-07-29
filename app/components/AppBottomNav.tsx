@@ -1,40 +1,106 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { BarChart3, Users, Home, UserRound, Vote, Youtube } from "lucide-react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { motion } from "motion/react";
 import type { MouseEvent } from "react";
 
 type NavKey = "home" | "roster" | "vote" | "stats" | "board" | "my";
 
-export default function AppBottomNav({
-  active,
-  currentUserName,
-}: {
-  active: NavKey;
-  currentUserName?: string | null;
-}) {
-  const items = [
-    { key: "home" as const, label: "홈", icon: Home, href: "/" },
-    { key: "roster" as const, label: "명단", icon: Users, href: "/roster" },
-    { key: "vote" as const, label: "투표", icon: Vote, href: "/vote" },
-    { key: "board" as const, label: "전술", icon: Youtube, href: "/board" },
-    { key: "stats" as const, label: "스탯", icon: BarChart3, href: "/?tab=stats" },
-  ];
-  const selectedIndex = Math.max(
-    0,
-    [...items.map((item) => item.key), "my" as const].indexOf(active),
+const ITEMS = [
+  { key: "home" as const, label: "홈", icon: Home, href: "/" },
+  { key: "roster" as const, label: "명단", icon: Users, href: "/roster" },
+  { key: "vote" as const, label: "투표", icon: Vote, href: "/vote" },
+  { key: "board" as const, label: "전술", icon: Youtube, href: "/board" },
+  { key: "stats" as const, label: "스탯", icon: BarChart3, href: "/?tab=stats" },
+];
+
+/** 탭 순서(인디케이터 위치 계산용). MY는 항상 마지막. */
+const ORDER: NavKey[] = [...ITEMS.map((i) => i.key), "my"];
+
+// ── 인페이지 탭 오버라이드 ──────────────────────────────
+// 대시보드의 "경기/스탯"은 URL이 아니라 DashboardClient의 클라이언트 상태다.
+// (page.tsx가 ?tab=stats로 초기값만 주고, 이후 탭 전환은 URL을 바꾸지 않는다.)
+// 탭바가 레이아웃으로 올라오면서 그 상태를 볼 수 없게 되므로, 페이지가 자기
+// 활성 탭을 알려줄 통로를 둔다. 알려주지 않으면 pathname으로만 판단한다.
+const NavTabContext = React.createContext<{
+  override: NavKey | null;
+  setOverride: (key: NavKey | null) => void;
+}>({ override: null, setOverride: () => {} });
+
+export function NavTabProvider({ children }: { children: React.ReactNode }) {
+  const [override, setOverride] = React.useState<NavKey | null>(null);
+  const value = React.useMemo(() => ({ override, setOverride }), [override]);
+  return (
+    <NavTabContext.Provider value={value}>{children}</NavTabContext.Provider>
   );
-  const handleNavClick = (
-    event: MouseEvent<HTMLAnchorElement>,
-    key: NavKey,
-  ) => {
+}
+
+/**
+ * 페이지가 자신의 인페이지 탭을 하단 탭바에 반영시킨다.
+ * 언마운트되면 자동 해제돼 다른 라우트의 판단을 방해하지 않는다.
+ */
+export function useReportNavTab(key: NavKey | null): void {
+  const { setOverride } = React.useContext(NavTabContext);
+  React.useEffect(() => {
+    setOverride(key);
+    return () => setOverride(null);
+  }, [key, setOverride]);
+}
+
+/** 에디터는 전체화면 작업 모드라 탭바를 띄우지 않는다. */
+function isFullscreenRoute(pathname: string): boolean {
+  return /^\/matches\/[^/]+\/edit\/?$/.test(pathname);
+}
+
+function activeFromPath(pathname: string, tab: string | null): NavKey | null {
+  if (pathname === "/") return tab === "stats" ? "stats" : "home";
+  if (pathname.startsWith("/roster")) return "roster";
+  if (pathname.startsWith("/vote")) return "vote";
+  if (pathname.startsWith("/board")) return "board";
+  if (pathname.startsWith("/players")) return "my";
+  if (pathname.startsWith("/matches")) return "home";
+  // /titles, /media 처럼 탭에 대응되지 않는 화면은 아무것도 활성화하지 않는다.
+  return null;
+}
+
+/**
+ * useSearchParams()는 정적 라우트에서 Suspense 경계를 요구한다. fallback이 null이면
+ * /titles·/media 같은 정적 페이지에서 탭바가 하이드레이션 후에야 나타나 깜빡인다.
+ * 그래서 searchParams가 필요한 부분만 분리하고, fallback은 pathname만으로 같은 탭바를
+ * 그린다(?tab을 쓰는 건 "/" 뿐이라 정적 페이지에서는 결과가 동일하다).
+ */
+export function AppBottomNavFallback() {
+  const pathname = usePathname();
+  if (isFullscreenRoute(pathname)) return null;
+  return <NavBar active={activeFromPath(pathname, null)} />;
+}
+
+export default function AppBottomNav() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { override } = React.useContext(NavTabContext);
+  if (isFullscreenRoute(pathname)) return null;
+  return (
+    <NavBar active={override ?? activeFromPath(pathname, searchParams.get("tab"))} />
+  );
+}
+
+function NavBar({ active }: { active: NavKey | null }) {
+  const { data: session } = useSession();
+  const currentUserName = session?.user?.name?.trim() || null;
+
+  const handleNavClick = (event: MouseEvent<HTMLAnchorElement>, key: NavKey) => {
     if (key !== "home" || active !== "home") return;
     event.preventDefault();
     window.scrollTo({ top: 0, behavior: "smooth" });
     navigator.vibrate?.(8);
   };
+
+  const selectedIndex = active ? ORDER.indexOf(active) : -1;
 
   return (
     <nav
@@ -45,12 +111,15 @@ export default function AppBottomNav({
         <motion.div
           aria-hidden="true"
           className="pointer-events-none absolute inset-y-0 left-0 w-1/6 px-1"
-          animate={{ x: `${selectedIndex * 100}%` }}
+          animate={{
+            x: `${Math.max(0, selectedIndex) * 100}%`,
+            opacity: selectedIndex < 0 ? 0 : 1,
+          }}
           transition={{ type: "spring", stiffness: 430, damping: 34, mass: 0.72 }}
         >
           <div className="mx-auto mt-1 h-8 w-11 rounded-[14px] bg-[#FF8FA3]/11 ring-1 ring-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10 dark:ring-[#FFB6C1]/10" />
         </motion.div>
-        {items.map(({ key, label, icon: Icon, href }) => {
+        {ITEMS.map(({ key, label, icon: Icon, href }) => {
           const selected = active === key;
           return (
             <Link
@@ -78,7 +147,7 @@ export default function AppBottomNav({
 
         {currentUserName ? (
           <Link
-            href={`/players/${encodeURIComponent(currentUserName.trim())}`}
+            href={`/players/${encodeURIComponent(currentUserName)}`}
             aria-current={active === "my" ? "page" : undefined}
             className={`relative z-10 flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-extrabold transition-colors ${
               active === "my"

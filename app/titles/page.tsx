@@ -110,7 +110,7 @@ export default function TitlesPage() {
 
   return (
     <main className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-white">
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-gray-200/70 bg-white/85 px-4 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/85">
+      <header className="sticky top-0 z-40 flex safe-header-h-14 items-center gap-3 border-b border-gray-200/70 bg-white/85 px-4 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/85">
         <Link
           href="/"
           aria-label="홈으로"

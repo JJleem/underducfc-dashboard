@@ -14,13 +14,11 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "../components/ui/drawer";
-import AppBottomNav from "../components/AppBottomNav";
 import { playerFaceOnSrc } from "../lib/player-faceons";
 
 interface RosterClientProps {
   players: string[][];
   isAdmin?: boolean;
-  currentUserName?: string | null;
 }
 
 // 포지션 그룹 메타 (앱 포지션 색 체계와 동일). 골키퍼 주황 / 수비 파랑 / 미드 초록 / 공격 핑크.
@@ -61,7 +59,7 @@ function SquadPhoto({ name, accent }: { name: string; accent: string }) {
   );
 }
 
-export default function RosterClient({ players: initialPlayers, isAdmin = false, currentUserName }: RosterClientProps) {
+export default function RosterClient({ players: initialPlayers, isAdmin = false }: RosterClientProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const [playerList, setPlayerList] = React.useState<string[][]>(initialPlayers);
 
@@ -154,7 +152,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
   return (
     <div className="min-h-[100dvh] bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors duration-300">
       {/* 📱 App Header */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-3.5 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-5 safe-header-py-35 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
         <Link
           href="/"
           className="p-1 -ml-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
@@ -289,7 +287,6 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false,
           })}
         </div>
       </main>
-      <AppBottomNav active="roster" currentUserName={currentUserName} />
 
       {/* 선수 추가/수정 Drawer */}
       <Drawer open={modalOpen} onOpenChange={setModalOpen} repositionInputs={false}>

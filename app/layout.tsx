@@ -1,9 +1,15 @@
 // app/layout.tsx
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
+import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "./components/theme-provider";
 import PullToRefresh from "./components/PullToRefresh";
 import ServiceWorkerRegister from "./components/ServiceWorkerRegister";
 import PushNotificationBanner from "./components/PushNotificationBanner";
+import AppBottomNav, {
+  AppBottomNavFallback,
+  NavTabProvider,
+} from "./components/AppBottomNav";
 import Image from "next/image";
 import "./globals.css";
 import Link from "next/link";
@@ -36,9 +42,15 @@ export const metadata: Metadata = {
     images: ["/meta.png"],
   },
 
+  // 이전에는 2.13MB짜리 원본 로고(1024px)를 파비콘·애플 아이콘으로 그대로 썼다.
+  // 용도별 크기를 따로 만들어 첫 로드에서 불필요한 2MB 다운로드를 없앤다.
   icons: {
-    icon: "/underducklogo.png",
-    apple: "/underducklogo.png",
+    icon: [
+      { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: { url: "/icons/apple-touch-icon.png", sizes: "180x180" },
   },
 
   // 💡 PWA: 홈 화면에 추가 시 standalone 앱으로 실행
@@ -53,11 +65,31 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // 💡 PWA standalone에서 env(safe-area-inset-*)가 실제 값을 갖게 하는 필수 옵션.
+  //    이게 없으면 iOS는 safe-area를 전부 0으로 계산해서, 하단 탭바/푸터의
+  //    pb-[env(safe-area-inset-bottom)] 이 무효가 되고 홈 인디케이터와 겹친다.
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f9fafb" },
     { media: "(prefers-color-scheme: dark)", color: "#09090b" },
   ],
 };
+// iOS standalone 실행 시 흰 화면 번쩍임을 없애는 스플래시 이미지.
+// iOS는 media query가 기기와 "정확히" 일치할 때만 쓰므로 해상도별 파일이 따로 필요하다.
+// [CSS 폭, CSS 높이, DPR] — public/splash/{폭*DPR}x{높이*DPR}.png 와 짝을 이룬다.
+const IOS_SPLASH: [number, number, number][] = [
+  [375, 667, 2], // SE(2·3세대), 8, 7, 6s
+  [375, 812, 3], // X, XS, 11 Pro, 12·13 mini
+  [390, 844, 3], // 12, 13, 14
+  [393, 852, 3], // 14 Pro, 15, 15 Pro, 16
+  [402, 874, 3], // 16 Pro
+  [414, 896, 2], // XR, 11
+  [414, 896, 3], // XS Max, 11 Pro Max
+  [428, 926, 3], // 12·13 Pro Max, 14 Plus
+  [430, 932, 3], // 14·15 Pro Max, 15 Plus, 16 Plus
+  [440, 956, 3], // 16 Pro Max
+];
+
 export default function RootLayout({
   children,
 }: {
@@ -77,6 +109,15 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
         />
+        {/* iOS 스플래시 (Next의 metadata API가 지원하지 않아 직접 link 태그로 넣는다) */}
+        {IOS_SPLASH.map(([w, h, dpr]) => (
+          <link
+            key={`${w}x${h}@${dpr}`}
+            rel="apple-touch-startup-image"
+            href={`/splash/${w * dpr}x${h * dpr}.png`}
+            media={`(device-width: ${w}px) and (device-height: ${h}px) and (-webkit-device-pixel-ratio: ${dpr}) and (orientation: portrait)`}
+          />
+        ))}
       </head>
       <body className="antialiased bg-zinc-100 dark:bg-black">
         <ThemeProvider
@@ -85,6 +126,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <SessionProvider>
+          <NavTabProvider>
           <ServiceWorkerRegister />
           <PushNotificationBanner />
           {/* 📱 모바일 앱 프레임 래퍼 */}
@@ -129,7 +172,15 @@ export default function RootLayout({
               </div>
             </footer>
             </PullToRefresh>
+
+            {/* 💡 하단 탭바: 라우트가 바뀌어도 언마운트되지 않도록 레이아웃에 1회만 둔다.
+                PullToRefresh의 transform 바깥에 둬서 당기는 동안에도 제자리에 고정된다. */}
+            <Suspense fallback={<AppBottomNavFallback />}>
+              <AppBottomNav />
+            </Suspense>
           </div>
+          </NavTabProvider>
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

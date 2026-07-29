@@ -21,7 +21,6 @@ import {
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { weatherEmoji } from "../lib/weather";
-import AppBottomNav from "../components/AppBottomNav";
 
 interface MatchInfo {
   id: number;
@@ -181,6 +180,25 @@ export default function VoteClient({
     if (!currentUser || submittingVote) return;
     setSubmittingVote({ matchId, response });
     setSavedVote(null);
+
+    // 낙관적 반영: 백엔드 왕복을 기다리면 탭한 뒤 잠깐 멈춘 것처럼 느껴진다.
+    // 내 선택을 먼저 화면에 넣고, 실패하면 이전 상태로 되돌린다.
+    // (게시판 좋아요 toggleLike와 같은 방식)
+    const before = votes;
+    setVotes((prev) => {
+      const filtered = prev.filter(
+        (v) => !(v.matchId === matchId && v.kakaoId === currentUser.kakaoId)
+      );
+      filtered.push({
+        matchId,
+        kakaoId: currentUser.kakaoId,
+        nickname: currentUser.name,
+        response,
+        timestamp: new Date().toISOString(),
+      });
+      return filtered;
+    });
+
     try {
       const res = await fetch("/api/attendance", {
         method: "POST",
@@ -188,19 +206,6 @@ export default function VoteClient({
         body: JSON.stringify({ matchId, response }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "투표 실패");
-      setVotes((prev) => {
-        const filtered = prev.filter(
-          (v) => !(v.matchId === matchId && v.kakaoId === currentUser.kakaoId)
-        );
-        filtered.push({
-          matchId,
-          kakaoId: currentUser.kakaoId,
-          nickname: currentUser.name,
-          response,
-          timestamp: new Date().toISOString(),
-        });
-        return filtered;
-      });
       setSavedVote({ matchId, response });
       window.setTimeout(() => {
         setSavedVote((current) =>
@@ -208,6 +213,7 @@ export default function VoteClient({
         );
       }, 1200);
     } catch (e) {
+      setVotes(before); // 롤백
       alert(e instanceof Error ? e.message : "투표 실패");
     } finally {
       setSubmittingVote(null);
@@ -218,6 +224,22 @@ export default function VoteClient({
     const msg = commentInput[matchId]?.trim();
     if (!msg || !currentUser || submittingComment) return;
     setSubmittingComment(true);
+
+    // 낙관적 반영: 전송을 누른 즉시 댓글을 붙이고 입력창을 비운다.
+    // 실패하면 댓글을 빼고 입력하던 내용을 되돌려 준다(입력 유실 방지).
+    const before = comments;
+    setComments((prev) => [
+      ...prev,
+      {
+        matchId,
+        kakaoId: currentUser.kakaoId,
+        nickname: currentUser.name,
+        message: msg,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    setCommentInput((prev) => ({ ...prev, [matchId]: "" }));
+
     try {
       const res = await fetch("/api/vote-comment", {
         method: "POST",
@@ -225,18 +247,9 @@ export default function VoteClient({
         body: JSON.stringify({ matchId, message: msg }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "댓글 실패");
-      setComments((prev) => [
-        ...prev,
-        {
-          matchId,
-          kakaoId: currentUser.kakaoId,
-          nickname: currentUser.name,
-          message: msg,
-          timestamp: new Date().toISOString(),
-        },
-      ]);
-      setCommentInput((prev) => ({ ...prev, [matchId]: "" }));
     } catch (e) {
+      setComments(before);
+      setCommentInput((prev) => ({ ...prev, [matchId]: msg }));
       alert(e instanceof Error ? e.message : "댓글 실패");
     } finally {
       setSubmittingComment(false);
@@ -631,7 +644,7 @@ export default function VoteClient({
     <div className="min-h-screen bg-gray-50 dark:bg-[#0B0B0D]">
       <div className="max-w-md mx-auto pb-24">
         {/* 헤더 */}
-        <div className="sticky top-0 z-10 bg-gray-50/80 dark:bg-[#0B0B0D]/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-white/5 px-4 py-3">
+        <div className="sticky top-0 z-10 bg-gray-50/80 dark:bg-[#0B0B0D]/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-white/5 px-4 safe-header-py-3">
           <div className="flex items-center gap-3">
             <Link href="/" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
               <ChevronLeft className="w-5 h-5" />
@@ -677,7 +690,6 @@ export default function VoteClient({
           )}
         </div>
       </div>
-      <AppBottomNav active="vote" currentUserName={currentUser?.name} />
 
       {/* 댓글 삭제 확인 모달 */}
       {deleteCommentTarget && (

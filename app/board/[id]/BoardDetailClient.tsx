@@ -8,7 +8,6 @@ import { ChevronLeft, Trash2, Send, Heart, MessageCircle, Eye, User, Pencil } fr
 import { youtubeEmbed } from "../../lib/youtube";
 import { FormationField, type SeasonStat } from "../../components/FormationField";
 import type { EarnedTitle } from "../../lib/titles";
-import AppBottomNav from "../../components/AppBottomNav";
 import type { BoardPost, BoardComment } from "../../lib/board";
 
 // 한국시간(KST) 기준 날짜 + 시:분:초
@@ -136,7 +135,7 @@ export default function BoardDetailClient({
 
   return (
     <div className="pb-24 text-gray-900 dark:text-white">
-      <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-gray-200/70 bg-white/90 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#101013]/90">
+      <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-gray-200/70 bg-white/90 px-4 safe-header-py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#101013]/90">
         <Link href="/board" aria-label="목록으로" className="rounded-full p-1 active:opacity-60">
           <ChevronLeft className="h-5 w-5" />
         </Link>
@@ -314,7 +313,6 @@ export default function BoardDetailClient({
         </div>
       </div>
 
-      <AppBottomNav active="board" currentUserName={currentUser?.name} />
     </div>
   );
 }

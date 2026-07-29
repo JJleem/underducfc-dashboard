@@ -31,7 +31,6 @@ import FeaturedEditor from "../../components/FeaturedEditor";
 import PrefPosEditor from "../../components/PrefPosEditor";
 import PlayerAvatar from "../../components/PlayerAvatar";
 import PlayerFace from "../../components/PlayerFace";
-import AppBottomNav from "../../components/AppBottomNav";
 import PlayerProfileBackButton from "../../components/PlayerProfileBackButton";
 
 export const dynamic = "force-dynamic";
@@ -53,25 +52,35 @@ export default async function PlayerPage({
   const { name: rawName } = await params;
   const name = decodeURIComponent(rawName).trim();
 
-  const rawStats: string[][] = await getStatsRows();
-  const rawRoster: string[][] = await getRosterRows();
-  const rawMatches: string[][] = await getMatchesRows();
-  let rawLineups: string[][] = [];
-  try { rawLineups = await getLineupRows(); } catch { rawLineups = []; }
-  let rawAttendanceVotes: string[][] = [];
-  try { rawAttendanceVotes = await getAttendanceVoteRows(); } catch { rawAttendanceVotes = []; }
-  let rawVoteComments: string[][] = [];
-  try { rawVoteComments = await getVoteCommentRows(); } catch { rawVoteComments = []; }
-  let rawFeatured: string[][] = [];
-  try { rawFeatured = await getFeaturedRows(); } catch { rawFeatured = []; }
-  let rawFeedbacks: string[][] = [];
-  try { rawFeedbacks = await getFeedbackRows(); } catch { rawFeedbacks = []; }
-  let rawBoardComments: string[][] = [];
-  try { rawBoardComments = await getBoardCommentRows(); } catch { rawBoardComments = []; }
-  let rawBoardPosts: string[][] = [];
-  try { rawBoardPosts = await getBoardPostRows(); } catch { rawBoardPosts = []; }
-  let rawBoardLikeGivers: string[][] = [];
-  try { rawBoardLikeGivers = await getBoardLikeGiverRows(); } catch { rawBoardLikeGivers = []; }
+  // 11개 소스를 순차로 await 하면 직렬 왕복이 그대로 누적돼 MY 탭이 눌린 뒤 멈춘 것처럼
+  // 보인다. 전부 독립이라 병렬로 받는다. 필수 3개(stats/roster/matches)는 기존처럼 실패 시
+  // 그대로 throw 되고(에러 바운더리), 선택 8개는 기존처럼 빈 배열로 폴백한다.
+  const optional = (): string[][] => [];
+  const [
+    rawStats,
+    rawRoster,
+    rawMatches,
+    rawLineups,
+    rawAttendanceVotes,
+    rawVoteComments,
+    rawFeatured,
+    rawFeedbacks,
+    rawBoardComments,
+    rawBoardPosts,
+    rawBoardLikeGivers,
+  ]: string[][][] = await Promise.all([
+    getStatsRows(),
+    getRosterRows(),
+    getMatchesRows(),
+    getLineupRows().catch(optional),
+    getAttendanceVoteRows().catch(optional),
+    getVoteCommentRows().catch(optional),
+    getFeaturedRows().catch(optional),
+    getFeedbackRows().catch(optional),
+    getBoardCommentRows().catch(optional),
+    getBoardPostRows().catch(optional),
+    getBoardLikeGiverRows().catch(optional),
+  ]);
 
   const isManager = name === MANAGER_NAME;
 
@@ -177,7 +186,7 @@ export default async function PlayerPage({
     <main className="min-h-dvh bg-gray-50 dark:bg-[#0a0a0c] text-gray-900 dark:text-white">
       <div className="max-w-md mx-auto pb-28">
         {/* 상단 바 */}
-        <div className="sticky top-0 z-10 flex items-center gap-2 px-4 py-3 bg-gray-50/80 dark:bg-[#0a0a0c]/80 backdrop-blur border-b border-gray-200/60 dark:border-white/[0.06]">
+        <div className="sticky top-0 z-10 flex items-center gap-2 px-4 safe-header-py-3 bg-gray-50/80 dark:bg-[#0a0a0c]/80 backdrop-blur border-b border-gray-200/60 dark:border-white/[0.06]">
           <PlayerProfileBackButton />
           <span className="text-[12px] font-black tracking-widest text-gray-400">PLAYER</span>
         </div>
@@ -482,7 +491,6 @@ export default async function PlayerPage({
           </section>
         )}
       </div>
-      <AppBottomNav active="my" currentUserName={session?.user?.name} />
     </main>
   );
 }

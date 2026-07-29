@@ -7,7 +7,7 @@ export default function Loading() {
       aria-label="화면을 불러오는 중"
       aria-busy="true"
     >
-      <header className="sticky top-0 z-50 flex h-[61px] items-center justify-between border-b border-gray-200/70 bg-white/70 px-5 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/70">
+      <header className="sticky top-0 z-50 flex safe-header-h-61 items-center justify-between border-b border-gray-200/70 bg-white/70 px-5 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/70">
         <div className="flex items-center gap-2">
           <span className="h-1.5 w-1.5 rounded-full bg-[#FF8FA3]" />
           <span className="h-3.5 w-24 rounded-md bg-gray-200 skeleton-shimmer dark:bg-white/10" />

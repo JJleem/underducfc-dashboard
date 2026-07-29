@@ -8,7 +8,6 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 import { MatchData, LineupData } from "../../components/DashboardClient";
-import AppBottomNav from "../../components/AppBottomNav";
 import LineupViewer from "../../components/LineupViewer";
 import OpponentLogo from "../../components/OpponentLogo";
 import { parseWeather, weatherEmoji } from "../../lib/weather";
@@ -21,10 +20,9 @@ interface MatchDetailClientProps {
   captainRoles?: Record<string, string>;
   playerStats?: Record<string, { apps: number; goals: number; assists: number; mom: number; pos?: string }>;
   playerTitles?: Record<string, EarnedTitle[]>;
-  currentUserName?: string | null;
 }
 
-export default function MatchDetailClient({ match, lineups, rosterMap, captainRoles, playerStats, playerTitles = {}, currentUserName }: MatchDetailClientProps) {
+export default function MatchDetailClient({ match, lineups, rosterMap, captainRoles, playerStats, playerTitles = {} }: MatchDetailClientProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const isInternal = match.opponent === "자체전";
   const [lightbox, setLightbox] = useState<{ urls: string[]; index: number } | null>(null);
@@ -40,7 +38,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
 
   return (
     <div className="min-h-dvh bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors duration-300">
-      <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-3.5 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-5 safe-header-py-35 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
         <Link href="/" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" />
           <span className="font-extrabold text-sm uppercase tracking-tight">UNDERDUCK</span>
@@ -237,7 +235,6 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
           </div>
         )}
       </main>
-      <AppBottomNav active="home" currentUserName={currentUserName} />
 
       {/* 라이트박스 */}
       {lightbox && (

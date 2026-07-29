@@ -5,7 +5,6 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { ChevronLeft, Plus, MessageCircle, PlayCircle, Youtube, Search, Heart, Eye, X, Loader2, Check, ClipboardList, Pencil } from "lucide-react";
 import { youtubeThumb, youtubeId } from "../lib/youtube";
-import AppBottomNav from "../components/AppBottomNav";
 import type { BoardPost } from "../lib/board";
 import LineupMini from "../components/LineupMini";
 
@@ -129,7 +128,7 @@ export default function BoardClient({
   return (
     <div className="pb-24 text-gray-900 dark:text-white">
       {/* 헤더 */}
-      <header className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/90 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#101013]/90">
+      <header className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/90 px-4 safe-header-py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#101013]/90">
         <div className="flex items-center gap-2">
           <Link href="/" aria-label="홈으로" className="rounded-full p-1 active:opacity-60">
             <ChevronLeft className="h-5 w-5" />
@@ -364,7 +363,6 @@ export default function BoardClient({
         </div>
       )}
 
-      <AppBottomNav active="board" currentUserName={currentUser?.name} />
     </div>
   );
 }

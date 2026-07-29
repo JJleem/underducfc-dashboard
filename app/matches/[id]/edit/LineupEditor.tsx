@@ -418,7 +418,7 @@ export default function LineupEditor({
   return (
     <div className="min-h-dvh bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto shadow-2xl overflow-hidden">
       {/* 헤더 */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-3.5 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-5 safe-header-py-35 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
         <Link href={`/matches/${match.id}`} className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
           <ArrowLeft className="w-4 h-4" />
           <span className="font-extrabold text-sm uppercase tracking-tight">라인업 편집</span>

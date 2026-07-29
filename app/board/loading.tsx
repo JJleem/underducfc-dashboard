@@ -2,7 +2,7 @@
 export default function Loading() {
   return (
     <div className="pb-24">
-      <header className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/90 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#101013]/90">
+      <header className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/90 px-4 safe-header-py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#101013]/90">
         <div className="flex items-center gap-2">
           <div className="h-5 w-5 rounded-full bg-gray-200 dark:bg-white/10" />
           <div className="h-5 w-28 rounded bg-gray-200 dark:bg-white/10" />
