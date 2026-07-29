@@ -6,6 +6,7 @@ import { ThemeProvider } from "./components/theme-provider";
 import PullToRefresh from "./components/PullToRefresh";
 import ServiceWorkerRegister from "./components/ServiceWorkerRegister";
 import PushNotificationBanner from "./components/PushNotificationBanner";
+import PageTransition from "./components/PageTransition";
 import AppBottomNav, {
   AppBottomNavFallback,
   NavTabProvider,
@@ -134,7 +135,9 @@ export default function RootLayout({
           <div className="max-w-md mx-auto min-h-[100dvh] flex flex-col bg-gray-50 dark:bg-[#09090b] shadow-2xl relative overflow-hidden transition-colors duration-300">
             <PullToRefresh>
             {/* 메인 컨텐츠 (Dashboard, Roster 등) */}
-            <div className="flex-1">{children}</div>
+            <div className="flex-1">
+              <PageTransition>{children}</PageTransition>
+            </div>
 
             {/* 💡 전역 Footer (모든 페이지 하단에 공통 적용) */}
             <footer className="w-full pt-8 pb-[calc(6.5rem+env(safe-area-inset-bottom))] px-5 flex flex-col items-center gap-5 border-t border-gray-200/60 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-sm mt-auto">
