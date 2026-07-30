@@ -119,15 +119,21 @@ export default function MediaClient({ media }: MediaClientProps) {
   const deleteMediaItem = async (url: string) => {
     if (!confirm("삭제할까요?")) return;
     try {
-      await fetch("/api/media", {
+      // fetch 는 4xx/5xx 로도 reject 하지 않는다. res.ok 를 보지 않으면
+      // 권한 없음·실패에도 화면에서만 사라진다.
+      const res = await fetch("/api/media", {
         method: "DELETE",
         headers: { "Content-Type": "application/json", "x-admin-pin": adminPinRef.current },
         body: JSON.stringify({ url }),
       });
+      if (!res.ok) {
+        const j = await res.json().catch(() => null);
+        throw new Error(j?.error || "삭제 실패");
+      }
       router.refresh();
       setMediaList((prev) => prev.filter((item) => item.url !== url));
-    } catch {
-      alert("삭제 실패");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "삭제 실패");
     }
   };
 

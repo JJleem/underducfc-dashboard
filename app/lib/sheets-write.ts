@@ -210,7 +210,9 @@ export async function appendMedia(item: {
 export async function deleteMediaByUrl(url: string): Promise<void> {
   const list = await udGet<MediaRow[]>("/api/underduck/media");
   const hit = list.find((m) => s(m.url) === url);
-  if (hit) await udDelete(`/api/underduck/media/${hit.id}`);
+  // 못 찾았는데 조용히 성공으로 넘기면 화면에서만 사라지고 서버엔 남는다.
+  if (!hit) throw new Error("삭제할 사진을 찾지 못했습니다. 새로고침 후 다시 시도해주세요.");
+  await udDelete(`/api/underduck/media/${hit.id}`);
 }
 
 // ── lineup ── (match_id+quarter upsert, 빈값이면 백엔드가 삭제)

@@ -985,6 +985,10 @@ export default function DashboardClient({
       }));
       // props photos도 로컬에서 반영 (제거된 것 추적)
       setDeletedPhotos((prev) => ({ ...prev, [matchId]: [...(prev[matchId] || []), url] }));
+    } else {
+      // 실패했는데 화면에서만 지우면 "지웠는데 다시 들어오면 살아있다"가 된다.
+      const j = await res.json().catch(() => null);
+      alert(j?.error || "사진 삭제에 실패했습니다.");
     }
   };
 
