@@ -36,9 +36,12 @@ export async function deleteFeedback(
   // 백엔드는 id로 삭제 → (matchId, timestamp, name, message)로 행을 찾아 id 확보.
   const list = await udGet<FeedbackRow[]>(`/api/underduck/feedback?match_id=${matchId}`);
   const hit = list.find((f) => s(f.timestamp) === timestamp && s(f.name) === name && s(f.message) === message);
-  if (hit) await udDelete(`/api/underduck/feedback/${hit.id}`);
+  // 못 찾았는데 조용히 성공으로 넘기면 화면에서만 사라지고 서버엔 남는다.
+  if (!hit) throw new Error("삭제할 댓글을 찾지 못했습니다. 새로고침 후 다시 시도해주세요.");
+  await udDelete(`/api/underduck/feedback/${hit.id}`);
 }
 
+/** 저장된 실제 행을 돌려준다(timestamp·name은 백엔드가 정하므로 화면도 이 값을 써야 한다). */
 export async function appendFeedback({
   matchId,
   name,
@@ -47,8 +50,14 @@ export async function appendFeedback({
   matchId: number;
   name: string;
   message: string;
-}) {
-  await udPost("/api/underduck/feedback", { match_id: matchId, name, message });
+}): Promise<{ matchId: number; timestamp: string; name: string; message: string }> {
+  const row = await udPost<FeedbackRow>("/api/underduck/feedback", { match_id: matchId, name, message });
+  return {
+    matchId: Number(row?.match_id ?? matchId),
+    timestamp: s(row?.timestamp),
+    name: s(row?.name),
+    message: s(row?.message),
+  };
 }
 
 // ── mom_vote ──
@@ -327,8 +336,16 @@ export async function setAttendanceStatus(
 }
 
 // ── 투표 댓글 (vote_comment) ──
-interface VoteCommentRow { id: number; kakao_id: string | null; timestamp: string | null; }
+interface VoteCommentRow {
+  id: number;
+  match_id?: number | null;
+  kakao_id: string | null;
+  nickname?: string | null;
+  message?: string | null;
+  timestamp: string | null;
+}
 
+/** 저장된 실제 행을 돌려준다(timestamp·nickname은 백엔드가 정하므로 화면도 이 값을 써야 한다). */
 export async function appendVoteComment({
   matchId,
   kakaoId,
@@ -339,13 +356,20 @@ export async function appendVoteComment({
   kakaoId: string;
   nickname: string;
   message: string;
-}): Promise<void> {
-  await udPost("/api/underduck/vote-comment", {
+}): Promise<{ matchId: number; kakaoId: string; nickname: string; message: string; timestamp: string }> {
+  const row = await udPost<VoteCommentRow>("/api/underduck/vote-comment", {
     match_id: matchId,
     kakao_id: kakaoId,
     nickname: nickname.trim(),
     message: message.trim(),
   });
+  return {
+    matchId: Number(row?.match_id ?? matchId),
+    kakaoId: s(row?.kakao_id),
+    nickname: s(row?.nickname),
+    message: s(row?.message),
+    timestamp: s(row?.timestamp),
+  };
 }
 
 export async function deleteVoteComment(
@@ -355,5 +379,7 @@ export async function deleteVoteComment(
 ): Promise<void> {
   const list = await udGet<VoteCommentRow[]>(`/api/underduck/vote-comment?match_id=${matchId}`);
   const hit = list.find((c) => s(c.kakao_id) === kakaoId && s(c.timestamp) === timestamp);
-  if (hit) await udDelete(`/api/underduck/vote-comment/${hit.id}`);
+  // 못 찾았는데 조용히 성공으로 넘기면 화면에서만 사라지고 서버엔 남는다.
+  if (!hit) throw new Error("삭제할 댓글을 찾지 못했습니다. 새로고침 후 다시 시도해주세요.");
+  await udDelete(`/api/underduck/vote-comment/${hit.id}`);
 }

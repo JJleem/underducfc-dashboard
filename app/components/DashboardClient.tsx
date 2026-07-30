@@ -1002,6 +1002,10 @@ export default function DashboardClient({
           (f) => !(f.timestamp === fb.timestamp && f.name === fb.name && f.message === fb.message)
         ),
       }));
+    } else {
+      // 실패했는데 화면에서만 지우면 "지웠는데 다시 들어오면 살아있다"가 된다.
+      const j = await res.json().catch(() => null);
+      alert(j?.error || "삭제에 실패했습니다.");
     }
   };
 
@@ -1027,12 +1031,17 @@ export default function DashboardClient({
       });
       if (res.ok) {
         router.refresh();
-        const newFb: FeedbackData = {
-          matchId,
-          timestamp: new Date().toISOString(),
-          name,
-          message: form.message.trim(),
-        };
+        // 서버가 저장한 실제 행을 쓴다. 임시 timestamp 를 들고 있으면
+        // 방금 쓴 댓글의 삭제가 서버에서 행을 못 찾아 실패한다.
+        const saved = (await res.json().catch(() => null))?.feedback as FeedbackData | undefined;
+        const newFb: FeedbackData = saved?.timestamp
+          ? saved
+          : {
+              matchId,
+              timestamp: new Date().toISOString(),
+              name,
+              message: form.message.trim(),
+            };
         setFeedbackMap((prev) => ({
           ...prev,
           [matchId]: [...(prev[matchId] || []), newFb],
@@ -1962,7 +1971,10 @@ export default function DashboardClient({
                                         value={fbForm.message}
                                         maxLength={200}
                                         onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...fbForm, message: e.target.value } }))}
-                                        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitFeedback(match.id); } }}
+                                        // 한글 조합 중(isComposing)에는 보내지 않는다 — 조합 확정용 Enter가
+                                        // 전송으로 새면 "안 눌렀는데 댓글이 올라간다".
+                                        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && !e.repeat) { e.preventDefault(); submitFeedback(match.id); } }}
+                                        enterKeyHint="send"
                                         className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-gray-400 text-gray-800 dark:text-gray-200 min-w-0"
                                       />
                                       <button
@@ -2604,7 +2616,10 @@ export default function DashboardClient({
                                         value={form.message}
                                         maxLength={200}
                                         onChange={(e) => setFeedbackForms((prev) => ({ ...prev, [match.id]: { ...form, message: e.target.value } }))}
-                                        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitFeedback(match.id); } }}
+                                        // 한글 조합 중(isComposing)에는 보내지 않는다 — 조합 확정용 Enter가
+                                        // 전송으로 새면 "안 눌렀는데 댓글이 올라간다".
+                                        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && !e.repeat) { e.preventDefault(); submitFeedback(match.id); } }}
+                                        enterKeyHint="send"
                                         className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-gray-400 text-gray-800 dark:text-gray-200 min-w-0"
                                       />
                                       <button

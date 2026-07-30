@@ -9,7 +9,7 @@
 //
 // ⚠️ read-modify-write용 읽기(sheets-write.ts의 udGet 등)에는 쓰지 말 것 — 항상 신선해야 함.
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 /** 렌더 읽기 fetch에 붙는 캐시 태그. */
 export const UD_READ_TAG = "underduck-read";
@@ -27,5 +27,12 @@ export const udReadOpts: { next: { revalidate: number; tags: string[] } } = {
  * 캐시를 즉시 무효화(대시보드·순위·로스터·매치상세 전부). 다음 요청은 새 데이터.
  */
 export function revalidateAppData(): void {
+  // 태그 무효화가 먼저다. revalidatePath 는 라우트의 렌더 결과만 버리고,
+  // 라우트 핸들러(/api/feedback·/api/vote-comment 등)가 부른 백엔드 읽기의
+  // fetch 캐시(UD_READ_REVALIDATE=45초)는 건드리지 않는다.
+  // 이게 빠져 있어서 "삭제했는데 나갔다 들어오면 살아있다"가 났다.
+  // { expire: 0 } = 즉시 만료. Next 16 은 두 번째 인자가 필수이고,
+  // 프로필을 주면 stale-while-revalidate 로 잠깐 옛 값을 더 내보낸다.
+  revalidateTag(UD_READ_TAG, { expire: 0 });
   revalidatePath("/", "layout");
 }

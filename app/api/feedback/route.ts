@@ -32,9 +32,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "필수 필드 누락" }, { status: 400 });
     }
 
-    await appendFeedback({ matchId: Number(matchId), name, message });
+    // 저장된 행을 그대로 돌려준다. 화면이 임의로 만든 timestamp 를 들고 있으면
+    // 그 댓글을 지울 때 서버에서 행을 못 찾는다(삭제가 조용히 실패).
+    const feedback = await appendFeedback({ matchId: Number(matchId), name, message });
     revalidateAppData();
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, feedback });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
     return NextResponse.json({ error: message }, { status: 500 });

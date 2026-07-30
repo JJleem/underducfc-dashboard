@@ -233,16 +233,14 @@ export default function VoteClient({
     // 낙관적 반영: 전송을 누른 즉시 댓글을 붙이고 입력창을 비운다.
     // 실패하면 댓글을 빼고 입력하던 내용을 되돌려 준다(입력 유실 방지).
     const before = comments;
-    setComments((prev) => [
-      ...prev,
-      {
-        matchId,
-        kakaoId: currentUser.kakaoId,
-        nickname: currentUser.name,
-        message: msg,
-        timestamp: new Date().toISOString(),
-      },
-    ]);
+    const optimistic: VoteComment = {
+      matchId,
+      kakaoId: currentUser.kakaoId,
+      nickname: currentUser.name,
+      message: msg,
+      timestamp: new Date().toISOString(),
+    };
+    setComments((prev) => [...prev, optimistic]);
     setCommentInput((prev) => ({ ...prev, [matchId]: "" }));
 
     try {
@@ -252,6 +250,12 @@ export default function VoteClient({
         body: JSON.stringify({ matchId, message: msg }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "댓글 실패");
+      // 서버가 저장한 실제 행(timestamp)으로 갈아끼운다.
+      // 임시 timestamp 를 그대로 들고 있으면 이 댓글의 삭제가 서버에서 실패한다.
+      const saved = (await res.json().catch(() => null))?.comment as VoteComment | undefined;
+      if (saved?.timestamp) {
+        setComments((prev) => prev.map((c) => (c === optimistic ? { ...c, ...saved } : c)));
+      }
       router.refresh();
     } catch (e) {
       setComments(before);
@@ -624,7 +628,16 @@ export default function VoteClient({
                           type="text"
                           value={commentInput[match.id] || ""}
                           onChange={(e) => setCommentInput((prev) => ({ ...prev, [match.id]: e.target.value }))}
-                          onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) submitComment(match.id); }}
+                          onKeyDown={(e) => {
+                            // 한글 조합 중(isComposing)에는 보내지 않는다 — 조합 확정용 Enter가
+                            // 전송으로 새는 걸 막는다.
+                            if (e.key === "Enter" && !e.nativeEvent.isComposing && !e.repeat) {
+                              e.preventDefault();
+                              submitComment(match.id);
+                            }
+                          }}
+                          // 모바일 키보드의 엔터키를 "전송"으로 표시 — 누르면 올라간다는 걸 미리 알려준다.
+                          enterKeyHint="send"
                           placeholder="댓글 달기..."
                           className="flex-1 text-[13px] bg-transparent outline-none placeholder:text-gray-400 text-gray-800 dark:text-gray-200 min-w-0"
                         />

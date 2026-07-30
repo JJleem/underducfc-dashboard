@@ -300,7 +300,15 @@ export default function BoardDetailClient({
               <input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") addComment(); }}
+                // 한글 조합 중(isComposing)에는 보내지 않는다 — 조합 확정용 Enter가
+                // 전송으로 새면 "안 눌렀는데 댓글이 올라간다".
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing && !e.repeat) {
+                    e.preventDefault();
+                    addComment();
+                  }
+                }}
+                enterKeyHint="send"
                 placeholder="댓글 달기…"
                 className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm outline-none focus:border-[#FF8FA3] dark:border-white/10 dark:bg-white/5"
               />
