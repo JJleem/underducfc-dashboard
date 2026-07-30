@@ -11,6 +11,38 @@ import type { BoardPost } from "../lib/board";
 import LineupMini from "../components/LineupMini";
 import ModalPortal from "../components/ModalPortal";
 
+/**
+ * 인스타 썸네일. 서버가 임베드 페이지에서 뽑아 프록시해준다([[api/board/insta-thumb]]).
+ * 실패하면(인스타가 막는 경우 등) 인스타 그라데이션 placeholder 로 폴백한다.
+ */
+function InstaThumb({ media }: { media: { kind: "reel" | "p" | "tv"; code: string } }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <>
+      {failed ? (
+        <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#833AB4] via-[#E1306C] to-[#F77737]">
+          <Instagram className="h-7 w-7 text-white/95" strokeWidth={2} />
+        </div>
+      ) : (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`/api/board/insta-thumb?code=${media.code}&kind=${media.kind}`}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover"
+            onError={() => setFailed(true)}
+          />
+          <PlayCircle className="absolute inset-0 m-auto h-8 w-8 text-white/90 drop-shadow" />
+        </>
+      )}
+      <span className="absolute bottom-1 left-1 rounded bg-black/45 px-1 text-[9px] font-black text-white">
+        {media.kind === "reel" ? "릴스" : "인스타"}
+      </span>
+    </>
+  );
+}
+
 type Sort = "latest" | "popular" | "views" | "likes" | "comments";
 const SORTS: { key: Sort; label: string }[] = [
   { key: "latest", label: "최신순" },
@@ -227,12 +259,7 @@ export default function BoardClient({
                           <PlayCircle className="absolute inset-0 m-auto h-8 w-8 text-white/90 drop-shadow" />
                         </>
                       ) : insta ? (
-                        <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#833AB4] via-[#E1306C] to-[#F77737]">
-                          <Instagram className="h-7 w-7 text-white/95" strokeWidth={2} />
-                          <span className="absolute bottom-1 left-1 rounded bg-black/45 px-1 text-[9px] font-black text-white">
-                            {insta.kind === "reel" ? "릴스" : "인스타"}
-                          </span>
-                        </div>
+                        <InstaThumb media={insta} />
                       ) : (
                         <div className="flex h-full items-center justify-center">
                           <Youtube className="h-6 w-6 text-gray-400" />
