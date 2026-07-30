@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ChevronLeft, Trash2, Send, Heart, MessageCircle, Eye, User, Pencil } from "lucide-react";
+import { ChevronLeft, Trash2, Send, Heart, MessageCircle, Eye, User, Pencil, Instagram } from "lucide-react";
 import { youtubeEmbed } from "../../lib/youtube";
+import { instagramEmbed } from "../../lib/instagram";
 import { FormationField, type SeasonStat } from "../../components/FormationField";
 import type { EarnedTitle } from "../../lib/titles";
 import type { BoardPost, BoardComment } from "../../lib/board";
@@ -53,6 +54,7 @@ export default function BoardDetailClient({
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [viewCount, setViewCount] = useState(post.viewCount);
   const embed = youtubeEmbed(post.youtubeUrl);
+  const instaEmbed = embed ? null : instagramEmbed(post.youtubeUrl);
   // 내 전술 글이면 수정 버튼을 노출 (전술 글은 1인 1개라 항상 /board/lineup으로 간다)
   const isMyLineup = !!post.lineup && !!currentUser && post.kakaoId === currentUser.kakaoId;
   // 전술 글은 쿼터별 안을 가질 수 있다 (최대 4개)
@@ -195,21 +197,46 @@ export default function BoardDetailClient({
             )}
           </div>
         ) : post.youtubeUrl ? (
-        <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black">
-          {embed ? (
-            <iframe
-              src={embed}
-              title={post.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="h-full w-full"
-            />
+          embed ? (
+            <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black">
+              <iframe
+                src={embed}
+                title={post.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="h-full w-full"
+              />
+            </div>
+          ) : instaEmbed ? (
+            // 인스타그램 공개 임베드. 릴스는 세로(9:16)라 유튜브와 다른 비율을 쓴다.
+            // 인스타 정책상 임베드에서 바로 재생이 막힐 수 있어 아래에 원본 링크를 같이 둔다.
+            <div className="space-y-2">
+              <div className="relative mx-auto aspect-[9/16] max-h-[76vh] w-full max-w-[400px] overflow-hidden rounded-2xl bg-black">
+                <iframe
+                  src={instaEmbed}
+                  title={post.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  scrolling="no"
+                  className="h-full w-full"
+                />
+              </div>
+              <a
+                href={post.youtubeUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 py-2 text-[12px] font-black text-gray-500 active:opacity-70 dark:border-white/10 dark:text-gray-400"
+              >
+                <Instagram className="h-3.5 w-3.5" /> 인스타그램에서 보기
+              </a>
+            </div>
           ) : (
-            <a href={post.youtubeUrl} target="_blank" rel="noreferrer" className="flex h-full items-center justify-center text-sm text-white/80 underline">
-              유튜브에서 열기
-            </a>
-          )}
-        </div>
+            <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black">
+              <a href={post.youtubeUrl} target="_blank" rel="noreferrer" className="flex h-full items-center justify-center text-sm text-white/80 underline">
+                원본 링크로 열기
+              </a>
+            </div>
+          )
         ) : (
           // 라인업도 영상도 없는 글 (예전 구조로 저장돼 내용이 비어버린 경우)
           <div className="flex aspect-video w-full items-center justify-center rounded-2xl border border-dashed border-gray-200 text-[12px] font-bold text-gray-400 dark:border-white/10">

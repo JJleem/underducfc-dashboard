@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ChevronLeft, Plus, MessageCircle, PlayCircle, Youtube, Search, Heart, Eye, X, Loader2, Check, ClipboardList, Pencil } from "lucide-react";
+import { ChevronLeft, Plus, MessageCircle, PlayCircle, Youtube, Instagram, Search, Heart, Eye, X, Loader2, Check, ClipboardList, Pencil } from "lucide-react";
 import { youtubeThumb, youtubeId } from "../lib/youtube";
+import { instagramMedia, isInstagramUrl } from "../lib/instagram";
 import type { BoardPost } from "../lib/board";
 import LineupMini from "../components/LineupMini";
 import ModalPortal from "../components/ModalPortal";
@@ -33,7 +34,7 @@ export default function BoardClient({
   const router = useRouter();
   const [toast, setToast] = useState<string | null>(null);
 
-  // 글쓰기: 먼저 종류를 고르고(유튜브/전술), 유튜브면 모달을 연다
+  // 글쓰기: 먼저 종류를 고르고(영상/전술), 영상이면 모달을 연다
   const [choosing, setChoosing] = useState(false);
   const [writing, setWriting] = useState(false);
   const [title, setTitle] = useState("");
@@ -41,7 +42,9 @@ export default function BoardClient({
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const canSubmit = title.trim() && youtubeId(url);
+  // 유튜브(watch·youtu.be·shorts) 또는 인스타그램(릴스·게시물) 링크면 등록 가능
+  const linkOk = !!youtubeId(url) || isInstagramUrl(url);
+  const canSubmit = title.trim() && linkOk;
 
   useEffect(() => {
     if (!toast) return;
@@ -193,6 +196,8 @@ export default function BoardClient({
           <ul className="space-y-3">
             {visible.map((p) => {
               const thumb = youtubeThumb(p.youtubeUrl);
+              // 인스타는 API 토큰 없이 썸네일을 못 가져온다 → 인스타 느낌의 placeholder
+              const insta = p.lineup ? null : instagramMedia(p.youtubeUrl);
               return (
                 <li key={p.id}>
                   <Link
@@ -221,6 +226,13 @@ export default function BoardClient({
                           <img src={thumb} alt="" className="h-full w-full object-cover" />
                           <PlayCircle className="absolute inset-0 m-auto h-8 w-8 text-white/90 drop-shadow" />
                         </>
+                      ) : insta ? (
+                        <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#833AB4] via-[#E1306C] to-[#F77737]">
+                          <Instagram className="h-7 w-7 text-white/95" strokeWidth={2} />
+                          <span className="absolute bottom-1 left-1 rounded bg-black/45 px-1 text-[9px] font-black text-white">
+                            {insta.kind === "reel" ? "릴스" : "인스타"}
+                          </span>
+                        </div>
                       ) : (
                         <div className="flex h-full items-center justify-center">
                           <Youtube className="h-6 w-6 text-gray-400" />
@@ -295,10 +307,13 @@ export default function BoardClient({
               onClick={() => { setChoosing(false); setWriting(true); }}
               className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 p-3.5 text-left active:opacity-70 dark:border-white/10"
             >
-              <Youtube className="h-6 w-6 shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+              <div className="flex shrink-0 items-center gap-1 text-[#FF8FA3] dark:text-[#FFB6C1]">
+                <Youtube className="h-6 w-6" />
+                <Instagram className="h-5 w-5" />
+              </div>
               <span>
-                <span className="block text-sm font-black">유튜브 영상 공유</span>
-                <span className="block text-[11px] text-gray-400">경기 영상이나 전술 참고 영상</span>
+                <span className="block text-sm font-black">영상 공유</span>
+                <span className="block text-[11px] text-gray-400">유튜브 · 인스타그램 릴스</span>
               </span>
             </button>
             <Link
@@ -327,7 +342,7 @@ export default function BoardClient({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-1 flex items-center justify-between">
-              <h2 className="text-base font-black">유튜브 영상 공유</h2>
+              <h2 className="text-base font-black">영상 공유</h2>
               <button onClick={() => setWriting(false)} className="p-1 text-gray-400 active:opacity-60" aria-label="닫기">
                 <X className="h-5 w-5" />
               </button>
@@ -341,11 +356,13 @@ export default function BoardClient({
             <input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="유튜브 링크 (youtu.be / shorts / watch)"
+              placeholder="유튜브 또는 인스타그램 릴스 링크"
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-[#FF8FA3] dark:border-white/10 dark:bg-white/5"
             />
-            {url && !youtubeId(url) && (
-              <p className="text-[11px] font-bold text-red-500">유튜브 링크를 인식하지 못했어요.</p>
+            {url && !linkOk && (
+              <p className="text-[11px] font-bold text-red-500">
+                링크를 인식하지 못했어요. 유튜브(watch·youtu.be·shorts) 또는 인스타그램(릴스·게시물) 주소를 넣어주세요.
+              </p>
             )}
             <textarea
               value={body}
