@@ -61,6 +61,7 @@ import type { EarnedTitle } from "../lib/titles";
 import type { SubstitutionEvent } from "../lib/lineup";
 import { useReportNavTab } from "./AppBottomNav";
 import LineupViewer from "./LineupViewer";
+import ModalPortal from "./ModalPortal";
 import OpponentLogo from "./OpponentLogo";
 import { getOpponentLogo } from "../lib/opponent-logos";
 import PlayerFace from "./PlayerFace";
@@ -2656,9 +2657,12 @@ export default function DashboardClient({
             })}
           </TabsContent>
 
-          {/* 라이트박스 */}
+          {/* 라이트박스 — body 로 포털해야 "지금 보고 있는 화면"에 꽉 찬다 */}
           {lightbox && (
+            <ModalPortal>
             <div
+              role="dialog"
+              aria-modal="true"
               className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
               onClick={() => setLightbox(null)}
             >
@@ -2708,6 +2712,7 @@ export default function DashboardClient({
                 </div>
               )}
             </div>
+            </ModalPortal>
           )}
 
           {/* 선수 스탯 탭 */}
@@ -3542,9 +3547,12 @@ export default function DashboardClient({
         </DrawerContent>
       </Drawer>
 
-      {/* MOM 투표 모달 */}
+      {/* MOM 투표 모달 — body 로 포털해야 "지금 보고 있는 화면" 가운데에 뜬다 */}
       {momModal && (
+        <ModalPortal>
         <div
+          role="dialog"
+          aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-6"
           onClick={() => setMomModal(null)}
         >
@@ -3618,11 +3626,15 @@ export default function DashboardClient({
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
 
-      {/* 댓글 삭제 확인 모달 */}
+      {/* 댓글 삭제 확인 모달 — body 로 포털해야 "지금 보고 있는 화면" 가운데에 뜬다 */}
       {deleteTarget && (
+        <ModalPortal>
         <div
+          role="dialog"
+          aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-6"
           onClick={() => setDeleteTarget(null)}
         >
@@ -3653,10 +3665,13 @@ export default function DashboardClient({
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
 
-      {/* 위로 가기 버튼 */}
+      {/* 위로 가기 버튼 — 모달과 같은 이유로 포털이 필요하다(조상 transform 때문에
+          화면 우하단이 아니라 페이지 맨 아래에 붙어 안 보였다) */}
       {showTopBtn && (
+        <ModalPortal>
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="fixed bottom-24 right-6 z-50 w-10 h-10 rounded-full bg-white dark:bg-[#161618] border border-gray-200 dark:border-white/10 shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
@@ -3664,6 +3679,7 @@ export default function DashboardClient({
         >
           <ChevronUp className="w-5 h-5 text-[#FF8FA3] dark:text-[#FFB6C1]" />
         </button>
+        </ModalPortal>
       )}
     </div>
   );

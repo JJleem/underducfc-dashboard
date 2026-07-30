@@ -8,6 +8,7 @@ import { ChevronLeft, Plus, MessageCircle, PlayCircle, Youtube, Search, Heart, E
 import { youtubeThumb, youtubeId } from "../lib/youtube";
 import type { BoardPost } from "../lib/board";
 import LineupMini from "../components/LineupMini";
+import ModalPortal from "../components/ModalPortal";
 
 type Sort = "latest" | "popular" | "views" | "likes" | "comments";
 const SORTS: { key: Sort; label: string }[] = [
@@ -271,9 +272,12 @@ export default function BoardClient({
         )}
       </div>
 
-      {/* 글 종류 선택 */}
+      {/* 글 종류 선택 — body 로 포털해야 "지금 보고 있는 화면" 기준으로 뜬다 */}
       {choosing && (
+        <ModalPortal>
         <div
+          role="dialog"
+          aria-modal="true"
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
           onClick={() => setChoosing(false)}
         >
@@ -311,11 +315,13 @@ export default function BoardClient({
             </Link>
           </div>
         </div>
+        </ModalPortal>
       )}
 
-      {/* 글쓰기 모달 */}
+      {/* 글쓰기 모달 — body 로 포털해야 "지금 보고 있는 화면" 기준으로 뜬다 */}
       {writing && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={() => setWriting(false)}>
+        <ModalPortal>
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={() => setWriting(false)}>
           <div
             className="w-full max-w-md space-y-2.5 rounded-t-3xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-[#161618] sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
@@ -358,13 +364,16 @@ export default function BoardClient({
             </button>
           </div>
         </div>
+        </ModalPortal>
       )}
 
-      {/* 토스트 */}
+      {/* 토스트 — 모달과 같은 이유로 포털이 필요하다 */}
       {toast && (
+        <ModalPortal>
         <div className="fixed bottom-24 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-gray-900/90 px-4 py-2 text-xs font-bold text-white shadow-lg dark:bg-white/90 dark:text-black">
           <Check className="h-3.5 w-3.5" /> {toast}
         </div>
+        </ModalPortal>
       )}
 
     </div>

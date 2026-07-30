@@ -7,6 +7,7 @@ import { ChevronDown, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { EarnedTitle, topTitles } from "../lib/titles";
 import { titleIcon } from "../lib/title-icons";
+import ModalPortal from "./ModalPortal";
 
 interface Accent {
   ring: string;
@@ -145,7 +146,9 @@ export default function PlayerTitleCards({ titles }: { titles: EarnedTitle[] }) 
         )}
       </div>
 
+      {/* body 로 포털해야 "지금 보고 있는 화면" 아래쪽에 뜬다 */}
       {selected && selectedAccent && (
+        <ModalPortal>
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 px-4 pb-5 backdrop-blur-sm"
           onClick={() => setSelected(null)}
@@ -211,6 +214,7 @@ export default function PlayerTitleCards({ titles }: { titles: EarnedTitle[] }) 
             )}
           </div>
         </div>
+        </ModalPortal>
       )}
     </>
   );

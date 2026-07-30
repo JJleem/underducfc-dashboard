@@ -21,6 +21,7 @@ import {
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import ModalPortal from "../components/ModalPortal";
 import { weatherEmoji } from "../lib/weather";
 
 interface MatchInfo {
@@ -713,9 +714,12 @@ export default function VoteClient({
         </div>
       </div>
 
-      {/* 댓글 삭제 확인 모달 */}
+      {/* 댓글 삭제 확인 모달 — body 로 포털해야 "지금 보고 있는 화면" 가운데에 뜬다 */}
       {deleteCommentTarget && (
+        <ModalPortal>
         <div
+          role="dialog"
+          aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-6"
           onClick={() => setDeleteCommentTarget(null)}
         >
@@ -746,6 +750,7 @@ export default function VoteClient({
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
     </div>
   );

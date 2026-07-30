@@ -9,6 +9,7 @@ import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 import { MatchData, LineupData } from "../../components/DashboardClient";
 import LineupViewer from "../../components/LineupViewer";
+import ModalPortal from "../../components/ModalPortal";
 import OpponentLogo from "../../components/OpponentLogo";
 import { parseWeather, weatherEmoji } from "../../lib/weather";
 import type { EarnedTitle } from "../../lib/titles";
@@ -236,9 +237,12 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
         )}
       </main>
 
-      {/* 라이트박스 */}
+      {/* 라이트박스 — body 로 포털해야 "지금 보고 있는 화면"에 꽉 찬다 */}
       {lightbox && (
+        <ModalPortal>
         <div
+          role="dialog"
+          aria-modal="true"
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
           onClick={() => setLightbox(null)}
         >
@@ -272,6 +276,7 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
             onClick={(e) => e.stopPropagation()}
           />
         </div>
+        </ModalPortal>
       )}
     </div>
   );
