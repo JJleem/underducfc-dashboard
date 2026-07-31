@@ -81,6 +81,7 @@ export interface PlayerContext {
   // 히든 칭호용
   isFirstBlood: boolean; // 시즌 첫 경기 득점자
   goalPerGame: number; // 골/출전 비율
+  peakGoalPerGame: number; // 5경기 이상 시점들 중 누적 골/경기 최고치 (레이저 박탈 방지)
   bestDuoAssists: number; // 같은 선수에게 어시스트한 최대 횟수
   posGroupsWithMin3: number; // 3경기+ 경험한 포지션 그룹 수
 }
@@ -475,7 +476,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     const goalsByOpp = new Map<string, number>();
 
     const participatedDates: { date: string; played: boolean }[] = [];
-    const completedParticipation: { date: string; played: boolean }[] = [];
+    const completedParticipation: { date: string; played: boolean; goals: number }[] = [];
 
     matches.forEach((m) => {
       const g = countInCsv(m.goals, name);
@@ -495,7 +496,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
 
       if (m.isReal) participatedDates.push({ date: m.date, played });
       if (m.isReal && m.result !== "예정") {
-        completedParticipation.push({ date: m.date, played });
+        completedParticipation.push({ date: m.date, played, goals: g });
       }
 
       if (played && m.isReal) {
@@ -562,6 +563,22 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
         absenceAfterPlaying = 0;
       } else if (hasPlayedBefore) {
         absenceAfterPlaying += 1;
+      }
+    });
+
+    // 히든 "레이저"는 경기당 득점 비율이라, 나중에 출전이 늘면 조건이 깨져 이미 딴 칭호를 뺏긴다.
+    // 그래서 현재 비율 대신 "5경기를 넘긴 시점들 중 누적 비율의 최고치"를 남긴다.
+    // 이 값은 시간이 지나도 내려가지 않으므로 한 번 1.0을 찍으면 영구히 유지된다.
+    // (completedParticipation은 위에서 날짜 오름차순 정렬됨)
+    let peakGoalPerGame = 0;
+    let runningApps = 0;
+    let runningGoals = 0;
+    completedParticipation.forEach((d) => {
+      if (!d.played) return;
+      runningApps += 1;
+      runningGoals += d.goals;
+      if (runningApps >= 5) {
+        peakGoalPerGame = Math.max(peakGoalPerGame, runningGoals / runningApps);
       }
     });
 
@@ -647,6 +664,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       likesGiven,
       isFirstBlood,
       goalPerGame,
+      peakGoalPerGame,
       bestDuoAssists,
       posGroupsWithMin3,
     });
@@ -728,7 +746,8 @@ export const TITLES: TitleDef[] = [
 
   // ── 히든 칭호
   { id: "firstblood", name: "퍼스트 블러드", icon: "sword", category: "히든", state: "live", hidden: true, flat: true, desc: "데뷔전 득점자", check: (c) => c.isFirstBlood },
-  { id: "laser", name: "레이저", icon: "crosshair", category: "히든", state: "live", hidden: true, flat: true, desc: "경기당 1골 이상 (최소 5경기)", check: (c) => c.apps >= 5 && c.goalPerGame >= 1 },
+  // 한 번이라도 5경기 이상 시점에서 경기당 1골을 찍었으면 계속 유지된다(peakGoalPerGame).
+  { id: "laser", name: "레이저", icon: "crosshair", category: "히든", state: "live", hidden: true, flat: true, desc: "경기당 1골 이상 (최소 5경기)", check: (c) => (c.apps >= 5 && c.goalPerGame >= 1) || c.peakGoalPerGame >= 1 },
   { id: "duo", name: "찰떡궁합", icon: "heart-handshake", category: "히든", state: "live", hidden: true, flat: true, desc: "같은 선수에게 3회+ 어시스트", check: (c) => c.bestDuoAssists >= 3 },
   { id: "overlap_machine", name: "오버래핑 머신", icon: "rocket", category: "히든", state: "live", hidden: true, flat: true, desc: "풀백 20경기+ & 도움 7+", check: (c) => c.fullbackGames >= 20 && c.assists >= 7 },
   { id: "setpiece_nightmare", name: "세트피스의 악몽", icon: "crosshair", category: "히든", state: "live", hidden: true, flat: true, desc: "센터백 20경기+ & 득점 5+", check: (c) => c.centerbackGames >= 20 && c.goals >= 5 },
@@ -788,7 +807,7 @@ function achievementStats(id: string, c: PlayerContext): { label: string; value:
     case "onehit": return [{ label: "출전", value: `${c.apps}경기` }, { label: "득점", value: `${c.goals}골` }];
     case "invincible": return [{ label: "출전", value: `${c.apps}경기` }, { label: "승률", value: `${Math.round(c.winRate * 100)}%` }];
     case "firstblood": return [{ label: "데뷔전", value: "득점 성공" }];
-    case "laser": return [{ label: "출전", value: `${c.apps}경기` }, { label: "경기당 득점", value: c.goalPerGame.toFixed(2) }];
+    case "laser": return [{ label: "출전", value: `${c.apps}경기` }, { label: "경기당 득점", value: c.goalPerGame.toFixed(2) }, ...(c.peakGoalPerGame > c.goalPerGame ? [{ label: "최고 시점", value: c.peakGoalPerGame.toFixed(2) }] : [])];
     case "duo": return [{ label: "최다 호흡", value: `${c.bestDuoAssists}도움` }];
     case "perfect_attendance": return [{ label: "최대 연속 출석", value: `${c.maxAttendStreak}연속` }, { label: "통산 출전", value: `${c.apps}경기` }];
     case "total_onemanshow": return [{ label: "한 경기 최고", value: `${c.bestSingleGamePoints}P` }];
