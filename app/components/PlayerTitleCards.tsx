@@ -56,9 +56,12 @@ function Highlight({
 export default function PlayerTitleCards({
   titles,
   featuredIds,
+  leading,
 }: {
   titles: EarnedTitle[];
   featuredIds?: string[];
+  /** 줄 맨 앞에 붙는 항목(본인 프로필의 ＋ 대표 고르기). 칭호와 같은 폭으로 맞춰 그린다. */
+  leading?: React.ReactNode;
 }) {
   const [selected, setSelected] = useState<EarnedTitle | null>(null);
   const { resolvedTheme } = useTheme();
@@ -71,7 +74,8 @@ export default function PlayerTitleCards({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [moreRight, setMoreRight] = useState(false);
   const [itemW, setItemW] = useState(64);
-  const count = titles.length;
+  // ＋ 항목도 줄에서 자리를 차지하므로 넘침 판정에 함께 넣어야 폭이 맞게 잡힌다.
+  const count = titles.length + (leading ? 1 : 0);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -129,6 +133,11 @@ export default function PlayerTitleCards({
         style={{ WebkitMaskImage: fade, maskImage: fade }}
       >
         <div className="flex w-max gap-3">
+          {leading && (
+            <div className="shrink-0" style={{ width: itemW }}>
+              {leading}
+            </div>
+          )}
           {ordered.map((t) => (
             <Highlight
               key={t.id}

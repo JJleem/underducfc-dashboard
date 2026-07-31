@@ -10,12 +10,23 @@ import { titleIcon } from "../lib/title-icons";
 export default function FeaturedEditor({
   titles,
   current,
+  open: openProp,
+  onOpenChange,
 }: {
   titles: EarnedTitle[];
   current: string[];
+  /** 넘기면 제어 모드 — 자체 트리거 버튼을 그리지 않는다(하이라이트 줄의 ＋ 동그라미가 대신 연다). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const controlled = openProp !== undefined;
+  const open = controlled ? openProp : openState;
+  const setOpen = (next: boolean) => {
+    if (controlled) onOpenChange?.(next);
+    else setOpenState(next);
+  };
   const earnedIds = new Set(titles.map((t) => t.id));
   const validCurrent = current.filter((id) => earnedIds.has(id)).slice(0, 3);
   const [sel, setSel] = useState<string[]>(validCurrent);
@@ -54,6 +65,7 @@ export default function FeaturedEditor({
   };
 
   if (!open) {
+    if (controlled) return null;
     return (
       // 섹션 제목 옆에 붙는 보조 동작이라 조용하게 — 예전엔 핑크 블록이라 너무 튀었다
       <button

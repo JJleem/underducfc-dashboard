@@ -27,8 +27,8 @@ import {
   MANAGER_NAME,
   type EarnedTitle,
 } from "../../lib/titles";
-import PlayerTitleCards from "../../components/PlayerTitleCards";
-import FeaturedEditor from "../../components/FeaturedEditor";
+import TitleHighlights from "../../components/TitleHighlights";
+import ProfileTabs from "../../components/ProfileTabs";
 import PrefPosEditor from "../../components/PrefPosEditor";
 import PlayerAvatar from "../../components/PlayerAvatar";
 import PlayerFace from "../../components/PlayerFace";
@@ -294,6 +294,14 @@ export default async function PlayerPage({
 
   const accent = posColor(displayPositions[0] || registeredPos);
 
+  // 탭이 통째로 빈 경우를 구분해야 빈 화면 대신 안내를 띄울 수 있다.
+  const hasStatsTab = !!relations.bestGame || posDist.length > 0 || attendRate !== null;
+  const hasChemTab =
+    !!relations.bestDuo ||
+    !!relations.mostPlayedWith ||
+    !!relations.assistRecipients ||
+    !!relations.assistGivers;
+
   return (
     <main className="min-h-dvh bg-gray-50 dark:bg-[#0a0a0c] text-gray-900 dark:text-white">
       <div className="max-w-md mx-auto pb-28">
@@ -406,190 +414,205 @@ export default async function PlayerPage({
         </section>
 
         {/* 칭호 — 인스타 스토리 하이라이트 자리.
-            개수 표기는 뺐다. 동그라미 밑에 이름이 붙어 있어 무엇인지 이미 읽히고,
-            12개든 3개든 사용자가 할 행동이 달라지지 않는다(레퍼런스에도 개수가 없다). */}
-        <section className="px-4 mt-5">
-          <div className="mb-1 flex items-center justify-between gap-2">
-            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest">칭호</p>
-            {canEdit && <FeaturedEditor titles={titles} current={featuredIds} />}
-          </div>
-          <PlayerTitleCards titles={titles} featuredIds={featuredIds} />
+            라벨 줄("칭호 (12) · 대표 고르기")을 통째로 걷어냈다. 레퍼런스엔 하이라이트 위에
+            라벨도 개수도 없고 편집은 줄 맨 앞 ＋ 동그라미가 맡는다(TitleHighlights). */}
+        <section className="px-4 mt-4">
+          <TitleHighlights titles={titles} featuredIds={featuredIds} canEdit={canEdit} />
         </section>
 
-        {/* 하이라이트 · 케미 — 예전엔 에메랄드·핑크·스카이로 테두리와 그라데이션이 제각각인
-            카드 다섯 개가 따로 놀았다. 골격이 같은 줄로 묶고 구분은 헤어라인 하나로 끝낸다.
-            색은 크롬에서 빼고 데이터(얼굴·숫자)에만 남긴다. */}
-        {(relations.bestDuo ||
-          relations.bestGame ||
-          relations.mostPlayedWith ||
-          relations.assistRecipients ||
-          relations.assistGivers) && (
-          <section className="px-4 mt-5">
-            <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 dark:border-white/[0.06] dark:bg-white/[0.03] dark:divide-white/[0.06]">
-              {relations.bestDuo && (
-                <ListRow
-                  left={
-                    <div className="flex items-center -space-x-2">
-                      {relations.bestDuo.names.map((nm) => (
-                        <Link
-                          key={nm}
-                          href={`/players/${encodeURIComponent(nm)}`}
-                          className="active:opacity-60"
-                        >
-                          <PlayerFace name={nm} size={28} />
-                        </Link>
-                      ))}
-                    </div>
-                  }
-                  label="최고의 듀오"
-                  value={
-                    <span className="truncate">
-                      {relations.bestDuo.names.map((nm, i) => (
-                        <span key={nm}>
-                          {i > 0 && <span className="text-gray-400"> · </span>}
-                          <Link
-                            href={`/players/${encodeURIComponent(nm)}`}
-                            className="underline-offset-2 hover:underline"
-                          >
-                            {nm}
-                          </Link>
-                        </span>
-                      ))}
-                    </span>
-                  }
-                  amount={relations.bestDuo.count}
-                  unit="골 합작"
-                />
-              )}
-
-              {relations.bestGame && (
-                <ListRow
-                  left={<OpponentMark name={relations.bestGame.opponent} />}
-                  label={`시즌 베스트 경기 · ${relations.bestGame.date}`}
-                  value={
-                    <>
-                      <span className="truncate">vs {relations.bestGame.opponent}</span>
-                      <span className="flex shrink-0 items-center gap-1.5 text-[11px]">
-                        <ScorePips
-                          goals={relations.bestGame.goals}
-                          assists={relations.bestGame.assists}
-                          size={12}
-                        />
-                      </span>
-                      {relations.bestGame.isMom && (
-                        <Crown width={12} height={12} strokeWidth={2.6} className="shrink-0 text-amber-400" />
-                      )}
-                    </>
-                  }
-                  amount={relations.bestGame.points}
-                  unit="공격P"
-                  href={`/matches/${relations.bestGame.matchId}`}
-                />
-              )}
-
-              {[
-                { label: "가장 많이 함께 뛴 동료", rel: relations.mostPlayedWith, unit: "경기" },
-                { label: "내 도움을 가장 많이 받은 선수", rel: relations.assistRecipients, unit: "골" },
-                { label: "나를 가장 많이 살린 도우미", rel: relations.assistGivers, unit: "도움" },
-              ].map((item) =>
-                item.rel ? (
-                  <ListRow
-                    key={item.label}
-                    left={
-                      <div className="flex items-center -space-x-2">
-                        {item.rel.names.slice(0, 2).map((nm) => (
-                          <PlayerFace key={nm} name={nm} size={28} />
-                        ))}
-                      </div>
-                    }
-                    label={item.label}
-                    value={
-                      <span className="truncate">
-                        {item.rel.names.map((nm, i) => (
-                          <span key={nm}>
-                            {i > 0 && <span className="text-gray-400"> · </span>}
-                            <Link
-                              href={`/players/${encodeURIComponent(nm)}`}
-                              className="underline-offset-2 hover:underline"
-                            >
-                              {nm}
-                            </Link>
-                          </span>
-                        ))}
-                      </span>
-                    }
-                    amount={item.rel.count}
-                    unit={item.unit}
-                  />
-                ) : null
-              )}
-            </div>
-          </section>
-        )}
-
-        {/* 포지션 출전 분포 — 막대 색은 포지션 고유색이라 그대로 둔다(데이터 색) */}
-        {posDist.length > 0 && (
-          <section className="px-4 mt-6">
-            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2">
-              포지션 출전
-            </p>
-            <div className="space-y-2">
-              {posDist.map((d) => {
-                const color = posColor(d.pos);
-                return (
-                  <div key={d.pos} className="flex items-center gap-2">
-                    <span className="text-[10px] font-black w-8 shrink-0" style={{ color }}>
-                      {d.pos}
-                    </span>
-                    <div className="flex-1 h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${posMax > 0 ? (d.count / posMax) * 100 : 0}%`, background: color }}
+        {/* 탭 — 피드 / 숫자 / 사람 */}
+        <ProfileTabs
+          feed={
+            myMatches.length > 0 ? (
+              <PlayerMatchGrid matches={myMatches} />
+            ) : (
+              <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-gray-600">
+                아직 출전한 경기가 없어요.
+              </p>
+            )
+          }
+          stats={
+            hasStatsTab ? (
+              <div className="space-y-6">
+                {relations.bestGame && (
+                  <section className="px-4">
+                    <p className="mb-2 text-[10px] font-black tracking-widest text-gray-500 dark:text-gray-400">
+                      시즌 베스트 경기
+                    </p>
+                    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white dark:border-white/[0.06] dark:bg-white/[0.03]">
+                      <ListRow
+                        left={<OpponentMark name={relations.bestGame.opponent} />}
+                        label={relations.bestGame.date}
+                        value={
+                          <>
+                            <span className="truncate">vs {relations.bestGame.opponent}</span>
+                            <span className="flex shrink-0 items-center gap-1.5 text-[11px]">
+                              <ScorePips
+                                goals={relations.bestGame.goals}
+                                assists={relations.bestGame.assists}
+                                size={12}
+                              />
+                            </span>
+                            {relations.bestGame.isMom && (
+                              <Crown width={12} height={12} strokeWidth={2.6} className="shrink-0 text-amber-400" />
+                            )}
+                          </>
+                        }
+                        amount={relations.bestGame.points}
+                        unit="공격P"
+                        href={`/matches/${relations.bestGame.matchId}`}
                       />
                     </div>
-                    <span className="text-[11px] font-black tabular-nums text-gray-500 dark:text-gray-400 w-10 text-right">
-                      {d.count}쿼터
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
+                  </section>
+                )}
 
-        {/* 출석률 — 핑크 고정이던 걸 선수 포지션 색으로 맞춰 히어로(링·등번호)와 한 색으로 묶는다 */}
-        {attendRate !== null && (
-          <section className="px-4 mt-6">
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-2">
-                <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest">
-                  출석률 <span className="text-gray-400 font-medium">({attendCount}/{withAttendees.length})</span>
-                </p>
-                {currentStreak >= 2 && (
-                  <span className="inline-flex items-center gap-0.5 text-[10px] font-black text-orange-500">
-                    <Flame width={11} height={11} strokeWidth={2.6} /> {currentStreak}연속
-                  </span>
+                {/* 포지션 출전 분포 — 막대 색은 포지션 고유색이라 그대로 둔다(데이터 색) */}
+                {posDist.length > 0 && (
+                  <section className="px-4">
+                    <p className="mb-2 text-[10px] font-black tracking-widest text-gray-500 dark:text-gray-400">
+                      포지션 출전
+                    </p>
+                    <div className="space-y-2">
+                      {posDist.map((d) => {
+                        const color = posColor(d.pos);
+                        return (
+                          <div key={d.pos} className="flex items-center gap-2">
+                            <span className="w-8 shrink-0 text-[10px] font-black" style={{ color }}>
+                              {d.pos}
+                            </span>
+                            <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-white/5">
+                              <div
+                                className="h-full rounded-full"
+                                style={{ width: `${posMax > 0 ? (d.count / posMax) * 100 : 0}%`, background: color }}
+                              />
+                            </div>
+                            <span className="w-10 text-right text-[11px] font-black tabular-nums text-gray-500 dark:text-gray-400">
+                              {d.count}쿼터
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
+
+                {/* 출석률 — 핑크 고정이던 걸 선수 포지션 색으로 맞춰 히어로(링·등번호)와 한 색으로 묶는다 */}
+                {attendRate !== null && (
+                  <section className="px-4">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] font-black tracking-widest text-gray-500 dark:text-gray-400">
+                          출석률 <span className="font-medium text-gray-400">({attendCount}/{withAttendees.length})</span>
+                        </p>
+                        {currentStreak >= 2 && (
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-black text-orange-500">
+                            <Flame width={11} height={11} strokeWidth={2.6} /> {currentStreak}연속
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[13px] font-black tabular-nums" style={{ color: accent }}>
+                        {attendRate}%
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-white/5">
+                      <div className="h-full rounded-full" style={{ width: `${attendRate}%`, background: accent }} />
+                    </div>
+                  </section>
                 )}
               </div>
-              <span className="text-[13px] font-black tabular-nums" style={{ color: accent }}>
-                {attendRate}%
-              </span>
-            </div>
-            <div className="h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
-              <div className="h-full rounded-full" style={{ width: `${attendRate}%`, background: accent }} />
-            </div>
-          </section>
-        )}
+            ) : (
+              <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-gray-600">
+                아직 쌓인 기록이 없어요.
+              </p>
+            )
+          }
+          chemistry={
+            hasChemTab ? (
+              <section className="px-4">
+                {/* 예전엔 에메랄드·핑크·스카이로 테두리와 그라데이션이 제각각인 카드가 따로 놀았다.
+                    골격이 같은 줄로 묶고 구분은 헤어라인 하나로 끝낸다. */}
+                <div className="divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-100 bg-white dark:divide-white/[0.06] dark:border-white/[0.06] dark:bg-white/[0.03]">
+                  {relations.bestDuo && (
+                    <ListRow
+                      left={
+                        <div className="flex items-center -space-x-2">
+                          {relations.bestDuo.names.map((nm) => (
+                            <Link
+                              key={nm}
+                              href={`/players/${encodeURIComponent(nm)}`}
+                              className="active:opacity-60"
+                            >
+                              <PlayerFace name={nm} size={28} />
+                            </Link>
+                          ))}
+                        </div>
+                      }
+                      label="최고의 듀오"
+                      value={
+                        <span className="truncate">
+                          {relations.bestDuo.names.map((nm, i) => (
+                            <span key={nm}>
+                              {i > 0 && <span className="text-gray-400"> · </span>}
+                              <Link
+                                href={`/players/${encodeURIComponent(nm)}`}
+                                className="underline-offset-2 hover:underline"
+                              >
+                                {nm}
+                              </Link>
+                            </span>
+                          ))}
+                        </span>
+                      }
+                      amount={relations.bestDuo.count}
+                      unit="골 합작"
+                    />
+                  )}
 
-        {/* 경기 — 인스타 피드 그리드. 좌우 여백 없이 화면 끝까지 붙어야 피드로 읽힌다. */}
-        {myMatches.length > 0 && (
-          <section className="mt-6">
-            <p className="px-4 mb-2 text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest">
-              경기
-            </p>
-            <PlayerMatchGrid matches={myMatches} />
-          </section>
-        )}
+                  {[
+                    { label: "가장 많이 함께 뛴 동료", rel: relations.mostPlayedWith, unit: "경기" },
+                    { label: "내 도움을 가장 많이 받은 선수", rel: relations.assistRecipients, unit: "골" },
+                    { label: "나를 가장 많이 살린 도우미", rel: relations.assistGivers, unit: "도움" },
+                  ].map((item) =>
+                    item.rel ? (
+                      <ListRow
+                        key={item.label}
+                        left={
+                          <div className="flex items-center -space-x-2">
+                            {item.rel.names.slice(0, 2).map((nm) => (
+                              <PlayerFace key={nm} name={nm} size={28} />
+                            ))}
+                          </div>
+                        }
+                        label={item.label}
+                        value={
+                          <span className="truncate">
+                            {item.rel.names.map((nm, i) => (
+                              <span key={nm}>
+                                {i > 0 && <span className="text-gray-400"> · </span>}
+                                <Link
+                                  href={`/players/${encodeURIComponent(nm)}`}
+                                  className="underline-offset-2 hover:underline"
+                                >
+                                  {nm}
+                                </Link>
+                              </span>
+                            ))}
+                          </span>
+                        }
+                        amount={item.rel.count}
+                        unit={item.unit}
+                      />
+                    ) : null
+                  )}
+                </div>
+              </section>
+            ) : (
+              <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-gray-600">
+                아직 함께 뛴 기록이 부족해요.
+              </p>
+            )
+          }
+        />
       </div>
     </main>
   );
