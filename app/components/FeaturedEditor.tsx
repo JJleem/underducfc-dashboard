@@ -2,6 +2,7 @@
 // 대표 칭호 선택 (본인만). 라인업/순위에 보일 최대 3개를 순서대로 고른다.
 
 import { createElement, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { EarnedTitle } from "../lib/titles";
 import { titleIcon } from "../lib/title-icons";
@@ -13,6 +14,7 @@ export default function FeaturedEditor({
   titles: EarnedTitle[];
   current: string[];
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const earnedIds = new Set(titles.map((t) => t.id));
   const validCurrent = current.filter((id) => earnedIds.has(id)).slice(0, 3);
@@ -41,6 +43,9 @@ export default function FeaturedEditor({
       if (!res.ok) throw new Error(data.error || "저장 실패");
       setSaved(sel);
       setOpen(false);
+      // 서버 캐시는 /api/featured 가 무효화하지만, 이미 방문한 라인업·순위 화면은
+      // 클라이언트 라우터 캐시에 남아 옛 뱃지를 그대로 보여준다. refresh 가 그걸 비운다.
+      router.refresh();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "저장 실패");
     } finally {
