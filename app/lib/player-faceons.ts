@@ -1,6 +1,7 @@
 const PLAYER_FACEONS = new Set([
   "강창훈",
   "강현준",
+  "강환국",
   "공도하",
   "금상덕",
   "김광민",
