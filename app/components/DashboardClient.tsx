@@ -1201,6 +1201,9 @@ export default function DashboardClient({
         <div className="flex items-center gap-2">
           <Link
             href="/titles"
+            // 대시보드에 있는 링크라 홈을 열 때마다 프리페치가 돌았다. 실제 방문은 드문데
+            // 세그먼트 프리페치가 요청당 300~400ms CPU 를 먹어 전체의 1/3 을 차지했다.
+            prefetch={false}
             aria-label="칭호 도감"
             title="칭호 도감"
             className="press-icon flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3]/10 text-[#FF8FA3] transition-colors hover:bg-[#FF8FA3]/20 dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
@@ -1319,7 +1322,7 @@ export default function DashboardClient({
             <Link href="/roster" aria-label="팀원 명단" className="press-icon flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white shadow-sm dark:bg-white/10 dark:text-[#FFB6C1]">
               <Users className="h-4 w-4" />
             </Link>
-            <Link href="/media" aria-label="콘텐츠" className="press-icon flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
+            <Link href="/media" prefetch={false} aria-label="콘텐츠" className="press-icon flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
               <Film className="h-4 w-4" />
             </Link>
           </div>
