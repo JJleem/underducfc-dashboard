@@ -253,7 +253,8 @@ export default async function PlayerPage({
             <PlayerAvatar name={name} no={no} accent={accent} width={92} shape="circle" />
 
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-1.5">
+              {/* 이름 줄에 등번호·포지션까지 함께 (인스타의 이름 + 카테고리 자리) */}
+              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
                 <h1 className="text-[19px] font-black leading-none tracking-tight text-gray-900 dark:text-white">
                   {name}
                 </h1>
@@ -270,6 +271,26 @@ export default async function PlayerPage({
                     {role}
                   </span>
                 )}
+                {no && no !== "-" && (
+                  <span
+                    className="rounded-md px-1.5 py-0.5 text-[11px] font-black leading-none text-white"
+                    style={{ background: accent, boxShadow: `0 2px 6px ${accent}55` }}
+                  >
+                    #{no}
+                  </span>
+                )}
+                {displayPositions.map((position) => {
+                  const color = posColor(position);
+                  return (
+                    <span
+                      key={position}
+                      className="rounded-full px-2 py-0.5 text-[9px] font-black uppercase leading-none tracking-[0.14em]"
+                      style={{ color, background: `${color}1f`, border: `1px solid ${color}55` }}
+                    >
+                      {position}
+                    </span>
+                  );
+                })}
               </div>
 
               <div className="mt-3 grid grid-cols-4 gap-1">
@@ -290,34 +311,11 @@ export default async function PlayerPage({
             </div>
           </div>
 
-          {/* 2단: 정보 줄 (인스타의 소개글 자리) */}
-          <div className="relative mt-4 flex flex-wrap items-center gap-1.5">
-            {no && no !== "-" && (
-              <span
-                className="rounded-md px-2 py-0.5 text-[12px] font-black text-white"
-                style={{ background: accent, boxShadow: `0 2px 8px ${accent}55` }}
-              >
-                #{no}
-              </span>
-            )}
-            {displayPositions.map((position) => {
-              const color = posColor(position);
-              return (
-                <span
-                  key={position}
-                  className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
-                  style={{ color, background: `${color}1f`, border: `1px solid ${color}55` }}
-                >
-                  {position}
-                </span>
-              );
-            })}
-          </div>
-
-          {/* 선호 포지션 — 정보 줄 바로 아래 */}
+          {/* 2단: 선호 포지션 (인스타의 소개글 자리).
+              라벨과 칩의 세로 패딩·글자 크기를 맞춰야 높낮이가 어긋나지 않는다. */}
           {rosterRow && (
-            <div className="relative mt-2 flex items-start gap-1.5">
-              <span className="mt-1.5 shrink-0 text-[10px] font-bold text-gray-400 dark:text-white/40">선호</span>
+            <div className="relative mt-3.5 flex items-start gap-1.5">
+              <span className="shrink-0 py-1 text-[11px] font-bold text-gray-400 dark:text-white/40">선호</span>
               {/* 편집을 열면 카드가 펼쳐지므로 남는 폭을 다 쓰게 둔다 */}
               <div className="min-w-0 flex-1">
                 <PrefPosEditor initial={prefPos} canEdit={canEdit} />
@@ -328,10 +326,12 @@ export default async function PlayerPage({
 
         {/* 칭호 — 인스타 스토리 하이라이트 자리 */}
         <section className="px-4 mt-5">
-          <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-1">
-            칭호 <span className="text-gray-400 font-bold">({titles.length})</span>
-          </p>
-          {canEdit && <FeaturedEditor titles={titles} current={featuredIds} />}
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest">
+              칭호 <span className="text-gray-400 font-bold">({titles.length})</span>
+            </p>
+            {canEdit && <FeaturedEditor titles={titles} current={featuredIds} />}
+          </div>
           <PlayerTitleCards titles={titles} featuredIds={featuredIds} />
         </section>
 

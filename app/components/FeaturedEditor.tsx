@@ -55,13 +55,14 @@ export default function FeaturedEditor({
 
   if (!open) {
     return (
+      // 섹션 제목 옆에 붙는 보조 동작이라 조용하게 — 예전엔 핑크 블록이라 너무 튀었다
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mb-3 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-black bg-[#FF8FA3]/15 text-[#FF8FA3] dark:text-[#FFB6C1] border border-[#FF8FA3]/30 active:scale-95 transition-transform"
+        className="inline-flex shrink-0 items-center gap-1 text-[10px] font-bold text-gray-400 active:opacity-60 dark:text-white/40"
       >
-        <Pencil className="w-3.5 h-3.5" />
-        대표 칭호 고르기
+        <Pencil className="h-3 w-3" />
+        대표 고르기
       </button>
     );
   }

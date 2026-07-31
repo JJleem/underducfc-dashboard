@@ -68,12 +68,16 @@ export default function PrefPosEditor({
             </span>
           ))
         ) : (
-          <span className="text-[11px] text-gray-400">{canEdit ? "선호 포지션을 설정해보세요" : "미설정"}</span>
+          // 칩과 같은 py-1·text-[11px] 이라야 옆에 놓였을 때 높낮이가 안 어긋난다
+          <span className="py-1 text-[11px] text-gray-400">
+            {canEdit ? "선호 포지션을 설정해보세요" : "미설정"}
+          </span>
         )}
         {canEdit && (
+          // 보조 동작이라 테두리 없이 조용하게
           <button
             onClick={() => { setSel(initial); setEditing(true); }}
-            className="flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1 text-[11px] font-bold text-gray-500 active:opacity-60 dark:border-white/10 dark:text-gray-400"
+            className="flex items-center gap-1 py-1 text-[10px] font-bold text-gray-400 active:opacity-60 dark:text-white/40"
           >
             <Pencil className="h-3 w-3" /> 편집
           </button>
