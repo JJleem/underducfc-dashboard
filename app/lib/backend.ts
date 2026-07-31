@@ -152,16 +152,6 @@ export async function getFeedbackRows(): Promise<string[][]> {
   return [HEADER, ...rows.map((r) => [s(r.match_id), s(r.timestamp), s(r.name), s(r.message)])];
 }
 
-// ── media ── 시트: A=type B=url C=title D=uploadedAt
-interface MediaOut {
-  id: number; type: string | null; url: string | null; title: string | null; uploaded_at: string | null;
-}
-export async function getMediaRows(): Promise<string[][]> {
-  const rows = await udGet<MediaOut[]>("/api/underduck/media", udReadOpts);
-  const HEADER = ["type", "url", "title", "uploadedAt"];
-  return [HEADER, ...rows.map((r) => [s(r.type), s(r.url), s(r.title), s(r.uploaded_at)])];
-}
-
 // ── mom_vote ── 시트: A=matchId B=voterName C=votedFor D=voteType E=timestamp
 interface MomVoteOut {
   id: number; match_id: number | null; voter_name: string | null;

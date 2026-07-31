@@ -35,7 +35,6 @@ import {
   Camera,
   Trash2,
   Pencil,
-  Film,
   MessageCircle,
   Star,
   Tent,
@@ -199,14 +198,6 @@ export interface MatchData {
   photos?: string; // M열 - Drive 파일ID (쉼표 구분)
   weather?: string; // N열 - "28°C,맑음,01d,10"
   attendanceStatus?: "진행중" | "마감"; // O열 - 출석 투표 상태
-}
-
-export interface MediaData {
-  id: number;
-  type: "video" | "image";
-  url: string;
-  title: string;
-  uploadedAt: string;
 }
 
 export interface AttendanceVoteData {
@@ -1321,9 +1312,6 @@ export default function DashboardClient({
           <div className="absolute right-0 top-1/2 flex -translate-y-1/2 flex-col gap-1.5">
             <Link href="/roster" aria-label="팀원 명단" className="press-icon flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white shadow-sm dark:bg-white/10 dark:text-[#FFB6C1]">
               <Users className="h-4 w-4" />
-            </Link>
-            <Link href="/media" prefetch={false} aria-label="콘텐츠" className="press-icon flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
-              <Film className="h-4 w-4" />
             </Link>
           </div>
           </div>
