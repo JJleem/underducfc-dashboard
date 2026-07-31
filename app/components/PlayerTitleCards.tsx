@@ -14,13 +14,24 @@ import ModalPortal from "./ModalPortal";
 // 색은 뱃지와 같은 금속에서 파생시킨다(titleSurface) — 예전엔 여기서 별도 팔레트를
 // 들고 있어서 라인업 뱃지와 개인 페이지의 색 체계가 서로 달랐다.
 
-function Highlight({ title, isLight, onClick }: { title: EarnedTitle; isLight: boolean; onClick: () => void }) {
+function Highlight({
+  title,
+  isLight,
+  width,
+  onClick,
+}: {
+  title: EarnedTitle;
+  isLight: boolean;
+  width: number;
+  onClick: () => void;
+}) {
   const s = titleSurface(title, isLight);
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex w-[64px] shrink-0 flex-col items-center gap-1.5 transition-transform active:scale-[0.94]"
+      style={{ width }}
+      className="flex shrink-0 flex-col items-center gap-1.5 transition-transform active:scale-[0.94]"
     >
       {/* inline-flex 가 없으면 span 높이가 줄 높이로 잡혀 원이 타원으로 찌그러진다 */}
       <span
@@ -53,28 +64,50 @@ export default function PlayerTitleCards({
   const { resolvedTheme } = useTheme();
   const isLight = resolvedTheme === "light";
 
-  // 항목 폭(64) + 간격(12) = 76px 간격이라 화면 폭에 따라 마지막 항목이 가장자리에
-  // 딱 떨어져 버린다. 그러면 옆으로 넘길 수 있다는 신호가 사라진다.
-  // 넘칠 때만 오른쪽을 페이드시키고, 끝까지 밀면 페이드를 걷는다.
+  // 항목 폭을 고정하면(예전 64px) 화면 폭에 따라 마지막 항목이 가장자리에 딱 떨어져
+  // "더 있다"가 안 읽힌다. 그래서 폭을 화면에 맞춰 계산한다 —
+  // 정수 개가 아니라 k + 0.5 개가 들어가게 잡아 다음 항목이 항상 반쯤 걸치게 한다.
+  // (링 지름이 59px 이라 62px 아래로는 못 줄인다)
   const scrollRef = useRef<HTMLDivElement>(null);
   const [moreRight, setMoreRight] = useState(false);
+  const [itemW, setItemW] = useState(64);
+  const count = titles.length;
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const check = () =>
+    const GAP = 12;
+    const PAD_LEFT = 16;
+
+    const measure = () => {
+      const avail = el.clientWidth - PAD_LEFT;
+      let w = 64;
+      for (let k = 6; k >= 3; k--) {
+        const cand = (avail - GAP * k) / (k + 0.5);
+        if (cand >= 62 && cand <= 84) {
+          w = cand;
+          break;
+        }
+      }
+      // 항목이 적어 어차피 다 보이면 굳이 늘리지 않는다
+      const overflows = count * (w + GAP) - GAP > avail;
+      setItemW(overflows ? Math.round(w) : 64);
       setMoreRight(el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
-    check();
-    el.addEventListener("scroll", check, { passive: true });
-    const ro = new ResizeObserver(check);
+    };
+
+    measure();
+    el.addEventListener("scroll", measure, { passive: true });
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => {
-      el.removeEventListener("scroll", check);
+      el.removeEventListener("scroll", measure);
       ro.disconnect();
     };
-  }, [titles.length]);
+  }, [count]);
 
+  // 반쯤 걸친 항목이 주된 신호라 페이드는 거들기만 한다 — 너무 세면 걸친 코인이 안 보인다
   const fade = moreRight
-    ? "linear-gradient(90deg, #000 0, #000 calc(100% - 44px), rgba(0,0,0,0.15) 100%)"
+    ? "linear-gradient(90deg, #000 0, #000 calc(100% - 28px), rgba(0,0,0,0.4) 100%)"
     : undefined;
 
   if (!titles.length) {
@@ -97,7 +130,13 @@ export default function PlayerTitleCards({
       >
         <div className="flex w-max gap-3">
           {ordered.map((t) => (
-            <Highlight key={t.id} title={t} isLight={isLight} onClick={() => setSelected(t)} />
+            <Highlight
+              key={t.id}
+              title={t}
+              isLight={isLight}
+              width={itemW}
+              onClick={() => setSelected(t)}
+            />
           ))}
         </div>
       </div>
