@@ -246,8 +246,9 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
           onClick={() => setLightbox(null)}
         >
+          {/* PWA에서 top-4는 상태바에 묻혀 탭이 안 먹으므로 safe-area만큼 내린다 */}
           <button
-            className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors text-2xl font-bold"
+            className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-4 text-white/70 hover:text-white transition-colors text-2xl font-bold"
             onClick={() => setLightbox(null)}
           >
             ✕

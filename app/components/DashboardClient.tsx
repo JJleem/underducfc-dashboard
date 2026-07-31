@@ -2666,9 +2666,9 @@ export default function DashboardClient({
               className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
               onClick={() => setLightbox(null)}
             >
-              {/* 닫기 */}
+              {/* 닫기 — PWA에서 top-4는 상태바에 묻혀 탭이 안 먹으므로 safe-area만큼 내린다 */}
               <button
-                className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+                className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-4 text-white/70 hover:text-white transition-colors"
                 onClick={() => setLightbox(null)}
               >
                 <X className="w-7 h-7" />
