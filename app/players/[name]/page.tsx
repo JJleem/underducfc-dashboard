@@ -222,105 +222,118 @@ export default async function PlayerPage({
           <span className="text-[12px] font-black tracking-widest text-gray-400">PLAYER</span>
         </div>
 
-        {/* 페이스온 히어로 (라이트/다크 대응) */}
-        <div className="relative mx-4 mt-4 rounded-3xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-soft bg-gradient-to-b from-white to-gray-100 dark:from-[#0c1430] dark:to-[#0a0f24]">
+        {/* 히어로 — 인스타 프로필 구조.
+            [원형 프로필 사진 | 이름 + 스탯] → 정보 줄(등번호·포지션·선호) → 액션 → 하이라이트.
+            카드로 감싸지 않고 페이지 배경 위에 그대로 올려야 그 구조가 산다. */}
+        <section className="relative px-4 pt-5">
           {/* 포지션 컬러 글로우 */}
           <div
-            className="absolute -top-10 -right-10 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: accent, opacity: 0.18, filter: "blur(46px)" }}
+            className="pointer-events-none absolute -top-8 right-0 h-40 w-40 rounded-full"
+            style={{ background: accent, opacity: 0.16, filter: "blur(48px)" }}
           />
-          {/* 로고 워터마크.
-              underducklogo.png 는 알파 없는 RGB(네이비 배경) 1024² 2.1MB 라
+          {/* 로고 워터마크. underducklogo.png 는 알파 없는 RGB(네이비 배경) 1024² 2.1MB라
               투명도만 낮춰 깔면 마크가 아니라 '네모난 네이비 덩어리'가 깔렸다.
-              밝기를 알파로 바꾼 underduck-mark.png(16KB)를 마스크로 써서
-              마크 모양만 남기고, 색은 테마별로 입힌다. */}
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div
-              className="h-40 w-40 bg-gray-900/[0.07] dark:bg-white/[0.08]"
-              style={{
-                WebkitMaskImage: "url(/underduck-mark.png)",
-                maskImage: "url(/underduck-mark.png)",
-                WebkitMaskSize: "contain",
-                maskSize: "contain",
-                WebkitMaskRepeat: "no-repeat",
-                maskRepeat: "no-repeat",
-                WebkitMaskPosition: "center",
-                maskPosition: "center",
-              }}
-            />
-          </div>
+              밝기를 알파로 바꾼 underduck-mark.png(16KB)를 마스크로 써서 모양만 남긴다. */}
+          <div
+            className="pointer-events-none absolute -right-6 top-2 h-32 w-32 bg-gray-900/[0.06] dark:bg-white/[0.07]"
+            style={{
+              WebkitMaskImage: "url(/underduck-mark.png)",
+              maskImage: "url(/underduck-mark.png)",
+              WebkitMaskSize: "contain",
+              maskSize: "contain",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              WebkitMaskPosition: "center",
+              maskPosition: "center",
+            }}
+          />
 
-          {/* 좌: 인물(잘리지 않게 크게) · 우: 이름/등번호/포지션 */}
-          <div className="relative flex items-end gap-3 px-5 pt-6 pb-5">
-            <PlayerAvatar name={name} no={no} accent={accent} />
+          {/* 1단: 프로필 사진 + 이름 · 스탯 */}
+          <div className="relative flex items-center gap-4">
+            <PlayerAvatar name={name} no={no} accent={accent} width={92} shape="circle" />
 
-            <div className="flex-1 min-w-0 pb-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-[26px] leading-none font-black tracking-tight text-gray-900 dark:text-white">{name}</h1>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <h1 className="text-[19px] font-black leading-none tracking-tight text-gray-900 dark:text-white">
+                  {name}
+                </h1>
                 {isManager && (
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-md text-amber-950"
-                    style={{ background: "linear-gradient(135deg,#FFE9A8,#D4A017)" }}>
+                  <span
+                    className="rounded-md px-1.5 py-0.5 text-[9px] font-black text-amber-950"
+                    style={{ background: "linear-gradient(135deg,#FFE9A8,#D4A017)" }}
+                  >
                     감독
                   </span>
                 )}
                 {role && (role === "C" || role === "VC") && (
-                  <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-gradient-to-br from-amber-200 to-amber-500 text-amber-950">
+                  <span className="rounded bg-gradient-to-br from-amber-200 to-amber-500 px-1.5 py-0.5 text-[9px] font-black text-amber-950">
                     {role}
                   </span>
                 )}
               </div>
-              <div className="mt-2.5 flex items-center gap-2 flex-wrap">
-                {no && no !== "-" && (
-                  <span
-                    className="text-[13px] font-black px-2 py-0.5 rounded-md text-white"
-                    style={{ background: accent, boxShadow: `0 2px 8px ${accent}55` }}
-                  >
-                    #{no}
-                  </span>
-                )}
-                {displayPositions.map((position) => {
-                  const color = posColor(position);
-                  return (
-                    <span
-                      key={position}
-                      className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
-                      style={{
-                        color,
-                        background: `${color}1f`,
-                        border: `1px solid ${color}55`,
-                      }}
-                    >
-                      {position}
-                    </span>
-                  );
-                })}
+
+              <div className="mt-3 grid grid-cols-4 gap-1">
+                {[
+                  { label: "출전", value: apps },
+                  { label: "골", value: goals },
+                  { label: "도움", value: assists },
+                  { label: "MOM", value: mom },
+                ].map((s) => (
+                  <div key={s.label} className="min-w-0">
+                    <p className="text-[17px] font-black leading-none tabular-nums text-gray-900 dark:text-white">
+                      {s.value}
+                    </p>
+                    <p className="mt-1 text-[9.5px] font-bold text-gray-400 dark:text-white/45">{s.label}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* 스탯 4분할 */}
-          <div className="relative grid grid-cols-4 border-t border-black/5 dark:border-white/10 divide-x divide-black/5 dark:divide-white/10">
-            {[
-              { label: "출전", value: apps },
-              { label: "골", value: goals },
-              { label: "도움", value: assists },
-              { label: "MOM", value: mom },
-            ].map((s) => (
-              <div key={s.label} className="flex flex-col items-center justify-center py-3.5">
-                <span className="text-xl font-black tabular-nums text-gray-900 dark:text-white">{s.value}</span>
-                <span className="text-[9px] font-bold text-gray-400 dark:text-white/45 mt-0.5">{s.label}</span>
-              </div>
-            ))}
+          {/* 2단: 정보 줄 (인스타의 소개글 자리) */}
+          <div className="relative mt-4 flex flex-wrap items-center gap-1.5">
+            {no && no !== "-" && (
+              <span
+                className="rounded-md px-2 py-0.5 text-[12px] font-black text-white"
+                style={{ background: accent, boxShadow: `0 2px 8px ${accent}55` }}
+              >
+                #{no}
+              </span>
+            )}
+            {displayPositions.map((position) => {
+              const color = posColor(position);
+              return (
+                <span
+                  key={position}
+                  className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
+                  style={{ color, background: `${color}1f`, border: `1px solid ${color}55` }}
+                >
+                  {position}
+                </span>
+              );
+            })}
           </div>
-        </div>
 
-        {/* 선호 포지션 */}
-        {rosterRow && (
-          <section className="px-4 mt-4">
-            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2.5">선호 포지션</p>
-            <PrefPosEditor initial={prefPos} canEdit={canEdit} />
-          </section>
-        )}
+          {/* 선호 포지션 — 정보 줄 바로 아래 */}
+          {rosterRow && (
+            <div className="relative mt-2 flex items-start gap-1.5">
+              <span className="mt-1.5 shrink-0 text-[10px] font-bold text-gray-400 dark:text-white/40">선호</span>
+              {/* 편집을 열면 카드가 펼쳐지므로 남는 폭을 다 쓰게 둔다 */}
+              <div className="min-w-0 flex-1">
+                <PrefPosEditor initial={prefPos} canEdit={canEdit} />
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* 칭호 — 인스타 스토리 하이라이트 자리 */}
+        <section className="px-4 mt-5">
+          <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-1">
+            칭호 <span className="text-gray-400 font-bold">({titles.length})</span>
+          </p>
+          {canEdit && <FeaturedEditor titles={titles} current={featuredIds} />}
+          <PlayerTitleCards titles={titles} featuredIds={featuredIds} />
+        </section>
 
         {/* 최고의 듀오 */}
         {relations.bestDuo && (
@@ -354,15 +367,6 @@ export default async function PlayerPage({
             </div>
           </section>
         )}
-
-        {/* 칭호 */}
-        <section className="px-4 mt-6">
-          <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2.5">
-            칭호 <span className="text-gray-400 font-bold">({titles.length})</span>
-          </p>
-          {canEdit && <FeaturedEditor titles={titles} current={featuredIds} />}
-          <PlayerTitleCards titles={titles} featuredIds={featuredIds} />
-        </section>
 
         {/* 시즌 베스트 경기 */}
         {relations.bestGame && (

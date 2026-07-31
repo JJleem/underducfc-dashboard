@@ -12,24 +12,32 @@ export default function PlayerAvatar({
   no,
   accent,
   width = 124,
+  shape = "card",
 }: {
   name: string;
   no: string;
   accent: string;
   width?: number;
+  /** card = 세로 전신(기본) · circle = 인스타식 원형 프로필 사진 */
+  shape?: "card" | "circle";
 }) {
   const src = playerFaceOnSrc(name);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
-  const height = Math.round(width * 1.3);
+  const circle = shape === "circle";
+  const height = circle ? width : Math.round(width * 1.3);
 
   return (
     <div
-      className="relative flex items-end justify-center overflow-hidden rounded-2xl shrink-0"
+      className={`relative flex shrink-0 items-end justify-center overflow-hidden ${
+        circle ? "rounded-full" : "rounded-2xl"
+      }`}
       style={{
         width,
         height,
         background: `radial-gradient(110% 80% at 50% 6%, ${accent}2e 0%, transparent 70%)`,
+        // 원형일 땐 테두리를 둘러야 배경과 분리돼 프로필 사진처럼 읽힌다
+        boxShadow: circle ? `inset 0 0 0 2px ${accent}66` : undefined,
       }}
     >
       <User
@@ -46,9 +54,12 @@ export default function PlayerAvatar({
           alt={name}
           loading="eager"
           fetchPriority="high"
-          className={`absolute inset-0 h-full w-full object-contain object-bottom drop-shadow-[0_6px_8px_rgba(0,0,0,0.45)] transition-opacity duration-150 ${
-            loaded ? "opacity-100" : "opacity-0"
-          }`}
+          // 원형은 얼굴이 차게 cover+top, 카드형은 전신이 잘리지 않게 contain+bottom
+          className={`absolute inset-0 h-full w-full transition-opacity duration-150 ${
+            circle
+              ? "object-cover object-top"
+              : "object-contain object-bottom drop-shadow-[0_6px_8px_rgba(0,0,0,0.45)]"
+          } ${loaded ? "opacity-100" : "opacity-0"}`}
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
         />
