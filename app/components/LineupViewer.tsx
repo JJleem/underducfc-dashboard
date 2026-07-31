@@ -404,7 +404,7 @@ export default function LineupViewer({
                     </span>
                     {playerTitles[name]?.length ? (
                       <span className="absolute right-1.5 top-1.5">
-                        <TitleBadges titles={playerTitles[name]} size={14} max={3} gap={2} />
+                        <TitleBadges titles={playerTitles[name]} size={12} max={3} gap={2} />
                       </span>
                     ) : null}
                   </Link>

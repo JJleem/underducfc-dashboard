@@ -18,6 +18,11 @@ interface Metal {
   ramp: [string, string, string, string, string];
   /** 희귀 등급만 아주 옅은 링라이트 */
   aura: boolean;
+  /**
+   * 테두리에 섞어 넣는 이색(異色). 지정하면 금속이 홀로그램 포일처럼 보인다.
+   * 히든 전용 — 다른 등급과 재질부터 다르게 두려고 쓴다.
+   */
+  foil?: string;
 }
 
 // 0 루키(브론즈) → 3 프로(핑크·퍼플)
@@ -34,8 +39,12 @@ const FLAT_METAL: Metal = { ramp: ["#EEF2F8", "#C6CFDC", "#8A96A8", "#4A5462", "
 const ELITE_METAL: Metal = { ramp: ["#E4F1FF", "#A9CBF7", "#5B8DEF", "#26417F", "#132449"], aura: false };
 // 리더(팀 1위) — 골드
 const LEADER_METAL: Metal = { ramp: ["#FFFCE8", "#FFE49B", "#F0B818", "#8C5C00", "#513400"], aura: true };
-// 히든 — 시안/틸
-const HIDDEN_METAL: Metal = { ramp: ["#E6FCFF", "#9CEEFC", "#38C6E2", "#0B6076", "#053544"], aura: true };
+// 히든 — 시안/틸에 보랏빛 포일. 히든만 재질이 다르다.
+const HIDDEN_METAL: Metal = {
+  ramp: ["#E6FCFF", "#9CEEFC", "#38C6E2", "#0B6076", "#053544"],
+  aura: true,
+  foil: "#B98CFF",
+};
 // 감독 — 로열 골드 (모양으로 구분하므로 금속은 리더보다 더 깊게)
 const MANAGER_METAL: Metal = { ramp: ["#FFF6CE", "#FFDF8F", "#E8B21C", "#7A4A00", "#3C2200"], aura: true };
 
@@ -106,21 +115,37 @@ function Coin({
         flex: "0 0 auto",
         filter:
           `drop-shadow(0 ${Math.max(1, size * 0.05)}px ${Math.max(1, size * 0.09)}px rgba(0,0,0,0.55))` +
-          (metal.aura ? ` drop-shadow(0 0 ${size * 0.22}px ${rgba(base, 0.5)})` : ""),
+          (metal.aura ? ` drop-shadow(0 0 ${size * 0.22}px ${rgba(base, 0.5)})` : "") +
+          // 포일은 헤일로도 두 색이라 가장자리에 옅은 색수차가 생긴다
+          (metal.foil ? ` drop-shadow(0 0 ${size * 0.3}px ${rgba(metal.foil, 0.32)})` : ""),
       }}
     >
       <defs>
-        {/* 테두리: 위가 밝다 */}
+        {/* 테두리: 위가 밝다. 포일이 있으면 중간에 이색이 한 번 스친다 */}
         <linearGradient id={`${uid}-r`} x1="0.22" y1="0" x2="0.78" y2="1">
-          <stop offset="0" stopColor={xhi} />
-          <stop offset="0.28" stopColor={hi} />
-          <stop offset="0.62" stopColor={base} />
-          <stop offset="1" stopColor={shadow} />
+          {metal.foil ? (
+            <>
+              <stop offset="0" stopColor={xhi} />
+              <stop offset="0.16" stopColor="#FFFFFF" />
+              <stop offset="0.34" stopColor={hi} />
+              <stop offset="0.54" stopColor={metal.foil} />
+              <stop offset="0.74" stopColor={base} />
+              <stop offset="1" stopColor={shadow} />
+            </>
+          ) : (
+            <>
+              <stop offset="0" stopColor={xhi} />
+              <stop offset="0.28" stopColor={hi} />
+              <stop offset="0.62" stopColor={base} />
+              <stop offset="1" stopColor={shadow} />
+            </>
+          )}
         </linearGradient>
         {/* 면: 진한 에나멜에 등급 색이 옅게 감돈다 */}
         <radialGradient id={`${uid}-f`} cx="0.34" cy="0.24" r="0.95">
           <stop offset="0" stopColor={rgba(base, 0.42)} />
           <stop offset="0.55" stopColor={ENAMEL_MID} />
+          {metal.foil && <stop offset="0.82" stopColor={rgba(metal.foil, 0.16)} />}
           <stop offset="1" stopColor={ENAMEL_DEEP} />
         </radialGradient>
         <clipPath id={`${uid}-k`}>
@@ -149,6 +174,19 @@ function Coin({
         <g clipPath={`url(#${uid}-k)`}>
           <path d="M-8 -8 L58 -8 L4 58 L-8 34 Z" fill="#fff" opacity="0.14" />
         </g>
+      )}
+      {/* 포일 전용: 테두리 바깥 모서리의 광택선.
+          히든의 표식이라 작은 크기에서도 끄지 않는다 (대신 얇아지지 않게 굵기를 키운다). */}
+      {metal.foil && shape === "circle" && (
+        <circle
+          cx="50"
+          cy="50"
+          r="48.2"
+          fill="none"
+          stroke="#FFFFFF"
+          strokeWidth={detail ? 0.9 : 1.8}
+          opacity="0.45"
+        />
       )}
 
       {/* 에나멜: 금속 위에 잉크빛 단색으로 박아 넣는다 */}

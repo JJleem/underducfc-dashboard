@@ -639,7 +639,7 @@ export function FormationField({
                           >
                             <TitleBadges
                               titles={playerTitles[name]}
-                              size={mode === "faceon" ? 14 : 15}
+                              size={mode === "faceon" ? 12 : 14}
                               max={3}
                               gap={2}
                               direction={mode === "faceon" ? "column" : "row"}
