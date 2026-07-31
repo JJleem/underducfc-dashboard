@@ -10,7 +10,7 @@ import {
   CloudLightning, Swords, Lock, Rocket, Sparkles, Vote, MessageCircle,
   AlarmClock, Activity, MessageSquarePlus, HeartHandshake, Handshake,
   Zap, Infinity as InfinityIcon, Trophy, Shield, Sword,
-  Medal, Award, ClipboardList,
+  Medal, Award, ClipboardList, CalendarHeart, WandSparkles, Droplets,
   type LucideIcon,
 } from "lucide-react";
 
@@ -61,6 +61,9 @@ const ICONS: Record<string, LucideIcon> = {
   medal: Medal,
   award: Award,
   "clipboard-list": ClipboardList,
+  "calendar-heart": CalendarHeart,
+  "wand-sparkles": WandSparkles,
+  droplets: Droplets,
 };
 
 export function titleIcon(name: string): LucideIcon {

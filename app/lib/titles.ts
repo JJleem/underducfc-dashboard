@@ -740,6 +740,10 @@ export const TITLES: TitleDef[] = [
   { id: "football_master", name: "축구 도사", icon: "sparkles", category: "히든", state: "live", hidden: true, flat: true, desc: "3개 포지션 각 10경기+ & 공격P 20+", check: (c) => Object.values(c.posCounts).filter((count) => count >= 10).length >= 3 && c.points >= 20 },
   { id: "tactics_influencer", name: "전술 인플루언서", icon: "flame", category: "히든", state: "live", hidden: true, flat: true, desc: "전술게시판 글 좋아요 10개+", check: (c) => c.likesReceived >= 10 },
   { id: "like_fairy", name: "좋아요 요정", icon: "party-popper", category: "히든", state: "live", hidden: true, flat: true, desc: "전술게시판 좋아요 15번+ 누르기", check: (c) => c.likesGiven >= 15 },
+  // 아래 3개는 전부 단조증가 조건 — 한 번 달성하면 다시 잃지 않는다.
+  { id: "perfect_attendance", name: "출석부의 지배자", icon: "calendar-heart", category: "히든", state: "live", hidden: true, flat: true, desc: "연속 출석 15회+", check: (c) => c.maxAttendStreak >= 15 },
+  { id: "total_onemanshow", name: "완전한 원맨쇼", icon: "wand-sparkles", category: "히든", state: "live", hidden: true, flat: true, desc: "한 경기 골+도움 5 이상", check: (c) => c.bestSingleGamePoints >= 5 },
+  { id: "rain_master", name: "우중전 스페셜리스트", icon: "droplets", category: "히든", state: "live", hidden: true, flat: true, desc: "비 오는 날 2골+", check: (c) => c.goalsInRain >= 2 },
 ];
 
 // ───────────────────────── 평가 ─────────────────────────
@@ -786,6 +790,9 @@ function achievementStats(id: string, c: PlayerContext): { label: string; value:
     case "firstblood": return [{ label: "데뷔전", value: "득점 성공" }];
     case "laser": return [{ label: "출전", value: `${c.apps}경기` }, { label: "경기당 득점", value: c.goalPerGame.toFixed(2) }];
     case "duo": return [{ label: "최다 호흡", value: `${c.bestDuoAssists}도움` }];
+    case "perfect_attendance": return [{ label: "최대 연속 출석", value: `${c.maxAttendStreak}연속` }, { label: "통산 출전", value: `${c.apps}경기` }];
+    case "total_onemanshow": return [{ label: "한 경기 최고", value: `${c.bestSingleGamePoints}P` }];
+    case "rain_master": return [{ label: "우중전 득점", value: `${c.goalsInRain}골` }, { label: "통산 득점", value: `${c.goals}골` }];
     default: return [{ label: "출전", value: `${c.apps}경기` }, { label: "공격 기록", value: `${c.goals}골 · ${c.assists}도움` }];
   }
 }
