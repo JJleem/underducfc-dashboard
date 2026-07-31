@@ -306,7 +306,9 @@ export default function LineupViewer({
         </DialogTrigger>
       </div>
 
-      <DialogContent className="left-1/2 top-0 h-[100dvh] w-full max-w-md translate-x-[-50%] translate-y-0 gap-0 overflow-y-auto rounded-none border-0 bg-gray-50 p-0 text-gray-900 duration-300 dark:bg-[#070b18] dark:text-white [&>button]:right-4 [&>button]:top-4 [&>button]:z-50 [&>button]:rounded-full [&>button]:bg-black/5 [&>button]:p-2 [&>button]:text-gray-700 dark:[&>button]:bg-white/10 dark:[&>button]:text-white">
+      {/* PWA standalone(viewportFit: cover)에서는 top-0이 상태바 아래까지 올라간다.
+          내용과 닫기 버튼을 상태바 높이만큼 내려 배터리/시계 영역에 가려 탭이 막히는 걸 막는다. */}
+      <DialogContent className="left-1/2 top-0 h-[100dvh] w-full max-w-md translate-x-[-50%] translate-y-0 gap-0 overflow-y-auto rounded-none border-0 bg-gray-50 p-0 pt-[env(safe-area-inset-top)] text-gray-900 duration-300 dark:bg-[#070b18] dark:text-white [&>button]:right-4 [&>button]:top-[calc(1rem+env(safe-area-inset-top))] [&>button]:z-50 [&>button]:rounded-full [&>button]:bg-black/5 [&>button]:p-2 [&>button]:text-gray-700 dark:[&>button]:bg-white/10 dark:[&>button]:text-white">
         <DialogTitle className="sr-only">경기 라인업</DialogTitle>
         <DialogDescription className="sr-only">
           쿼터별 포메이션, 선발 선수, 대기 선수와 교체 기록
