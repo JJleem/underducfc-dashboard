@@ -3,50 +3,36 @@
 // 라이트/다크 테마 대응: 어두운 배경에선 밝은 accent 텍스트(a.text), 라이트에선 진한 accent(a.ring).
 
 import { useState } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useTheme } from "next-themes";
-import { EarnedTitle, topTitles } from "../lib/titles";
+import { EarnedTitle, pickBadges } from "../lib/titles";
 import { TitleBadge, titleSurface } from "./TitleBadges";
 import ModalPortal from "./ModalPortal";
 
-// 카드 색은 뱃지와 같은 금속에서 파생시킨다(titleSurface). 예전엔 여기서 별도 팔레트를
-// 들고 있어서 라인업 뱃지와 개인 페이지 카드의 색 체계가 서로 달랐다.
+// 인스타 스토리 하이라이트처럼 가로로 넘긴다. 대표 칭호가 맨 앞, 나머지는 희귀도순.
+// 보유 수는 최대 17개 · 평균 7개라 한 줄 스크롤로 전부 담긴다.
+// 색은 뱃지와 같은 금속에서 파생시킨다(titleSurface) — 예전엔 여기서 별도 팔레트를
+// 들고 있어서 라인업 뱃지와 개인 페이지의 색 체계가 서로 달랐다.
 
-function TitleCard({ title, isLight, onClick }: { title: EarnedTitle; isLight: boolean; onClick: () => void }) {
+function Highlight({ title, isLight, onClick }: { title: EarnedTitle; isLight: boolean; onClick: () => void }) {
   const s = titleSurface(title, isLight);
   return (
     <button
       type="button"
       onClick={onClick}
-      className="relative flex min-h-[96px] min-w-0 flex-col items-center justify-start overflow-hidden rounded-[15px] px-2 pb-2 pt-2.5 text-center transition-transform active:scale-[0.97]"
-      style={{
-        background: s.background,
-        border: `1px solid ${s.border}`,
-        boxShadow: s.glow
-          ? `0 5px 18px ${s.glow}, inset 0 1px rgba(255,255,255,0.12)`
-          : "inset 0 1px rgba(255,255,255,0.1)",
-      }}
+      className="flex w-[64px] shrink-0 flex-col items-center gap-1.5 transition-transform active:scale-[0.94]"
     >
-      {title.hidden && (
-        <>
-          <span className="absolute -right-5 -top-8 h-16 w-24 rotate-12 rounded-full bg-cyan-300/20 blur-xl" />
-          <span className="absolute -bottom-8 right-8 h-14 w-20 rounded-full bg-fuchsia-400/15 blur-xl" />
-          <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/80 to-transparent" />
-        </>
-      )}
-      <div className="relative flex w-full items-start justify-center">
-        <TitleBadge title={title} size={40} />
-        {(title.hidden || title.tierLabel) && (
-          <span
-            className="absolute right-0 top-0 max-w-[54px] truncate rounded-full px-1 py-0.5 text-[6px] font-black"
-            style={{ color: s.fg, background: s.border, border: `1px solid ${s.border}` }}
-          >
-            {title.hidden ? "HIDDEN" : title.tierLabel}
-          </span>
-        )}
-      </div>
       <span
-        className="relative mt-2 line-clamp-2 text-[10px] font-black leading-[1.2] tracking-[-0.02em]"
+        className="rounded-full p-[3px]"
+        style={{
+          border: `1.5px solid ${s.border}`,
+          boxShadow: s.glow ? `0 0 10px ${s.glow}` : undefined,
+        }}
+      >
+        <TitleBadge title={title} size={50} />
+      </span>
+      <span
+        className="line-clamp-2 text-center text-[9.5px] font-black leading-[1.25] tracking-[-0.02em]"
         style={{ color: s.fg }}
       >
         {title.name}
@@ -55,10 +41,13 @@ function TitleCard({ title, isLight, onClick }: { title: EarnedTitle; isLight: b
   );
 }
 
-const PREVIEW = 9; // 접힌 상태에서 보이는 개수
-
-export default function PlayerTitleCards({ titles }: { titles: EarnedTitle[] }) {
-  const [expanded, setExpanded] = useState(false);
+export default function PlayerTitleCards({
+  titles,
+  featuredIds,
+}: {
+  titles: EarnedTitle[];
+  featuredIds?: string[];
+}) {
   const [selected, setSelected] = useState<EarnedTitle | null>(null);
   const { resolvedTheme } = useTheme();
   const isLight = resolvedTheme === "light";
@@ -67,30 +56,19 @@ export default function PlayerTitleCards({ titles }: { titles: EarnedTitle[] }) 
     return <p className="text-[12px] text-gray-400 font-semibold py-2">아직 획득한 칭호가 없어요.</p>;
   }
 
-  const sorted = topTitles(titles, titles.length); // 등급/리더/감독 우선 정렬
-  const hasMore = sorted.length > PREVIEW;
-  const shown = expanded ? sorted : sorted.slice(0, PREVIEW);
+  // 대표 칭호를 고른 순서대로 앞에, 나머지는 희귀도순 — 라인업 뱃지와 같은 규칙.
+  const ordered = pickBadges(titles, featuredIds, titles.length);
   const selectedSurface = selected ? titleSurface(selected, isLight) : null;
 
   return (
     <>
-      <div className="rounded-[22px] bg-gradient-to-b from-gray-100/80 to-gray-50 p-2 ring-1 ring-black/5 dark:from-[#0d1425] dark:to-[#090e1b] dark:ring-white/10">
-        <div className="grid grid-cols-3 gap-1.5">
-          {shown.map((t) => (
-            <TitleCard key={t.id} title={t} isLight={isLight} onClick={() => setSelected(t)} />
+      {/* 좌우로 화면 끝까지 흘려보내야 '더 있다'는 게 읽힌다 */}
+      <div className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex w-max gap-3">
+          {ordered.map((t) => (
+            <Highlight key={t.id} title={t} isLight={isLight} onClick={() => setSelected(t)} />
           ))}
         </div>
-
-        {hasMore && (
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-[14px] bg-black/[0.04] py-2 text-[10.5px] font-black text-gray-700 transition-all hover:bg-black/[0.07] active:scale-[0.98] dark:bg-white/[0.06] dark:text-white/80 dark:hover:bg-white/[0.1]"
-          >
-            {expanded ? "접기" : `전체 확인하기 (${sorted.length})`}
-            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} />
-          </button>
-        )}
       </div>
 
       {/* body 로 포털해야 "지금 보고 있는 화면" 아래쪽에 뜬다 */}

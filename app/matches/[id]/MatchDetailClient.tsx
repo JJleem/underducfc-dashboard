@@ -271,7 +271,8 @@ export default function MatchDetailClient({ match, lineups, rosterMap, captainRo
           )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={lightbox.urls[lightbox.index].replace("/upload/", "/upload/q_auto,f_auto/")}
+            // 해상도 제한이 없으면 원본(장당 5MB)을 그대로 받는다
+            src={lightbox.urls[lightbox.index].replace("/upload/", "/upload/w_1200,c_limit,q_auto,f_auto/")}
             alt="경기 사진"
             className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}

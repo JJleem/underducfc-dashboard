@@ -2685,7 +2685,9 @@ export default function DashboardClient({
               {/* 이미지 */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={lightbox.ids[lightbox.index].replace("/upload/", "/upload/q_auto,f_auto/")}
+                // w_1200,c_limit 이 없으면 원본(장당 5MB)을 그대로 받는다.
+                // q_auto,f_auto 는 화질·포맷만 자동이고 해상도는 안 줄인다.
+                src={lightbox.ids[lightbox.index].replace("/upload/", "/upload/w_1200,c_limit,q_auto,f_auto/")}
                 alt="경기사진"
                 className="max-h-[88vh] max-w-[88vw] object-contain rounded-xl"
                 onClick={(e) => e.stopPropagation()}

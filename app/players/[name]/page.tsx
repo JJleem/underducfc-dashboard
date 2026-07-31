@@ -1,7 +1,6 @@
 // app/players/[name]/page.tsx
 // 선수 전용 페이지 (페이스온). 칭호 + 스탯 + 출석률 + 최근 활약.
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
   Crown,
@@ -230,11 +229,25 @@ export default async function PlayerPage({
             className="absolute -top-10 -right-10 w-48 h-48 rounded-full pointer-events-none"
             style={{ background: accent, opacity: 0.18, filter: "blur(46px)" }}
           />
-          {/* 잔디 로고 워터마크 */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04] dark:opacity-[0.06]">
-            <div className="relative w-40 h-40">
-              <Image src="/underducklogo.png" alt="" fill className="object-contain" />
-            </div>
+          {/* 로고 워터마크.
+              underducklogo.png 는 알파 없는 RGB(네이비 배경) 1024² 2.1MB 라
+              투명도만 낮춰 깔면 마크가 아니라 '네모난 네이비 덩어리'가 깔렸다.
+              밝기를 알파로 바꾼 underduck-mark.png(16KB)를 마스크로 써서
+              마크 모양만 남기고, 색은 테마별로 입힌다. */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div
+              className="h-40 w-40 bg-gray-900/[0.07] dark:bg-white/[0.08]"
+              style={{
+                WebkitMaskImage: "url(/underduck-mark.png)",
+                maskImage: "url(/underduck-mark.png)",
+                WebkitMaskSize: "contain",
+                maskSize: "contain",
+                WebkitMaskRepeat: "no-repeat",
+                maskRepeat: "no-repeat",
+                WebkitMaskPosition: "center",
+                maskPosition: "center",
+              }}
+            />
           </div>
 
           {/* 좌: 인물(잘리지 않게 크게) · 우: 이름/등번호/포지션 */}
@@ -348,7 +361,7 @@ export default async function PlayerPage({
             칭호 <span className="text-gray-400 font-bold">({titles.length})</span>
           </p>
           {canEdit && <FeaturedEditor titles={titles} current={featuredIds} />}
-          <PlayerTitleCards titles={titles} />
+          <PlayerTitleCards titles={titles} featuredIds={featuredIds} />
         </section>
 
         {/* 시즌 베스트 경기 */}
