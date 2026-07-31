@@ -2,7 +2,7 @@
 // 개인 페이지 칭호 — 카드형. 일부만 보이고 아래 블러 + "전체 확인하기"로 펼침.
 // 라이트/다크 테마 대응: 어두운 배경에선 밝은 accent 텍스트(a.text), 라이트에선 진한 accent(a.ring).
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { EarnedTitle, pickBadges } from "../lib/titles";
@@ -53,6 +53,30 @@ export default function PlayerTitleCards({
   const { resolvedTheme } = useTheme();
   const isLight = resolvedTheme === "light";
 
+  // 항목 폭(64) + 간격(12) = 76px 간격이라 화면 폭에 따라 마지막 항목이 가장자리에
+  // 딱 떨어져 버린다. 그러면 옆으로 넘길 수 있다는 신호가 사라진다.
+  // 넘칠 때만 오른쪽을 페이드시키고, 끝까지 밀면 페이드를 걷는다.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [moreRight, setMoreRight] = useState(false);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const check = () =>
+      setMoreRight(el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+    check();
+    el.addEventListener("scroll", check, { passive: true });
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", check);
+      ro.disconnect();
+    };
+  }, [titles.length]);
+
+  const fade = moreRight
+    ? "linear-gradient(90deg, #000 0, #000 calc(100% - 44px), rgba(0,0,0,0.15) 100%)"
+    : undefined;
+
   if (!titles.length) {
     return <p className="text-[12px] text-gray-400 font-semibold py-2">아직 획득한 칭호가 없어요.</p>;
   }
@@ -66,7 +90,11 @@ export default function PlayerTitleCards({
       {/* 좌우로 화면 끝까지 흘려보내야 '더 있다'는 게 읽힌다.
           overflow-x 를 걸면 overflow-y 도 visible → auto 로 바뀌어 코인 글로우가
           위아래로 잘린다. 세로 패딩으로 번지는 만큼(약 12px) 자리를 비워둔다. */}
-      <div className="-mx-4 overflow-x-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div
+        ref={scrollRef}
+        className="-mx-4 overflow-x-auto py-3 pl-4 pr-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{ WebkitMaskImage: fade, maskImage: fade }}
+      >
         <div className="flex w-max gap-3">
           {ordered.map((t) => (
             <Highlight key={t.id} title={t} isLight={isLight} onClick={() => setSelected(t)} />
