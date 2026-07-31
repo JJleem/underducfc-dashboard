@@ -22,11 +22,12 @@ function Highlight({ title, isLight, onClick }: { title: EarnedTitle; isLight: b
       onClick={onClick}
       className="flex w-[64px] shrink-0 flex-col items-center gap-1.5 transition-transform active:scale-[0.94]"
     >
+      {/* inline-flex 가 없으면 span 높이가 줄 높이로 잡혀 원이 타원으로 찌그러진다 */}
       <span
-        className="rounded-full p-[3px]"
+        className="inline-flex rounded-full p-[3px]"
         style={{
           border: `1.5px solid ${s.border}`,
-          boxShadow: s.glow ? `0 0 10px ${s.glow}` : undefined,
+          boxShadow: s.glow ? `0 0 8px ${s.glow}` : undefined,
         }}
       >
         <TitleBadge title={title} size={50} />
@@ -62,8 +63,10 @@ export default function PlayerTitleCards({
 
   return (
     <>
-      {/* 좌우로 화면 끝까지 흘려보내야 '더 있다'는 게 읽힌다 */}
-      <div className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* 좌우로 화면 끝까지 흘려보내야 '더 있다'는 게 읽힌다.
+          overflow-x 를 걸면 overflow-y 도 visible → auto 로 바뀌어 코인 글로우가
+          위아래로 잘린다. 세로 패딩으로 번지는 만큼(약 12px) 자리를 비워둔다. */}
+      <div className="-mx-4 overflow-x-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex w-max gap-3">
           {ordered.map((t) => (
             <Highlight key={t.id} title={t} isLight={isLight} onClick={() => setSelected(t)} />
