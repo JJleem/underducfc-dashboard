@@ -3,6 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import {
+  Crown,
+  Flame,
+  Handshake,
+  Spline,
+  Target,
+  UsersRound,
+  Volleyball,
+} from "lucide-react";
 import { auth } from "@/auth";
 import { getMatchesRows } from "../../lib/matches-backend";
 import {
@@ -34,6 +43,29 @@ import PlayerFace from "../../components/PlayerFace";
 import PlayerProfileBackButton from "../../components/PlayerProfileBackButton";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * 골·도움 표시. 베스트 경기와 최근 활약 두 곳에서 같은 모양이어야 해서 한 군데로 모았다.
+ * (예전엔 ⚽ / 🅰️ 이모지라 기기·OS마다 다르게 그려졌고 나머지 lucide 아이콘과 톤이 어긋났다)
+ */
+function ScorePips({ goals, assists, size = 12 }: { goals: number; assists: number; size?: number }) {
+  return (
+    <>
+      {goals > 0 && (
+        <span className="inline-flex items-center gap-0.5 font-black text-gray-800 dark:text-gray-100">
+          <Volleyball width={size} height={size} strokeWidth={2.4} />
+          {goals > 1 && <span className="tabular-nums">×{goals}</span>}
+        </span>
+      )}
+      {assists > 0 && (
+        <span className="inline-flex items-center gap-0.5 font-black text-emerald-500">
+          <Spline width={size} height={size} strokeWidth={2.4} />
+          {assists > 1 && <span className="tabular-nums">×{assists}</span>}
+        </span>
+      )}
+    </>
+  );
+}
 
 const posColor = (pos: string): string => {
   const p = pos?.toUpperCase();
@@ -337,25 +369,16 @@ export default async function PlayerPage({
                   <p className="text-[10px] text-gray-400 mt-0.5">{relations.bestGame.date}</p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="flex items-center justify-end gap-1.5">
-                    {relations.bestGame.goals > 0 && (
-                      <span className="text-[12px] font-black text-gray-800 dark:text-gray-100">
-                        ⚽{relations.bestGame.goals > 1 ? `×${relations.bestGame.goals}` : ""}
-                      </span>
-                    )}
-                    {relations.bestGame.assists > 0 && (
-                      <span className="text-[12px] font-black text-emerald-500">
-                        🅰️{relations.bestGame.assists > 1 ? `×${relations.bestGame.assists}` : ""}
-                      </span>
-                    )}
+                  <div className="flex items-center justify-end gap-1.5 text-[12px]">
+                    <ScorePips goals={relations.bestGame.goals} assists={relations.bestGame.assists} size={13} />
                   </div>
                   <div className="flex items-center justify-end gap-1.5 mt-1">
                     <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-[#FF8FA3]/15 text-[#FF8FA3] dark:text-[#FFB6C1]">
                       공격P {relations.bestGame.points}
                     </span>
                     {relations.bestGame.isMom && (
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-gradient-to-br from-amber-200 to-amber-500 text-amber-950">
-                        🏅 MOM
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-black px-1.5 py-0.5 rounded bg-gradient-to-br from-amber-200 to-amber-500 text-amber-950">
+                        <Crown width={11} height={11} strokeWidth={2.6} /> MOM
                       </span>
                     )}
                   </div>
@@ -373,34 +396,47 @@ export default async function PlayerPage({
             </p>
             <div className="space-y-1.5">
               {[
-                { emoji: "🤝", label: "가장 많이 함께 뛴 동료", rel: relations.mostPlayedWith, unit: "경기" },
-                { emoji: "🎯", label: "내 도움을 가장 많이 받은 선수", rel: relations.assistRecipients, unit: "골" },
-                { emoji: "⚽", label: "나를 가장 많이 살린 도우미", rel: relations.assistGivers, unit: "도움" },
+                { icon: UsersRound, tint: "#38BDF8", label: "가장 많이 함께 뛴 동료", rel: relations.mostPlayedWith, unit: "경기" },
+                { icon: Target, tint: "#34D399", label: "내 도움을 가장 많이 받은 선수", rel: relations.assistRecipients, unit: "골" },
+                { icon: Handshake, tint: "#FF8FA3", label: "나를 가장 많이 살린 도우미", rel: relations.assistGivers, unit: "도움" },
               ].map((item) =>
                 item.rel ? (
                   <div
                     key={item.label}
-                    className="flex items-center gap-2.5 rounded-xl bg-white dark:bg-white/[0.03] border border-gray-100 dark:border-white/[0.06] px-3 py-2.5"
+                    className="flex items-center gap-3 rounded-2xl border px-3 py-2.5"
+                    style={{
+                      borderColor: `${item.tint}33`,
+                      background: `linear-gradient(90deg, ${item.tint}14, transparent 70%)`,
+                    }}
                   >
-                    <span className="text-[16px] shrink-0">{item.emoji}</span>
+                    <span
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                      style={{ background: `${item.tint}1f`, color: item.tint }}
+                    >
+                      <item.icon width={17} height={17} strokeWidth={2.4} />
+                    </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-bold text-gray-400">{item.label}</p>
-                      <div className="flex items-center gap-x-2.5 gap-y-1 flex-wrap mt-0.5">
+                      <p className="text-[9.5px] font-black tracking-wide" style={{ color: item.tint }}>
+                        {item.label}
+                      </p>
+                      <div className="flex items-center gap-x-2.5 gap-y-1 flex-wrap mt-1">
                         {item.rel.names.map((nm) => (
                           <Link
                             key={nm}
                             href={`/players/${encodeURIComponent(nm)}`}
                             className="inline-flex items-center gap-1.5 active:opacity-60"
                           >
-                            <PlayerFace name={nm} size={18} />
-                            <span className="text-[12px] font-black text-gray-800 dark:text-gray-200 underline-offset-2 hover:underline">{nm}</span>
+                            <PlayerFace name={nm} size={20} />
+                            <span className="text-[12.5px] font-black text-gray-900 dark:text-white underline-offset-2 hover:underline">{nm}</span>
                           </Link>
                         ))}
                       </div>
                     </div>
-                    <span className="shrink-0 text-[12px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
-                      {item.rel.count}
-                      {item.unit}
+                    <span className="shrink-0 text-right leading-none">
+                      <span className="block text-[17px] font-black tabular-nums" style={{ color: item.tint }}>
+                        {item.rel.count}
+                      </span>
+                      <span className="block text-[9px] font-bold text-gray-400 mt-0.5">{item.unit}</span>
                     </span>
                   </div>
                 ) : null
@@ -449,7 +485,7 @@ export default async function PlayerPage({
                 </p>
                 {currentStreak >= 2 && (
                   <span className="inline-flex items-center gap-0.5 text-[10px] font-black text-orange-500">
-                    🔥 {currentStreak}연속
+                    <Flame width={11} height={11} strokeWidth={2.6} /> {currentStreak}연속
                   </span>
                 )}
               </div>
@@ -481,8 +517,9 @@ export default async function PlayerPage({
                       vs {m.opponent} <span className="text-gray-400 font-medium ml-1">{m.date}</span>
                     </span>
                     <span className="shrink-0 flex items-center gap-1.5 ml-2">
-                      {g > 0 && <span className="text-[11px] font-black text-gray-800 dark:text-gray-200">⚽{g > 1 ? `×${g}` : ""}</span>}
-                      {a > 0 && <span className="text-[11px] font-black text-emerald-500">🅰️{a > 1 ? `×${a}` : ""}</span>}
+                      <span className="inline-flex items-center gap-1.5 text-[11px]">
+                        <ScorePips goals={g} assists={a} />
+                      </span>
                     </span>
                   </Link>
                 );

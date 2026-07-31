@@ -69,8 +69,11 @@ export function titleSurface(t: EarnedTitle, isLight: boolean) {
       ? `linear-gradient(135deg, ${rgba(hi, 0.5)} 0%, ${rgba(base, 0.14)} 100%)`
       : `linear-gradient(135deg, ${rgba(base, 0.17)} 0%, ${rgba(dark, 0.34)} 100%)`,
     border: isLight ? rgba(shadow, 0.34) : rgba(base, 0.42),
-    /** 제목·수치 색 */
-    fg: isLight ? shadow : hi,
+    /**
+     * 제목·수치 색. 라이트에서 shadow(4단계)를 쓰면 실버·골드가 4.5:1 턱걸이라
+     * 최암부(dark)를 쓴다 — 색 계열은 그대로면서 대비가 9:1 이상으로 올라간다.
+     */
+    fg: isLight ? dark : hi,
     glow: metal.aura ? rgba(base, isLight ? 0.22 : 0.3) : undefined,
   };
 }
