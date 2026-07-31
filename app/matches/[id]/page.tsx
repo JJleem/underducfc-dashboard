@@ -1,10 +1,11 @@
-import { getLineupRows, getRosterRows, getStatsRows, getAttendanceVoteRows, getVoteCommentRows, getFeedbackRows, getFeaturedRows, getBoardCommentRows, getBoardPostRows, getBoardLikeGiverRows } from "../../lib/backend";
+import { getLineupRows, getRosterRows, getStatsRows, getFeaturedRows } from "../../lib/backend";
 import { getMatchesRows } from "../../lib/matches-backend";
 import { LineupData, MatchData } from "../../components/DashboardClient";
 import MatchDetailClient from "./MatchDetailClient";
 import { notFound } from "next/navigation";
 import { parseSubstitutions } from "../../lib/lineup";
-import { buildContexts, evaluatePlayer, evaluateLeaders, managerTitle, pickBadges, MANAGER_NAME, type EarnedTitle } from "../../lib/titles";
+import { pickBadges, type EarnedTitle } from "../../lib/titles";
+import { getTeamTitleData } from "../../lib/titles-cache";
 
 export default async function MatchDetailPage({
   params,
@@ -14,31 +15,19 @@ export default async function MatchDetailPage({
   const { id } = await params;
   const matchId = Number(id);
 
-  const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult, rawAttendanceResult, rawVoteCommentsResult, rawFeedbacksResult, rawFeaturedResult, rawBoardCommentsResult, rawBoardPostsResult, rawBoardLikeGiversResult] = await Promise.allSettled([
+  const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult, rawFeaturedResult] = await Promise.allSettled([
     getMatchesRows(),
     getLineupRows(),
     getRosterRows(),
     getStatsRows(),
-    getAttendanceVoteRows(),
-    getVoteCommentRows(),
-    getFeedbackRows(),
     getFeaturedRows(),
-    getBoardCommentRows(),
-    getBoardPostRows(),
-    getBoardLikeGiverRows(),
   ]);
 
   const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
   const rawLineups = rawLineupsResult.status === "fulfilled" ? rawLineupsResult.value : [];
   const rawRoster = rawRosterResult.status === "fulfilled" ? rawRosterResult.value : [];
   const rawStats = rawStatsResult.status === "fulfilled" ? rawStatsResult.value : [];
-  const rawAttendanceVotes = rawAttendanceResult.status === "fulfilled" ? rawAttendanceResult.value : [];
-  const rawVoteComments = rawVoteCommentsResult.status === "fulfilled" ? rawVoteCommentsResult.value : [];
-  const rawFeedbacks = rawFeedbacksResult.status === "fulfilled" ? rawFeedbacksResult.value : [];
   const rawFeatured = rawFeaturedResult.status === "fulfilled" ? rawFeaturedResult.value : [];
-  const rawBoardComments = rawBoardCommentsResult.status === "fulfilled" ? rawBoardCommentsResult.value : [];
-  const rawBoardPosts = rawBoardPostsResult.status === "fulfilled" ? rawBoardPostsResult.value : [];
-  const rawBoardLikeGivers = rawBoardLikeGiversResult.status === "fulfilled" ? rawBoardLikeGiversResult.value : [];
 
   // 이름 → 등번호 맵 (A=등번호, B=이름)
   const rosterMap: Record<string, string> = {};
@@ -112,20 +101,8 @@ export default async function MatchDetailPage({
     }))
     .filter((l: LineupData) => l.matchId === matchId);
 
-  // 칭호 산출
-  const contexts = buildContexts({
-    rawStats,
-    rawMatches,
-    rawLineups,
-    rawRoster,
-    rawAttendanceVotes,
-    rawVoteComments,
-    rawFeedbacks,
-    rawBoardComments,
-    rawBoardPosts,
-    rawBoardLikeGivers,
-  });
-  const leaders = evaluateLeaders(contexts);
+  // 칭호 산출은 45초 캐시된 팀 전체 결과를 재사용한다(요청마다 다시 계산하지 않는다).
+  const { allTitles } = await getTeamTitleData();
   const featuredMap: Record<string, string[]> = {};
   rawFeatured.forEach((row) => {
     const name = (row[0] || "").trim();
@@ -134,14 +111,9 @@ export default async function MatchDetailPage({
     if (ids.length) featuredMap[name] = ids;
   });
   const playerTitles: Record<string, EarnedTitle[]> = {};
-  contexts.forEach((ctx, name) => {
-    const earned = evaluatePlayer(ctx);
-    const lead = leaders.get(name) ?? [];
-    const all = [...lead, ...earned];
-    if (name === MANAGER_NAME) all.unshift(managerTitle());
-    if (all.length) playerTitles[name] = pickBadges(all, featuredMap[name]);
+  Object.entries(allTitles).forEach(([name, all]) => {
+    playerTitles[name] = pickBadges(all, featuredMap[name]);
   });
-  if (!playerTitles[MANAGER_NAME]) playerTitles[MANAGER_NAME] = [managerTitle()];
 
   return (
     <MatchDetailClient

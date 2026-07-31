@@ -2,28 +2,12 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { isAdmin } from "../../lib/admin";
 import { getBoardPost, listBoardComments, getMyLikedPostIds } from "../../lib/board";
+import { getRosterRows, getStatsRows, getFeaturedRows } from "../../lib/backend";
 import {
-  getRosterRows,
-  getLineupRows,
-  getStatsRows,
-  getAttendanceVoteRows,
-  getVoteCommentRows,
-  getFeedbackRows,
-  getFeaturedRows,
-  getBoardCommentRows,
-  getBoardPostRows,
-  getBoardLikeGiverRows,
-} from "../../lib/backend";
-import { getMatchesRows } from "../../lib/matches-backend";
-import {
-  buildContexts,
-  evaluatePlayer,
-  evaluateLeaders,
-  managerTitle,
   pickBadges,
-  MANAGER_NAME,
   type EarnedTitle,
 } from "../../lib/titles";
+import { getTeamTitleData } from "../../lib/titles-cache";
 import BoardDetailClient from "./BoardDetailClient";
 
 export const dynamic = "force-dynamic";
@@ -69,10 +53,10 @@ export default async function BoardDetailPage({
   const playerTitles: Record<string, EarnedTitle[]> = {};
 
   if (post.lineup) {
+    // 칭호 계산에 쓰던 나머지 소스는 titles-cache 로 옮겨갔다. 여기 남는 건
+    // 시즌 기록(stats) 과 대표 칭호(featured) 둘뿐이다 → rows(0), rows(1).
     const results = await Promise.allSettled([
-      getStatsRows(), getMatchesRows(), getLineupRows(), getAttendanceVoteRows(),
-      getVoteCommentRows(), getFeedbackRows(), getFeaturedRows(),
-      getBoardCommentRows(), getBoardPostRows(), getBoardLikeGiverRows(),
+      getStatsRows(), getFeaturedRows(),
     ]);
     const rows = (i: number): string[][] =>
       results[i].status === "fulfilled"
@@ -92,34 +76,18 @@ export default async function BoardDetailPage({
       };
     });
 
-    const contexts = buildContexts({
-      rawStats,
-      rawMatches: rows(1),
-      rawLineups: rows(2),
-      rawRoster: rosterRows,
-      rawAttendanceVotes: rows(3),
-      rawVoteComments: rows(4),
-      rawFeedbacks: rows(5),
-      rawBoardComments: rows(7),
-      rawBoardPosts: rows(8),
-      rawBoardLikeGivers: rows(9),
-    });
-    const leaders = evaluateLeaders(contexts);
+    // 칭호 산출은 45초 캐시된 팀 전체 결과를 재사용한다(요청마다 다시 계산하지 않는다).
+    const { allTitles } = await getTeamTitleData();
     const featuredMap: Record<string, string[]> = {};
-    rows(6).forEach((row) => {
+    rows(1).forEach((row) => {
       const name = (row[0] || "").trim();
       if (!name) return;
       const ids = [row[1], row[2], row[3]].map((v) => (v || "").trim()).filter(Boolean);
       if (ids.length) featuredMap[name] = ids;
     });
-    contexts.forEach((ctx, name) => {
-      const earned = evaluatePlayer(ctx);
-      const lead = leaders.get(name) ?? [];
-      const all = [...lead, ...earned];
-      if (name === MANAGER_NAME) all.unshift(managerTitle());
-      if (all.length) playerTitles[name] = pickBadges(all, featuredMap[name]);
+    Object.entries(allTitles).forEach(([name, all]) => {
+      playerTitles[name] = pickBadges(all, featuredMap[name]);
     });
-    if (!playerTitles[MANAGER_NAME]) playerTitles[MANAGER_NAME] = [managerTitle()];
   }
 
   const currentUser = session?.user

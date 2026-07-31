@@ -10,23 +10,15 @@ import {
   getStatsRows,
   getRosterRows,
   getLineupRows,
-  getAttendanceVoteRows,
-  getVoteCommentRows,
   getFeaturedRows,
-  getFeedbackRows,
-  getBoardCommentRows,
-  getBoardPostRows,
-  getBoardLikeGiverRows,
 } from "../../lib/backend";
 import {
-  buildContexts,
-  evaluatePlayer,
-  evaluateLeaders,
   buildPlayerRelations,
   managerTitle,
   MANAGER_NAME,
   type EarnedTitle,
 } from "../../lib/titles";
+import { getTeamTitleData } from "../../lib/titles-cache";
 import TitleHighlights from "../../components/TitleHighlights";
 import ProfileTabs from "../../components/ProfileTabs";
 import PrefPosEditor from "../../components/PrefPosEditor";
@@ -140,35 +132,19 @@ export default async function PlayerPage({
   const { name: rawName } = await params;
   const name = decodeURIComponent(rawName).trim();
 
-  // 11개 소스를 순차로 await 하면 직렬 왕복이 그대로 누적돼 MY 탭이 눌린 뒤 멈춘 것처럼
-  // 보인다. 전부 독립이라 병렬로 받는다. 필수 3개(stats/roster/matches)는 기존처럼 실패 시
-  // 그대로 throw 되고(에러 바운더리), 선택 8개는 기존처럼 빈 배열로 폴백한다.
+  // 순차로 await 하면 직렬 왕복이 그대로 누적돼 MY 탭이 눌린 뒤 멈춘 것처럼 보인다.
+  // 전부 독립이라 병렬로 받는다. 필수 3개(stats/roster/matches)는 실패 시 그대로
+  // throw 되고(에러 바운더리), 선택 2개는 빈 배열로 폴백한다.
+  // (칭호 계산에 쓰던 6개 소스는 titles-cache 로 옮겨가 여기서 받지 않는다)
   const optional = (): string[][] => [];
-  const [
-    rawStats,
-    rawRoster,
-    rawMatches,
-    rawLineups,
-    rawAttendanceVotes,
-    rawVoteComments,
-    rawFeatured,
-    rawFeedbacks,
-    rawBoardComments,
-    rawBoardPosts,
-    rawBoardLikeGivers,
-  ]: string[][][] = await Promise.all([
-    getStatsRows(),
-    getRosterRows(),
-    getMatchesRows(),
-    getLineupRows().catch(optional),
-    getAttendanceVoteRows().catch(optional),
-    getVoteCommentRows().catch(optional),
-    getFeaturedRows().catch(optional),
-    getFeedbackRows().catch(optional),
-    getBoardCommentRows().catch(optional),
-    getBoardPostRows().catch(optional),
-    getBoardLikeGiverRows().catch(optional),
-  ]);
+  const [rawStats, rawRoster, rawMatches, rawLineups, rawFeatured]: string[][][] =
+    await Promise.all([
+      getStatsRows(),
+      getRosterRows(),
+      getMatchesRows(),
+      getLineupRows().catch(optional),
+      getFeaturedRows().catch(optional),
+    ]);
 
   const isManager = name === MANAGER_NAME;
 
@@ -199,27 +175,22 @@ export default async function PlayerPage({
   // 등록되지 않은 이름 (감독 제외) → 404
   if (!rosterRow && !statRow && !isManager) notFound();
 
-  // 칭호
-  const contexts = buildContexts({
-    rawStats, rawMatches, rawLineups, rawRoster, rawAttendanceVotes, rawVoteComments, rawFeedbacks, rawBoardComments, rawBoardPosts, rawBoardLikeGivers,
-  });
-  const leaders = evaluateLeaders(contexts);
-  const ctx = contexts.get(name);
-  const maxPositionCount = ctx ? Math.max(...Object.values(ctx.posLineupCounts)) : 0;
-  const mostPlayedPositions = ctx
+  // 칭호 — 45초 캐시된 팀 전체 산출 결과를 재사용한다(요청마다 다시 계산하지 않는다).
+  // allTitles[name] 은 감독 → 리더 → 자동 칭호 순으로 이미 정렬돼 있어서
+  // 예전에 여기서 조립하던 순서와 동일하다.
+  const { allTitles, posLineupCounts } = await getTeamTitleData();
+  const posCounts = posLineupCounts[name] ?? null;
+  const maxPositionCount = posCounts ? Math.max(...Object.values(posCounts)) : 0;
+  const mostPlayedPositions = posCounts
     ? (["GK", "DF", "MF", "FW"] as const).filter((position) => {
-        return maxPositionCount > 0 && ctx.posLineupCounts[position] === maxPositionCount;
+        return maxPositionCount > 0 && posCounts[position] === maxPositionCount;
       })
     : [];
   const displayPositions = Array.from(new Set([
     ...(registeredPos !== "-" ? [registeredPos] : []),
     ...mostPlayedPositions,
   ]));
-  const titles: EarnedTitle[] = [
-    ...(isManager ? [managerTitle()] : []),
-    ...(leaders.get(name) ?? []),
-    ...(ctx ? evaluatePlayer(ctx) : []),
-  ];
+  const titles: EarnedTitle[] = allTitles[name] ?? (isManager ? [managerTitle()] : []);
 
   // 출석률 + 최근 활약 경기
   const completed = rawMatches.slice(1)
@@ -285,9 +256,9 @@ export default async function PlayerPage({
   const relations = buildPlayerRelations(name, rawMatches, rawLineups);
 
   // 포지션 출전 분포 (쿼터별 라인업 등장 기준)
-  const posDist = ctx
+  const posDist = posCounts
     ? (["GK", "DF", "MF", "FW"] as const)
-        .map((p) => ({ pos: p, count: ctx.posLineupCounts[p] }))
+        .map((p) => ({ pos: p, count: posCounts[p] }))
         .filter((d) => d.count > 0)
     : [];
   const posMax = posDist.reduce((mx, d) => Math.max(mx, d.count), 0);

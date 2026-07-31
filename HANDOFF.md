@@ -198,6 +198,7 @@
 6. ✅ **칭호/뱃지/페이스온** 완료 (위 "완료: 칭호/뱃지/페이스온" 참고)
 7. 🚧 **백엔드 마이그레이션(Phase 3 프론트 컷오버)** 진행 중 — 위 "🚧 진행 중: 백엔드 마이그레이션" 참고.
    - 다음 단계: 🔴 secret 정합 → matches 도메인 컷오버 → 나머지 도메인.
+8. 💡 **전술 패턴(움직임 애니메이션)** — 설계만 확정, 미구현. **`PATTERN_HANDOFF.md`** 참고.
 
 ### ⏭️ 칭호 시스템 — 다른 PC에서 이어서 할 것
 1. **`featured` 시트 탭 생성** (대표 칭호 저장용) — 안 만들면 저장 시 에러
@@ -207,6 +208,58 @@
 5. (선택) 라인업 토큰 뱃지가 너무 빽빽하면 `FormationField.tsx`에서 size/max 조정
 
 ### (선택) 추후 정리거리
-- media/media/sign을 카카오 관리자로 통합 (현재 ADMIN_PIN 유지 중)
+- ~~media/media/sign을 카카오 관리자로 통합~~ → /media 페이지 자체를 삭제해서 무효 (2026-07-31, 커밋 `dbfbbb2`)
 - `push/test`(전체 푸시)에 `requireAdmin` 적용 (현재 무방비)
 - 투표자 닉네임↔로스터 실명 매핑 (칭호 활동 집계·본인확인과도 연결됨)
+
+---
+
+## ⚡ Vercel Fluid Active CPU 절감 (2026-07-31)
+
+30일 사용량이 한도에 근접해서(`underduckfc-dashboard` 2h 2m, 전체의 55%) 라우트별로
+실측하고 손댔다. **Active CPU = 요청 수 × 요청당 CPU** 이므로 둘 다 봐야 한다.
+
+### 측정 방법 (재현용)
+- Vercel → Observability → Functions 에서 라우트별 요청 수·CPU 를 본다. **총합이 아니라 요청당**으로 나눠 봐야 범인이 보인다.
+- 로컬 정밀 측정: `npm run build && npx next start -p 3110` 후 `/proc/<pid>/stat` 의 utime+stime 델타를 요청 수로 나눈다.
+  ⚠️ `next-server` 프로세스가 **여러 개** 떠 있으면 CPU 가 합산돼 숫자가 엉킨다. 반드시 하나만 띄우고 재라.
+
+### 확인된 사실 (오해 정리)
+- **이미지는 범인이 아니다.** 경기 사진은 Cloudinary 직통이고 `PlayerFace`/`PlayerAvatar`/`PlayerMatchGrid` 는 전부 plain `<img>`.
+  `next/image` 를 쓰는 곳은 `/underducklogo.png` 하나뿐이고, Vercel 에선 이미지 최적화가 Fluid Active CPU 가 아니라 별도 항목이다.
+- **데이터 계층도 범인이 아니다.** `udReadOpts`(45초) 가 잘 듣고 있어서 12개 소스 fetch+파싱이 **합쳐 2ms**.
+- 대시보드 `/` 내부 분해: fetch+parse 2ms · transform 0.2ms · 칭호 12ms · **React SSR 약 45ms(76%)**.
+
+### 적용 완료
+1. **`prefetch={false}`** — `DashboardClient` 의 `/titles`·`/media` 링크 (커밋 `e182fac`).
+   두 링크가 대시보드 안에 있어서 홈을 열 때마다 두 페이지를 통째로 프리페치했다.
+   `*.segments/_tree` 등이 요청당 240~410ms 로 앱 최악이었고 585요청(전체 5.4%)이 CPU 35% 를 먹었다.
+2. **`/media` 삭제** (커밋 `dbfbbb2`) — 항목 2개뿐인 사문화된 페이지. `udReadOpts` 가 라우트 revalidate 로 전파돼 45초마다 재생성되고 있었다.
+3. **칭호 산출 결과 요청 간 캐시** — `app/lib/titles-cache.ts` 신규.
+   `/`·`/board/[id]`·`/matches/[id]`·`/players/[name]` 네 페이지가 `buildContexts`+`evaluate*` 를 요청마다 다시 돌리고 있었다.
+   입력이 45초 캐시된 같은 데이터라 결과가 항상 같으므로 `unstable_cache`(같은 45초·같은 `UD_READ_TAG`)로 감쌌다.
+   - 실측: 계산 13.69ms → 캐시 읽기 **0.26ms** (페이로드 50KB), 12요청당 compute 1회
+   - 라우트: `/` 70.4→57.2ms(−19%) · `/players/[name]` 32.8→24.0ms(−27%) · `/matches/[id]` 22.8→17.6ms(−23%)
+   - 칭호 계산에만 쓰던 6개 소스를 네 페이지에서 걷어냈다(캐시 안에서만 받는다)
+   - 동등성 검증: 선수 38명 전원에 대해 예전 인라인 계산과 결과가 **완전히 동일**함을 대조 확인
+
+### ⏭️ 남은 일 — 2단계: 대시보드 SSR 줄이기 (미착수)
+`/` 의 남은 57ms 중 **약 45ms 가 React SSR** 이다. `DashboardClient` 는 3,679줄이고
+경기 24개를 전부 서버 렌더하는데 첫 화면엔 3~4개만 보인다.
+
+- **방법**: `PlayerMatchGrid` 에 쓴 것과 같은 기법 — 처음 N개만 렌더하고
+  `IntersectionObserver` 로 스크롤 **도달 전에** 이어붙인다(`rootMargin` 넉넉히). 그러면 체감 변화가 없다.
+- **기대 효과**: −15~25ms (`/` 기준 −30~45%)
+- **위험**: 실재한다. 3,679줄 클라이언트 컴포넌트를 건드리는 작업이고, Radix `Tabs` 가
+  이미 비활성 탭을 언마운트하므로(`TabsContent`) 남은 이득은 활성 탭의 목록 길이에서만 나온다.
+  착수 전에 "경기 목록 렌더가 정말 그 45ms 의 대부분인가"를 먼저 계측할 것 —
+  `app/page.tsx` 에 `performance.now()` 를 끼워 넣는 방식으로 위에서 했던 대로.
+- **전제 조건**: 사용자 요구사항이 "**절대 UX 에 문제가 있으면 안 된다**" 다.
+  스크롤 중 빈칸이 보이거나 탭 전환이 느려지면 실패로 간주할 것.
+
+### 🚫 하지 말 것으로 결론난 것
+- **`auth()` 를 페이지에서 걷어내고 ISR 로 돌리기** — 이론상 CPU 를 방문 수에서 분리하는
+  가장 큰 한 방이지만, 개인화(로그인 상태·내 투표·관리자 버튼)가 나중에 채워지면서
+  화면이 한 번 바뀐다. UX 무회귀 원칙과 정면 충돌하므로 후보에서 제외했다.
+- `next.config.ts` 의 `remotePatterns: res.cloudinary.com` 은 지금 아무 데서도 안 쓰는 잔재
+  (비용과 무관하므로 급하지 않음).

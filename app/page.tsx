@@ -9,10 +9,6 @@ import {
   getAttendanceVoteRows,
   getVoteCommentRows,
   getFeaturedRows,
-  getFeedbackRows,
-  getBoardCommentRows,
-  getBoardPostRows,
-  getBoardLikeGiverRows,
 } from "./lib/backend";
 import { getMatchesRows } from "./lib/matches-backend";
 import DashboardClient, {
@@ -22,15 +18,8 @@ import DashboardClient, {
   NoticeData,
   PlayerData,
 } from "./components/DashboardClient";
-import {
-  buildContexts,
-  evaluatePlayer,
-  evaluateLeaders,
-  managerTitle,
-  pickBadges,
-  MANAGER_NAME,
-  type EarnedTitle,
-} from "./lib/titles";
+import { pickBadges, type EarnedTitle } from "./lib/titles";
+import { getTeamTitleData } from "./lib/titles-cache";
 import { parseSubstitutions } from "./lib/lineup";
 export default async function TeamDashboardPage({
   searchParams,
@@ -60,10 +49,6 @@ export default async function TeamDashboardPage({
     getAttendanceVoteRows(),
     getVoteCommentRows(),
     getFeaturedRows(),
-    getFeedbackRows(),
-    getBoardCommentRows(),
-    getBoardPostRows(),
-    getBoardLikeGiverRows(),
   ]);
   const rowsOf = (index: number): string[][] =>
     sheetResults[index].status === "fulfilled" ? sheetResults[index].value : [];
@@ -75,10 +60,6 @@ export default async function TeamDashboardPage({
   const rawAttendanceVotes = rowsOf(5);
   const rawVoteComments = rowsOf(6);
   const rawFeatured = rowsOf(7);
-  const rawFeedbacks = rowsOf(8);
-  const rawBoardComments = rowsOf(9);
-  const rawBoardPosts = rowsOf(10);
-  const rawBoardLikeGivers = rowsOf(11);
   // Google Sheets가 "08:00"을 시간 포맷으로 인식해 "08:00:00"으로 반환하는 경우를 정규화
   const normalizeTime = (raw: string): string => {
     if (!raw) return "미정";
@@ -206,30 +187,8 @@ export default async function TeamDashboardPage({
     voteCommentCounts[id] = (voteCommentCounts[id] || 0) + 1;
   });
 
-  // 칭호 산출: 선수별 자동 칭호 + 리더(팀 1위) + 감독
-  const contexts = buildContexts({
-    rawStats,
-    rawMatches,
-    rawLineups,
-    rawRoster,
-    rawAttendanceVotes,
-    rawVoteComments,
-    rawFeedbacks,
-    rawBoardComments,
-    rawBoardPosts,
-    rawBoardLikeGivers,
-  });
-  const leaders = evaluateLeaders(contexts);
-  const allTitles: Record<string, EarnedTitle[]> = {};
-  contexts.forEach((ctx, name) => {
-    const earned = evaluatePlayer(ctx);
-    const lead = leaders.get(name) ?? [];
-    const all = [...lead, ...earned];
-    if (name === MANAGER_NAME) all.unshift(managerTitle());
-    if (all.length) allTitles[name] = all;
-  });
-  // 감독이 stats에 없으면(선수로 안 뜀) 감독 뱃지만 단독 부여
-  if (!allTitles[MANAGER_NAME]) allTitles[MANAGER_NAME] = [managerTitle()];
+  // 칭호 산출은 45초 캐시된 팀 전체 결과를 재사용한다(요청마다 다시 계산하지 않는다).
+  const { allTitles } = await getTeamTitleData();
 
   // 대표 칭호(본인 선택) 맵
   const featuredMap: Record<string, string[]> = {};
