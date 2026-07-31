@@ -2,70 +2,29 @@
 // 개인 페이지 칭호 — 카드형. 일부만 보이고 아래 블러 + "전체 확인하기"로 펼침.
 // 라이트/다크 테마 대응: 어두운 배경에선 밝은 accent 텍스트(a.text), 라이트에선 진한 accent(a.ring).
 
-import { createElement, useState } from "react";
+import { useState } from "react";
 import { ChevronDown, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { EarnedTitle, topTitles } from "../lib/titles";
-import { titleIcon } from "../lib/title-icons";
+import { TitleBadge, titleSurface } from "./TitleBadges";
 import ModalPortal from "./ModalPortal";
 
-interface Accent {
-  ring: string;
-  text: string;
-  lightBg: string;
-  darkBg: string;
-  glow?: string;
-}
-
-const ELITE_ACHIEVEMENT_IDS = new Set([
-  "multiplayer",
-  "utility",
-  "concrete",
-  "fox",
-  "box2box",
-  "lastman",
-  "sweeperkeeper",
-  "attacking_fullback",
-  "attacking_centerback",
-  "invincible",
-  "unsung",
-  "devotion",
-  "onehit",
-  "loyalty",
-]);
-
-const isEliteAchievement = (id: string) =>
-  ELITE_ACHIEVEMENT_IDS.has(id.replace(/-(?:flat|[0-3])$/, ""));
-
-function accentOf(t: EarnedTitle): Accent {
-  if (t.variant === "manager") return { ring: "#D4A017", text: "#FFD978", lightBg: "linear-gradient(135deg,#fff9e8 0%,#f5e7bd 100%)", darkBg: "linear-gradient(135deg,#241a3d 0%,#17101f 55%,#34240b 100%)", glow: "rgba(255,196,70,0.22)" };
-  if (t.variant === "leader") return { ring: "#E0A100", text: "#FFD45A", lightBg: "linear-gradient(135deg,#fffbed 0%,#f8e8ad 100%)", darkBg: "linear-gradient(135deg,#241d0a 0%,#16140d 58%,#302407 100%)", glow: "rgba(255,200,60,0.18)" };
-  if (t.hidden) return { ring: "#22D3EE", text: "#A5F3FC", lightBg: "linear-gradient(125deg,#ecfeff 0%,#e0f2fe 42%,#f3e8ff 100%)", darkBg: "linear-gradient(125deg,#061b2c 0%,#09263b 42%,#21113b 100%)", glow: "rgba(34,211,238,0.24)" };
-  if (isEliteAchievement(t.id)) return { ring: "#4F7FDB", text: "#BFDBFE", lightBg: "linear-gradient(135deg,#edf4ff 0%,#e4e9f8 58%,#eee9f8 100%)", darkBg: "linear-gradient(135deg,#102544 0%,#141c35 58%,#241b38 100%)", glow: "rgba(79,127,219,0.13)" };
-  if (t.tier === null) return { ring: "#718096", text: "#D7DEE8", lightBg: "linear-gradient(135deg,#f1f3f6 0%,#e7ebf0 72%,#e9e5ef 100%)", darkBg: "linear-gradient(135deg,#17202d 0%,#111827 72%,#1b1924 100%)" };
-  const m: Accent[] = [
-    { ring: "#B87333", text: "#F1B678", lightBg: "linear-gradient(135deg,#fff7ed 0%,#f2ddc7 100%)", darkBg: "linear-gradient(135deg,#2b1b12 0%,#171311 100%)" },
-    { ring: "#8291A6", text: "#DCE6F3", lightBg: "linear-gradient(135deg,#f8fafc 0%,#dfe7f0 100%)", darkBg: "linear-gradient(135deg,#202938 0%,#121722 100%)" },
-    { ring: "#D4A017", text: "#FFE37C", lightBg: "linear-gradient(135deg,#fffbea 0%,#f6e5a7 100%)", darkBg: "linear-gradient(135deg,#292109 0%,#17150d 100%)", glow: "rgba(245,206,90,0.14)" },
-    { ring: "#A855F7", text: "#E9D5FF", lightBg: "linear-gradient(135deg,#faf5ff 0%,#eadcff 50%,#ffe4eb 100%)", darkBg: "linear-gradient(135deg,#26123e 0%,#171127 52%,#321524 100%)", glow: "rgba(168,85,247,0.2)" },
-  ];
-  return m[t.tier];
-}
+// 카드 색은 뱃지와 같은 금속에서 파생시킨다(titleSurface). 예전엔 여기서 별도 팔레트를
+// 들고 있어서 라인업 뱃지와 개인 페이지 카드의 색 체계가 서로 달랐다.
 
 function TitleCard({ title, isLight, onClick }: { title: EarnedTitle; isLight: boolean; onClick: () => void }) {
-  const a = accentOf(title);
-  // 라이트 모드: 밝은 accent(a.text)는 흰 배경에서 안 보여 진한 a.ring 사용
-  const fg = isLight ? a.ring : a.text;
-  const icon = createElement(titleIcon(title.icon), { size: 17, strokeWidth: 2.5 });
+  const s = titleSurface(title, isLight);
   return (
     <button
       type="button"
       onClick={onClick}
-      className="relative flex min-h-[88px] min-w-0 flex-col items-center overflow-hidden rounded-[15px] p-2 text-center transition-transform active:scale-[0.97]"
+      className="relative flex min-h-[96px] min-w-0 flex-col items-center justify-start overflow-hidden rounded-[15px] px-2 pb-2 pt-2.5 text-center transition-transform active:scale-[0.97]"
       style={{
-        background: isLight ? a.lightBg : a.darkBg,
-        border: `1px solid ${a.ring}55`,
-        boxShadow: a.glow ? `0 5px 18px ${a.glow}, inset 0 1px rgba(255,255,255,0.12)` : "inset 0 1px rgba(255,255,255,0.1)",
+        background: s.background,
+        border: `1px solid ${s.border}`,
+        boxShadow: s.glow
+          ? `0 5px 18px ${s.glow}, inset 0 1px rgba(255,255,255,0.12)`
+          : "inset 0 1px rgba(255,255,255,0.1)",
       }}
     >
       {title.hidden && (
@@ -76,29 +35,20 @@ function TitleCard({ title, isLight, onClick }: { title: EarnedTitle; isLight: b
         </>
       )}
       <div className="relative flex w-full items-start justify-center">
-        <span
-          className="flex shrink-0 items-center justify-center rounded-[11px]"
-          style={{
-            width: 34,
-            height: 34,
-            color: fg,
-            background: isLight ? "rgba(255,255,255,0.68)" : "rgba(3,7,18,0.48)",
-            border: `1px solid ${a.ring}99`,
-            boxShadow: title.hidden ? `0 0 12px ${a.glow}` : `inset 0 1px rgba(255,255,255,0.16)`,
-          }}
-        >
-          {icon}
-        </span>
+        <TitleBadge title={title} size={40} />
         {(title.hidden || title.tierLabel) && (
           <span
             className="absolute right-0 top-0 max-w-[54px] truncate rounded-full px-1 py-0.5 text-[6px] font-black"
-            style={{ color: fg, background: `${a.ring}22`, border: `1px solid ${a.ring}33` }}
+            style={{ color: s.fg, background: s.border, border: `1px solid ${s.border}` }}
           >
             {title.hidden ? "HIDDEN" : title.tierLabel}
           </span>
         )}
       </div>
-      <span className="relative mt-2 line-clamp-2 text-[10px] font-black leading-[1.2] tracking-[-0.02em]" style={{ color: fg }}>
+      <span
+        className="relative mt-2 line-clamp-2 text-[10px] font-black leading-[1.2] tracking-[-0.02em]"
+        style={{ color: s.fg }}
+      >
         {title.name}
       </span>
     </button>
@@ -120,10 +70,7 @@ export default function PlayerTitleCards({ titles }: { titles: EarnedTitle[] }) 
   const sorted = topTitles(titles, titles.length); // 등급/리더/감독 우선 정렬
   const hasMore = sorted.length > PREVIEW;
   const shown = expanded ? sorted : sorted.slice(0, PREVIEW);
-  const selectedAccent = selected ? accentOf(selected) : null;
-  const selectedFg = selectedAccent
-    ? (isLight ? selectedAccent.ring : selectedAccent.text)
-    : undefined;
+  const selectedSurface = selected ? titleSurface(selected, isLight) : null;
 
   return (
     <>
@@ -147,7 +94,7 @@ export default function PlayerTitleCards({ titles }: { titles: EarnedTitle[] }) 
       </div>
 
       {/* body 로 포털해야 "지금 보고 있는 화면" 아래쪽에 뜬다 */}
-      {selected && selectedAccent && (
+      {selected && selectedSurface && (
         <ModalPortal>
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur-sm"
@@ -159,9 +106,10 @@ export default function PlayerTitleCards({ titles }: { titles: EarnedTitle[] }) 
             aria-label={`${selected.name} 상세 정보`}
             className="relative w-full max-w-sm overflow-hidden rounded-[26px] p-5 shadow-2xl"
             style={{
-              background: isLight ? selectedAccent.lightBg : selectedAccent.darkBg,
-              border: `1px solid ${selectedAccent.ring}77`,
-              boxShadow: selectedAccent.glow ? `0 18px 60px ${selectedAccent.glow}` : undefined,
+              // 반투명 금속 틴트를 불투명 판 위에 얹는다 (마지막 레이어가 바탕색)
+              background: `${selectedSurface.background}, ${isLight ? "#F7F9FC" : "#0C1220"}`,
+              border: `1px solid ${selectedSurface.border}`,
+              boxShadow: selectedSurface.glow ? `0 18px 60px ${selectedSurface.glow}` : undefined,
             }}
             onClick={(event) => event.stopPropagation()}
           >
@@ -181,15 +129,10 @@ export default function PlayerTitleCards({ titles }: { titles: EarnedTitle[] }) 
             </button>
 
             <div className="relative flex items-center gap-3">
-              <span
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
-                style={{ color: selectedFg, background: "rgba(255,255,255,0.1)", border: `1px solid ${selectedAccent.ring}88` }}
-              >
-                {createElement(titleIcon(selected.icon), { size: 23, strokeWidth: 2.4 })}
-              </span>
+              <TitleBadge title={selected} size={52} />
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-[15px] font-black" style={{ color: selectedFg }}>{selected.name}</p>
+                  <p className="text-[15px] font-black" style={{ color: selectedSurface.fg }}>{selected.name}</p>
                   {selected.hidden && <span className="rounded-full bg-cyan-300/15 px-1.5 py-0.5 text-[7px] font-black text-cyan-600 dark:text-cyan-200">HIDDEN</span>}
                 </div>
                 <p className="mt-0.5 text-[9px] font-bold text-gray-500 dark:text-white/45">
@@ -207,7 +150,7 @@ export default function PlayerTitleCards({ titles }: { titles: EarnedTitle[] }) 
                 {selected.stats.map((stat) => (
                   <div key={`${stat.label}-${stat.value}`} className="rounded-xl bg-white/45 px-3 py-2.5 dark:bg-black/20">
                     <p className="text-[8px] font-bold text-gray-500 dark:text-white/40">{stat.label}</p>
-                    <p className="mt-0.5 text-[13px] font-black tabular-nums" style={{ color: selectedFg }}>{stat.value}</p>
+                    <p className="mt-0.5 text-[13px] font-black tabular-nums" style={{ color: selectedSurface.fg }}>{stat.value}</p>
                   </div>
                 ))}
               </div>

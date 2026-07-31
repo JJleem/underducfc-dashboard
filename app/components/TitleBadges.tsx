@@ -48,11 +48,31 @@ const HIDDEN_METAL: Metal = {
 // 감독 — 로열 골드 (모양으로 구분하므로 금속은 리더보다 더 깊게)
 const MANAGER_METAL: Metal = { ramp: ["#FFF6CE", "#FFDF8F", "#E8B21C", "#7A4A00", "#3C2200"], aura: true };
 
-function metalOf(t: EarnedTitle): Metal {
+/** 칭호 → 금속. 뱃지 밖(개인 페이지 카드 등)에서도 같은 색을 쓰라고 내보낸다. */
+export function titleMetal(t: EarnedTitle): Metal {
+  if (t.variant === "manager") return MANAGER_METAL;
   if (t.variant === "leader") return LEADER_METAL;
   if (t.hidden) return HIDDEN_METAL;
   if (isEliteAchievement(t.id)) return ELITE_METAL;
   return t.tier === null ? FLAT_METAL : TIER_METAL[t.tier];
+}
+
+/**
+ * 칭호 카드·모달이 쓸 표면 색. 뱃지와 같은 금속에서 파생시켜
+ * 한 화면에 두 개의 색 체계가 생기지 않게 한다.
+ */
+export function titleSurface(t: EarnedTitle, isLight: boolean) {
+  const metal = titleMetal(t);
+  const [, hi, base, shadow, dark] = metal.ramp;
+  return {
+    background: isLight
+      ? `linear-gradient(135deg, ${rgba(hi, 0.5)} 0%, ${rgba(base, 0.14)} 100%)`
+      : `linear-gradient(135deg, ${rgba(base, 0.17)} 0%, ${rgba(dark, 0.34)} 100%)`,
+    border: isLight ? rgba(shadow, 0.34) : rgba(base, 0.42),
+    /** 제목·수치 색 */
+    fg: isLight ? shadow : hi,
+    glow: metal.aura ? rgba(base, isLight ? 0.22 : 0.3) : undefined,
+  };
 }
 
 // 에나멜(면) 색. 라이트모드에서도 어둡게 유지한다 — 밝게 바꾸면 그 위의
@@ -209,7 +229,7 @@ export function TitleBadge({ title, size = 26 }: { title: EarnedTitle; size?: nu
 
   return (
     <span title={label} aria-label={label} style={{ display: "inline-flex", flex: "0 0 auto" }}>
-      <Coin title={title} size={size} metal={metalOf(title)} />
+      <Coin title={title} size={size} metal={titleMetal(title)} />
     </span>
   );
 }
@@ -294,7 +314,7 @@ function TitleChip({ title }: { title: EarnedTitle }) {
   }
 
   // 칩도 같은 금속을 쓴다 — 테두리는 위가 밝은 금속, 글자·아이콘은 하이라이트 톤.
-  const [, hi, base, shadow] = metalOf(title).ramp;
+  const [, hi, base, shadow] = titleMetal(title).ramp;
   return (
     <span
       title={label}
@@ -302,7 +322,7 @@ function TitleChip({ title }: { title: EarnedTitle }) {
         ...chipBase,
         color: hi,
         background: `linear-gradient(#11182e,#11182e) padding-box, linear-gradient(135deg, ${base}, ${shadow}) border-box`,
-        boxShadow: metalOf(title).aura ? `0 0 7px ${rgba(base, 0.4)}` : undefined,
+        boxShadow: titleMetal(title).aura ? `0 0 7px ${rgba(base, 0.4)}` : undefined,
       }}
     >
       {icon}
