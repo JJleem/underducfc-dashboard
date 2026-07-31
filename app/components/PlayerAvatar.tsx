@@ -40,13 +40,15 @@ export default function PlayerAvatar({
         boxShadow: circle ? `inset 0 0 0 2px ${accent}66` : undefined,
       }}
     >
-      <User
-        className={`mb-3 transition-opacity duration-150 ${
-          loaded ? "opacity-0" : "opacity-100"
-        }`}
-        style={{ width: width * 0.52, height: width * 0.52, color: accent }}
-        strokeWidth={1.4}
-      />
+      {/* 선수 사진은 배경이 투명한 누끼라, 실루엣을 페이드로 숨기면 사라지는 동안
+          사진의 투명한 부분으로 실루엣이 비쳐 보인다. 사진이 뜨는 즉시 아예 언마운트. */}
+      {!loaded && (
+        <User
+          className="mb-3"
+          style={{ width: width * 0.52, height: width * 0.52, color: accent }}
+          strokeWidth={1.4}
+        />
+      )}
       {src && !failed && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -55,11 +57,16 @@ export default function PlayerAvatar({
           loading="eager"
           fetchPriority="high"
           // 원형은 얼굴이 차게 cover+top, 카드형은 전신이 잘리지 않게 contain+bottom
-          className={`absolute inset-0 h-full w-full transition-opacity duration-150 ${
+          className={`absolute inset-0 h-full w-full ${
             circle
               ? "object-cover object-top"
               : "object-contain object-bottom drop-shadow-[0_6px_8px_rgba(0,0,0,0.45)]"
-          } ${loaded ? "opacity-100" : "opacity-0"}`}
+          }`}
+          // 캐시된 이미지는 하이드레이션 전에 로드가 끝나 onLoad 가 안 잡힌다.
+          // 그러면 실루엣이 사진 뒤에 계속 남으므로 complete 를 직접 확인한다.
+          ref={(el) => {
+            if (el?.complete && el.naturalWidth > 0) setLoaded(true);
+          }}
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
         />
