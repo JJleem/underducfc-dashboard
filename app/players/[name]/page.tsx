@@ -2,17 +2,10 @@
 // 선수 전용 페이지 (페이스온). 칭호 + 스탯 + 출석률 + 최근 활약.
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  Crown,
-  Flame,
-  Handshake,
-  Spline,
-  Target,
-  UsersRound,
-  Volleyball,
-} from "lucide-react";
+import { Crown, Flame, Spline, Volleyball } from "lucide-react";
 import { auth } from "@/auth";
 import { getMatchesRows } from "../../lib/matches-backend";
+import { getOpponentLogo } from "../../lib/opponent-logos";
 import {
   getStatsRows,
   getRosterRows,
@@ -40,6 +33,7 @@ import PrefPosEditor from "../../components/PrefPosEditor";
 import PlayerAvatar from "../../components/PlayerAvatar";
 import PlayerFace from "../../components/PlayerFace";
 import PlayerProfileBackButton from "../../components/PlayerProfileBackButton";
+import PlayerMatchGrid, { type GridMatch } from "../../components/PlayerMatchGrid";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +57,69 @@ function ScorePips({ goals, assists, size = 12 }: { goals: number; assists: numb
         </span>
       )}
     </>
+  );
+}
+
+/**
+ * 하이라이트·케미 공통 줄.
+ * 예전엔 줄마다 색 테두리 + 그라데이션 + 아이콘 배지가 따로 붙어서 여섯 개 섹션이
+ * 저마다 다른 색으로 소리쳤다. 골격을 하나로 통일하고 색은 데이터(얼굴·숫자)에만 남긴다.
+ */
+function ListRow({
+  left,
+  label,
+  value,
+  amount,
+  unit,
+  href,
+}: {
+  left: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  amount: React.ReactNode;
+  unit: string;
+  href?: string;
+}) {
+  const inner = (
+    <>
+      <div className="shrink-0">{left}</div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[9px] font-black tracking-wide text-gray-400 dark:text-white/40">{label}</div>
+        <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12.5px] font-black text-gray-900 dark:text-white">
+          {value}
+        </div>
+      </div>
+      <div className="shrink-0 text-right leading-none">
+        <div className="text-[15px] font-black tabular-nums text-gray-900 dark:text-white">{amount}</div>
+        <div className="mt-1 text-[9px] font-bold text-gray-400">{unit}</div>
+      </div>
+    </>
+  );
+
+  // 줄 안에 선수 링크가 들어가는 경우가 있어 href 가 있는 줄만 Link 로 감싼다(중첩 방지).
+  return href ? (
+    <Link href={href} className="flex items-center gap-3 px-3 py-2.5 active:bg-gray-50 dark:active:bg-white/[0.04]">
+      {inner}
+    </Link>
+  ) : (
+    <div className="flex items-center gap-3 px-3 py-2.5">{inner}</div>
+  );
+}
+
+/** 리스트 줄 왼쪽에 들어가는 상대팀 마크. 로고가 없으면 팀명 첫 글자. */
+function OpponentMark({ name }: { name: string }) {
+  const logo = getOpponentLogo(name);
+  return logo ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={logo}
+      alt=""
+      className="h-7 w-7 rounded-full bg-white object-cover ring-1 ring-gray-200 dark:ring-white/10"
+    />
+  ) : (
+    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-[11px] font-black text-gray-400 dark:bg-white/10 dark:text-gray-500">
+      {name.trim().charAt(0) || "?"}
+    </span>
   );
 }
 
@@ -166,15 +223,23 @@ export default async function PlayerPage({
 
   // 출석률 + 최근 활약 경기
   const completed = rawMatches.slice(1)
-    .map((r, i) => ({
-      id: i,
-      date: r[0] || "",
-      opponent: (r[3] || "").trim() || "상대 미정",
-      result: r[6] || "예정",
-      goals: r[8] || "",
-      assists: r[9] || "",
-      attendees: r[11] || "",
-    }))
+    .map((r, i) => {
+      const loc = (r[2] || "").trim();
+      return {
+        id: i,
+        date: r[0] || "",
+        location: loc === "미정" ? "" : loc,
+        opponent: (r[3] || "").trim() || "상대 미정",
+        ourScore: r[4] || "-",
+        theirScore: r[5] || "-",
+        result: r[6] || "예정",
+        goals: r[8] || "",
+        assists: r[9] || "",
+        mom: r[10] || "",
+        attendees: r[11] || "",
+        photos: r[12] || "",
+      };
+    })
     .filter((m) => m.result !== "예정");
 
   const withAttendees = completed.filter((m) => m.attendees.trim());
@@ -187,9 +252,25 @@ export default async function PlayerPage({
 
   const countIn = (csv: string) =>
     csv.split(",").map((s) => s.trim()).filter((s) => s === name).length;
-  const contributed = completed
-    .filter((m) => countIn(m.goals) > 0 || countIn(m.assists) > 0)
-    .slice(-6)
+
+  // 경기 그리드 — 골·도움이 있는 경기만이 아니라 "출전한 모든 경기". 인스타 프로필이
+  // 잘 나온 사진만이 아니라 내 게시물 전부인 것과 같다. 최신순.
+  const myMatches: GridMatch[] = completed
+    .filter((m) => m.attendees.split(",").map((s) => s.trim()).includes(name))
+    .map((m) => ({
+      id: m.id,
+      date: m.date,
+      opponent: m.opponent,
+      location: m.location,
+      result: m.result,
+      ourScore: m.ourScore,
+      theirScore: m.theirScore,
+      photos: m.photos.split(",").map((s) => s.trim()).filter((s) => s.startsWith("http")),
+      logo: getOpponentLogo(m.opponent),
+      goals: countIn(m.goals),
+      assists: countIn(m.assists),
+      isMom: m.mom.split(",").map((s) => s.trim()).includes(name),
+    }))
     .reverse();
 
   // 현재 연속 출석 (최근 경기부터 거슬러 연속 참석)
@@ -324,145 +405,129 @@ export default async function PlayerPage({
           )}
         </section>
 
-        {/* 칭호 — 인스타 스토리 하이라이트 자리 */}
+        {/* 칭호 — 인스타 스토리 하이라이트 자리.
+            개수 표기는 뺐다. 동그라미 밑에 이름이 붙어 있어 무엇인지 이미 읽히고,
+            12개든 3개든 사용자가 할 행동이 달라지지 않는다(레퍼런스에도 개수가 없다). */}
         <section className="px-4 mt-5">
           <div className="mb-1 flex items-center justify-between gap-2">
-            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest">
-              칭호 <span className="text-gray-400 font-bold">({titles.length})</span>
-            </p>
+            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest">칭호</p>
             {canEdit && <FeaturedEditor titles={titles} current={featuredIds} />}
           </div>
           <PlayerTitleCards titles={titles} featuredIds={featuredIds} />
         </section>
 
-        {/* 최고의 듀오 */}
-        {relations.bestDuo && (
-          <section className="px-4 mt-4">
-            <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/30 bg-gradient-to-r from-emerald-400/10 to-transparent px-4 py-3">
-              <div className="flex items-center -space-x-2 shrink-0">
-                {relations.bestDuo.names.map((nm) => (
-                  <Link key={nm} href={`/players/${encodeURIComponent(nm)}`} className="active:opacity-60">
-                    <PlayerFace name={nm} size={36} />
-                  </Link>
-                ))}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">최고의 듀오</p>
-                <p className="text-[13px] font-black text-gray-900 dark:text-white truncate">
-                  {name} <span className="text-gray-400 font-bold">×</span>{" "}
-                  {relations.bestDuo.names.map((nm, i) => (
-                    <span key={nm}>
-                      {i > 0 && <span className="text-gray-400"> · </span>}
-                      <Link href={`/players/${encodeURIComponent(nm)}`} className="underline-offset-2 hover:underline">
-                        {nm}
-                      </Link>
+        {/* 하이라이트 · 케미 — 예전엔 에메랄드·핑크·스카이로 테두리와 그라데이션이 제각각인
+            카드 다섯 개가 따로 놀았다. 골격이 같은 줄로 묶고 구분은 헤어라인 하나로 끝낸다.
+            색은 크롬에서 빼고 데이터(얼굴·숫자)에만 남긴다. */}
+        {(relations.bestDuo ||
+          relations.bestGame ||
+          relations.mostPlayedWith ||
+          relations.assistRecipients ||
+          relations.assistGivers) && (
+          <section className="px-4 mt-5">
+            <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 dark:border-white/[0.06] dark:bg-white/[0.03] dark:divide-white/[0.06]">
+              {relations.bestDuo && (
+                <ListRow
+                  left={
+                    <div className="flex items-center -space-x-2">
+                      {relations.bestDuo.names.map((nm) => (
+                        <Link
+                          key={nm}
+                          href={`/players/${encodeURIComponent(nm)}`}
+                          className="active:opacity-60"
+                        >
+                          <PlayerFace name={nm} size={28} />
+                        </Link>
+                      ))}
+                    </div>
+                  }
+                  label="최고의 듀오"
+                  value={
+                    <span className="truncate">
+                      {relations.bestDuo.names.map((nm, i) => (
+                        <span key={nm}>
+                          {i > 0 && <span className="text-gray-400"> · </span>}
+                          <Link
+                            href={`/players/${encodeURIComponent(nm)}`}
+                            className="underline-offset-2 hover:underline"
+                          >
+                            {nm}
+                          </Link>
+                        </span>
+                      ))}
                     </span>
-                  ))}
-                </p>
-              </div>
-              <span className="shrink-0 text-right">
-                <span className="text-[16px] font-black text-emerald-500 tabular-nums">{relations.bestDuo.count}</span>
-                <span className="text-[10px] font-bold text-gray-400 ml-0.5">골 합작</span>
-              </span>
-            </div>
-          </section>
-        )}
+                  }
+                  amount={relations.bestDuo.count}
+                  unit="골 합작"
+                />
+              )}
 
-        {/* 시즌 베스트 경기 */}
-        {relations.bestGame && (
-          <section className="px-4 mt-6">
-            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2">
-              시즌 베스트 경기
-            </p>
-            <Link
-              href={`/matches/${relations.bestGame.matchId}`}
-              className="block rounded-2xl border border-[#FF8FA3]/30 dark:border-[#FFB6C1]/20 bg-gradient-to-r from-[#FF8FA3]/10 to-transparent dark:from-[#FFB6C1]/10 px-4 py-3 active:scale-[0.98] transition-transform"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-[13px] font-black text-gray-900 dark:text-white truncate">
-                    vs {relations.bestGame.opponent}
-                  </p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">{relations.bestGame.date}</p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <div className="flex items-center justify-end gap-1.5 text-[12px]">
-                    <ScorePips goals={relations.bestGame.goals} assists={relations.bestGame.assists} size={13} />
-                  </div>
-                  <div className="flex items-center justify-end gap-1.5 mt-1">
-                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-[#FF8FA3]/15 text-[#FF8FA3] dark:text-[#FFB6C1]">
-                      공격P {relations.bestGame.points}
-                    </span>
-                    {relations.bestGame.isMom && (
-                      <span className="inline-flex items-center gap-0.5 text-[10px] font-black px-1.5 py-0.5 rounded bg-gradient-to-br from-amber-200 to-amber-500 text-amber-950">
-                        <Crown width={11} height={11} strokeWidth={2.6} /> MOM
+              {relations.bestGame && (
+                <ListRow
+                  left={<OpponentMark name={relations.bestGame.opponent} />}
+                  label={`시즌 베스트 경기 · ${relations.bestGame.date}`}
+                  value={
+                    <>
+                      <span className="truncate">vs {relations.bestGame.opponent}</span>
+                      <span className="flex shrink-0 items-center gap-1.5 text-[11px]">
+                        <ScorePips
+                          goals={relations.bestGame.goals}
+                          assists={relations.bestGame.assists}
+                          size={12}
+                        />
                       </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </section>
-        )}
+                      {relations.bestGame.isMom && (
+                        <Crown width={12} height={12} strokeWidth={2.6} className="shrink-0 text-amber-400" />
+                      )}
+                    </>
+                  }
+                  amount={relations.bestGame.points}
+                  unit="공격P"
+                  href={`/matches/${relations.bestGame.matchId}`}
+                />
+              )}
 
-        {/* 케미 · 관계 */}
-        {(relations.mostPlayedWith || relations.assistRecipients || relations.assistGivers) && (
-          <section className="px-4 mt-6">
-            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2">
-              케미
-            </p>
-            <div className="space-y-1.5">
               {[
-                { icon: UsersRound, tint: "#38BDF8", label: "가장 많이 함께 뛴 동료", rel: relations.mostPlayedWith, unit: "경기" },
-                { icon: Target, tint: "#34D399", label: "내 도움을 가장 많이 받은 선수", rel: relations.assistRecipients, unit: "골" },
-                { icon: Handshake, tint: "#FF8FA3", label: "나를 가장 많이 살린 도우미", rel: relations.assistGivers, unit: "도움" },
+                { label: "가장 많이 함께 뛴 동료", rel: relations.mostPlayedWith, unit: "경기" },
+                { label: "내 도움을 가장 많이 받은 선수", rel: relations.assistRecipients, unit: "골" },
+                { label: "나를 가장 많이 살린 도우미", rel: relations.assistGivers, unit: "도움" },
               ].map((item) =>
                 item.rel ? (
-                  <div
+                  <ListRow
                     key={item.label}
-                    className="flex items-center gap-3 rounded-2xl border px-3 py-2.5"
-                    style={{
-                      borderColor: `${item.tint}33`,
-                      background: `linear-gradient(90deg, ${item.tint}14, transparent 70%)`,
-                    }}
-                  >
-                    <span
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-                      style={{ background: `${item.tint}1f`, color: item.tint }}
-                    >
-                      <item.icon width={17} height={17} strokeWidth={2.4} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[9.5px] font-black tracking-wide" style={{ color: item.tint }}>
-                        {item.label}
-                      </p>
-                      <div className="flex items-center gap-x-2.5 gap-y-1 flex-wrap mt-1">
-                        {item.rel.names.map((nm) => (
-                          <Link
-                            key={nm}
-                            href={`/players/${encodeURIComponent(nm)}`}
-                            className="inline-flex items-center gap-1.5 active:opacity-60"
-                          >
-                            <PlayerFace name={nm} size={20} />
-                            <span className="text-[12.5px] font-black text-gray-900 dark:text-white underline-offset-2 hover:underline">{nm}</span>
-                          </Link>
+                    left={
+                      <div className="flex items-center -space-x-2">
+                        {item.rel.names.slice(0, 2).map((nm) => (
+                          <PlayerFace key={nm} name={nm} size={28} />
                         ))}
                       </div>
-                    </div>
-                    <span className="shrink-0 text-right leading-none">
-                      <span className="block text-[17px] font-black tabular-nums" style={{ color: item.tint }}>
-                        {item.rel.count}
+                    }
+                    label={item.label}
+                    value={
+                      <span className="truncate">
+                        {item.rel.names.map((nm, i) => (
+                          <span key={nm}>
+                            {i > 0 && <span className="text-gray-400"> · </span>}
+                            <Link
+                              href={`/players/${encodeURIComponent(nm)}`}
+                              className="underline-offset-2 hover:underline"
+                            >
+                              {nm}
+                            </Link>
+                          </span>
+                        ))}
                       </span>
-                      <span className="block text-[9px] font-bold text-gray-400 mt-0.5">{item.unit}</span>
-                    </span>
-                  </div>
+                    }
+                    amount={item.rel.count}
+                    unit={item.unit}
+                  />
                 ) : null
               )}
             </div>
           </section>
         )}
 
-        {/* 포지션 출전 분포 */}
+        {/* 포지션 출전 분포 — 막대 색은 포지션 고유색이라 그대로 둔다(데이터 색) */}
         {posDist.length > 0 && (
           <section className="px-4 mt-6">
             <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2">
@@ -492,7 +557,7 @@ export default async function PlayerPage({
           </section>
         )}
 
-        {/* 출석률 */}
+        {/* 출석률 — 핑크 고정이던 걸 선수 포지션 색으로 맞춰 히어로(링·등번호)와 한 색으로 묶는다 */}
         {attendRate !== null && (
           <section className="px-4 mt-6">
             <div className="flex items-center justify-between mb-1.5">
@@ -506,42 +571,23 @@ export default async function PlayerPage({
                   </span>
                 )}
               </div>
-              <span className="text-[13px] font-black text-[#FF8FA3] dark:text-[#FFB6C1] tabular-nums">{attendRate}%</span>
+              <span className="text-[13px] font-black tabular-nums" style={{ color: accent }}>
+                {attendRate}%
+              </span>
             </div>
             <div className="h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-[#FFB6C1] to-[#FF8FA3]" style={{ width: `${attendRate}%` }} />
+              <div className="h-full rounded-full" style={{ width: `${attendRate}%`, background: accent }} />
             </div>
           </section>
         )}
 
-        {/* 최근 활약 경기 */}
-        {contributed.length > 0 && (
-          <section className="px-4 mt-6">
-            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest mb-2">
-              최근 활약한 경기
+        {/* 경기 — 인스타 피드 그리드. 좌우 여백 없이 화면 끝까지 붙어야 피드로 읽힌다. */}
+        {myMatches.length > 0 && (
+          <section className="mt-6">
+            <p className="px-4 mb-2 text-[10px] font-black text-gray-500 dark:text-gray-400 tracking-widest">
+              경기
             </p>
-            <div className="space-y-1.5">
-              {contributed.map((m) => {
-                const g = countIn(m.goals);
-                const a = countIn(m.assists);
-                return (
-                  <Link
-                    key={m.id}
-                    href={`/matches/${m.id}`}
-                    className="flex items-center justify-between rounded-xl bg-white dark:bg-white/[0.03] border border-gray-100 dark:border-white/[0.06] px-3 py-2.5 active:scale-[0.98] transition-transform"
-                  >
-                    <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300 truncate">
-                      vs {m.opponent} <span className="text-gray-400 font-medium ml-1">{m.date}</span>
-                    </span>
-                    <span className="shrink-0 flex items-center gap-1.5 ml-2">
-                      <span className="inline-flex items-center gap-1.5 text-[11px]">
-                        <ScorePips goals={g} assists={a} />
-                      </span>
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
+            <PlayerMatchGrid matches={myMatches} />
           </section>
         )}
       </div>

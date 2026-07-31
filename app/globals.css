@@ -257,6 +257,19 @@ body {
   }
 }
 
+/* ── 경기 사진 타일 → 오버레이 전환 (PlayerMatchGrid) ──────
+   사진만 자기 자리에서 커지면 되고 나머지는 배경이 덮이는 것뿐이라,
+   문서 전체 크로스페이드는 짧게 끊고 사진 쪽에 시간을 준다.
+   미지원 브라우저(카톡 인앱 등)에서는 이 규칙이 통째로 무시되고 오버레이가 그냥 뜬다. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+}
+::view-transition-group(ud-match-visual) {
+  animation-duration: 280ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 /* 접근성: 모션 최소화 선호 시 비활성 */
 @media (prefers-reduced-motion: reduce) {
   .animate-page,
