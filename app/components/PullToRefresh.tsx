@@ -8,6 +8,7 @@ import { refreshAppData } from "../lib/actions";
 
 const THRESHOLD = 75; // 이 거리 이상 당기면 새로고침 발동
 const MAX_PULL = 120; // 최대 당김 거리
+const AXIS_LOCK_PX = 8; // 이만큼 움직이면 제스처 방향을 확정한다(가로/세로)
 
 export default function PullToRefresh({
   children,
@@ -21,6 +22,9 @@ export default function PullToRefresh({
   const [busting, setBusting] = React.useState(false);
   const refreshing = isPending || busting;
   const startY = React.useRef<number | null>(null);
+  const startX = React.useRef(0);
+  // 제스처 방향 락. 가로로 판정되면 그 터치는 끝까지 PTR이 손대지 않는다.
+  const axis = React.useRef<"undecided" | "vertical" | "horizontal">("undecided");
   const pullRef = React.useRef(0);
   const refreshingRef = React.useRef(false);
 
@@ -53,7 +57,10 @@ export default function PullToRefresh({
   }, [doRefresh]);
 
   React.useEffect(() => {
-    // 드로어/모달 내부, 또는 자체 스크롤 영역 안에서 시작된 터치는 무시
+    // 드로어/모달 내부, 또는 자체 스크롤 영역 안에서 시작된 터치는 무시.
+    // 세로뿐 아니라 가로 스크롤 영역도 봐야 한다 — 칭호 하이라이트·라인업·경기 목록처럼
+    // overflow-x-auto 인 줄은 세로로 안 넘쳐서 scrollHeight === clientHeight 이고,
+    // 세로만 검사하던 예전 판정을 통과하지 못해 PTR 이 가로 스와이프를 가로챘다.
     const isInsideScrollableOrDialog = (target: EventTarget | null) => {
       let node = target instanceof Element ? target : null;
       while (node && node !== document.body) {
@@ -64,18 +71,25 @@ export default function PullToRefresh({
           node.scrollHeight > node.clientHeight
         )
           return true;
+        if (
+          /(auto|scroll)/.test(style.overflowX) &&
+          node.scrollWidth > node.clientWidth
+        )
+          return true;
         node = node.parentElement;
       }
       return false;
     };
 
     const onTouchStart = (e: TouchEvent) => {
+      axis.current = "undecided";
       if (
         window.scrollY <= 0 &&
         !refreshingRef.current &&
         !isInsideScrollableOrDialog(e.target)
       ) {
         startY.current = e.touches[0].clientY;
+        startX.current = e.touches[0].clientX;
       } else {
         startY.current = null;
       }
@@ -83,7 +97,19 @@ export default function PullToRefresh({
 
     const onTouchMove = (e: TouchEvent) => {
       if (startY.current === null || refreshingRef.current) return;
+
       const delta = e.touches[0].clientY - startY.current;
+
+      // 방향이 정해지기 전에는 preventDefault 를 하지 않는다. 가로가 우세하면
+      // 그 터치는 컨테이너에 완전히 양보한다(가로 스크롤이 끊기지 않게).
+      if (axis.current === "undecided") {
+        const dx = Math.abs(e.touches[0].clientX - startX.current);
+        const dy = Math.abs(delta);
+        if (dx < AXIS_LOCK_PX && dy < AXIS_LOCK_PX) return;
+        axis.current = dx > dy ? "horizontal" : "vertical";
+      }
+      if (axis.current === "horizontal") return;
+
       if (delta > 0 && window.scrollY <= 0) {
         // 저항감: 당길수록 천천히 늘어남
         const eased = Math.min(MAX_PULL, delta * 0.45);
@@ -97,6 +123,7 @@ export default function PullToRefresh({
     };
 
     const onTouchEnd = () => {
+      axis.current = "undecided";
       if (startY.current === null) return;
       startY.current = null;
       if (pullRef.current >= THRESHOLD) {
