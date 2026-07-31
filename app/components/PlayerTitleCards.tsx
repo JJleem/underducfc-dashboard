@@ -150,7 +150,7 @@ export default function PlayerTitleCards({ titles }: { titles: EarnedTitle[] }) 
       {selected && selectedAccent && (
         <ModalPortal>
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 px-4 pb-5 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur-sm"
           onClick={() => setSelected(null)}
         >
           <div

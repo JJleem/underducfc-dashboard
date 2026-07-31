@@ -321,7 +321,7 @@ export default function BoardClient({
           onClick={() => setChoosing(false)}
         >
           <div
-            className="w-full max-w-md space-y-2.5 rounded-t-3xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-[#161618] sm:rounded-3xl"
+            className="w-full max-w-md space-y-2.5 rounded-t-3xl border border-gray-200 bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] dark:border-white/10 dark:bg-[#161618] sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-1 flex items-center justify-between">
@@ -365,7 +365,7 @@ export default function BoardClient({
         <ModalPortal>
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={() => setWriting(false)}>
           <div
-            className="w-full max-w-md space-y-2.5 rounded-t-3xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-[#161618] sm:rounded-3xl"
+            className="w-full max-w-md space-y-2.5 rounded-t-3xl border border-gray-200 bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] dark:border-white/10 dark:bg-[#161618] sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-1 flex items-center justify-between">
@@ -414,7 +414,7 @@ export default function BoardClient({
       {/* 토스트 — 모달과 같은 이유로 포털이 필요하다 */}
       {toast && (
         <ModalPortal>
-        <div className="fixed bottom-24 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-gray-900/90 px-4 py-2 text-xs font-bold text-white shadow-lg dark:bg-white/90 dark:text-black">
+        <div className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 z-[60] flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-gray-900/90 px-4 py-2 text-xs font-bold text-white shadow-lg dark:bg-white/90 dark:text-black">
           <Check className="h-3.5 w-3.5" /> {toast}
         </div>
         </ModalPortal>

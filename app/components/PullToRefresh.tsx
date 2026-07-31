@@ -129,7 +129,8 @@ export default function PullToRefresh({
       <div
         className="fixed left-1/2 z-[60] pointer-events-none"
         style={{
-          top: 0,
+          // PWA에서 화면이 상태바 밑까지 확장되므로 그만큼 내려야 시계/배터리와 안 겹친다
+          top: "env(safe-area-inset-top)",
           transform: `translate(-50%, ${displayPull - 44}px)`,
           opacity: displayPull > 4 ? Math.min(1, progress * 1.2) : 0,
           transition:
