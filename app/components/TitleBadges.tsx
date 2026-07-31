@@ -6,96 +6,170 @@ import { createElement, type CSSProperties } from "react";
 import { EarnedTitle, TierIndex, topTitles, isEliteAchievement } from "../lib/titles";
 import { titleIcon } from "../lib/title-icons";
 
-interface TierVis {
-  grad: [string, string]; // 테두리 그라디언트
-  glow: string | null; // 외곽 글로우
-  icon: string; // 아이콘 색
+// ── 주조 코인 뱃지 ──
+// 테두리와 면에 같은 금속색을 쓰고 그라디언트 방향만 반대로 준다.
+// (테두리는 위쪽이 밝고, 면은 아래쪽이 밝게 → 테두리가 솟아 보인다)
+// 아이콘은 금속에 법랑(에나멜)을 채워 넣은 것처럼 잉크빛 단색으로 박는다.
+// 금속과 같은 계열로 각인하면 더 묵직하지만 작은 크기에서 형태가 죽어서, 대비를 택했다.
+// 검정 코어와 번지는 글로우를 쓰지 않으므로 밝은 배경에서도 물체로 읽힌다.
+
+interface Metal {
+  /** [최하이라이트, 하이라이트, 기본, 그림자, 최암부] */
+  ramp: [string, string, string, string, string];
+  /** 희귀 등급만 아주 옅은 링라이트 */
+  aura: boolean;
 }
 
-// 메탈릭 + 글로우. 0 루키(브론즈) → 3 프로(레전드)
-const TIER_VIS: Record<TierIndex, TierVis> = {
-  0: { grad: ["#EFB987", "#9C5F28"], glow: null, icon: "#EAB07A" },
-  1: { grad: ["#F4F7FB", "#94A1B3"], glow: "rgba(214,222,232,0.35)", icon: "#DCE3ED" },
-  2: { grad: ["#FCE694", "#CF9C12"], glow: "rgba(245,206,90,0.55)", icon: "#F5CE5A" },
-  3: { grad: ["#FF9FB0", "#B57BF5"], glow: "rgba(181,123,245,0.6)", icon: "#FFC2CE" },
+// 0 루키(브론즈) → 3 프로(핑크·퍼플)
+const TIER_METAL: Record<TierIndex, Metal> = {
+  0: { ramp: ["#FBE6CB", "#EBB782", "#C07C3C", "#7C4A1C", "#452508"], aura: false },
+  1: { ramp: ["#FFFFFF", "#E3EBF4", "#AEBCCD", "#616F81", "#333C49"], aura: false },
+  2: { ramp: ["#FFF8DA", "#F7DE93", "#DCAA2C", "#8E6109", "#553904"], aura: false },
+  3: { ramp: ["#FFE6EE", "#FFB3CC", "#C983EE", "#6B2FA6", "#3A1760"], aura: true },
 };
 
-// 달성형(등급 없음) — 차콜·네이비에 아주 옅은 자개 포인트
-const FLAT_VIS: TierVis = { grad: ["#94A3B8", "#6F687D"], glow: null, icon: "#D7DEE8" };
+// 달성형(등급 없음) — 백랍
+const FLAT_METAL: Metal = { ramp: ["#EEF2F8", "#C6CFDC", "#8A96A8", "#4A5462", "#282F3A"], aura: false };
+// 난도가 높은 달성형 — 청강
+const ELITE_METAL: Metal = { ramp: ["#E4F1FF", "#A9CBF7", "#5B8DEF", "#26417F", "#132449"], aura: false };
+// 리더(팀 1위) — 골드
+const LEADER_METAL: Metal = { ramp: ["#FFFCE8", "#FFE49B", "#F0B818", "#8C5C00", "#513400"], aura: true };
+// 히든 — 시안/틸
+const HIDDEN_METAL: Metal = { ramp: ["#E6FCFF", "#9CEEFC", "#38C6E2", "#0B6076", "#053544"], aura: true };
+// 감독 — 로열 골드 (모양으로 구분하므로 금속은 리더보다 더 깊게)
+const MANAGER_METAL: Metal = { ramp: ["#FFF6CE", "#FFDF8F", "#E8B21C", "#7A4A00", "#3C2200"], aura: true };
 
-// 난도가 높은 일반 달성형 — 딥 블루·청보라
-const ELITE_VIS: TierVis = { grad: ["#7DD3FC", "#6366F1"], glow: "rgba(79,127,219,0.24)", icon: "#BFDBFE" };
+function metalOf(t: EarnedTitle): Metal {
+  if (t.variant === "leader") return LEADER_METAL;
+  if (t.hidden) return HIDDEN_METAL;
+  if (isEliteAchievement(t.id)) return ELITE_METAL;
+  return t.tier === null ? FLAT_METAL : TIER_METAL[t.tier];
+}
 
-// 리더(팀 1위) — 빛나는 골드 왕관
-const LEADER_VIS: TierVis = { grad: ["#FFE7A0", "#E0A100"], glow: "rgba(255,200,60,0.65)", icon: "#FFD45A" };
+// 법랑 색 — 어느 금속 위에서도 대비가 서도록 한 가지로 통일한다.
+const ENAMEL = "#0C1526";
 
-// 히든 칭호 — 시안/틸 계열 신비로운 느낌
-const HIDDEN_VIS: TierVis = { grad: ["#67E8F9", "#0E7490"], glow: "rgba(103,232,249,0.55)", icon: "#67E8F9" };
+const rgba = (hex: string, alpha: number) => {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+};
 
-function visOf(t: EarnedTitle): TierVis {
-  if (t.variant === "leader") return LEADER_VIS;
-  if (t.hidden) return HIDDEN_VIS;
-  if (isEliteAchievement(t.id)) return ELITE_VIS;
-  return t.tier === null ? FLAT_VIS : TIER_VIS[t.tier];
+/** 코인 한 장. shape="circle" 일반 / "shield" 감독 */
+function Coin({
+  title,
+  size,
+  metal,
+  shape = "circle",
+}: {
+  title: EarnedTitle;
+  size: number;
+  metal: Metal;
+  shape?: "circle" | "shield";
+}) {
+  const [xhi, hi, base, shadow, dark] = metal.ramp;
+  // 14px 미만에선 스페큘러·이너베벨을 끈다. 작을 때 디테일은 노이즈가 된다.
+  const detail = size >= 14;
+  // 같은 이유로 작을수록 아이콘을 키우고 선을 굵힌다.
+  const iconBox = detail ? 44 : 50;
+  const strokeWidth = detail ? 2.2 : 2.9;
+  // 그라디언트 id는 '보이는 모습'으로 만든다. 같은 값이면 겹쳐도 결과가 같아 안전하고,
+  // 등급이 다르면(=금속이 다르면) id도 달라져 색이 섞이지 않는다.
+  // (서버 컴포넌트에서도 렌더되므로 useId는 쓸 수 없다)
+  const uid = `tb-${base.slice(1)}-${shape}-${size}`;
+
+  const icon = createElement(titleIcon(title.icon), {
+    x: 50 - iconBox / 2,
+    y: 50 - iconBox / 2,
+    width: iconBox,
+    height: iconBox,
+    stroke: ENAMEL,
+    strokeWidth,
+    fill: "none",
+  });
+
+  const outer =
+    shape === "shield"
+      ? "M50 3 L93 17 V50 C93 74 73 90 50 97 C27 90 7 74 7 50 V17 Z"
+      : "M50 1 A49 49 0 1 1 49.9 1 Z";
+  const faceR = detail ? 39 : 40;
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      style={{
+        display: "block",
+        flex: "0 0 auto",
+        filter:
+          `drop-shadow(0 ${Math.max(1, size * 0.05)}px ${Math.max(1, size * 0.09)}px rgba(0,0,0,0.55))` +
+          (metal.aura ? ` drop-shadow(0 0 ${size * 0.22}px ${rgba(base, 0.5)})` : ""),
+      }}
+    >
+      <defs>
+        {/* 테두리: 위가 밝다 */}
+        <linearGradient id={`${uid}-r`} x1="0.22" y1="0" x2="0.78" y2="1">
+          <stop offset="0" stopColor={xhi} />
+          <stop offset="0.28" stopColor={hi} />
+          <stop offset="0.62" stopColor={base} />
+          <stop offset="1" stopColor={shadow} />
+        </linearGradient>
+        {/* 면: 아래가 밝다 (테두리와 반대라 두께가 생긴다) */}
+        <linearGradient id={`${uid}-f`} x1="0.78" y1="1" x2="0.22" y2="0">
+          <stop offset="0" stopColor={hi} />
+          <stop offset="0.42" stopColor={base} />
+          <stop offset="0.86" stopColor={shadow} />
+          <stop offset="1" stopColor={base} />
+        </linearGradient>
+        <clipPath id={`${uid}-k`}>
+          <path d={outer} />
+        </clipPath>
+      </defs>
+
+      <path d={outer} fill={`url(#${uid}-r)`} />
+      {shape === "shield" ? (
+        <path
+          d={outer}
+          fill={`url(#${uid}-f)`}
+          transform="translate(50 50) scale(0.74) translate(-50 -50)"
+        />
+      ) : (
+        <circle cx="50" cy="50" r={faceR} fill={`url(#${uid}-f)`} />
+      )}
+
+      {detail && shape === "circle" && (
+        <>
+          <circle cx="50" cy="50" r="39.8" fill="none" stroke={dark} strokeWidth="1.1" opacity="0.55" />
+          <circle cx="50" cy="50" r="38.4" fill="none" stroke={xhi} strokeWidth="0.9" opacity="0.5" />
+        </>
+      )}
+      {detail && (
+        <g clipPath={`url(#${uid}-k)`}>
+          <path d="M-8 -8 L58 -8 L4 58 L-8 34 Z" fill="#fff" opacity="0.14" />
+        </g>
+      )}
+
+      {/* 에나멜: 금속 위에 잉크빛 단색으로 박아 넣는다 */}
+      {icon}
+    </svg>
+  );
 }
 
 export function TitleBadge({ title, size = 26 }: { title: EarnedTitle; size?: number }) {
   const label = title.tierLabel ? `${title.name} · ${title.tierLabel}` : title.name;
-  const icon = createElement(titleIcon(title.icon), {
-    size: Math.round(size * 0.54),
-    strokeWidth: 2.4,
-  });
 
-  // 감독 전용: 회전하는 메탈 골드 콘릭 링 + 로열 다크 코어 (아예 다른 스타일)
+  // 감독은 방패꼴로 실루엣부터 다르게 간다 (금속 언어는 나머지와 동일)
   if (title.variant === "manager") {
-    const mSize = Math.round(size * 1.12);
     return (
-      <span
-        title="감독"
-        aria-label="감독"
-        style={{
-          width: mSize,
-          height: mSize,
-          borderRadius: "30%",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          border: "2.5px solid transparent",
-          background:
-            "radial-gradient(120% 120% at 30% 20%, #241a3d 0%, #0a0a16 100%) padding-box, " +
-            "conic-gradient(from 210deg, #FFE9A8, #B8860B, #FFD45A, #8a6508, #FFE9A8) border-box",
-          boxShadow: "0 0 12px rgba(255,196,70,0.55), inset 0 0 6px rgba(255,220,140,0.25), 0 2px 6px rgba(0,0,0,0.5)",
-          color: "#FFD978",
-          flex: "0 0 auto",
-        }}
-      >
-        {icon}
+      <span title="감독" aria-label="감독" style={{ display: "inline-flex", flex: "0 0 auto" }}>
+        <Coin title={title} size={Math.round(size * 1.12)} metal={MANAGER_METAL} shape="shield" />
       </span>
     );
   }
 
-  const vis = visOf(title);
   return (
-    <span
-      title={label}
-      aria-label={label}
-      style={{
-        width: size,
-        height: size,
-        borderRadius: "50%",
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        border: "2px solid transparent",
-        background: `linear-gradient(#0b1224,#0b1224) padding-box, linear-gradient(135deg, ${vis.grad[0]}, ${vis.grad[1]}) border-box`,
-        boxShadow: vis.glow
-          ? `0 0 9px ${vis.glow}, 0 1px 3px rgba(0,0,0,0.45)`
-          : "0 1px 3px rgba(0,0,0,0.45)",
-        color: vis.icon,
-        flex: "0 0 auto",
-      }}
-    >
-      {icon}
+    <span title={label} aria-label={label} style={{ display: "inline-flex", flex: "0 0 auto" }}>
+      <Coin title={title} size={size} metal={metalOf(title)} />
     </span>
   );
 }
@@ -179,15 +253,16 @@ function TitleChip({ title }: { title: EarnedTitle }) {
     );
   }
 
-  const vis = visOf(title);
+  // 칩도 같은 금속을 쓴다 — 테두리는 위가 밝은 금속, 글자·아이콘은 하이라이트 톤.
+  const [, hi, base, shadow] = metalOf(title).ramp;
   return (
     <span
       title={label}
       style={{
         ...chipBase,
-        color: vis.icon,
-        background: `linear-gradient(#11182e,#11182e) padding-box, linear-gradient(135deg, ${vis.grad[0]}, ${vis.grad[1]}) border-box`,
-        boxShadow: vis.glow ? `0 0 7px ${vis.glow}` : undefined,
+        color: hi,
+        background: `linear-gradient(#11182e,#11182e) padding-box, linear-gradient(135deg, ${base}, ${shadow}) border-box`,
+        boxShadow: metalOf(title).aura ? `0 0 7px ${rgba(base, 0.4)}` : undefined,
       }}
     >
       {icon}
