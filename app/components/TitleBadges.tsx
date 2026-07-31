@@ -9,9 +9,9 @@ import { titleIcon } from "../lib/title-icons";
 // ── 주조 코인 뱃지 ──
 // 테두리와 면에 같은 금속색을 쓰고 그라디언트 방향만 반대로 준다.
 // (테두리는 위쪽이 밝고, 면은 아래쪽이 밝게 → 테두리가 솟아 보인다)
-// 아이콘은 금속에 법랑(에나멜)을 채워 넣은 것처럼 잉크빛 단색으로 박는다.
-// 금속과 같은 계열로 각인하면 더 묵직하지만 작은 크기에서 형태가 죽어서, 대비를 택했다.
-// 검정 코어와 번지는 글로우를 쓰지 않으므로 밝은 배경에서도 물체로 읽힌다.
+// 안쪽 면은 진한 에나멜(칠보)로 채우고 그 위에 밝은 금속색 아이콘을 올린다.
+// 어두운 면이 컬러 아이콘을 받쳐줘야 화려해 보인다 — 면까지 금속으로 채우면
+// 명도가 전부 중간에 몰려 칙칙해진다(한 번 그렇게 만들었다가 되돌렸다).
 
 interface Metal {
   /** [최하이라이트, 하이라이트, 기본, 그림자, 최암부] */
@@ -46,8 +46,10 @@ function metalOf(t: EarnedTitle): Metal {
   return t.tier === null ? FLAT_METAL : TIER_METAL[t.tier];
 }
 
-// 법랑 색 — 어느 금속 위에서도 대비가 서도록 한 가지로 통일한다.
-const ENAMEL = "#0C1526";
+// 에나멜(면) 색. 라이트모드에서도 어둡게 유지한다 — 밝게 바꾸면 그 위의
+// 밝은 컬러 아이콘이 묻혀버려서 아이콘 색까지 테마별로 갈라야 한다.
+const ENAMEL_MID = "#111A2E";
+const ENAMEL_DEEP = "#070B16";
 
 const rgba = (hex: string, alpha: number) => {
   const n = parseInt(hex.slice(1), 16);
@@ -82,7 +84,7 @@ function Coin({
     y: 50 - iconBox / 2,
     width: iconBox,
     height: iconBox,
-    stroke: ENAMEL,
+    stroke: hi, // 밝은 금속 톤 — 진한 에나멜 위에서 형광처럼 뜬다
     strokeWidth,
     fill: "none",
   });
@@ -91,7 +93,8 @@ function Coin({
     shape === "shield"
       ? "M50 3 L93 17 V50 C93 74 73 90 50 97 C27 90 7 74 7 50 V17 Z"
       : "M50 1 A49 49 0 1 1 49.9 1 Z";
-  const faceR = detail ? 39 : 40;
+  // 칠보는 테두리 금속을 넉넉히 남겨야 메달처럼 보인다
+  const faceR = detail ? 36 : 37;
 
   return (
     <svg
@@ -114,13 +117,12 @@ function Coin({
           <stop offset="0.62" stopColor={base} />
           <stop offset="1" stopColor={shadow} />
         </linearGradient>
-        {/* 면: 아래가 밝다 (테두리와 반대라 두께가 생긴다) */}
-        <linearGradient id={`${uid}-f`} x1="0.78" y1="1" x2="0.22" y2="0">
-          <stop offset="0" stopColor={hi} />
-          <stop offset="0.42" stopColor={base} />
-          <stop offset="0.86" stopColor={shadow} />
-          <stop offset="1" stopColor={base} />
-        </linearGradient>
+        {/* 면: 진한 에나멜에 등급 색이 옅게 감돈다 */}
+        <radialGradient id={`${uid}-f`} cx="0.34" cy="0.24" r="0.95">
+          <stop offset="0" stopColor={rgba(base, 0.42)} />
+          <stop offset="0.55" stopColor={ENAMEL_MID} />
+          <stop offset="1" stopColor={ENAMEL_DEEP} />
+        </radialGradient>
         <clipPath id={`${uid}-k`}>
           <path d={outer} />
         </clipPath>
@@ -139,8 +141,8 @@ function Coin({
 
       {detail && shape === "circle" && (
         <>
-          <circle cx="50" cy="50" r="39.8" fill="none" stroke={dark} strokeWidth="1.1" opacity="0.55" />
-          <circle cx="50" cy="50" r="38.4" fill="none" stroke={xhi} strokeWidth="0.9" opacity="0.5" />
+          <circle cx="50" cy="50" r={faceR + 0.8} fill="none" stroke={dark} strokeWidth="1.1" opacity="0.55" />
+          <circle cx="50" cy="50" r={faceR - 0.6} fill="none" stroke={xhi} strokeWidth="0.9" opacity="0.3" />
         </>
       )}
       {detail && (
