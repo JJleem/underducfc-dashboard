@@ -56,8 +56,8 @@ export default function CommentSheet({
     setOpen(nextOpen);
   };
 
-  // 댓글 영역은 처음 열린 62%로 고정한다. 키보드가 뜨면 실제로 가려진 거리만큼
-  // 시트 배경을 늘려 댓글을 올린다. 브라우저가 이미 올린 기기에서는 inset이 0이 된다.
+  // 시트 높이는 처음 열린 62%로 고정한다. 키보드가 뜨면 실제로 가려진 거리만
+  // 측정해 시트 전체를 올린다. 브라우저가 이미 올린 기기에서는 inset이 0이 된다.
   useEffect(() => {
     if (!open) return;
 
@@ -138,40 +138,37 @@ export default function CommentSheet({
           }}
           handleClassName="!absolute left-1/2 top-0 z-10 -translate-x-1/2"
           overlayClassName="touch-none overscroll-none"
-          className="mx-auto h-[62dvh] max-h-none w-full max-w-md overflow-hidden bg-white transition-[height] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-none dark:bg-[#161618]"
-          style={
-            restingHeight > 0
-              ? { height: restingHeight + bottomInset, bottom: 0 }
-              : undefined
-          }
+          className="mx-auto h-[62dvh] max-h-none w-full max-w-md overflow-visible bg-white transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-none dark:bg-[#161618]"
+          style={restingHeight > 0 ? { height: restingHeight, bottom: bottomInset } : undefined}
         >
-          <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
-            <div
-              className="flex min-h-0 w-full shrink-0 flex-col overflow-hidden"
-              style={restingHeight > 0 ? { height: restingHeight } : { flex: 1 }}
-            >
-              <DrawerHeader className="shrink-0 border-b border-gray-100 pb-3 pt-7 dark:border-white/[0.06]">
-                <DrawerTitle className="text-center text-[15px] font-black text-gray-900 dark:text-white">
-                  {title}
-                </DrawerTitle>
-                {subtitle && (
-                  <p className="text-center text-[10.5px] font-bold text-gray-400 dark:text-white/30">
-                    {subtitle}
-                  </p>
-                )}
-              </DrawerHeader>
+          <div className="relative z-10 flex h-full min-h-0 w-full flex-col overflow-hidden rounded-t-lg bg-white dark:bg-[#161618]">
+            <DrawerHeader className="shrink-0 border-b border-gray-100 pb-3 pt-7 dark:border-white/[0.06]">
+              <DrawerTitle className="text-center text-[15px] font-black text-gray-900 dark:text-white">
+                {title}
+              </DrawerTitle>
+              {subtitle && (
+                <p className="text-center text-[10.5px] font-bold text-gray-400 dark:text-white/30">
+                  {subtitle}
+                </p>
+              )}
+            </DrawerHeader>
 
-              <FeedbackThread
-                matchId={matchId}
-                initial={feedbacks}
-                userName={userName}
-                isAdmin={isAdmin}
-                collapsedCount={0}
-                sheetLayout
-              />
-            </div>
-            {bottomInset > 0 && <div aria-hidden className="min-h-0 flex-1 bg-inherit" />}
+            <FeedbackThread
+              matchId={matchId}
+              initial={feedbacks}
+              userName={userName}
+              isAdmin={isAdmin}
+              collapsedCount={0}
+              sheetLayout
+            />
           </div>
+          {bottomInset > 0 && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-full bg-white dark:bg-[#161618]"
+              style={{ height: bottomInset }}
+            />
+          )}
         </DrawerContent>
       </Drawer>
     </>
