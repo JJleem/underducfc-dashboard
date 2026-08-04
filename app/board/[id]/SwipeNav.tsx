@@ -29,7 +29,9 @@ export default function SwipeNav({
   nextId: number | null;
 }) {
   const router = useRouter();
-  const start = useRef<{ x: number; y: number; atTop: boolean; atBottom: boolean } | null>(null);
+  const start = useRef<{ x: number; y: number } | null>(null);
+  // 스크롤 끝에 닿은 지점. 여기서부터 당긴 거리를 잰다.
+  const anchor = useRef<{ y: number; dir: "prev" | "next" } | null>(null);
   // 판정에 쓰는 값은 ref 로 둔다. touchend 는 등록 시점의 state 를 캡처하므로
   // state 만 보면 항상 옛 값을 읽는다. state 는 화면 표시에만 쓴다.
   const gesture = useRef<{ dir: "prev" | "next"; ratio: number } | null>(null);
@@ -42,11 +44,15 @@ export default function SwipeNav({
   }, [prevId, nextId, router]);
 
   useEffect(() => {
+    // 스크롤 끝인지는 **터치가 움직이는 매 순간** 다시 잰다.
+    // 처음엔 touchstart 시점에 한 번만 쟀는데, 그러면 "스크롤해서 내려가다가 바닥에 닿은
+    // 바로 그 손짓"으로는 절대 안 넘어갔다(시작할 땐 바닥이 아니었으니까).
+    // 손을 뗐다가 다시 밀어야만 동작해서 "될 때가 있고 안 될 때가 있는" 것처럼 보였다.
     const scrollEdges = () => {
       const el = document.scrollingElement || document.documentElement;
       return {
-        atTop: el.scrollTop <= 1,
         // 1px 여유 — 브라우저마다 소수점이 남아 정확히 안 떨어진다.
+        atTop: el.scrollTop <= 1,
         atBottom: el.scrollTop + el.clientHeight >= el.scrollHeight - 1,
       };
     };
@@ -54,46 +60,56 @@ export default function SwipeNav({
     const onStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
       const t = e.touches[0];
-      start.current = { x: t.clientX, y: t.clientY, ...scrollEdges() };
+      start.current = { x: t.clientX, y: t.clientY };
+      anchor.current = null;
+      gesture.current = null;
     };
 
     const onMove = (e: TouchEvent) => {
       const s = start.current;
       if (!s || e.touches.length !== 1) return;
       const t = e.touches[0];
-      const dy = t.clientY - s.y;
-      const dx = t.clientX - s.x;
-      if (Math.abs(dy) < Math.abs(dx) * VERTICAL_RATIO) {
-        gesture.current = null;
-        setHint(null);
-        return; // 가로 제스처
-      }
+      if (Math.abs(t.clientY - s.y) < Math.abs(t.clientX - s.x) * VERTICAL_RATIO) return;
 
-      // 위로 미는 중 + 바닥 → 다음 글 / 아래로 당기는 중 + 꼭대기 → 이전 글
+      const edges = scrollEdges();
+      const goingUp = t.clientY < (anchor.current?.y ?? s.y);
       const dir: "prev" | "next" | null =
-        dy < 0 && s.atBottom && nextId !== null
+        edges.atBottom && nextId !== null && (goingUp || anchor.current?.dir === "next")
           ? "next"
-          : dy > 0 && s.atTop && prevId !== null
+          : edges.atTop && prevId !== null && (!goingUp || anchor.current?.dir === "prev")
             ? "prev"
             : null;
+
       if (!dir) {
-        // 방향을 되돌렸는데 예전 임계값이 남아 있으면 손을 놓는 순간 원치 않게 이동한다.
-        gesture.current = null;
-        setHint(null);
+        anchor.current = null;
+        if (gesture.current) {
+          gesture.current = null;
+          setHint(null);
+        }
         return;
       }
 
-      const next = { dir, ratio: Math.min(Math.abs(dy) / THRESHOLD, 1) };
+      // 끝에 닿은 그 지점을 기준으로 다시 잰다. 그래야 스크롤한 거리가 안 섞인다.
+      if (!anchor.current || anchor.current.dir !== dir) {
+        anchor.current = { y: t.clientY, dir };
+      }
+
+      // 방향을 반영해서 잰다. 절댓값으로 재면 위로 당겼다가 도로 내려도 임계치가
+      // 넘은 채로 남아서, 손을 떼는 순간 원치 않게 넘어간다.
+      const pulled =
+        dir === "next" ? anchor.current.y - t.clientY : t.clientY - anchor.current.y;
+      const next = { dir, ratio: Math.min(Math.max(pulled, 0) / THRESHOLD, 1) };
       gesture.current = next;
       setHint(next);
     };
 
     const onEnd = () => {
-      const h = gesture.current;
+      const g = gesture.current;
       start.current = null;
+      anchor.current = null;
       gesture.current = null;
-      if (h && h.ratio >= 1) {
-        const target = h.dir === "next" ? nextId : prevId;
+      if (g && g.ratio >= 1) {
+        const target = g.dir === "next" ? nextId : prevId;
         if (target !== null) router.push(`/board/${target}`);
       }
       setHint(null);
