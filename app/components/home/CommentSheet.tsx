@@ -54,8 +54,8 @@ export default function CommentSheet({
     setOpen(nextOpen);
   };
 
-  // 키보드가 차지하는 만큼 시트의 위·아래에 공간을 동시에 만든다.
-  // 시트 상단은 올라가지만 실제 댓글 시작점은 그대로이고, 입력창만 키보드 위로 이동한다.
+  // 키보드가 차지하는 만큼 시트를 위로 확장한다. 댓글 영역은 기존 높이를 유지하고
+  // 맨 아래 키보드 영역만 비워서 입력창이 키보드 바로 위에 오게 한다.
   useEffect(() => {
     if (!open) return;
 
@@ -84,9 +84,7 @@ export default function CommentSheet({
 
   const { restingHeight, keyboardHeight } = keyboardMetrics;
   const keyboardOpen = keyboardHeight > 0 && restingHeight > 0;
-  const commentsHeight = keyboardOpen
-    ? Math.max(0, restingHeight - keyboardHeight)
-    : undefined;
+  const commentsHeight = keyboardOpen ? restingHeight : undefined;
 
   return (
     <>
@@ -124,14 +122,6 @@ export default function CommentSheet({
           }
         >
           <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
-            {keyboardOpen && (
-              <div
-                aria-hidden
-                className="shrink-0 transition-[height] duration-200 ease-out"
-                style={{ height: keyboardHeight }}
-              />
-            )}
-
             <div
               className="flex min-h-0 w-full flex-col overflow-hidden"
               style={commentsHeight === undefined ? { flex: 1 } : { height: commentsHeight }}
