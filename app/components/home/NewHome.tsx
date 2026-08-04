@@ -4,7 +4,7 @@
 // 상태·레이아웃 스위치를 더 띄울 뿐, 그리는 내용은 완전히 같다.
 // (두 벌로 두면 한쪽만 고쳐지는 순간 "미리보기에선 됐는데" 가 시작된다)
 //
-// 기존 홈(DashboardClient)은 그대로 살아 있다. app/lib/home-flag.ts 참고.
+// 실제 `/`는 이 화면으로 확정됐다. `/home-preview`는 상태별 확인 용도로만 남긴다.
 
 import Link from "next/link";
 import { Bell, MapPin } from "lucide-react";

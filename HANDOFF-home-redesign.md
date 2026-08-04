@@ -23,7 +23,6 @@
 
 ```
 app/lib/
-  home-flag.ts          새 홈 ON/OFF 스위치
   home-state.ts         홈 상태 판정 (dday / afterMatch / needVote / matching / idle)
   storylines.ts         주목 포인트 — DashboardClient 에서 추출 (기존 홈도 이걸 씀)
   team-stats.ts         시즌 요약·상대전적·장소전적·듀오 집계
@@ -57,26 +56,18 @@ app/home-preview/page.tsx             NewHome 을 preview 모드로 (상태·레
 
 | 파일 | 변경 |
 |---|---|
-| `app/page.tsx` | 맨 앞에 새 홈 분기 3줄 + import 2줄 |
+| `app/page.tsx` | 인스타 피드형 `NewHome`을 항상 렌더링 |
 | `app/components/DashboardClient.tsx` | `buildMatchStorylines` 197줄을 `lib/storylines.ts` 로 이동 + import 1줄 / 경기 유형에 `풋살` 추가(2곳) |
 | `app/components/AppBottomNav.tsx` | 스탯 탭 `/?tab=stats` → `/stats`, 활성 판정에 `/stats`·`/record` 추가 |
 
-**기존 홈(DashboardClient)의 동작은 그대로다.** 리팩터 후 주목 포인트 출력이 이전과 동일함을 확인했다.
+기존 `DashboardClient` 코드는 참고용으로 남아 있지만 실제 `/`에서는 사용하지 않는다.
 
 ---
 
-## 2. 켜고 끄는 법 (이번 작업의 전제 조건)
+## 2. 홈 적용 방식
 
-`app/lib/home-flag.ts`
-
-```
-1. 주소에 ?home=old / ?home=new    그 요청만. 배포 없이 비교
-2. 환경변수 NEW_HOME=on / off       전체 적용
-3. DEFAULT_NEW_HOME = false         코드 기본값
-```
-
-**현재 `.env.local` 에 `NEW_HOME=on` 이 들어 있다**(사용자가 직접 켬).
-`NEXT_PUBLIC_` 을 안 붙인 건 의도적 — 서버 컴포넌트에서만 읽어 요청 시점에 평가된다.
+인스타 피드형 `NewHome`으로 최종 확정했다. `NEW_HOME` 환경변수와
+`?home=old`·`?home=new` 전환은 제거했으며 `/`는 항상 새 홈을 렌더링한다.
 
 ---
 
@@ -169,7 +160,7 @@ nohup npm run dev > /tmp/dev.log 2>&1 < /dev/null & disown
 npx tsc --noEmit                  # 현재 0건 (.next/ 생성물 제외)
 npx eslint app/components/home app/stats app/record
 
-for u in "/" "/?home=old" "/stats" "/record" "/home-preview" "/roster" "/vote"; do
+for u in "/" "/stats" "/record" "/home-preview" "/roster" "/vote"; do
   printf "%-16s " "$u"; curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:3000$u"
 done
 ```
