@@ -19,9 +19,12 @@ import {
   getRosterRows,
   getStatsRows,
   getMomVoteRows,
+  getFeaturedRows,
 } from "../../lib/backend";
 import { parseSubstitutions } from "../../lib/lineup";
 import { buildMatchStorylines, type Storyline } from "../../lib/storylines";
+import { pickBadges, type EarnedTitle } from "../../lib/titles";
+import { getTeamTitleData } from "../../lib/titles-cache";
 import type { LineupData, MatchData } from "../DashboardClient";
 import {
   HOME_STATES,
@@ -105,7 +108,7 @@ export default async function NewHome({
   const userName = session?.user?.name?.trim() || undefined;
   const admin = isAdmin(session?.user);
 
-  const [rawMatches, rawVotes, rawNotices, rawLineups, rawRoster, rawFeedback, rawStats, rawMomVotes] =
+  const [rawMatches, rawVotes, rawNotices, rawLineups, rawRoster, rawFeedback, rawStats, rawMomVotes, rawFeatured] =
     await Promise.all([
       getMatchesRows(),
       getAttendanceVoteRows().catch((): string[][] => []),
@@ -115,6 +118,7 @@ export default async function NewHome({
       getFeedbackRows().catch((): string[][] => []),
       getStatsRows().catch((): string[][] => []),
       getMomVoteRows().catch((): string[][] => []),
+      getFeaturedRows().catch((): string[][] => []),
     ]);
 
   const matches = rawMatches.slice(1).map(toMatch);
@@ -263,6 +267,21 @@ export default async function NewHome({
       mom: Number(r[6]) || 0,
     };
   });
+  // 라인업 뷰어에 들어갈 칭호. 기존 홈과 같은 기준(대표 칭호 우선, 없으면 자동 상위 3).
+  // 안 넘기면 LineupViewer 가 조용히 빈 값으로 그려서 칭호가 통째로 사라진다.
+  const { allTitles } = await getTeamTitleData();
+  const featuredMap: Record<string, string[]> = {};
+  rawFeatured.forEach((r) => {
+    const name = (r[0] || "").trim();
+    if (!name) return;
+    const ids = [r[1], r[2], r[3]].map((x) => (x || "").trim()).filter(Boolean);
+    if (ids.length) featuredMap[name] = ids;
+  });
+  const playerTitles: Record<string, EarnedTitle[]> = {};
+  Object.entries(allTitles).forEach(([name, all]) => {
+    playerTitles[name] = pickBadges(all, featuredMap[name]);
+  });
+
   const storylinesByMatch: Record<number, Storyline[]> = {};
   matches.forEach((m) => {
     const att = (m.attendees || "").split(",").map((x) => x.trim()).filter(Boolean);
@@ -373,6 +392,9 @@ export default async function NewHome({
         captainRoles={captainRoles}
         momVotes={heroLast ? momVotesByMatch[heroLast.id] || [] : []}
         positions={positions}
+        playerStats={playerStats}
+        playerTitles={playerTitles}
+        isAdmin={admin}
         momCountdownPreview={preview && state === "afterMatch"}
         attendancePreview={preview}
         attendancePreviewNextHref={`/home-preview?state=${
@@ -468,6 +490,8 @@ export default async function NewHome({
               roster: rosterNames,
               positions,
               momCountdownPreview: preview && m.id === lastMatch?.id,
+              playerStats,
+              playerTitles,
             };
             return layout === "feed" ? (
               <MatchFeed key={m.id} {...common} />

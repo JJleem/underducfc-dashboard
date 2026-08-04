@@ -8,6 +8,8 @@
 import Link from "next/link";
 import { CalendarDays, Check, Clock, Flame, MapPin } from "lucide-react";
 import LineupViewer from "../LineupViewer";
+import type { SeasonStat } from "../FormationField";
+import type { EarnedTitle } from "../../lib/titles";
 import type { LineupData } from "../DashboardClient";
 import { getOpponentLogo } from "../../lib/opponent-logos";
 import { parseWeather, weatherEmoji } from "../../lib/weather";
@@ -57,6 +59,11 @@ export interface HomeHeroProps {
   lineups?: LineupData[];
   rosterMap?: Record<string, string>;
   captainRoles?: Record<string, string>;
+  /** 라인업 뷰어가 쓰는 시즌 기록·칭호. 안 넘기면 칭호가 통째로 안 뜬다. */
+  playerStats?: Record<string, SeasonStat>;
+  playerTitles?: Record<string, EarnedTitle[]>;
+  /** 관리자면 라인업 편집 링크를 띄운다. */
+  isAdmin?: boolean;
   /**
    * 주목 포인트. 히어로에는 팀 서사 한 줄만 세운다.
    * 세 개를 이모지 붙여 쌓으면 헤드라인("팀 4연패 중")이 각주("최동권 20경기 출전")와
@@ -214,6 +221,9 @@ export default function HomeHero({
   lineups = [],
   rosterMap = {},
   captainRoles = {},
+  playerStats,
+  playerTitles = {},
+  isAdmin = false,
   storylines = [],
   momVotes = [],
   positions = {},
@@ -271,6 +281,9 @@ export default function HomeHero({
               lineups={lineups}
               rosterMap={rosterMap}
               captainRoles={captainRoles}
+              playerStats={playerStats}
+              playerTitles={playerTitles}
+              editHref={isAdmin ? `/matches/${nextMatch.id}/edit` : undefined}
             />
           </div>
         )}

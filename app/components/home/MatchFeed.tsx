@@ -21,6 +21,8 @@ import {
   Users,
 } from "lucide-react";
 import LineupViewer from "../LineupViewer";
+import type { SeasonStat } from "../FormationField";
+import type { EarnedTitle } from "../../lib/titles";
 import ModalPortal from "../ModalPortal";
 import type { LineupData, MatchData } from "../DashboardClient";
 import { getOpponentLogo } from "../../lib/opponent-logos";
@@ -88,6 +90,8 @@ export default function MatchFeed({
   storylines = [],
   userName,
   isAdmin = false,
+  playerStats,
+  playerTitles = {},
   momVotes = [],
   roster = [],
   positions = {},
@@ -102,6 +106,9 @@ export default function MatchFeed({
   storylines?: Storyline[];
   userName?: string;
   isAdmin?: boolean;
+  /** 라인업 뷰어가 쓰는 시즌 기록·칭호. 안 넘기면 칭호가 통째로 안 뜬다. */
+  playerStats?: Record<string, SeasonStat>;
+  playerTitles?: Record<string, EarnedTitle[]>;
   momVotes?: MomVoteData[];
   roster?: string[];
   positions?: Record<string, string>;
@@ -500,6 +507,9 @@ export default function MatchFeed({
               lineups={lineups}
               rosterMap={rosterMap}
               captainRoles={captainRoles}
+              playerStats={playerStats}
+              playerTitles={playerTitles}
+              editHref={isAdmin ? `/matches/${match.id}/edit` : undefined}
             />
           </DetailSheet>
         )}

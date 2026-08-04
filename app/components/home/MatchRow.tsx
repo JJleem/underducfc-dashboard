@@ -23,6 +23,8 @@ import {
   Volleyball,
 } from "lucide-react";
 import LineupViewer from "../LineupViewer";
+import type { SeasonStat } from "../FormationField";
+import type { EarnedTitle } from "../../lib/titles";
 import ModalPortal from "../ModalPortal";
 import type { LineupData, MatchData } from "../DashboardClient";
 import { getOpponentLogo } from "../../lib/opponent-logos";
@@ -86,6 +88,8 @@ export default function MatchRow({
   storylines = [],
   userName,
   isAdmin = false,
+  playerStats,
+  playerTitles = {},
 }: {
   match: MatchData;
   lineups: LineupData[];
@@ -96,6 +100,9 @@ export default function MatchRow({
   storylines?: Storyline[];
   userName?: string;
   isAdmin?: boolean;
+  /** 라인업 뷰어가 쓰는 시즌 기록·칭호. 안 넘기면 칭호가 통째로 안 뜬다. */
+  playerStats?: Record<string, SeasonStat>;
+  playerTitles?: Record<string, EarnedTitle[]>;
 }) {
   const [open, setOpen] = useState(false);
   // 접힌 줄만 봐서는 새 댓글이 달렸는지 알 수 없다. 개수가 늘면 점을 찍는다.
@@ -394,6 +401,9 @@ export default function MatchRow({
                     lineups={lineups}
                     rosterMap={rosterMap}
                     captainRoles={captainRoles}
+                    playerStats={playerStats}
+                    playerTitles={playerTitles}
+                    editHref={isAdmin ? `/matches/${match.id}/edit` : undefined}
                   />
                 </div>
               )}
