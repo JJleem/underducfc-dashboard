@@ -18,7 +18,7 @@ const KEYBOARD_THRESHOLD = 120;
 
 interface KeyboardMetrics {
   restingHeight: number;
-  keyboardHeight: number;
+  bottomInset: number;
 }
 
 export default function CommentSheet({
@@ -43,9 +43,11 @@ export default function CommentSheet({
   const [open, setOpen] = useState(false);
   const [keyboardMetrics, setKeyboardMetrics] = useState<KeyboardMetrics>({
     restingHeight: 0,
-    keyboardHeight: 0,
+    bottomInset: 0,
   });
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const keyboardPositionMode = useRef<"native" | "manual" | null>(null);
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen && document.activeElement instanceof HTMLElement) {
@@ -54,37 +56,56 @@ export default function CommentSheet({
     setOpen(nextOpen);
   };
 
-  // 키보드가 차지하는 만큼 시트를 위로 확장한다. 댓글 영역은 기존 높이를 유지하고
-  // 맨 아래 키보드 영역만 비워서 입력창이 키보드 바로 위에 오게 한다.
+  // 시트 높이는 처음 열린 62%로 고정한다. 키보드가 뜨면 실제로 가려진 거리만
+  // 측정해 시트 전체를 올린다. 브라우저가 이미 올린 기기에서는 inset이 0이 된다.
   useEffect(() => {
     if (!open) return;
 
     const viewport = window.visualViewport;
     const initialVisualHeight = viewport?.height ?? window.innerHeight;
+    const initialVisualBottom = (viewport?.offsetTop ?? 0) + initialVisualHeight;
     const restingHeight = initialVisualHeight * SHEET_HEIGHT_RATIO;
+    let frame = 0;
+    keyboardPositionMode.current = null;
 
-    const updateKeyboardHeight = () => {
-      const visualHeight = viewport?.height ?? window.innerHeight;
-      const nextHeight = Math.max(0, initialVisualHeight - visualHeight);
-      setKeyboardMetrics({
-        restingHeight,
-        keyboardHeight: nextHeight > KEYBOARD_THRESHOLD ? nextHeight : 0,
+    const updatePosition = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const visualHeight = viewport?.height ?? window.innerHeight;
+        const keyboardHeight = Math.max(0, initialVisualHeight - visualHeight);
+
+        if (keyboardHeight <= KEYBOARD_THRESHOLD) {
+          keyboardPositionMode.current = null;
+          setKeyboardMetrics({ restingHeight, bottomInset: 0 });
+          return;
+        }
+
+        const visualBottom = (viewport?.offsetTop ?? 0) + visualHeight;
+        if (keyboardPositionMode.current === null) {
+          const renderedBottom = sheetRef.current?.getBoundingClientRect().bottom ?? visualBottom;
+          keyboardPositionMode.current = renderedBottom - visualBottom > 8 ? "manual" : "native";
+        }
+
+        const bottomInset =
+          keyboardPositionMode.current === "manual"
+            ? Math.max(0, initialVisualBottom - visualBottom)
+            : 0;
+        setKeyboardMetrics({ restingHeight, bottomInset });
       });
     };
 
-    updateKeyboardHeight();
-    viewport?.addEventListener("resize", updateKeyboardHeight);
-    viewport?.addEventListener("scroll", updateKeyboardHeight);
+    updatePosition();
+    viewport?.addEventListener("resize", updatePosition);
+    viewport?.addEventListener("scroll", updatePosition);
 
     return () => {
-      viewport?.removeEventListener("resize", updateKeyboardHeight);
-      viewport?.removeEventListener("scroll", updateKeyboardHeight);
+      cancelAnimationFrame(frame);
+      viewport?.removeEventListener("resize", updatePosition);
+      viewport?.removeEventListener("scroll", updatePosition);
     };
   }, [open]);
 
-  const { restingHeight, keyboardHeight } = keyboardMetrics;
-  const keyboardOpen = keyboardHeight > 0 && restingHeight > 0;
-  const commentsHeight = keyboardOpen ? restingHeight : undefined;
+  const { restingHeight, bottomInset } = keyboardMetrics;
 
   return (
     <>
@@ -105,49 +126,41 @@ export default function CommentSheet({
         preventScrollRestoration
         onAnimationEnd={(nextOpen) => {
           if (!nextOpen) {
-            setKeyboardMetrics({ restingHeight: 0, keyboardHeight: 0 });
+            setKeyboardMetrics({ restingHeight: 0, bottomInset: 0 });
           }
         }}
       >
         <DrawerContent
+          ref={sheetRef}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             triggerRef.current?.focus({ preventScroll: true });
           }}
           handleClassName="!absolute left-1/2 top-0 z-10 -translate-x-1/2"
           overlayClassName="touch-none overscroll-none"
-          className="mx-auto h-[62dvh] max-h-none w-full max-w-md overflow-hidden bg-white transition-[height] duration-200 ease-out data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-none dark:bg-[#161618]"
-          style={
-            keyboardOpen ? { height: restingHeight + keyboardHeight, bottom: 0 } : undefined
-          }
+          className="mx-auto h-[62dvh] max-h-none w-full max-w-md overflow-hidden bg-white transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-none dark:bg-[#161618]"
+          style={restingHeight > 0 ? { height: restingHeight, bottom: bottomInset } : undefined}
         >
           <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
-            <div
-              className="flex min-h-0 w-full flex-col overflow-hidden"
-              style={commentsHeight === undefined ? { flex: 1 } : { height: commentsHeight }}
-            >
-              <DrawerHeader className="shrink-0 border-b border-gray-100 pb-3 pt-7 dark:border-white/[0.06]">
-                <DrawerTitle className="text-center text-[15px] font-black text-gray-900 dark:text-white">
-                  {title}
-                </DrawerTitle>
-                {subtitle && (
-                  <p className="text-center text-[10.5px] font-bold text-gray-400 dark:text-white/30">
-                    {subtitle}
-                  </p>
-                )}
-              </DrawerHeader>
+            <DrawerHeader className="shrink-0 border-b border-gray-100 pb-3 pt-7 dark:border-white/[0.06]">
+              <DrawerTitle className="text-center text-[15px] font-black text-gray-900 dark:text-white">
+                {title}
+              </DrawerTitle>
+              {subtitle && (
+                <p className="text-center text-[10.5px] font-bold text-gray-400 dark:text-white/30">
+                  {subtitle}
+                </p>
+              )}
+            </DrawerHeader>
 
-              <FeedbackThread
-                matchId={matchId}
-                initial={feedbacks}
-                userName={userName}
-                isAdmin={isAdmin}
-                collapsedCount={0}
-                sheetLayout
-              />
-            </div>
-
-            {keyboardOpen && <div aria-hidden className="shrink-0" style={{ height: keyboardHeight }} />}
+            <FeedbackThread
+              matchId={matchId}
+              initial={feedbacks}
+              userName={userName}
+              isAdmin={isAdmin}
+              collapsedCount={0}
+              sheetLayout
+            />
           </div>
         </DrawerContent>
       </Drawer>
