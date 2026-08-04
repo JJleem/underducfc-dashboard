@@ -4,7 +4,7 @@
 // 짧은 내용에 따라 높이가 달라지지 않는 고정형 시트다.
 // 목록과 입력창을 분리하고 배경 스크롤을 잠가, 키보드가 올라와도 피드 위치는 움직이지 않는다.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Drawer,
   DrawerContent,
@@ -45,10 +45,13 @@ export default function CommentSheet({
     restingHeight: 0,
     keyboardHeight: 0,
   });
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     setOpen(nextOpen);
-    if (!nextOpen) setKeyboardMetrics({ restingHeight: 0, keyboardHeight: 0 });
   };
 
   // 키보드가 차지하는 만큼 시트의 위·아래에 공간을 동시에 만든다.
@@ -87,7 +90,12 @@ export default function CommentSheet({
 
   return (
     <>
-      <button type="button" onClick={() => handleOpenChange(true)} className={className}>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => handleOpenChange(true)}
+        className={className}
+      >
         {trigger}
       </button>
 
@@ -97,8 +105,17 @@ export default function CommentSheet({
         handleOnly
         repositionInputs={false}
         preventScrollRestoration
+        onAnimationEnd={(nextOpen) => {
+          if (!nextOpen) {
+            setKeyboardMetrics({ restingHeight: 0, keyboardHeight: 0 });
+          }
+        }}
       >
         <DrawerContent
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            triggerRef.current?.focus({ preventScroll: true });
+          }}
           handleClassName="!absolute left-1/2 top-0 z-10 -translate-x-1/2"
           overlayClassName="touch-none overscroll-none"
           className="mx-auto h-[62dvh] max-h-none w-full max-w-md overflow-hidden bg-white transition-[height] duration-200 ease-out data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-none dark:bg-[#161618]"
