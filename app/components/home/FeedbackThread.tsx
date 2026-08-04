@@ -38,7 +38,6 @@ export default function FeedbackThread({
   isAdmin = false,
   collapsedCount = 1,
   sheetLayout = false,
-  onComposerFocus,
 }: {
   matchId: number;
   initial: Feedback[];
@@ -49,8 +48,6 @@ export default function FeedbackThread({
   collapsedCount?: number;
   /** 댓글 전용 드로어: 목록만 스크롤하고 입력창은 하단에 고정한다. */
   sheetLayout?: boolean;
-  /** 모바일 키보드가 열리기 전에 댓글 시트를 충분한 높이로 펼친다. */
-  onComposerFocus?: () => void;
 }) {
   const router = useRouter();
   // 서버가 준 목록으로 시작하고, 쓰거나 지우면 그 자리에서 반영한다.
@@ -191,7 +188,6 @@ export default function FeedbackThread({
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            onFocus={onComposerFocus}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) submit();
             }}

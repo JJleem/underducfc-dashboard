@@ -12,7 +12,7 @@
 // content-visibility 로 렌더를 미루고 이미지는 lazy 로 받는다.
 
 import Link from "next/link";
-import { Heart, Instagram, LayoutGrid, MessageCircle, Play } from "lucide-react";
+import { Eye, Heart, Instagram, LayoutGrid, MessageCircle, Play } from "lucide-react";
 import LineupMini from "../components/LineupMini";
 import { youtubeThumb } from "../lib/youtube";
 import { instagramMedia } from "../lib/instagram";
@@ -160,6 +160,10 @@ function Cell({ post }: { post: BoardPost }) {
               <span className="tabular-nums">{post.commentCount}</span>
             </span>
           )}
+          <span className="flex items-center gap-0.5">
+            <Eye width={9} height={9} strokeWidth={2.6} />
+            <span className="tabular-nums">{post.viewCount}</span>
+          </span>
         </p>
       </div>
     </Link>

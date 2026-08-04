@@ -92,7 +92,6 @@ export default function CommentSheet({
               isAdmin={isAdmin}
               collapsedCount={0}
               sheetLayout
-              onComposerFocus={() => setActiveSnapPoint(EXPANDED_SNAP)}
             />
           </div>
         </DrawerContent>
