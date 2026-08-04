@@ -427,7 +427,9 @@ export default function MatchRow({
           )}
 
           {/* 인스타 결과 카드 — 기존 draw-story-card 를 그대로 부른다.
-              1080×1920(스토리) / 1080×1350(피드)을 캔버스로 그려 공유 시트를 띄운다. */}
+              1080×1920(스토리) / 1080×1350(피드)을 캔버스로 그려 공유 시트를 띄운다.
+              끝난 경기에만 띄운다. 예정 경기는 스코어·MOM 이 비어 빈 판이 나온다. */}
+          {!upcoming && (
           <button
             type="button"
             onClick={async () => {
@@ -457,6 +459,7 @@ export default function MatchRow({
             )}
             인스타에 결과 공유
           </button>
+          )}
         </div>
       )}
 

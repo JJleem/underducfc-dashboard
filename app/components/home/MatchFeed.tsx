@@ -519,6 +519,9 @@ export default function MatchFeed({
           <PhotoUploader matchId={match.id} count={photos.length} />
         )}
 
+        {/* 결과 카드 공유 — 끝난 경기에만. 예정 경기는 스코어·MOM 이 비어 있어서
+            카드를 만들어봐야 빈 판이 나온다(눌러도 아무 일도 안 일어난 것처럼 보였다). */}
+        {!upcoming && (
         <button
           type="button"
           onClick={async () => {
@@ -548,6 +551,7 @@ export default function MatchFeed({
             공유
           </span>
         </button>
+        )}
       </div>
 
       {/* 캡션 — 인스타에서 사진 밑에 글이 붙는 자리.

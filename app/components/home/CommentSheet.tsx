@@ -58,8 +58,7 @@ export default function CommentSheet({
         setActiveSnapPoint={setActiveSnapPoint}
         fadeFromIndex={0}
         handleOnly
-        fixed
-        repositionInputs
+        repositionInputs={false}
         preventScrollRestoration
       >
         <DrawerContent
