@@ -1,4 +1,4 @@
-// 전술게시판 — 유튜브 링크 공유 게시판 목록.
+// 전술게시판 — 영상 공유와 쿼터별 전술을 함께 보는 게시판 목록.
 import { auth } from "@/auth";
 import { isAdmin } from "../lib/admin";
 import { listBoardPosts, getMyLikedPostIds } from "../lib/board";
@@ -7,7 +7,10 @@ import BoardClient from "./BoardClient";
 export const dynamic = "force-dynamic";
 
 export default async function BoardPage() {
-  const session = await auth();
+  const [session, loadedPosts] = await Promise.all([
+    auth(),
+    listBoardPosts().catch(() => [] as Awaited<ReturnType<typeof listBoardPosts>>),
+  ]);
   const currentUser = session?.user
     ? {
         kakaoId: (session.user as { kakaoId?: string }).kakaoId ?? "",
@@ -15,12 +18,7 @@ export default async function BoardPage() {
       }
     : null;
 
-  let posts = [] as Awaited<ReturnType<typeof listBoardPosts>>;
-  try {
-    posts = await listBoardPosts();
-  } catch {
-    posts = [];
-  }
+  let posts = loadedPosts;
 
   // 로그인 시 내가 좋아요한 글 표시
   if (currentUser?.kakaoId) {

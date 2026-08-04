@@ -93,15 +93,13 @@ export default async function VotePage() {
   // 날씨: 시트에 저장된 값 우선, 없으면 API 조회 후 시트에 저장
   const weatherMap: Record<number, { temp: number; description: string; icon: string; pop: number; available: boolean }> = {};
 
-  for (const m of [...upcomingMatches, ...pastMatches]) {
-    if (m.weatherRaw) {
-      // 시트에 이미 저장된 날씨
-      weatherMap[m.id] = parseWeather(m.weatherRaw);
-    } else if (m.result === "예정") {
-      // 예정 경기 & 날씨 미저장 → API 조회 시도
+  const weatherEntries = await Promise.all(
+    [...upcomingMatches, ...pastMatches].map(async (m) => {
+      if (m.weatherRaw) return [m.id, parseWeather(m.weatherRaw)] as const;
+      if (m.result !== "예정") return null;
+
+      // 날씨가 비어 있는 경기가 여러 개여도 외부 조회를 직렬로 기다리지 않는다.
       const weather = await getMatchWeather(m.date, m.time, m.location);
-      weatherMap[m.id] = weather;
-      // 조회 성공하면 시트에 기록 (다음 방문부터는 시트에서 읽음)
       if (weather.available) {
         try {
           await writeMatchWeather(m.id, serializeWeather(weather));
@@ -109,13 +107,25 @@ export default async function VotePage() {
           console.error(`[vote] 날씨 저장 실패 match=${m.id}:`, e);
         }
       }
-    }
-  }
+      return [m.id, weather] as const;
+    }),
+  );
+  weatherEntries.forEach((entry) => {
+    if (entry) weatherMap[entry[0]] = entry[1];
+  });
 
   return (
     <VoteClient
-      upcomingMatches={upcomingMatches.map(({ weatherRaw: _, ...m }) => m)}
-      pastMatches={pastMatches.map(({ weatherRaw: _, ...m }) => m)}
+      upcomingMatches={upcomingMatches.map((match) => {
+        const { weatherRaw, ...withoutWeather } = match;
+        void weatherRaw;
+        return withoutWeather;
+      })}
+      pastMatches={pastMatches.map((match) => {
+        const { weatherRaw, ...withoutWeather } = match;
+        void weatherRaw;
+        return withoutWeather;
+      })}
       attendanceVotes={attendanceVotes}
       voteComments={voteComments}
       users={users}

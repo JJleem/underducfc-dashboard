@@ -16,6 +16,7 @@ import { flushSync } from "react-dom";
 import Link from "next/link";
 import { ChevronRight, Copy, Crown, MapPin, Spline, Volleyball, X } from "lucide-react";
 import ModalPortal from "./ModalPortal";
+import PinchZoomImage from "./PinchZoomImage";
 
 export type GridMatch = {
   id: number;
@@ -68,7 +69,7 @@ function Pips({ goals, assists, size = 11 }: { goals: number; assists: number; s
         </span>
       )}
       {assists > 0 && (
-        <span className="inline-flex items-center gap-0.5 font-black text-emerald-500">
+        <span className="inline-flex items-center gap-0.5 font-black text-gray-400 dark:text-white/45">
           <Spline width={size} height={size} strokeWidth={2.4} />
           {assists > 1 && <span className="tabular-nums">×{assists}</span>}
         </span>
@@ -302,13 +303,12 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
                           className="absolute inset-0 scale-110 bg-cover bg-center opacity-60 blur-lg"
                           style={{ backgroundImage: `url(${thumb(p)})` }}
                         />
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <PinchZoomImage
                           src={full(p)}
                           alt={`${current.opponent} 경기 사진 ${i + 1}`}
+                          className="relative"
+                          allowHorizontalSwipe
                           loading={i === 0 ? "eager" : "lazy"}
-                          decoding="async"
-                          className="relative max-h-full max-w-full object-contain"
                         />
                       </div>
                     </div>

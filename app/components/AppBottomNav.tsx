@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { BarChart3, Users, Home, UserRound, Vote, Youtube } from "lucide-react";
+import { BarChart3, Users, Home, UserRound, Vote, ClipboardList } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { motion } from "motion/react";
 import type { MouseEvent } from "react";
@@ -14,8 +14,8 @@ const ITEMS = [
   { key: "home" as const, label: "홈", icon: Home, href: "/" },
   { key: "roster" as const, label: "명단", icon: Users, href: "/roster" },
   { key: "vote" as const, label: "투표", icon: Vote, href: "/vote" },
-  { key: "board" as const, label: "전술", icon: Youtube, href: "/board" },
-  { key: "stats" as const, label: "스탯", icon: BarChart3, href: "/?tab=stats" },
+  { key: "board" as const, label: "전술", icon: ClipboardList, href: "/board" },
+  { key: "stats" as const, label: "스탯", icon: BarChart3, href: "/stats" },
 ];
 
 /** 탭 순서(인디케이터 위치 계산용). MY는 항상 마지막. */
@@ -57,6 +57,8 @@ function isFullscreenRoute(pathname: string): boolean {
 }
 
 function activeFromPath(pathname: string, tab: string | null): NavKey | null {
+  // 스탯·전적이 홈 탭에서 독립 페이지로 빠졌다. ?tab=stats 는 기존 홈에만 남아 있다.
+  if (pathname.startsWith("/stats") || pathname.startsWith("/record")) return "stats";
   if (pathname === "/") return tab === "stats" ? "stats" : "home";
   if (pathname.startsWith("/roster")) return "roster";
   if (pathname.startsWith("/vote")) return "vote";

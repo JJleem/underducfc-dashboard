@@ -7,6 +7,8 @@ import { requireUser } from "@/app/lib/admin";
 import { auth } from "@/auth";
 
 export async function GET() {
+  const denied = await requireUser();
+  if (denied) return denied;
   try {
     const rows = await getAttendanceVoteRows();
     const votes = rows.slice(1).map((row: string[]) => ({

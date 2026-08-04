@@ -1,37 +1,62 @@
-// 선수 프로필 이동 시 즉시 뜨는 스켈레톤 (헤더 클래스는 page.tsx와 동일하게 유지)
+const SHIMMER = "skeleton-shimmer bg-gray-200 dark:bg-white/[0.08]";
+const SOFT = "skeleton-shimmer bg-gray-100 dark:bg-white/[0.05]";
+
 export default function Loading() {
   return (
-    <div>
-      <div className="sticky top-0 z-10 flex items-center gap-2 px-4 safe-header-py-3 bg-gray-50/80 dark:bg-[#0a0a0c]/80 backdrop-blur border-b border-gray-200/60 dark:border-white/[0.06]">
-        <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-white/10" />
-        <div className="h-3.5 w-24 rounded bg-gray-200 dark:bg-white/10" />
+    <div className="mx-auto min-h-dvh max-w-md bg-gray-50 pb-28 dark:bg-[#09090b]">
+      <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-gray-200/60 bg-gray-50/80 px-4 safe-header-py-3 backdrop-blur dark:border-white/[0.06] dark:bg-[#09090b]/80">
+        <div className={`h-[18px] w-[18px] rounded ${SHIMMER}`} />
+        <div className={`h-3 w-16 rounded ${SOFT}`} />
       </div>
-      <main className="animate-pulse space-y-4 p-4 pb-28">
-        <section className="rounded-[22px] border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-[#161618]">
-          <div className="flex items-center gap-4">
-            <div className="h-20 w-20 rounded-full bg-gray-200 dark:bg-white/10" />
-            <div className="flex-1 space-y-2.5">
-              <div className="h-5 w-28 rounded bg-gray-200 dark:bg-white/10" />
-              <div className="h-3 w-16 rounded bg-gray-100 dark:bg-white/5" />
-              <div className="h-3 w-20 rounded bg-gray-100 dark:bg-white/5" />
+
+      <section className="relative overflow-hidden px-4 pt-5">
+        <div
+          className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-[#FF8FA3]"
+          style={{ opacity: 0.1, filter: "blur(48px)" }}
+        />
+        <div className="relative flex items-center gap-4">
+          <div className={`h-[92px] w-[92px] shrink-0 rounded-full ${SHIMMER}`} />
+          <div className="min-w-0 flex-1">
+            <div className={`h-5 w-24 rounded ${SHIMMER}`} />
+            <div className="mt-4 grid grid-cols-4 gap-1">
+              {[0, 1, 2, 3].map((item) => (
+                <div key={item}>
+                  <div className={`h-4 w-7 rounded ${SHIMMER}`} />
+                  <div className={`mt-1.5 h-2 w-7 rounded ${SOFT}`} />
+                </div>
+              ))}
             </div>
           </div>
-          <div className="mt-5 grid grid-cols-4 gap-2">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="rounded-xl bg-gray-100 dark:bg-white/5 py-3">
-                <div className="mx-auto h-4 w-6 rounded bg-gray-200 dark:bg-white/10" />
-                <div className="mx-auto mt-1.5 h-2 w-8 rounded bg-gray-200 dark:bg-white/10" />
-              </div>
-            ))}
-          </div>
-        </section>
-        <div className="h-3 w-20 rounded bg-gray-200 dark:bg-white/10" />
-        <div className="flex gap-2">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-24 flex-1 rounded-2xl border border-gray-200 bg-white dark:border-white/10 dark:bg-[#161618]" />
-          ))}
         </div>
-      </main>
+        <div className="mt-4 flex gap-2">
+          <div className={`h-3 w-8 rounded ${SOFT}`} />
+          <div className={`h-6 w-40 rounded-full ${SOFT}`} />
+        </div>
+      </section>
+
+      <section className="mt-4 flex gap-3 overflow-hidden px-4">
+        {[0, 1, 2, 3].map((item) => (
+          <div key={item} className="flex shrink-0 flex-col items-center gap-2">
+            <div className={`h-14 w-14 rounded-full ${SHIMMER}`} />
+            <div className={`h-2.5 w-12 rounded ${SOFT}`} />
+          </div>
+        ))}
+      </section>
+
+      <div className="mt-5 grid min-h-14 grid-cols-3 border-y border-gray-200/70 dark:border-white/[0.08]">
+        {[0, 1, 2].map((item) => (
+          <div key={item} className="flex flex-col items-center justify-center gap-1">
+            <div className={`h-[19px] w-[19px] rounded ${SHIMMER}`} />
+            <div className={`h-2 w-6 rounded ${SOFT}`} />
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-3 gap-[2px]">
+        {Array.from({ length: 9 }, (_, item) => (
+          <div key={item} className={`aspect-square ${item % 2 ? SOFT : SHIMMER}`} />
+        ))}
+      </div>
     </div>
   );
 }

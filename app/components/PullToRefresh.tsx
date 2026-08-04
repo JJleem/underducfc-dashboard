@@ -64,6 +64,9 @@ export default function PullToRefresh({
     const isInsideScrollableOrDialog = (target: EventTarget | null) => {
       let node = target instanceof Element ? target : null;
       while (node && node !== document.body) {
+        // 전술 상세는 화면 가장자리의 세로 당김을 글 이동 제스처로 쓴다.
+        // 같은 터치를 당겨서 새로고침까지 동시에 잡지 않도록 명시적으로 양보한다.
+        if (node.hasAttribute("data-pull-to-refresh-ignore")) return true;
         if (node.getAttribute("role") === "dialog") return true;
         const style = window.getComputedStyle(node);
         if (

@@ -18,6 +18,7 @@ import {
   type Point,
 } from "../../lib/positions";
 import type { BoardPost } from "../../lib/board";
+import AppConfirmDialog from "../../components/AppConfirmDialog";
 
 const FORMATIONS = ["4-3-3", "4-4-2", "4-2-3-1", "3-5-2", "3-4-3", "5-3-2", "4-1-4-1"];
 const QUARTER_NAMES = ["1Q", "2Q", "3Q", "4Q"];
@@ -91,6 +92,7 @@ export default function BoardLineupClient({
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+  const [confirmAction, setConfirmAction] = useState<"remove-quarter" | "reset" | null>(null);
 
   const cur = quarters[active];
   const { formation, positions, assignments, instructions, tactic } = cur;
@@ -113,13 +115,18 @@ export default function BoardLineupClient({
     setQuarters((prev) => [...prev, emptyQuarter(next)]);
     setActive(quarters.length);
     setSelected(null);
+    setSwapFrom(null);
+    setLiveShape(null);
   };
 
   const removeQuarter = (index: number) => {
     if (quarters.length <= 1) return;
     setQuarters((prev) => prev.filter((_, i) => i !== index));
-    setActive((prev) => (prev >= index && prev > 0 ? prev - 1 : prev));
+    // 중간 쿼터 삭제 시 그 자리에 당겨온 다음 쿼터를, 마지막 삭제 시 이전 쿼터를 본다.
+    setActive(Math.min(index, quarters.length - 2));
     setSelected(null);
+    setSwapFrom(null);
+    setLiveShape(null);
   };
 
   const shapeName = liveShape ?? formationOf(positions);
@@ -135,18 +142,17 @@ export default function BoardLineupClient({
     patch({ formation: f, positions: FORMATION_PRESETS[f] ?? FORMATION_PRESETS[FORMATIONS[0]] });
     setSelected(null);
     setSwapFrom(null);
+    setLiveShape(null);
   };
 
   /** 선수 풀에서 선수를 탭 → 선택된 슬롯에 배치 (이미 배치돼 있으면 그 자리는 비운다) */
   const placePlayer = (name: string) => {
     if (selected === null) return;
     setSwapFrom(null);
-    setAssignments((prev) => {
-      const next = prev.map((p) => (p === name ? null : p));
-      next[selected] = name;
-      return next;
-    });
-    const nextEmpty = assignments.findIndex((v, i) => i > selected && !v);
+    const next = assignments.map((player) => (player === name ? null : player));
+    next[selected] = name;
+    patch({ assignments: next });
+    const nextEmpty = next.findIndex((value, index) => index > selected && !value);
     setSelected(nextEmpty >= 0 ? nextEmpty : null);
   };
 
@@ -227,14 +233,14 @@ export default function BoardLineupClient({
   return (
     <div className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100 font-sans max-w-md mx-auto shadow-2xl">
       <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white/70 px-4 safe-header-py-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/70">
-        <Link href="/board" className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-          <ArrowLeft className="h-4 w-4" />
-          <span className="text-sm font-extrabold">{existing ? "내 전술 수정" : "전술 짜기"}</span>
+        <Link href="/board" aria-label="전술 게시판으로" className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300">
+          <ArrowLeft className="h-[18px] w-[18px]" />
         </Link>
+        <span className="mr-auto text-[12px] font-black tracking-widest text-gray-400">TACTICS</span>
         <button
           onClick={submit}
           disabled={submitting || done}
-          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-black transition-all ${
+          className={`-my-2 flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-[12px] font-black transition-all ${
             done ? "bg-green-500 text-white" : "bg-[#FFB6C1] text-black hover:bg-[#FF8FA3]"
           } disabled:opacity-70`}
         >
@@ -274,8 +280,13 @@ export default function BoardLineupClient({
             return (
               <button
                 key={q.quarter}
-                onClick={() => { setActive(i); setSelected(null); }}
-                className={`flex shrink-0 items-center gap-1 rounded-xl px-3 py-1.5 text-[11px] font-black transition-all ${
+                onClick={() => {
+                  setActive(i);
+                  setSelected(null);
+                  setSwapFrom(null);
+                  setLiveShape(null);
+                }}
+                className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl px-3 text-[11px] font-black transition-all ${
                   active === i
                     ? "bg-[#FF8FA3] text-white"
                     : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
@@ -301,16 +312,16 @@ export default function BoardLineupClient({
           {quarters.length < MAX_QUARTERS && (
             <button
               onClick={addQuarter}
-              className="flex shrink-0 items-center gap-1 rounded-xl border border-dashed border-gray-300 px-2.5 py-1.5 text-[11px] font-black text-gray-400 dark:border-white/15"
+              className="flex min-h-9 shrink-0 items-center gap-1 rounded-xl border border-dashed border-gray-300 px-2.5 text-[11px] font-black text-gray-400 dark:border-white/15"
             >
               <Plus className="h-3 w-3" /> 쿼터
             </button>
           )}
           {quarters.length > 1 && (
             <button
-              onClick={() => removeQuarter(active)}
+              onClick={() => setConfirmAction("remove-quarter")}
               aria-label="현재 쿼터 삭제"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-gray-400 active:bg-red-50 active:text-red-500 dark:active:bg-red-500/10"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -331,7 +342,7 @@ export default function BoardLineupClient({
               <button
                 key={f}
                 onClick={() => handleFormationChange(f)}
-                className={`flex-shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-black transition-all ${
+                className={`min-h-9 flex-shrink-0 rounded-lg px-2.5 text-[10px] font-black transition-all ${
                   matchesPreset(f)
                     ? "bg-gray-900 text-white dark:bg-white dark:text-black"
                     : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
@@ -352,7 +363,7 @@ export default function BoardLineupClient({
                 key={t.id}
                 onClick={() => setTactic(tactic === t.id ? "" : t.id)}
                 title={t.desc}
-                className={`flex-shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-black transition-all ${
+                className={`min-h-9 flex-shrink-0 rounded-lg px-2.5 text-[10px] font-black transition-all ${
                   tactic === t.id
                     ? "bg-[#FF8FA3] text-white"
                     : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
@@ -379,20 +390,14 @@ export default function BoardLineupClient({
               {isCustom && (
                 <button
                   onClick={() => patch({ positions: FORMATION_PRESETS[formation] ?? FORMATION_PRESETS[FORMATIONS[0]] })}
-                  className="flex items-center gap-1 text-[10px] font-bold text-[#FF8FA3] hover:opacity-75"
+                  className="-my-2 flex min-h-9 items-center gap-1 px-1 text-[10px] font-bold text-[#FF8FA3] hover:opacity-75"
                 >
                   <Move className="h-3 w-3" /> 배치 복귀
                 </button>
               )}
               <button
-                onClick={() => {
-                  patch({
-                    assignments: Array(11).fill(null),
-                    instructions: Array.from({ length: 11 }, () => []),
-                  });
-                  setSelected(null);
-                }}
-                className="flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                onClick={() => setConfirmAction("reset")}
+                className="-my-2 -mr-1 flex min-h-9 items-center gap-1 px-1 text-[10px] font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >
                 <RotateCcw className="h-3 w-3" /> 초기화
               </button>
@@ -427,7 +432,7 @@ export default function BoardLineupClient({
             {selected !== null && assignments[selected] && (
               <button
                 onClick={clearSlot}
-                className="rounded-lg bg-gray-100 px-2 py-0.5 text-[10px] font-black text-gray-500 dark:bg-white/5 dark:text-gray-400"
+                className="min-h-9 rounded-lg bg-gray-100 px-2.5 text-[10px] font-black text-gray-500 dark:bg-white/5 dark:text-gray-400"
               >
                 이 자리 비우기
               </button>
@@ -445,7 +450,7 @@ export default function BoardLineupClient({
                     <button
                       onClick={() => placePlayer(name)}
                       disabled={selected === null}
-                      className={`rounded-xl px-3 py-1.5 text-[11px] font-black transition-all ${
+                      className={`min-h-9 rounded-xl px-3 text-[11px] font-black transition-all ${
                         used
                           ? "border border-[#FFB6C1]/30 bg-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1]"
                           : selected !== null
@@ -486,6 +491,32 @@ export default function BoardLineupClient({
           </p>
         )}
       </main>
+      <AppConfirmDialog
+        open={confirmAction !== null}
+        title={confirmAction === "remove-quarter" ? `${quarters[active]?.quarter ?? "현재 쿼터"}를 삭제할까요?` : "현재 배치를 초기화할까요?"}
+        description={
+          confirmAction === "remove-quarter"
+            ? "이 쿼터의 선수 배치와 개인 전술이 함께 삭제됩니다."
+            : "현재 쿼터의 선수 배치와 개인 전술이 모두 비워집니다."
+        }
+        confirmLabel={confirmAction === "remove-quarter" ? "쿼터 삭제" : "초기화"}
+        destructive
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => {
+          if (confirmAction === "remove-quarter") {
+            removeQuarter(active);
+          } else {
+            patch({
+              assignments: Array(11).fill(null),
+              instructions: Array.from({ length: 11 }, () => []),
+            });
+            setSelected(null);
+            setSwapFrom(null);
+            setLiveShape(null);
+          }
+          setConfirmAction(null);
+        }}
+      />
     </div>
   );
 }

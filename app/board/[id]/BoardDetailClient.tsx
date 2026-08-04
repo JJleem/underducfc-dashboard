@@ -4,9 +4,61 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ChevronLeft, Trash2, Send, Heart, MessageCircle, Eye, User, Pencil, Instagram } from "lucide-react";
+import { ChevronLeft, ChevronUp, ChevronDown, Trash2, Send, Heart, MessageCircle, Eye, Pencil, Instagram } from "lucide-react";
 import { youtubeEmbed } from "../../lib/youtube";
 import { instagramEmbed } from "../../lib/instagram";
+import SwipeNav from "./SwipeNav";
+import AppConfirmDialog from "../../components/AppConfirmDialog";
+import AppToast from "../../components/AppToast";
+
+export interface NeighborPost {
+  id: number;
+  title: string;
+  author: string;
+}
+
+/**
+ * 글 아래 이전·다음 링크.
+ * 스와이프는 눈에 안 보여서 있는 줄 모르면 아무도 안 쓴다. 링크로 한 번 눌러보면
+ * "위아래로 넘어가는 화면"이라는 걸 알게 되고, 데스크톱(마우스)에서도 동작한다.
+ */
+function NeighborLinks({ prev, next }: { prev: NeighborPost | null; next: NeighborPost | null }) {
+  if (!prev && !next) return null;
+  return (
+    <nav className="mt-8 border-t border-gray-100 dark:border-white/[0.06]">
+      {[
+        { post: prev, label: "이전 글", Icon: ChevronUp },
+        { post: next, label: "다음 글", Icon: ChevronDown },
+      ].map(({ post, label, Icon }) =>
+        post ? (
+          <Link
+            key={label}
+            href={`/board/${post.id}`}
+            className="flex items-center gap-3 border-b border-gray-100 py-3.5 active:opacity-60 dark:border-white/[0.06]"
+          >
+            <Icon
+              width={15}
+              height={15}
+              strokeWidth={2.4}
+              className="shrink-0 text-gray-300 dark:text-white/25"
+            />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[10px] font-black tracking-[0.14em] text-gray-400 dark:text-white/35">
+                {label}
+              </span>
+              <span className="mt-0.5 block truncate text-[13px] font-black text-gray-900 dark:text-white">
+                {post.title}
+              </span>
+            </span>
+            <span className="shrink-0 text-[11px] font-bold text-gray-400 dark:text-white/35">
+              {post.author}
+            </span>
+          </Link>
+        ) : null,
+      )}
+    </nav>
+  );
+}
 import { FormationField, type SeasonStat } from "../../components/FormationField";
 import type { EarnedTitle } from "../../lib/titles";
 import type { BoardPost, BoardComment } from "../../lib/board";
@@ -36,6 +88,8 @@ export default function BoardDetailClient({
   captainRoles = {},
   playerStats,
   playerTitles = {},
+  prev = null,
+  next = null,
 }: {
   post: BoardPost;
   comments: BoardComment[];
@@ -45,6 +99,9 @@ export default function BoardDetailClient({
   captainRoles?: Record<string, string>;
   playerStats?: Record<string, SeasonStat>;
   playerTitles?: Record<string, EarnedTitle[]>;
+  /** 위아래로 넘어갈 이웃 글. 스와이프와 하단 링크가 같은 값을 쓴다. */
+  prev?: NeighborPost | null;
+  next?: NeighborPost | null;
 }) {
   const router = useRouter();
   const [comments, setComments] = useState(initialComments);
@@ -53,6 +110,13 @@ export default function BoardDetailClient({
   const [liked, setLiked] = useState(post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [viewCount, setViewCount] = useState(post.viewCount);
+  const [deleteTarget, setDeleteTarget] = useState<
+    | { kind: "post" }
+    | { kind: "comment"; id: number; message: string }
+    | null
+  >(null);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   const embed = youtubeEmbed(post.youtubeUrl);
   const instaEmbed = embed ? null : instagramEmbed(post.youtubeUrl);
   // 내 전술 글이면 수정 버튼을 노출 (전술 글은 1인 1개라 항상 /board/lineup으로 간다)
@@ -60,6 +124,12 @@ export default function BoardDetailClient({
   // 전술 글은 쿼터별 안을 가질 수 있다 (최대 4개)
   const [quarterIdx, setQuarterIdx] = useState(0);
   const shownQuarter = post.lineup?.quarters[quarterIdx] ?? post.lineup?.quarters[0] ?? null;
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(null), 2400);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   useEffect(() => {
     const key = `ud:board:viewed:${post.id}`;
@@ -92,6 +162,7 @@ export default function BoardDetailClient({
     } catch {
       setLiked(before.liked);
       setLikeCount(before.likeCount);
+      setToast({ message: "좋아요를 반영하지 못했어요.", tone: "error" });
     }
   }
 
@@ -117,41 +188,43 @@ export default function BoardDetailClient({
       setComments((prev) => [...prev, created]);
       setMessage("");
     } catch (e) {
-      alert(e instanceof Error ? e.message : "댓글 등록 실패");
+      setToast({ message: e instanceof Error ? e.message : "댓글을 등록하지 못했어요.", tone: "error" });
     } finally {
       setBusy(false);
     }
   }
 
   async function removeComment(cid: number) {
-    if (!confirm("댓글을 삭제할까요?")) return;
     const res = await fetch(`/api/board/${post.id}/comments/${cid}`, { method: "DELETE" });
     if (res.ok) {
       router.refresh();
       setComments((prev) => prev.filter((c) => c.id !== cid));
+      setToast({ message: "댓글을 삭제했어요.", tone: "success" });
+      return;
     }
-    else alert("삭제 실패");
+    throw new Error("댓글을 삭제하지 못했어요.");
   }
 
   async function removePost() {
-    if (!confirm("이 글을 삭제할까요?")) return;
     const res = await fetch(`/api/board/${post.id}`, { method: "DELETE" });
     if (res.ok) {
       router.refresh();
       router.push("/board");
+      return;
     }
-    else alert("삭제 실패");
+    throw new Error("게시글을 삭제하지 못했어요.");
   }
 
   return (
-    <div className="pb-24 text-gray-900 dark:text-white">
+    <div data-pull-to-refresh-ignore className="pb-24 text-gray-900 dark:text-white">
+      <SwipeNav prevId={prev?.id ?? null} nextId={next?.id ?? null} />
       <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-gray-200/70 bg-white/90 px-4 safe-header-py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#101013]/90">
-        <Link href="/board" aria-label="목록으로" className="rounded-full p-1 active:opacity-60">
+        <Link href="/board" aria-label="목록으로" className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 active:opacity-60 dark:text-gray-300">
           <ChevronLeft className="h-5 w-5" />
         </Link>
-        <h1 className="truncate text-base font-black">전술게시판</h1>
+        <h1 className="truncate text-[12px] font-black tracking-widest text-gray-400">BOARD</h1>
         {canDeletePost && (
-          <button onClick={removePost} className="ml-auto rounded-full p-1.5 text-gray-400 active:opacity-60" aria-label="글 삭제">
+          <button onClick={() => setDeleteTarget({ kind: "post" })} className="-my-2.5 ml-auto flex h-11 w-11 items-center justify-center rounded-full text-gray-400 active:bg-red-50 active:text-red-500 dark:active:bg-red-500/10" aria-label="글 삭제">
             <Trash2 className="h-4 w-4" />
           </button>
         )}
@@ -168,7 +241,7 @@ export default function BoardDetailClient({
                   <button
                     key={q.quarter}
                     onClick={() => setQuarterIdx(i)}
-                    className={`shrink-0 rounded-xl px-3 py-1.5 text-[11px] font-black transition-colors ${
+                    className={`min-h-9 shrink-0 rounded-xl px-3 text-[11px] font-black transition-colors ${
                       quarterIdx === i
                         ? "bg-[#FF8FA3] text-white dark:bg-[#FFB6C1] dark:text-black"
                         : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
@@ -254,7 +327,7 @@ export default function BoardDetailClient({
             </span>
           )}
           {isMyLineup && (
-            <Link href="/board/lineup" className="ml-auto flex items-center gap-1 rounded-lg bg-gray-100 px-2 py-1 font-black text-gray-600 dark:bg-white/10 dark:text-gray-200">
+            <Link href="/board/lineup" className="ml-auto flex min-h-9 items-center gap-1 rounded-lg bg-gray-100 px-3 font-black text-gray-600 dark:bg-white/10 dark:text-gray-200">
               <Pencil className="h-3 w-3" /> 수정
             </Link>
           )}
@@ -267,7 +340,7 @@ export default function BoardDetailClient({
         <div className="mt-4 flex items-center gap-2 border-t border-gray-100 pt-2.5 dark:border-white/5">
           <button
             onClick={toggleLike}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-black transition-colors ${
+            className={`flex min-h-11 items-center gap-1.5 rounded-full px-3 text-[13px] font-black transition-colors ${
               liked
                 ? "bg-[#FF8FA3]/10 text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
                 : "bg-gray-100 text-gray-500 active:opacity-70 dark:bg-white/5 dark:text-gray-400"
@@ -288,28 +361,19 @@ export default function BoardDetailClient({
           <p className="mb-3 text-sm font-black">댓글 {comments.length}</p>
           <ul className="space-y-3">
             {comments.map((c) => {
-              const no = rosterMap[(c.author || "").trim()];
               return (
               <li key={c.id} className="flex items-start gap-2">
-                {/* 등번호 배지 (피드백 댓글과 동일 스타일) */}
-                {no ? (
-                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#FFB6C1]/40 bg-[#FFB6C1]/20">
-                    <span className="text-[8px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">#{no}</span>
-                  </div>
-                ) : (
-                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-white/5">
-                    <User className="h-3 w-3 text-gray-400 dark:text-gray-500" />
-                  </div>
-                )}
-                <div className="flex-1 rounded-2xl bg-gray-100 px-3 py-2 dark:bg-white/5">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-1.5">
-                    <p className="text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">{c.author}</p>
-                    <span className="text-[9px] text-gray-400 tabular-nums">{fmt(c.createdAt)}</span>
+                    <Link href={`/players/${encodeURIComponent(c.author)}`} className="truncate text-[12.5px] font-black text-gray-900 active:opacity-60 dark:text-white">
+                      {c.author}
+                    </Link>
+                    <span className="shrink-0 text-[10px] font-bold text-gray-300 tabular-nums dark:text-white/25">{fmt(c.createdAt)}</span>
                   </div>
-                  <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-gray-800 dark:text-gray-200">{c.message}</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-[13px] leading-[1.55] text-gray-700 [overflow-wrap:anywhere] dark:text-white/70">{c.message}</p>
                 </div>
                 {canDeleteComment(c) && (
-                  <button onClick={() => removeComment(c.id)} className="mt-1 shrink-0 p-1 text-gray-400 active:opacity-60" aria-label="댓글 삭제">
+                  <button onClick={() => setDeleteTarget({ kind: "comment", id: c.id, message: c.message })} className="-my-2 -mr-2 flex h-11 w-11 shrink-0 items-center justify-center text-gray-300 active:text-red-500 dark:text-white/25" aria-label="댓글 삭제">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 )}
@@ -342,7 +406,7 @@ export default function BoardDetailClient({
               <button
                 onClick={addComment}
                 disabled={!message.trim() || busy}
-                className="rounded-full bg-[#FF8FA3] p-2.5 text-white active:opacity-80 disabled:opacity-40 dark:bg-[#FFB6C1] dark:text-black"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FF8FA3] text-white active:opacity-80 disabled:opacity-40 dark:bg-[#FFB6C1] dark:text-black"
                 aria-label="댓글 등록"
               >
                 <Send className="h-4 w-4" />
@@ -354,8 +418,35 @@ export default function BoardDetailClient({
             </button>
           )}
         </div>
-      </div>
 
+        <NeighborLinks prev={prev} next={next} />
+      </div>
+      <AppConfirmDialog
+        open={!!deleteTarget}
+        title={deleteTarget?.kind === "post" ? "게시글을 삭제할까요?" : "댓글을 삭제할까요?"}
+        description={deleteTarget?.kind === "post" ? "삭제한 게시글은 다시 복구할 수 없어요." : deleteTarget?.message}
+        confirmLabel="삭제"
+        destructive
+        busy={deleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={async () => {
+          if (!deleteTarget) return;
+          setDeleting(true);
+          try {
+            if (deleteTarget.kind === "post") await removePost();
+            else await removeComment(deleteTarget.id);
+            setDeleteTarget(null);
+          } catch (error) {
+            setToast({
+              message: error instanceof Error ? error.message : "삭제하지 못했어요.",
+              tone: "error",
+            });
+          } finally {
+            setDeleting(false);
+          }
+        }}
+      />
+      <AppToast message={toast?.message ?? null} tone={toast?.tone} />
     </div>
   );
 }

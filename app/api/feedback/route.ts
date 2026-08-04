@@ -6,6 +6,8 @@ import { requireUser, currentIsAdmin } from "@/app/lib/admin";
 import { auth } from "@/auth";
 
 export async function GET() {
+  const denied = await requireUser();
+  if (denied) return denied;
   try {
     const rows = await getFeedbackRows();
     const feedbacks = rows.slice(1).map((row: string[]) => ({
@@ -55,7 +57,6 @@ export async function DELETE(request: NextRequest) {
     // 본인 댓글이거나 어드민만 삭제 가능
     const session = await auth();
     const userName = session?.user?.name;
-    const kakaoId = (session?.user as { kakaoId?: string } | undefined)?.kakaoId ?? null;
     if (!(await currentIsAdmin()) && name !== userName) {
       return NextResponse.json({ error: "본인의 댓글만 삭제할 수 있습니다." }, { status: 403 });
     }

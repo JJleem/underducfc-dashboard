@@ -7,6 +7,8 @@ import { auth } from "@/auth";
 import { currentIsAdmin } from "@/app/lib/admin";
 
 export async function GET() {
+  const denied = await requireUser();
+  if (denied) return denied;
   try {
     const rows = await getVoteCommentRows();
     const comments = rows.slice(1).filter((r: string[]) => r[0]).map((row: string[]) => ({

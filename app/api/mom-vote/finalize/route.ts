@@ -4,6 +4,7 @@ import { getMomVoteRows } from "../../../lib/backend";
 import { getMatchesRows } from "../../../lib/matches-backend";
 import { writeMatchMom } from "../../../lib/sheets-write";
 import { requireAdmin } from "@/app/lib/admin";
+import { getMomVoteDeadline } from "@/app/lib/mom-vote-window";
 
 export async function POST() {
   const denied = await requireAdmin();
@@ -14,6 +15,7 @@ export async function POST() {
     const matches = rawMatches.slice(1).map((row: string[], index: number) => ({
       id: index,
       date: row[0] || "",
+      time: row[1] || "",
       mom: row[10] || "",
     }));
 
@@ -30,8 +32,7 @@ export async function POST() {
       });
     });
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = Date.now();
 
     const finalized: { matchId: number; mom: string }[] = [];
 
@@ -39,13 +40,9 @@ export async function POST() {
       // 이미 MOM 있으면 스킵
       if (match.mom?.trim()) continue;
 
-      // 날짜 파싱 (다양한 포맷 대응)
-      const d = new Date(match.date);
-      if (isNaN(d.getTime())) continue;
-      d.setHours(0, 0, 0, 0);
-
-      // 경기일이 오늘보다 이전이어야 함
-      if (d >= today) continue;
+      // 투표 창이 끝난 경기만 확정한다.
+      const deadline = getMomVoteDeadline(match.date, match.time);
+      if (!deadline || now < deadline.getTime()) continue;
 
       const votes = votesByMatch[match.id] || [];
       if (votes.length === 0) continue;

@@ -15,7 +15,7 @@ import { ChartColumnBig, Grid3x3, UsersRound } from "lucide-react";
 
 const TABS = [
   { key: "feed", label: "경기", Icon: Grid3x3 },
-  { key: "stats", label: "기록", Icon: ChartColumnBig },
+  { key: "stats", label: "스탯", Icon: ChartColumnBig },
   { key: "chem", label: "케미", Icon: UsersRound },
 ] as const;
 
@@ -35,7 +35,10 @@ export default function ProfileTabs({
 
   return (
     <div className="mt-5">
-      <div role="tablist" className="flex border-t border-gray-200 dark:border-white/[0.08]">
+      <div
+        role="tablist"
+        className="grid grid-cols-3 border-y border-gray-200/70 dark:border-white/[0.08]"
+      >
         {TABS.map(({ key, label, Icon }) => {
           const on = tab === key;
           return (
@@ -46,20 +49,29 @@ export default function ProfileTabs({
               aria-selected={on}
               aria-label={label}
               onClick={() => setTab(key)}
-              className={`flex flex-1 items-center justify-center border-b-[1.5px] py-2.5 transition-colors ${
+              className={`relative flex min-h-14 flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black transition-colors ${
                 on
-                  ? "border-gray-900 text-gray-900 dark:border-white dark:text-white"
-                  : "border-transparent text-gray-300 dark:text-white/25"
+                  ? "text-[#FF8FA3] dark:text-[#FFB6C1]"
+                  : "text-gray-300 dark:text-white/25"
               }`}
             >
               <Icon width={19} height={19} strokeWidth={on ? 2.4 : 2} />
+              <span>{label}</span>
+              {on && (
+                <span className="absolute inset-x-0 bottom-0 mx-auto h-0.5 w-8 rounded-full bg-[#FF8FA3] dark:bg-[#FFB6C1]" />
+              )}
             </button>
           );
         })}
       </div>
 
       {TABS.map(({ key }) => (
-        <div key={key} role="tabpanel" hidden={tab !== key} className="pt-4">
+        <div
+          key={key}
+          role="tabpanel"
+          hidden={tab !== key}
+          className={key === "feed" ? "pt-0" : "pt-5"}
+        >
           {panes[key]}
         </div>
       ))}

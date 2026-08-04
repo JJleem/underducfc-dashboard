@@ -43,7 +43,7 @@ function ScorePips({ goals, assists, size = 12 }: { goals: number; assists: numb
         </span>
       )}
       {assists > 0 && (
-        <span className="inline-flex items-center gap-0.5 font-black text-emerald-500">
+        <span className="inline-flex items-center gap-0.5 font-black text-gray-400 dark:text-white/45">
           <Spline width={size} height={size} strokeWidth={2.4} />
           {assists > 1 && <span className="tabular-nums">×{assists}</span>}
         </span>
@@ -90,11 +90,11 @@ function ListRow({
 
   // 줄 안에 선수 링크가 들어가는 경우가 있어 href 가 있는 줄만 Link 로 감싼다(중첩 방지).
   return href ? (
-    <Link href={href} className="flex items-center gap-3 px-3 py-2.5 active:bg-gray-50 dark:active:bg-white/[0.04]">
+    <Link href={href} className="flex items-center gap-3 py-3 active:opacity-60">
       {inner}
     </Link>
   ) : (
-    <div className="flex items-center gap-3 px-3 py-2.5">{inner}</div>
+    <div className="flex items-center gap-3 py-3">{inner}</div>
   );
 }
 
@@ -274,10 +274,10 @@ export default async function PlayerPage({
     !!relations.assistGivers;
 
   return (
-    <main className="min-h-dvh bg-gray-50 dark:bg-[#0a0a0c] text-gray-900 dark:text-white">
+    <main className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-white">
       <div className="max-w-md mx-auto pb-28">
         {/* 상단 바 */}
-        <div className="sticky top-0 z-10 flex items-center gap-2 px-4 safe-header-py-3 bg-gray-50/80 dark:bg-[#0a0a0c]/80 backdrop-blur border-b border-gray-200/60 dark:border-white/[0.06]">
+        <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-gray-200/60 bg-gray-50/80 px-4 safe-header-py-3 backdrop-blur dark:border-white/[0.06] dark:bg-[#09090b]/80">
           <PlayerProfileBackButton />
           <span className="text-[12px] font-black tracking-widest text-gray-400">PLAYER</span>
         </div>
@@ -410,7 +410,7 @@ export default async function PlayerPage({
                     <p className="mb-2 text-[10px] font-black tracking-widest text-gray-500 dark:text-gray-400">
                       시즌 베스트 경기
                     </p>
-                    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white dark:border-white/[0.06] dark:bg-white/[0.03]">
+                    <div className="border-y border-gray-100 dark:border-white/[0.06]">
                       <ListRow
                         left={<OpponentMark name={relations.bestGame.opponent} />}
                         label={relations.bestGame.date}
@@ -502,7 +502,7 @@ export default async function PlayerPage({
               <section className="px-4">
                 {/* 예전엔 에메랄드·핑크·스카이로 테두리와 그라데이션이 제각각인 카드가 따로 놀았다.
                     골격이 같은 줄로 묶고 구분은 헤어라인 하나로 끝낸다. */}
-                <div className="divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-100 bg-white dark:divide-white/[0.06] dark:border-white/[0.06] dark:bg-white/[0.03]">
+                <div className="divide-y divide-gray-100 border-y border-gray-100 dark:divide-white/[0.06] dark:border-white/[0.06]">
                   {relations.bestDuo && (
                     <ListRow
                       left={

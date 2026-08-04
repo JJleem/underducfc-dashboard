@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { incrementBoardView } from "@/app/lib/board";
+import { requireUser } from "@/app/lib/admin";
 
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await requireUser();
+  if (denied) return denied;
   try {
     const { id } = await params;
     const postId = Number(id);

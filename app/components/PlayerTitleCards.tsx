@@ -8,6 +8,7 @@ import { useTheme } from "next-themes";
 import { EarnedTitle, pickBadges } from "../lib/titles";
 import { TitleBadge, titleSurface } from "./TitleBadges";
 import ModalPortal from "./ModalPortal";
+import useAppOverlay from "./useAppOverlay";
 
 // 인스타 스토리 하이라이트처럼 가로로 넘긴다. 대표 칭호가 맨 앞, 나머지는 희귀도순.
 // 보유 수는 최대 17개 · 평균 7개라 한 줄 스크롤로 전부 담긴다.
@@ -64,6 +65,7 @@ export default function PlayerTitleCards({
   leading?: React.ReactNode;
 }) {
   const [selected, setSelected] = useState<EarnedTitle | null>(null);
+  const dismissSelected = useAppOverlay(!!selected, () => setSelected(null));
   const { resolvedTheme } = useTheme();
   const isLight = resolvedTheme === "light";
 
@@ -154,14 +156,14 @@ export default function PlayerTitleCards({
       {selected && selectedSurface && (
         <ModalPortal>
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur-sm"
-          onClick={() => setSelected(null)}
+          className="animate-fade fixed inset-0 z-50 flex items-end justify-center bg-black/55 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur-sm"
+          onClick={dismissSelected}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-label={`${selected.name} 상세 정보`}
-            className="relative w-full max-w-sm overflow-hidden rounded-[26px] p-5 shadow-2xl"
+            className="animate-rise relative w-full max-w-sm overflow-hidden rounded-[26px] p-5 shadow-2xl"
             style={{
               // 반투명 금속 틴트를 불투명 판 위에 얹는다 (마지막 레이어가 바탕색)
               background: `${selectedSurface.background}, ${isLight ? "#F7F9FC" : "#0C1220"}`,
@@ -179,8 +181,8 @@ export default function PlayerTitleCards({
             <button
               type="button"
               aria-label="닫기"
-              onClick={() => setSelected(null)}
-              className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/10 text-gray-600 dark:bg-white/10 dark:text-white/70"
+              onClick={dismissSelected}
+              className="absolute right-2 top-2 z-10 flex h-11 w-11 items-center justify-center rounded-full text-gray-500 active:bg-black/10 dark:text-white/60 dark:active:bg-white/10"
             >
               <X className="h-4 w-4" />
             </button>

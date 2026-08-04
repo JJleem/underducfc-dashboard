@@ -29,6 +29,19 @@ function DrawerClose({
   return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />;
 }
 
+function DrawerHandle({
+  className,
+  ...props
+}: React.ComponentProps<typeof DrawerPrimitive.Handle>) {
+  return (
+    <DrawerPrimitive.Handle
+      data-slot="drawer-handle"
+      className={cn("mt-3 mb-1 shrink-0 !bg-gray-300 dark:!bg-white/20", className)}
+      {...props}
+    />
+  );
+}
+
 function DrawerOverlay({
   className,
   ...props
@@ -48,8 +61,11 @@ function DrawerOverlay({
 function DrawerContent({
   className,
   children,
+  handleClassName,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Content>) {
+}: React.ComponentProps<typeof DrawerPrimitive.Content> & {
+  handleClassName?: string;
+}) {
   return (
     <DrawerPortal data-slot="drawer-portal">
       <DrawerOverlay />
@@ -65,7 +81,12 @@ function DrawerContent({
         )}
         {...props}
       >
-        <div className="bg-muted mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
+        <DrawerHandle
+          className={cn(
+            "hidden group-data-[vaul-drawer-direction=bottom]/drawer-content:block",
+            handleClassName,
+          )}
+        />
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>
@@ -124,6 +145,7 @@ export {
   DrawerOverlay,
   DrawerTrigger,
   DrawerClose,
+  DrawerHandle,
   DrawerContent,
   DrawerHeader,
   DrawerFooter,

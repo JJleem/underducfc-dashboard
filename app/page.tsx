@@ -1,5 +1,7 @@
 // app/page.tsx
 import { auth } from "@/auth";
+import { newHomeEnabled } from "./lib/home-flag";
+import NewHome from "./components/home/NewHome";
 import { isAdmin } from "./lib/admin";
 import {
   getRosterRows,
@@ -24,9 +26,19 @@ import { parseSubstitutions } from "./lib/lineup";
 export default async function TeamDashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; home?: string }>;
 }) {
-  const { tab } = await searchParams;
+  const { tab, home } = await searchParams;
+
+  // 새 홈(인스타 피드형). 기본은 꺼져 있고, 아래 어느 하나로 켜고 끈다.
+  //   ?home=new / ?home=old — 그 요청만 (배포 없이 비교)
+  //   NEW_HOME=on / off     — 서버 환경변수, 전체 적용
+  //   home-flag.ts 의 기본값
+  // 켜져 있어도 기존 홈 코드는 그대로 남아 있어 언제든 되돌릴 수 있다.
+  if (newHomeEnabled(home)) {
+    return <NewHome />;
+  }
+
   const initialView = tab === "stats" ? "stats" : tab === "matches" ? "matches" : "home";
   // 로그인 세션 (카카오) — 로그인 안 했으면 null
   const session = await auth();

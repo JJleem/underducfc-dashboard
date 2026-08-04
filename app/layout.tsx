@@ -2,6 +2,7 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { SessionProvider } from "next-auth/react";
+import { auth } from "@/auth";
 import { ThemeProvider } from "./components/theme-provider";
 import PullToRefresh from "./components/PullToRefresh";
 import ServiceWorkerRegister from "./components/ServiceWorkerRegister";
@@ -14,6 +15,7 @@ import AppBottomNav, {
 import Image from "next/image";
 import "./globals.css";
 import Link from "next/link";
+import LoginGate from "./components/LoginGate";
 
 export const metadata: Metadata = {
   title: "UNDERDUCK FC | 언더덕 FC",
@@ -66,6 +68,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   // 💡 PWA standalone에서 env(safe-area-inset-*)가 실제 값을 갖게 하는 필수 옵션.
   //    이게 없으면 iOS는 safe-area를 전부 0으로 계산해서, 하단 탭바/푸터의
   //    pb-[env(safe-area-inset-bottom)] 이 무효가 되고 홈 인디케이터와 겹친다.
@@ -91,11 +95,14 @@ const IOS_SPLASH: [number, number, number][] = [
   [440, 956, 3], // 16 Pro Max
 ];
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+  const signedIn = !!session?.user;
+
   return (
     // suppressHydrationWarning은 테마 깜빡임 방지용 필수 속성입니다
     <html lang="ko" suppressHydrationWarning>
@@ -127,52 +134,45 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider>
+          <SessionProvider session={session}>
           <NavTabProvider>
           <ServiceWorkerRegister />
-          <PushNotificationBanner />
           {/* 📱 모바일 앱 프레임 래퍼 */}
           <div className="max-w-md mx-auto min-h-[100dvh] flex flex-col bg-gray-50 dark:bg-[#09090b] shadow-2xl relative overflow-hidden transition-colors duration-300">
+            {signedIn ? (
+            <>
+            <PushNotificationBanner />
             <PullToRefresh>
             {/* 메인 컨텐츠 (Dashboard, Roster 등) */}
             <div className="flex-1">
               <PageTransition>{children}</PageTransition>
             </div>
 
-            {/* 💡 전역 Footer (모든 페이지 하단에 공통 적용) */}
-            <footer className="w-full pt-8 pb-[calc(6.5rem+env(safe-area-inset-bottom))] px-5 flex flex-col items-center gap-5 border-t border-gray-200/60 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-sm mt-auto">
-              {/* 팀 카피라이트 & 슬로건 */}
-              <div className="flex flex-col items-center gap-1.5 text-center">
-                <p className="text-[10px] font-black tracking-[0.2em] text-[#FF8FA3]/80 dark:text-[#FFB6C1]/70 uppercase ">
-                  Not &apos;Because of&apos;, but &apos;Thanks to&apos;
-                </p>
-                <p className="text-xs font-medium text-gray-400 dark:text-gray-500">
-                  © 2026 UNDERDUCK FC. All rights reserved.
-                </p>
-              </div>
-
-              {/* 몰트(molt) 제작자 뱃지 */}
-              <div className="flex items-center gap-2.5 px-4 py-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full shadow-sm">
-                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                  Designed & Built by
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <div className="relative w-5 h-5 rounded-sm overflow-hidden shrink-0">
-                    <Image
-                      src="/molt.png"
-                      alt="Molt Logo"
-                      fill
-                      className="object-contain shrink-0"
-                    />
-                  </div>
-                  <Link
-                    href={"https://github.com/JJleem"}
-                    className="font-black text-xs tracking-wider text-gray-800 dark:text-gray-200 hover:text-[#FF8FA3]/80"
-                  >
-                    molt
-                  </Link>
+            {/* 전역 Footer — 하단 탭과 경쟁하지 않는 조용한 팀 서명. */}
+            <footer className="mt-auto w-full border-t border-gray-200/60 px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-6 dark:border-white/[0.06]">
+              <div className="flex items-end justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FF8FA3] dark:text-[#FFB6C1]">
+                    UNDERDUCK FC
+                  </p>
+                  <p className="mt-1.5 text-[9.5px] font-bold tracking-[0.06em] text-gray-400 dark:text-white/30">
+                    NOT BECAUSE OF, BUT THANKS TO
+                  </p>
                 </div>
+                <Link
+                  href="https://github.com/JJleem"
+                  aria-label="molt GitHub"
+                  className="flex min-h-10 shrink-0 items-center gap-1.5 text-[10px] font-black text-gray-400 active:text-[#FF8FA3] dark:text-white/35 dark:active:text-[#FFB6C1]"
+                >
+                  <span className="relative h-4 w-4 overflow-hidden rounded-sm opacity-65">
+                    <Image src="/molt.png" alt="" fill sizes="16px" className="object-contain" />
+                  </span>
+                  molt
+                </Link>
               </div>
+              <p className="mt-4 text-[9px] font-medium text-gray-300 dark:text-white/20">
+                © 2026 UNDERDUCK FC
+              </p>
             </footer>
             </PullToRefresh>
 
@@ -181,6 +181,10 @@ export default function RootLayout({
             <Suspense fallback={<AppBottomNavFallback />}>
               <AppBottomNav />
             </Suspense>
+            </>
+            ) : (
+              <LoginGate />
+            )}
           </div>
           </NavTabProvider>
           </SessionProvider>

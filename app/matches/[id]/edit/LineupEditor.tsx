@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Sun, Moon, RotateCcw, Save, Check, UserPlus, X, ArrowRightLeft, Plus, Trash2, Move, ClipboardList } from "lucide-react";
-import Link from "next/link";
 import { useTheme } from "next-themes";
 import { MatchData, LineupData } from "../../../components/DashboardClient";
 import type { SubstitutionEvent } from "../../../lib/lineup";
@@ -420,10 +419,20 @@ export default function LineupEditor({
     <div className="min-h-dvh bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto shadow-2xl overflow-hidden">
       {/* 헤더 */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-5 safe-header-py-35 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
-        <Link href={`/matches/${match.id}`} className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-          <ArrowLeft className="w-4 h-4" />
+        <button
+          type="button"
+          onClick={() => {
+            // 홈 피드·경기 상세 등 실제로 편집 화면에 들어온 위치로 돌아간다.
+            // 새 탭에서 직접 연 경우에는 앱 밖으로 빠지지 않게 경기 상세를 fallback으로 쓴다.
+            if (window.history.length > 1) router.back();
+            else router.replace(`/matches/${match.id}`);
+          }}
+          aria-label="이전 화면으로"
+          className="-my-2.5 -ml-2.5 flex h-11 items-center gap-2 px-2.5 text-gray-600 dark:text-gray-400"
+        >
+          <ArrowLeft className="h-4 w-4" />
           <span className="font-extrabold text-sm uppercase tracking-tight">라인업 편집</span>
-        </Link>
+        </button>
         <div className="flex items-center gap-2">
           <button onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/10">
             <Moon className="block dark:hidden w-4 h-4 text-gray-700" />

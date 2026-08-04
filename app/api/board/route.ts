@@ -6,6 +6,8 @@ import { youtubeId } from "@/app/lib/youtube";
 import { isInstagramUrl } from "@/app/lib/instagram";
 
 export async function GET() {
+  const denied = await requireUser();
+  if (denied) return denied;
   try {
     return NextResponse.json(await listBoardPosts());
   } catch (err) {

@@ -7,6 +7,8 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await requireUser();
+  if (denied) return denied;
   try {
     const { id } = await params;
     return NextResponse.json(await listBoardComments(Number(id)));

@@ -4,44 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ChevronLeft, Plus, MessageCircle, PlayCircle, Youtube, Instagram, Search, Heart, Eye, X, Loader2, Check, ClipboardList, Pencil } from "lucide-react";
-import { youtubeThumb, youtubeId } from "../lib/youtube";
-import { instagramMedia, isInstagramUrl } from "../lib/instagram";
+import { ArrowLeft, Plus, Youtube, Instagram, Search, X, Loader2, ClipboardList } from "lucide-react";
+import { youtubeId } from "../lib/youtube";
+import { isInstagramUrl } from "../lib/instagram";
 import type { BoardPost } from "../lib/board";
-import LineupMini from "../components/LineupMini";
+import BoardGrid from "./BoardGrid";
 import ModalPortal from "../components/ModalPortal";
-
-/**
- * 인스타 썸네일. 서버가 임베드 페이지에서 뽑아 프록시해준다([[api/board/insta-thumb]]).
- * 실패하면(인스타가 막는 경우 등) 인스타 그라데이션 placeholder 로 폴백한다.
- */
-function InstaThumb({ media }: { media: { kind: "reel" | "p" | "tv"; code: string } }) {
-  const [failed, setFailed] = useState(false);
-  return (
-    <>
-      {failed ? (
-        <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#833AB4] via-[#E1306C] to-[#F77737]">
-          <Instagram className="h-7 w-7 text-white/95" strokeWidth={2} />
-        </div>
-      ) : (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={`/api/board/insta-thumb?code=${media.code}&kind=${media.kind}`}
-            alt=""
-            loading="lazy"
-            className="h-full w-full object-cover"
-            onError={() => setFailed(true)}
-          />
-          <PlayCircle className="absolute inset-0 m-auto h-8 w-8 text-white/90 drop-shadow" />
-        </>
-      )}
-      <span className="absolute bottom-1 left-1 rounded bg-black/45 px-1 text-[9px] font-black text-white">
-        {media.kind === "reel" ? "릴스" : "인스타"}
-      </span>
-    </>
-  );
-}
+import AppToast from "../components/AppToast";
+import useAppOverlay from "../components/useAppOverlay";
 
 type Sort = "latest" | "popular" | "views" | "likes" | "comments";
 const SORTS: { key: Sort; label: string }[] = [
@@ -67,8 +37,7 @@ export default function BoardClient({
   const [toast, setToast] = useState<string | null>(null);
 
   // 글쓰기: 먼저 종류를 고르고(영상/전술), 영상이면 모달을 연다
-  const [choosing, setChoosing] = useState(false);
-  const [writing, setWriting] = useState(false);
+  const [composer, setComposer] = useState<"choose" | "video" | null>(null);
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [body, setBody] = useState("");
@@ -77,6 +46,7 @@ export default function BoardClient({
   // 유튜브(watch·youtu.be·shorts) 또는 인스타그램(릴스·게시물) 링크면 등록 가능
   const linkOk = !!youtubeId(url) || isInstagramUrl(url);
   const canSubmit = title.trim() && linkOk;
+  const dismissComposer = useAppOverlay(composer !== null, () => setComposer(null));
 
   useEffect(() => {
     if (!toast) return;
@@ -129,7 +99,7 @@ export default function BoardClient({
       router.refresh(); // 다른 탭의 캐시된 화면에도 반영되게
       // 낙관적 반영: 서버 재요청 없이 목록에 즉시 추가
       setPosts((prev) => [created, ...prev]);
-      setTitle(""); setUrl(""); setBody(""); setWriting(false);
+      setTitle(""); setUrl(""); setBody(""); setComposer(null);
       setToast("게시글이 등록되었어요");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
@@ -139,76 +109,52 @@ export default function BoardClient({
     }
   }
 
-  async function toggleLike(e: React.MouseEvent, post: BoardPost) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!currentUser) { signIn("kakao"); return; }
-    const before = { likedByMe: post.likedByMe, likeCount: post.likeCount };
-    // 낙관적 업데이트
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === post.id
-          ? { ...p, likedByMe: !p.likedByMe, likeCount: p.likeCount + (p.likedByMe ? -1 : 1) }
-          : p,
-      ),
-    );
-    try {
-      const res = await fetch(`/api/board/${post.id}/like`, { method: "POST" });
-      if (!res.ok) throw new Error();
-      const { liked, likeCount } = await res.json();
-      router.refresh();
-      setPosts((prev) =>
-        prev.map((p) => (p.id === post.id ? { ...p, likedByMe: liked, likeCount } : p)),
-      );
-    } catch {
-      setPosts((prev) => prev.map((p) => (p.id === post.id ? { ...p, ...before } : p)));
-    }
-  }
 
   return (
     <div className="pb-24 text-gray-900 dark:text-white">
-      {/* 헤더 */}
-      <header className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/90 px-4 safe-header-py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#101013]/90">
+      {/* 헤더 — /vote·/stats·/record 와 같은 문법: 뒤로가기 + 영문 라벨.
+          페이지마다 상단 바가 다르면 같은 앱으로 안 읽힌다. */}
+      <header className="sticky top-0 z-30 border-b border-gray-200/60 bg-gray-50/80 px-4 safe-header-py-3 backdrop-blur dark:border-white/[0.06] dark:bg-[#09090b]/80">
         <div className="flex items-center gap-2">
-          <Link href="/" aria-label="홈으로" className="rounded-full p-1 active:opacity-60">
-            <ChevronLeft className="h-5 w-5" />
-          </Link>
-          <h1 className="flex items-center gap-1.5 text-lg font-black">
-            <Youtube className="h-5 w-5 text-[#FF8FA3] dark:text-[#FFB6C1]" /> 전술게시판
-          </h1>
-          <span className="ml-auto text-xs font-bold text-gray-400">{posts.length}개</span>
-        </div>
-
-        {/* 검색 + 글쓰기 */}
-        <div className="mt-2.5 flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="제목·작성자·내용 검색"
-              className="w-full rounded-full border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm outline-none focus:border-[#FF8FA3] dark:border-white/10 dark:bg-white/5"
-            />
-          </div>
-          <button
-            onClick={() => (currentUser ? setChoosing(true) : signIn("kakao"))}
-            aria-label="글쓰기"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FF8FA3] text-white shadow-sm active:opacity-80 dark:bg-[#FFB6C1] dark:text-black"
+          <Link
+            href="/"
+            aria-label="뒤로"
+            className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300"
           >
-            <Plus className="h-5 w-5" />
+            <ArrowLeft width={18} height={18} strokeWidth={2.4} />
+          </Link>
+          <span className="text-[12px] font-black tracking-widest text-gray-400">BOARD</span>
+          <button
+            onClick={() => (currentUser ? setComposer("choose") : signIn("kakao"))}
+            aria-label="글쓰기"
+            className="press-icon -my-1.5 ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:opacity-80"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3] text-white">
+              <Plus width={14} height={14} strokeWidth={2.6} />
+            </span>
           </button>
         </div>
 
-        {/* 정렬 필터 */}
-        <div className="mt-2.5 flex gap-1.5">
+        <div className="relative mt-2.5">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="제목·작성자·내용 검색"
+            className="w-full rounded-full bg-gray-100 py-2 pl-9 pr-3 text-[13px] outline-none placeholder:text-gray-400 dark:bg-white/[0.07] dark:placeholder:text-white/25"
+          />
+        </div>
+
+        <div className="mt-2.5 flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {SORTS.map((s) => (
             <button
               key={s.key}
               onClick={() => setSort(s.key)}
-              className={`rounded-full px-3 py-1 text-[11px] font-black transition-colors ${
+              aria-pressed={sort === s.key}
+              className={`min-h-9 shrink-0 rounded-full px-3 text-[11px] font-black transition-colors ${
                 sort === s.key
-                  ? "bg-[#FF8FA3] text-white dark:bg-[#FFB6C1] dark:text-black"
-                  : "bg-gray-100 text-gray-500 active:opacity-70 dark:bg-white/5 dark:text-gray-400"
+                  ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
+                  : "text-gray-400 active:opacity-70 dark:text-white/35"
               }`}
             >
               {s.label}
@@ -218,120 +164,40 @@ export default function BoardClient({
       </header>
 
       {/* 목록 */}
-      <div className="px-4 pt-4">
+      {/* 그리드는 화면 폭을 그대로 쓴다. 릴스 탭이 그렇고, 홈 피드의 사진도 풀블리드다.
+          좌우 패딩은 빈 상태 문구에만 필요해서 여기서 갈라 준다. */}
+      <div className="pt-4">
         {visible.length === 0 ? (
-          <div className="mt-16 flex flex-col items-center gap-3 text-gray-400 dark:text-gray-500">
+          <div className="mt-16 flex flex-col items-center gap-3 px-4 text-gray-400 dark:text-gray-500">
             <Youtube className="h-12 w-12" strokeWidth={1.5} />
-            <p className="text-sm font-semibold">{query ? "검색 결과가 없어요" : "아직 공유된 영상이 없어요"}</p>
+            <p className="text-sm font-semibold">{query ? "검색 결과가 없어요" : "아직 공유된 글이 없어요"}</p>
           </div>
         ) : (
-          <ul className="space-y-3">
-            {visible.map((p) => {
-              const thumb = youtubeThumb(p.youtubeUrl);
-              // 인스타는 API 토큰 없이 썸네일을 못 가져온다 → 인스타 느낌의 placeholder
-              const insta = p.lineup ? null : instagramMedia(p.youtubeUrl);
-              return (
-                <li key={p.id}>
-                  <Link
-                    href={`/board/${p.id}`}
-                    className="flex gap-3 rounded-2xl border border-gray-200 bg-white p-3 active:opacity-80 dark:border-white/10 dark:bg-[#161618]"
-                  >
-                    <div className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-white/5">
-                      {p.lineup ? (
-                        <>
-                          <LineupMini
-                            formation={p.lineup.quarters[0]?.formation ?? ""}
-                            positions={p.lineup.quarters[0]?.positions}
-                          />
-                          <span className="absolute bottom-1 left-1 rounded bg-black/65 px-1 text-[9px] font-black text-white">
-                            {p.lineup.quarters[0]?.formation}
-                          </span>
-                          {p.lineup.quarters.length > 1 && (
-                            <span className="absolute right-1 top-1 rounded bg-[#FF8FA3] px-1 text-[9px] font-black text-white">
-                              {p.lineup.quarters.length}쿼터
-                            </span>
-                          )}
-                        </>
-                      ) : thumb ? (
-                        <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={thumb} alt="" className="h-full w-full object-cover" />
-                          <PlayCircle className="absolute inset-0 m-auto h-8 w-8 text-white/90 drop-shadow" />
-                        </>
-                      ) : insta ? (
-                        <InstaThumb media={insta} />
-                      ) : (
-                        <div className="flex h-full items-center justify-center">
-                          <Youtube className="h-6 w-6 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <p
-                        className="truncate text-[13px] font-black leading-snug"
-                        title={p.title}
-                      >
-                        {p.title}
-                      </p>
-                      <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-gray-500 dark:text-gray-400">
-                        {p.author}
-                        {p.updatedAt && (
-                          <span className="flex items-center gap-0.5 text-[10px] font-bold text-[#FF8FA3] dark:text-[#FFB6C1]">
-                            <Pencil className="h-2.5 w-2.5" /> 수정됨
-                          </span>
-                        )}
-                      </p>
-                      {p.body && (
-                        <p className="mt-1 line-clamp-1 text-[11px] text-gray-400 dark:text-gray-500">{p.body}</p>
-                      )}
-                      <div className="mt-auto flex items-center gap-3 pt-1 text-[11px] font-bold text-gray-400">
-                        <button
-                          onClick={(e) => toggleLike(e, p)}
-                          className="flex items-center gap-1 active:opacity-60"
-                          aria-label="좋아요"
-                        >
-                          <Heart
-                            className={`h-3.5 w-3.5 ${p.likedByMe ? "fill-[#FF8FA3] text-[#FF8FA3] dark:fill-[#FFB6C1] dark:text-[#FFB6C1]" : ""}`}
-                          />
-                          <span className={p.likedByMe ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : ""}>{p.likeCount}</span>
-                        </button>
-                        <span className="flex items-center gap-1">
-                          <MessageCircle className="h-3.5 w-3.5" /> {p.commentCount}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Eye className="h-3.5 w-3.5" /> {p.viewCount}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          <BoardGrid key={`${sort}:${query.trim().toLowerCase()}`} posts={visible} />
         )}
       </div>
 
       {/* 글 종류 선택 — body 로 포털해야 "지금 보고 있는 화면" 기준으로 뜬다 */}
-      {choosing && (
+      {composer === "choose" && (
         <ModalPortal>
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
-          onClick={() => setChoosing(false)}
+          className="animate-fade fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
+          onClick={dismissComposer}
         >
           <div
-            className="w-full max-w-md space-y-2.5 rounded-t-3xl border border-gray-200 bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] dark:border-white/10 dark:bg-[#161618] sm:rounded-3xl"
+            className="animate-rise max-h-[92dvh] w-full max-w-md space-y-2.5 overflow-y-auto overscroll-contain rounded-t-3xl border border-gray-200 bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] dark:border-white/10 dark:bg-[#161618] sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-1 flex items-center justify-between">
               <h2 className="text-base font-black">무엇을 올릴까요?</h2>
-              <button onClick={() => setChoosing(false)} className="p-1 text-gray-400 active:opacity-60" aria-label="닫기">
+              <button onClick={dismissComposer} className="flex h-11 w-11 items-center justify-center rounded-full text-gray-400 active:bg-gray-100 dark:active:bg-white/10" aria-label="닫기">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <button
-              onClick={() => { setChoosing(false); setWriting(true); }}
+              onClick={() => setComposer("video")}
               className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 p-3.5 text-left active:opacity-70 dark:border-white/10"
             >
               <div className="flex shrink-0 items-center gap-1 text-[#FF8FA3] dark:text-[#FFB6C1]">
@@ -361,16 +227,16 @@ export default function BoardClient({
       )}
 
       {/* 글쓰기 모달 — body 로 포털해야 "지금 보고 있는 화면" 기준으로 뜬다 */}
-      {writing && (
+      {composer === "video" && (
         <ModalPortal>
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={() => setWriting(false)}>
+        <div role="dialog" aria-modal="true" className="animate-fade fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={dismissComposer}>
           <div
-            className="w-full max-w-md space-y-2.5 rounded-t-3xl border border-gray-200 bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] dark:border-white/10 dark:bg-[#161618] sm:rounded-3xl"
+            className="animate-rise max-h-[92dvh] w-full max-w-md space-y-2.5 overflow-y-auto overscroll-contain rounded-t-3xl border border-gray-200 bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] dark:border-white/10 dark:bg-[#161618] sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-1 flex items-center justify-between">
               <h2 className="text-base font-black">영상 공유</h2>
-              <button onClick={() => setWriting(false)} className="p-1 text-gray-400 active:opacity-60" aria-label="닫기">
+              <button onClick={dismissComposer} className="flex h-11 w-11 items-center justify-center rounded-full text-gray-400 active:bg-gray-100 dark:active:bg-white/10" aria-label="닫기">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -411,14 +277,7 @@ export default function BoardClient({
         </ModalPortal>
       )}
 
-      {/* 토스트 — 모달과 같은 이유로 포털이 필요하다 */}
-      {toast && (
-        <ModalPortal>
-        <div className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 z-[60] flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-gray-900/90 px-4 py-2 text-xs font-bold text-white shadow-lg dark:bg-white/90 dark:text-black">
-          <Check className="h-3.5 w-3.5" /> {toast}
-        </div>
-        </ModalPortal>
-      )}
+      <AppToast message={toast} />
 
     </div>
   );

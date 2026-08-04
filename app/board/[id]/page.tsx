@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { isAdmin } from "../../lib/admin";
-import { getBoardPost, listBoardComments, getMyLikedPostIds } from "../../lib/board";
+import { getBoardPost, listBoardComments, getMyLikedPostIds, listBoardPosts } from "../../lib/board";
 import { getRosterRows, getStatsRows, getFeaturedRows } from "../../lib/backend";
 import {
   pickBadges,
@@ -24,11 +24,13 @@ export default async function BoardDetailPage({
   if (!Number.isFinite(postId)) notFound();
 
   // 클릭 후 대기 시간을 줄이려 병렬 fetch (기존엔 순차 왕복 → 버벅임)
-  const [post, comments, rosterRows, session] = await Promise.all([
+  const [post, comments, rosterRows, session, allPosts] = await Promise.all([
     getBoardPost(postId),
     listBoardComments(postId).catch(() => []),
     getRosterRows().catch(() => [] as string[][]),
     auth(),
+    // 위아래 스와이프로 넘길 이웃 글. 목록 순서(최신순)를 그대로 쓴다.
+    listBoardPosts().catch(() => []),
   ]);
   if (!post) notFound();
 
@@ -106,8 +108,21 @@ export default async function BoardDetailPage({
     }
   }
 
+  // 목록에서 위 = 더 최신, 아래 = 더 오래된 글.
+  // 스와이프는 눈에 안 보이므로 글 아래에 링크로도 둔다 → 제목·작성자까지 넘긴다.
+  const at = allPosts.findIndex((p) => p.id === postId);
+  const brief = (p: (typeof allPosts)[number]) => ({
+    id: p.id,
+    title: p.title,
+    author: p.author,
+  });
+  const prev = at > 0 ? brief(allPosts[at - 1]) : null;
+  const next = at >= 0 && at < allPosts.length - 1 ? brief(allPosts[at + 1]) : null;
+
   return (
     <BoardDetailClient
+      prev={prev}
+      next={next}
       post={post}
       comments={comments}
       currentUser={currentUser}

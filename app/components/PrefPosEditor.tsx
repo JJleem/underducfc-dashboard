@@ -28,6 +28,7 @@ export default function PrefPosEditor({
   const [editing, setEditing] = useState(false);
   const [sel, setSel] = useState<string[]>(initial);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function toggle(p: string) {
     setSel((prev) =>
@@ -37,6 +38,7 @@ export default function PrefPosEditor({
 
   async function save() {
     setSaving(true);
+    setError(null);
     try {
       const res = await fetch("/api/roster/pref-pos", {
         method: "PUT",
@@ -47,7 +49,7 @@ export default function PrefPosEditor({
       setEditing(false);
       router.refresh();
     } catch {
-      alert("저장에 실패했어요.");
+      setError("저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
     } finally {
       setSaving(false);
     }
@@ -118,6 +120,7 @@ export default function PrefPosEditor({
           );
         })}
       </div>
+      {error && <p className="mt-2 text-[11px] font-bold text-red-500">{error}</p>}
       <button
         onClick={save}
         disabled={saving}
