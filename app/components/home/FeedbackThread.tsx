@@ -188,6 +188,12 @@ export default function FeedbackThread({
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onPointerDown={(e) => {
+              if (sheetLayout && document.activeElement !== e.currentTarget) {
+                e.preventDefault();
+                e.currentTarget.focus({ preventScroll: true });
+              }
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) submit();
             }}

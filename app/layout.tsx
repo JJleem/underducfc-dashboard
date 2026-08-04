@@ -70,9 +70,9 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  // Android/Chromium에서 키보드가 드로어를 억지로 밀어 올리지 않고
-  // 앱의 사용 가능 영역 자체를 줄이게 한다. iOS는 이 값을 무시하고 기본 포커스 동작을 쓴다.
-  interactiveWidget: "resizes-content",
+  // 키보드는 화면 위에 겹치고, 댓글 드로어가 그 높이를 직접 흡수한다.
+  // 그래야 배경 피드와 기존 댓글의 화면상 위치가 움직이지 않는다.
+  interactiveWidget: "overlays-content",
   // 💡 PWA standalone에서 env(safe-area-inset-*)가 실제 값을 갖게 하는 필수 옵션.
   //    이게 없으면 iOS는 safe-area를 전부 0으로 계산해서, 하단 탭바/푸터의
   //    pb-[env(safe-area-inset-bottom)] 이 무효가 되고 홈 인디케이터와 겹친다.
