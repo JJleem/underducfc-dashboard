@@ -16,7 +16,8 @@ import { flushSync } from "react-dom";
 import Link from "next/link";
 import { ChevronRight, Copy, Crown, MapPin, Spline, Volleyball, X } from "lucide-react";
 import ModalPortal from "./ModalPortal";
-import { matchResultArt } from "../lib/matchday-art";
+import { ART_RESULT_VEIL, matchResultArt } from "../lib/matchday-art";
+import { hasScore, resultWord } from "./home/match-result";
 import PinchZoomImage from "./PinchZoomImage";
 
 export type GridMatch = {
@@ -57,6 +58,20 @@ const resultTone = (result: string) =>
     : result === "패"
       ? "text-gray-400 dark:text-gray-500"
       : "text-amber-500";
+
+/**
+ * 스코어 한 덩어리. 언더덕 골 수만 팀 핑크로 둔다 —
+ * 숫자 두 개가 같은 색이면 어느 쪽이 우리인지 매번 다시 읽어야 한다.
+ */
+function Score({ our, their }: { our: string; their: string }) {
+  return (
+    <span className="tabular-nums">
+      <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{our}</span>
+      <span className="opacity-40">-</span>
+      {their}
+    </span>
+  );
+}
 
 /** 골·도움 표기. page.tsx 의 ScorePips 와 같은 모양이지만 그쪽은 서버 파일이라 옮겨올 수 없다. */
 function Pips({ goals, assists, size = 11 }: { goals: number; assists: number; size?: number }) {
@@ -166,6 +181,8 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
   if (matches.length === 0) return null;
 
   const current = active !== null ? matches[active] : null;
+  // 오버레이의 결과 카드 배경. 그리드 타일·피드와 같은 함수라 같은 그림이 나온다.
+  const overlayArt = current && current.photos.length === 0 ? matchResultArt(current.id) : null;
 
   return (
     <>
@@ -175,7 +192,11 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
           // 사진 없는 칸의 배경. matchId 로만 뽑아 피드와 같은 그림이 나온다.
           const art = cover ? null : matchResultArt(m.id);
           const vt = active === i && !open ? VT_NAME : undefined;
-          const hasFoot = m.goals > 0 || m.assists > 0 || !!m.location;
+          // 사진 칸은 스코어·상대팀을 항상 띄우므로 푸터가 늘 있다.
+          const hasFoot = !!cover || m.goals > 0 || m.assists > 0 || !!m.location;
+          // 자체전은 스코어가 비어 있다. 그대로 두면 "- - -" 가 나와서
+          // 결과 단어("자체전")로 갈아 끼운다(피드의 hasScore 처리와 같은 기준).
+          const scored = hasScore(m.ourScore, m.theirScore);
 
           return (
             <button
@@ -223,11 +244,15 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
                     </>
                   )}
                   <span
-                    className={`relative text-[17px] font-black tabular-nums leading-none drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)] ${
+                    className={`relative text-[17px] font-black leading-none drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)] ${
                       art ? "text-white" : resultTone(m.result)
                     }`}
                   >
-                    {m.ourScore}-{m.theirScore}
+                    {scored ? (
+                      <Score our={m.ourScore} their={m.theirScore} />
+                    ) : (
+                      <span className="text-[13px]">{resultWord(m.result) || "기록 없음"}</span>
+                    )}
                   </span>
                   <span
                     className={`relative max-w-full truncate text-[8.5px] font-bold ${
@@ -258,7 +283,26 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
                       : "text-gray-400 dark:text-gray-500"
                   }`}
                 >
-                  <span className="min-w-0 truncate">{m.location}</span>
+                  {/* 사진 칸은 스코어·상대팀 아래에 장소를 한 줄 더 놓는다. 사진만으로는
+                      어느 경기인지 알 수 없어 스코어가 먼저고, 장소는 보조라 흐리게 둔다.
+                      사진 없는 칸은 이미 가운데에 스코어·상대팀이 크게 있어서 장소만 쓴다. */}
+                  <span className="min-w-0 flex-1 leading-tight">
+                    {cover ? (
+                      <>
+                        <span className="block truncate">
+                          {scored && <Score our={m.ourScore} their={m.theirScore} />}
+                          <span className={scored ? "ml-1 opacity-80" : undefined}>
+                            {scored ? m.opponent : resultWord(m.result) || m.opponent}
+                          </span>
+                        </span>
+                        {m.location && (
+                          <span className="block truncate opacity-60">{m.location}</span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="block truncate">{m.location}</span>
+                    )}
+                  </span>
                   <span className={`shrink-0 ${cover ? "text-white" : "text-gray-600 dark:text-gray-300"}`}>
                     <Pips goals={m.goals} assists={m.assists} size={9} />
                   </span>
@@ -334,21 +378,59 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
                   ))}
                 </div>
               ) : (
-                <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-8">
+                /* 사진이 없는 경기. 예전엔 동그란 상대팀 로고와 "등록된 사진이 없는 경기"
+                   한 줄이 전부라 열어볼 이유가 없었다. 피드의 결과 카드와 같은 문법으로
+                   스코어·상대·결과를 세운다(그림도 matchId 로 뽑아 피드와 일치). */
+                <div className="flex min-h-0 flex-1 items-center justify-center p-3">
                   <div
-                    className="flex h-36 w-36 items-center justify-center rounded-full bg-white/[0.06] p-7"
+                    className="relative flex aspect-square w-full max-w-[420px] flex-col items-center justify-center overflow-hidden rounded-xl bg-[#070d20] text-center"
                     style={{ viewTransitionName: VT_NAME }}
                   >
-                    {current.logo ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={current.logo} alt="" className="h-full w-full object-contain" />
-                    ) : (
-                      <span className="text-[34px] font-black tabular-nums text-white">
-                        {current.ourScore}-{current.theirScore}
-                      </span>
+                    {overlayArt && (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={overlayArt.src}
+                          alt=""
+                          aria-hidden
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                        <span
+                          aria-hidden
+                          className="absolute inset-0"
+                          style={{ background: ART_RESULT_VEIL }}
+                        />
+                      </>
                     )}
+
+                    <div className="relative flex flex-col items-center px-6">
+                      <p className="text-[9px] font-black tracking-[0.28em] text-white/40">
+                        MATCH RESULT
+                      </p>
+                      <p className="mt-4 grid w-full grid-cols-2 gap-8 text-[11px] font-black text-white/60">
+                        <span className="truncate">언더덕</span>
+                        <span className="truncate">{current.opponent}</span>
+                      </p>
+                      {hasScore(current.ourScore, current.theirScore) ? (
+                        <p className="mt-1 text-[52px] font-black leading-none tracking-[-0.05em] text-white">
+                          <Score our={current.ourScore} their={current.theirScore} />
+                        </p>
+                      ) : (
+                        <p className="mt-3 text-[28px] font-black leading-none tracking-[-0.04em] text-white/85">
+                          {resultWord(current.result) || "기록 없음"}
+                        </p>
+                      )}
+                      {current.result && (
+                        <span className="mt-4 inline-flex min-w-16 justify-center rounded-full border border-white/15 bg-white/[0.07] px-4 py-1.5 text-[11px] font-black text-white/75">
+                          {current.result}
+                        </span>
+                      )}
+                      <p className="mt-4 text-[10px] font-bold text-white/45">
+                        {current.date}
+                        {current.location ? ` · ${current.location}` : ""}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-[11px] font-bold text-white/40">등록된 사진이 없는 경기</p>
                 </div>
               )}
 

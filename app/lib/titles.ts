@@ -9,6 +9,7 @@
 // 임계값(숫자)은 전부 TITLES 안에 모여 있고, TITLES_SPEC.md 와 1:1로 대응됩니다.
 // 숫자만 바꾸면 등급 컷이 바뀝니다 — 구조/로직은 건드릴 필요 없음.
 
+import { isMomOf } from "../components/home/match-result";
 import {
   CENTERBACK_ROLES,
   FORMATION_PRESETS,
@@ -983,7 +984,8 @@ export function buildPlayerRelations(
     const assists = countInCsv(m.assists, name);
     const points = goals + assists;
     if (points <= 0) return;
-    const isMom = m.mom === name;
+    // 공동 수상은 "A,B / C" 로 묶여 저장된다. 완전 일치로 보면 대부분 놓친다.
+    const isMom = isMomOf(m.mom, name);
     const better =
       !bestGame ||
       points > bestGame.points ||

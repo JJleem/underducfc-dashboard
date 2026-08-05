@@ -33,6 +33,28 @@ export function isCasualMatch(result: string, type?: string): boolean {
   return t === "자체전" || t === "풋살" || t === "야유회";
 }
 
+/**
+ * MOM 필드에서 수상자 이름을 모두 꺼낸다.
+ *
+ * 저장 형식이 두 겹이다. `/` 는 공격 MOM / 수비 MOM 을 나누고, `,` 는 같은 부문의
+ * 공동 수상을 나눈다. 실제 데이터에 "금상덕,김준수 / 안원진" 처럼 둘 다 섞여 있다.
+ *
+ * ⚠️ 쉼표로만 자르면 `/` 로 묶인 사람을 통째로 놓친다 — 실제로 김준수가 4경기
+ *    MOM 인데 프로필 그리드에 1개만 왕관이 떴다. 그래서 두 구분자를 함께 푼다.
+ */
+export function momNames(mom: string | undefined): string[] {
+  return (mom || "")
+    .split("/")
+    .flatMap((part) => part.split(","))
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/** 이 사람이 그 경기의 MOM 인가. */
+export function isMomOf(mom: string | undefined, name: string): boolean {
+  return momNames(mom).includes(name.trim());
+}
+
 /** 스코어가 실제로 기록됐는가. 자체전은 대부분 비어 있다. */
 export function hasScore(our: string | number | undefined, their: string | number | undefined): boolean {
   const ok = (v: string | number | undefined) => {
