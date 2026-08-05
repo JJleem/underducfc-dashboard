@@ -327,7 +327,13 @@ function NeedVote({
     <div className="relative pb-3">
       <div className="flex items-center justify-between gap-3">
         <p className={`shrink-0 text-[10px] font-black tracking-[0.18em] tabular-nums ${PINK}`}>
-          {dDay === 0 ? "D-DAY" : `D-${dDay}`} · {full} <WeekdayLabel weekday={weekday} />
+          {/* 날짜를 못 읽으면 null 이라 그냥 두면 "D-null" 이 찍힌다. 그때는 D 표기를 뺀다. */}
+          {dDay !== null && (
+            <>
+              {dDay === 0 ? "D-DAY" : dDay < 0 ? `D+${Math.abs(dDay)}` : `D-${dDay}`} ·{" "}
+            </>
+          )}
+          {full} <WeekdayLabel weekday={weekday} />
         </p>
         <HeroWeather weather={weather} />
       </div>

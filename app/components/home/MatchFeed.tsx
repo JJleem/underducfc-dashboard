@@ -218,6 +218,9 @@ export default function MatchFeed({
   const scored = hasScore(match.ourScore, match.theirScore);
   const upcoming = match.result === "예정";
   const dDay = upcoming ? getDDay(match.date) : null;
+  // 날짜는 지났는데 아직 결과를 안 넣은 경기. 그냥 두면 "D--3" 이 뜬다.
+  // 관리자가 결과를 채우기 전까지 이 상태로 남으므로 문구를 따로 준다.
+  const awaitingResult = dDay !== null && dDay < 0;
   const art = dDay === null ? null : matchdayArt(match.id, dDay);
   // 끝난 경기 카드의 배경. 날짜를 안 섞으므로 마이페이지 그리드와 항상 같은 그림이다.
   const resultArt = upcoming ? null : matchResultArt(match.id);
@@ -367,16 +370,18 @@ export default function MatchFeed({
                 art?.light ? "text-[#0f1729]/60" : "text-white/70"
               }`}
             >
-              NEXT MATCH
+              {awaitingResult ? "MATCH DONE" : "NEXT MATCH"}
             </p>
             <p
-              className={`mt-3 text-[64px] font-black leading-none tracking-[-0.05em] tabular-nums ${
+              className={`mt-3 font-black leading-none tracking-[-0.05em] tabular-nums ${
+                awaitingResult ? "text-[40px]" : "text-[64px]"
+              } ${
                 art?.light
                   ? "text-[#0f1729]"
                   : "text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.35)]"
               }`}
             >
-              {dDay === 0 ? "D-DAY" : `D-${dDay}`}
+              {awaitingResult ? "경기 종료" : dDay === 0 ? "D-DAY" : `D-${dDay}`}
             </p>
             <p
               className={`mt-4 text-[13px] font-bold ${

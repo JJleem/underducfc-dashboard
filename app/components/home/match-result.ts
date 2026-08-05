@@ -16,14 +16,21 @@ export function isInternalMatch(result: string, opponent?: string): boolean {
  * MOM 투표도 열지 않는다. 매주 자체전마다 전체 알림이 나가면 알림 피로만 쌓이고,
  * MOM 이 매주 나오면 상 자체의 무게가 없어진다.
  *
- * ⚠️ 자체전은 type 이 아니라 **result** 에 들어간다(실제 데이터: result="자체전" 3건).
- *    풋살·야유회는 type 이다. 그리고 type 에는 "일반 매칭"과 "일반매칭"처럼
- *    띄어쓰기가 섞여 있어서, 공백을 지우고 비교해야 새지 않는다.
+ * ⚠️ 자체전은 **양쪽에 다 들어올 수 있다**. 에디터의 "경기 유형" 선택지에도 있고
+ *    (MatchEditor.TYPES), 기존 데이터에는 result="자체전" 로 3건 들어가 있다.
+ *    그래서 둘 다 본다 — 한쪽만 보면 그쪽으로 안 넣은 경기가 그대로 샌다.
+ *
+ *    이게 중요한 이유: result 는 "경기가 끝났는가"를 겸하는 값이라, 미리
+ *    자체전으로 잡아 두려고 result 에 넣으면 그 순간 출석 투표가 마감된다.
+ *    유형은 type 에 잡고 result 는 경기가 실제로 끝날 때까지 "예정"으로 둬야 한다.
+ *
+ *    그리고 type 에는 "일반 매칭"과 "일반매칭"처럼 띄어쓰기가 섞여 있어서,
+ *    공백을 지우고 비교해야 새지 않는다.
  */
 export function isCasualMatch(result: string, type?: string): boolean {
   if (isInternalMatch(result)) return true;
   const t = (type || "").replace(/\s+/g, "");
-  return t === "풋살" || t === "야유회";
+  return t === "자체전" || t === "풋살" || t === "야유회";
 }
 
 /** 스코어가 실제로 기록됐는가. 자체전은 대부분 비어 있다. */

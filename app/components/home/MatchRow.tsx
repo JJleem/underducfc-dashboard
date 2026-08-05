@@ -174,7 +174,9 @@ export default function MatchRow({
               {upcoming && dDay !== null
                 ? dDay === 0
                   ? "D-DAY"
-                  : `D-${dDay}`
+                  : dDay < 0
+                    ? `D+${Math.abs(dDay)}`
+                    : `D-${dDay}`
                 : match.result}
             </span>
           </div>
