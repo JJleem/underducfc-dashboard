@@ -146,6 +146,23 @@ export default function MatchFeed({
   const liked = override?.liked ?? likedByMe;
   const likes = override?.likes ?? likeCount;
 
+  // 누른 사람 목록은 드로어를 열 때만 부른다. 피드 첫 로드에 매 경기 이름까지
+  // 실어 오면, 정작 대부분은 열어보지도 않는 목록 때문에 홈이 무거워진다.
+  const [likers, setLikers] = useState<string[] | null>(null);
+  const [likersFailed, setLikersFailed] = useState(false);
+
+  const loadLikers = async () => {
+    setLikers(null);
+    setLikersFailed(false);
+    try {
+      const res = await fetch(`/api/matches/${match.id}/likers`);
+      if (!res.ok) throw new Error();
+      setLikers((await res.json()).likers ?? []);
+    } catch {
+      setLikersFailed(true);
+    }
+  };
+
   const toggleLike = async () => {
     if (likeBusy.current) return;
     likeBusy.current = true;
@@ -469,32 +486,81 @@ export default function MatchFeed({
       {/* 액션 줄 — 아이콘은 먼저 읽히고, 짧은 이름으로 기능을 확인한다.
           라인업의 핑크 점은 등록된 라인업이 있다는 표시다. */}
       <div className="flex items-start gap-1 px-4 pt-3.5">
-        <button
-          type="button"
-          onClick={toggleLike}
-          aria-pressed={liked}
-          aria-label={liked ? "좋아요 취소" : "좋아요"}
-          className="press-icon flex w-11 flex-col items-center gap-1 text-gray-700 active:opacity-60 dark:text-white/70"
-        >
+        {/* 하트는 누르는 자리, 숫자는 누가 눌렀는지 보는 자리. 역할이 달라 버튼을 나눈다
+            (버튼 안에 버튼은 넣을 수 없기도 하다). */}
+        <div className="flex w-11 flex-col items-center gap-1 text-gray-700 dark:text-white/70">
           <span className="flex h-[18px] items-center gap-1">
-            <Heart
-              width={ICON.action}
-              height={ICON.action}
-              strokeWidth={2}
-              className={
-                liked
-                  ? "fill-[#FF8FA3] text-[#FF8FA3] dark:fill-[#FFB6C1] dark:text-[#FFB6C1]"
-                  : ""
-              }
-            />
+            <button
+              type="button"
+              onClick={toggleLike}
+              aria-pressed={liked}
+              aria-label={liked ? "좋아요 취소" : "좋아요"}
+              className="press-icon active:opacity-60"
+            >
+              <Heart
+                width={ICON.action}
+                height={ICON.action}
+                strokeWidth={2}
+                className={
+                  liked
+                    ? "fill-[#FF8FA3] text-[#FF8FA3] dark:fill-[#FFB6C1] dark:text-[#FFB6C1]"
+                    : ""
+                }
+              />
+            </button>
             {likes > 0 && (
-              <span className="text-[11px] font-black tabular-nums">{likes}</span>
+              <DetailSheet
+                title={`좋아요 ${likes}명`}
+                subtitle={`${match.opponent} · ${shortDate(match.date)}`}
+                className="text-[11px] font-black tabular-nums active:opacity-60"
+                onOpen={loadLikers}
+                trigger={likes}
+              >
+                {likersFailed ? (
+                  <p className="py-6 text-center text-[12px] font-bold text-gray-400 dark:text-white/30">
+                    목록을 불러오지 못했어요.
+                  </p>
+                ) : likers === null ? (
+                  // 이름 길이를 모르니 폭만 조금씩 다르게 둔다.
+                  <div className="flex flex-wrap gap-2">
+                    {[64, 78, 58].slice(0, Math.min(3, likes)).map((w) => (
+                      <span
+                        key={w}
+                        style={{ width: w }}
+                        className="skeleton-shimmer h-8 rounded-full bg-gray-100 dark:bg-white/[0.055]"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {likers.map((name, i) =>
+                      name === "알 수 없음" ? (
+                        <span
+                          key={`unknown-${i}`}
+                          className="rounded-full bg-gray-100 px-3 py-1.5 text-[12px] font-bold text-gray-400 dark:bg-white/[0.07] dark:text-white/30"
+                        >
+                          {name}
+                        </span>
+                      ) : (
+                        <Link
+                          key={`${name}-${i}`}
+                          href={`/players/${encodeURIComponent(name)}`}
+                          className="flex items-center gap-1.5 rounded-full bg-gray-100 py-1 pl-1 pr-3 text-[12px] font-bold text-gray-700 active:opacity-60 dark:bg-white/[0.07] dark:text-white/70"
+                        >
+                          <PlayerFace name={name} size={22} />
+                          {name}
+                        </Link>
+                      ),
+                    )}
+                  </div>
+                )}
+              </DetailSheet>
             )}
           </span>
           <span className="text-[9px] font-bold leading-none text-gray-400 dark:text-white/35">
             좋아요
           </span>
-        </button>
+        </div>
 
         <CommentSheet
           title="댓글"

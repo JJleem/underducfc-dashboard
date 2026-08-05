@@ -150,6 +150,13 @@ export async function toggleMatchLike(
   return { liked: r.liked, likeCount: r.like_count };
 }
 
+/** 이 경기에 좋아요를 누른 사람 이름, 누른 순서대로. */
+export async function getMatchLikers(matchId: number): Promise<string[]> {
+  return udGet<string[]>(`/api/underduck/matches/${matchId}/likers`, {
+    cache: "no-store",
+  });
+}
+
 /** 특정 사용자가 좋아요한 match_id 집합. */
 export async function getMyLikedMatchIds(kakaoId: string): Promise<Set<number>> {
   const ids = await udGet<number[]>(

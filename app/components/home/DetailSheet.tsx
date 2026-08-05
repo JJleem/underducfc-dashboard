@@ -17,6 +17,7 @@ export default function DetailSheet({
   children,
   className = "",
   contentClassName = "",
+  onOpen,
 }: {
   title: string;
   subtitle?: string;
@@ -26,12 +27,21 @@ export default function DetailSheet({
   className?: string;
   /** 내용 성격에 따라 기본 드로어 높이를 키울 때 쓴다. */
   contentClassName?: string;
+  /** 열릴 때 한 번. 내용을 그때 불러오는 드로어가 쓴다. */
+  onOpen?: () => void;
 }) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={className}>
+      <button
+        type="button"
+        onClick={() => {
+          onOpen?.();
+          setOpen(true);
+        }}
+        className={className}
+      >
         {trigger}
       </button>
 
