@@ -122,10 +122,19 @@ function hash(a: number, b: number): number {
   return Math.abs(Math.imul(h, 16777619));
 }
 
+/**
+ * 예정 경기 그림을 통째로 다시 섞고 싶을 때 올리는 값.
+ *
+ * "오늘 뜬 게 별로다" 싶으면 이 숫자만 바꾸면 된다. 예정 경기 그림은 어차피
+ * 날마다 바뀌는 값이라 다시 섞여도 잃는 게 없다.
+ * ⚠️ 끝난 경기(matchResultArt)는 이걸 쓰지 않는다 — 그건 고정이어야 한다.
+ */
+const DDAY_SALT = 5;
+
 /** 이 경기·이 날짜에 쓸 배경. 그림이 하나도 없으면 null(카드는 기존 그라디언트). */
 export function matchdayArt(matchId: number, dDay: number): MatchdayArt | null {
   if (ART.length === 0) return null;
-  return ART[hash(matchId, dDay) % ART.length];
+  return ART[hash(matchId + DDAY_SALT * 7919, dDay) % ART.length];
 }
 
 /**
