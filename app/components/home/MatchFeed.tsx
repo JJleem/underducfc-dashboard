@@ -7,13 +7,15 @@
 //
 // 사진이 없는 경기도 리듬이 끊기면 안 되므로 같은 정사각형 자리에 스코어를 크게 세운다.
 //
-// 읽기 전용이다. 좋아요처럼 동작하지 않을 버튼은 아예 두지 않는다.
+// 액션은 실제로 저장되는 것만 둔다. 좋아요는 match_like 테이블에 인당 1번으로
+// 남는다(백엔드 /matches/{id}/like). 동작하지 않을 장식 버튼은 여전히 두지 않는다.
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Crown,
   ClipboardList,
+  Heart,
   Loader2,
   MessageCircle,
   Pencil,
@@ -97,6 +99,8 @@ export default function MatchFeed({
   positions = {},
   momCountdownPreview = false,
   firstInFeed = false,
+  likeCount = 0,
+  likedByMe = false,
 }: {
   match: MatchData;
   lineups: LineupData[];
@@ -116,6 +120,8 @@ export default function MatchFeed({
   momCountdownPreview?: boolean;
   /** 피드 첫 게시물. 첫 장만 즉시 받아 첫 화면이 빈 채로 뜨지 않게 한다. */
   firstInFeed?: boolean;
+  likeCount?: number;
+  likedByMe?: boolean;
 }) {
   // 캐러셀 현재 장수. 인디케이터가 없으면 사진이 더 있다는 걸 알 방법이 없다.
   const [slide, setSlide] = useState(0);
@@ -123,9 +129,42 @@ export default function MatchFeed({
   const [lightboxSlide, setLightboxSlide] = useState(0);
   const lightboxTrack = useRef<HTMLDivElement>(null);
   const [sharing, setSharing] = useState(false);
-  const [shareError, setShareError] = useState<string | null>(null);
+  const [toastError, setToastError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const closeLightbox = useAppOverlay(lightboxOpen, () => setLightboxOpen(false));
+  // 좋아요 — 서버가 준 값이 기준이고, 내가 누른 직후에만 그 위에 덮어쓴다.
+  // 새 서버 값이 들어오면(새로고침·다른 사람이 누름) 덮개를 걷어 그쪽을 따른다.
+  const [override, setOverride] = useState<{ liked: boolean; likes: number } | null>(null);
+  const [serverLike, setServerLike] = useState({ likedByMe, likeCount });
+  const likeBusy = useRef(false);
+
+  if (serverLike.likedByMe !== likedByMe || serverLike.likeCount !== likeCount) {
+    setServerLike({ likedByMe, likeCount });
+    setOverride(null);
+  }
+
+  const liked = override?.liked ?? likedByMe;
+  const likes = override?.likes ?? likeCount;
+
+  const toggleLike = async () => {
+    if (likeBusy.current) return;
+    likeBusy.current = true;
+    const before = { liked, likes };
+    setOverride({ liked: !before.liked, likes: before.likes + (before.liked ? -1 : 1) });
+    navigator.vibrate?.(8);
+    try {
+      const res = await fetch(`/api/matches/${match.id}/like`, { method: "POST" });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setOverride({ liked: data.liked, likes: data.likeCount });
+    } catch {
+      // 안 눌린 걸 눌린 것처럼 두면 다음에 눌러도 반대로 동작한다.
+      setOverride(before);
+      setToastError("좋아요를 반영하지 못했어요.");
+    } finally {
+      likeBusy.current = false;
+    }
+  };
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -139,10 +178,10 @@ export default function MatchFeed({
   }, [lightboxOpen]);
 
   useEffect(() => {
-    if (!shareError) return;
-    const timer = window.setTimeout(() => setShareError(null), 2200);
+    if (!toastError) return;
+    const timer = window.setTimeout(() => setToastError(null), 2200);
     return () => window.clearTimeout(timer);
-  }, [shareError]);
+  }, [toastError]);
 
   const logo = getOpponentLogo(match.opponent);
   const photos = (match.photos || "").split(",").map((s) => s.trim()).filter((s) => s.startsWith("http"));
@@ -430,6 +469,33 @@ export default function MatchFeed({
       {/* 액션 줄 — 아이콘은 먼저 읽히고, 짧은 이름으로 기능을 확인한다.
           라인업의 핑크 점은 등록된 라인업이 있다는 표시다. */}
       <div className="flex items-start gap-1 px-4 pt-3.5">
+        <button
+          type="button"
+          onClick={toggleLike}
+          aria-pressed={liked}
+          aria-label={liked ? "좋아요 취소" : "좋아요"}
+          className="press-icon flex w-11 flex-col items-center gap-1 text-gray-700 active:opacity-60 dark:text-white/70"
+        >
+          <span className="flex h-[18px] items-center gap-1">
+            <Heart
+              width={ICON.action}
+              height={ICON.action}
+              strokeWidth={2}
+              className={
+                liked
+                  ? "fill-[#FF8FA3] text-[#FF8FA3] dark:fill-[#FFB6C1] dark:text-[#FFB6C1]"
+                  : ""
+              }
+            />
+            {likes > 0 && (
+              <span className="text-[11px] font-black tabular-nums">{likes}</span>
+            )}
+          </span>
+          <span className="text-[9px] font-bold leading-none text-gray-400 dark:text-white/35">
+            좋아요
+          </span>
+        </button>
+
         <CommentSheet
           title="댓글"
           subtitle={`${match.opponent} · ${shortDate(match.date)}`}
@@ -534,7 +600,7 @@ export default function MatchFeed({
               await shareStoryCard(match);
             } catch (e) {
               if (e instanceof Error && e.name !== "AbortError") {
-                setShareError("공유 이미지를 만들지 못했어요. 다시 시도해 주세요.");
+                setToastError("공유 이미지를 만들지 못했어요. 다시 시도해 주세요.");
               }
             } finally {
               setSharing(false);
@@ -813,7 +879,7 @@ export default function MatchFeed({
           </div>
         </ModalPortal>
       )}
-      <AppToast message={shareError} tone="error" />
+      <AppToast message={toastError} tone="error" />
     </article>
   );
 }

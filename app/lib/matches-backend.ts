@@ -29,6 +29,8 @@ export interface MatchOut {
   mom: string | null;
   weather: string | null;
   attendance_status: string | null;
+  /** 피드 좋아요 수. 목록 조회에 동봉돼 온다(경기당 추가 왕복 없음). */
+  like_count?: number;
 }
 
 const str = (v: unknown): string => (v === null || v === undefined ? "" : String(v));
@@ -36,10 +38,11 @@ const photosToCsv = (p: MatchOut["photos"]): string =>
   Array.isArray(p) ? p.filter(Boolean).join(",") : str(p);
 
 // 기존 시트 헤더(matches!A1:O1)와 동일한 컬럼 순서.
+// P(likeCount)는 시트에 없던 열이다 — 백엔드로 옮긴 뒤 늘어난 필드는 뒤에 붙인다.
 const HEADER = [
   "date", "time", "location", "opponent", "ourScore", "theirScore",
   "result", "type", "goals", "assists", "MOM", "attendees",
-  "photos", "weather", "attendanceStatus",
+  "photos", "weather", "attendanceStatus", "likeCount",
 ];
 
 /** MatchOut → 시트 A~O 한 행(위치 기반 파싱 호환). */
@@ -60,6 +63,7 @@ function toSheetRow(m: MatchOut): string[] {
     photosToCsv(m.photos),   // M photos(CSV)
     str(m.weather),          // N weather
     str(m.attendance_status),// O attendanceStatus
+    str(m.like_count ?? 0),  // P likeCount
   ];
 }
 
@@ -132,4 +136,25 @@ export async function addMatchPhotos(matchId: number, urls: string[]): Promise<M
 /** 사진 제거. */
 export async function removeMatchPhoto(matchId: number, url: string): Promise<MatchOut> {
   return udDelete<MatchOut>(`/api/underduck/matches/${matchId}/photos`, { url });
+}
+
+/** 피드 좋아요 토글. 인당 1번 — 백엔드가 누른 뒤 상태와 누적 수를 돌려준다. */
+export async function toggleMatchLike(
+  matchId: number,
+  kakaoId: string,
+): Promise<{ liked: boolean; likeCount: number }> {
+  const r = await udPost<{ liked: boolean; like_count: number }>(
+    `/api/underduck/matches/${matchId}/like`,
+    { kakao_id: kakaoId },
+  );
+  return { liked: r.liked, likeCount: r.like_count };
+}
+
+/** 특정 사용자가 좋아요한 match_id 집합. */
+export async function getMyLikedMatchIds(kakaoId: string): Promise<Set<number>> {
+  const ids = await udGet<number[]>(
+    `/api/underduck/matches/my-likes?kakao_id=${encodeURIComponent(kakaoId)}`,
+    { cache: "no-store" },
+  );
+  return new Set(ids);
 }

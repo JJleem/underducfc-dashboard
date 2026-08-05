@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Bell, MapPin } from "lucide-react";
 import { auth } from "@/auth";
 import { isAdmin } from "../../lib/admin";
-import { getMatchesRows } from "../../lib/matches-backend";
+import { getMatchesRows, getMyLikedMatchIds } from "../../lib/matches-backend";
 import {
   getAttendanceVoteRows,
   getFeedbackRows,
@@ -108,7 +108,7 @@ export default async function NewHome({
   const userName = session?.user?.name?.trim() || undefined;
   const admin = isAdmin(session?.user);
 
-  const [rawMatches, rawVotes, rawNotices, rawLineups, rawRoster, rawFeedback, rawStats, rawMomVotes, rawFeatured] =
+  const [rawMatches, rawVotes, rawNotices, rawLineups, rawRoster, rawFeedback, rawStats, rawMomVotes, rawFeatured, myLikedMatchIds] =
     await Promise.all([
       getMatchesRows(),
       getAttendanceVoteRows().catch((): string[][] => []),
@@ -119,9 +119,20 @@ export default async function NewHome({
       getStatsRows().catch((): string[][] => []),
       getMomVoteRows().catch((): string[][] => []),
       getFeaturedRows().catch((): string[][] => []),
+      // 로그인했으면 내가 누른 좋아요를 같이 받아 온다. 실패해도 피드는 그대로 뜬다.
+      kakaoId
+        ? getMyLikedMatchIds(kakaoId).catch(() => new Set<number>())
+        : Promise.resolve(new Set<number>()),
     ]);
 
   const matches = rawMatches.slice(1).map(toMatch);
+
+  // 좋아요 수는 경기 행의 P열로 함께 실려 온다(경기당 추가 왕복 없음).
+  const likeCountByMatch: Record<number, number> = {};
+  rawMatches.slice(1).forEach((row, id) => {
+    const count = Number(row[15]);
+    if (count > 0) likeCountByMatch[id] = count;
+  });
 
   // 홈과 같은 기준: 예정 + 야유회 아님 + 투표 안 마감, 그중 가장 이른 경기.
   // (야유회는 결과가 안 채워져 result 가 비는데, 그걸 빼지 않으면 지난 야유회가
@@ -494,7 +505,13 @@ export default async function NewHome({
               playerTitles,
             };
             return layout === "feed" ? (
-              <MatchFeed key={m.id} {...common} firstInFeed={idx === 0} />
+              <MatchFeed
+                key={m.id}
+                {...common}
+                firstInFeed={idx === 0}
+                likeCount={likeCountByMatch[m.id] || 0}
+                likedByMe={myLikedMatchIds.has(m.id)}
+              />
             ) : (
               <MatchRow key={m.id} {...common} />
             );
