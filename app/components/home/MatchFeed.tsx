@@ -7,6 +7,8 @@
 //
 // 사진이 없는 경기도 리듬이 끊기면 안 되므로 같은 정사각형 자리에 스코어를 크게 세운다.
 //
+// 사진은 눌러도 아무 일도 안 일어난다. 크게 보려면 두 손가락으로 벌린다(FeedPinchPhoto).
+//
 // 액션은 실제로 저장되는 것만 둔다. 좋아요는 match_like 테이블에 인당 1번으로
 // 남는다(백엔드 /matches/{id}/like). 동작하지 않을 장식 버튼은 여전히 두지 않는다.
 
@@ -25,7 +27,6 @@ import {
 import LineupViewer from "../LineupViewer";
 import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
-import ModalPortal from "../ModalPortal";
 import type { LineupData, MatchData } from "../DashboardClient";
 import { getOpponentLogo } from "../../lib/opponent-logos";
 import {
@@ -46,9 +47,8 @@ import MomVote, { type MomVote as MomVoteData } from "./MomVote";
 import MatchEditor, { type EditableMatch } from "./MatchEditor";
 import CommentSheet from "./CommentSheet";
 import { FEED_SUMMARY_ROW, FeedSummaryEnd, FeedSummaryLabel } from "./FeedSummary";
-import PinchZoomImage from "../PinchZoomImage";
+import FeedPinchPhoto from "./FeedPinchPhoto";
 import AppToast from "../AppToast";
-import useAppOverlay from "../useAppOverlay";
 
 
 // ── 디자인 스케일 (피드) ─────────────────────────────────────
@@ -125,13 +125,9 @@ export default function MatchFeed({
 }) {
   // 캐러셀 현재 장수. 인디케이터가 없으면 사진이 더 있다는 걸 알 방법이 없다.
   const [slide, setSlide] = useState(0);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxSlide, setLightboxSlide] = useState(0);
-  const lightboxTrack = useRef<HTMLDivElement>(null);
   const [sharing, setSharing] = useState(false);
   const [toastError, setToastError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
-  const closeLightbox = useAppOverlay(lightboxOpen, () => setLightboxOpen(false));
   // 좋아요 — 서버가 준 값이 기준이고, 내가 누른 직후에만 그 위에 덮어쓴다.
   // 새 서버 값이 들어오면(새로고침·다른 사람이 누름) 덮개를 걷어 그쪽을 따른다.
   const [override, setOverride] = useState<{ liked: boolean; likes: number } | null>(null);
@@ -182,17 +178,6 @@ export default function MatchFeed({
       likeBusy.current = false;
     }
   };
-
-  useEffect(() => {
-    if (!lightboxOpen) return;
-    const frame = requestAnimationFrame(() => {
-      const track = lightboxTrack.current;
-      if (track) track.scrollLeft = lightboxSlide * track.clientWidth;
-    });
-    return () => cancelAnimationFrame(frame);
-    // 처음 열릴 때 선택한 사진으로만 맞춘다. 스크롤 중 slide 변경에는 개입하지 않는다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lightboxOpen]);
 
   useEffect(() => {
     if (!toastError) return;
@@ -292,26 +277,13 @@ export default function MatchFeed({
             className="flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {photos.map((url, i) => (
-              <button
+              <FeedPinchPhoto
                 key={url}
-                type="button"
-                onClick={() => {
-                  setLightboxSlide(i);
-                  setLightboxOpen(true);
-                }}
-                aria-label={`경기 사진 ${i + 1} 크게 보기`}
+                src={full(url)}
                 className="w-full shrink-0 snap-center"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={full(url)}
-                  alt=""
-                  loading={firstInFeed && i === 0 ? "eager" : "lazy"}
-                  fetchPriority={firstInFeed && i === 0 ? "high" : undefined}
-                  draggable={false}
-                  className="aspect-square w-full bg-gray-100 object-cover dark:bg-white/5"
-                />
-              </button>
+                loading={firstInFeed && i === 0 ? "eager" : "lazy"}
+                fetchPriority={firstInFeed && i === 0 ? "high" : undefined}
+              />
             ))}
           </div>
 
@@ -887,64 +859,6 @@ export default function MatchFeed({
         />
       )}
 
-      {/* 라이트박스는 body 로 포털한다.
-          조상에 transform/filter 가 걸려 있으면 fixed 가 화면이 아니라 그 조상 기준이 돼서
-          "페이지 전체 높이의 가운데"에 뜬다. ModalPortal 주석 참고. */}
-      {lightboxOpen && (
-        <ModalPortal>
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="경기 사진 크게 보기"
-            className="fixed inset-0 z-[100] flex flex-col bg-black/95 backdrop-blur-sm"
-            onClick={closeLightbox}
-          >
-            <button
-              type="button"
-              onClick={closeLightbox}
-              aria-label="닫기"
-              className="absolute right-3 z-20 flex h-11 min-w-11 items-center justify-center rounded-full px-3 text-[12px] font-black text-white/80 active:bg-white/10"
-              style={{ top: "max(0.5rem, env(safe-area-inset-top))" }}
-            >
-              닫기
-            </button>
-
-            <div
-              ref={lightboxTrack}
-              onClick={(event) => event.stopPropagation()}
-              onScroll={(event) => {
-                const track = event.currentTarget;
-                if (!track.clientWidth) return;
-                setLightboxSlide(Math.round(track.scrollLeft / track.clientWidth));
-              }}
-              className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            >
-              {photos.map((photo, index) => (
-                <div key={`${photo}-lightbox`} className="h-full w-full shrink-0 snap-center px-3 py-14">
-                  <PinchZoomImage
-                    src={photo}
-                    alt={`${match.opponent} 경기 사진 ${index + 1}`}
-                    allowHorizontalSwipe
-                    loading={index === lightboxSlide ? "eager" : "lazy"}
-                  />
-                </div>
-              ))}
-            </div>
-            {photos.length > 1 && (
-              <div className="pointer-events-none absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] flex items-center justify-center gap-1.5">
-                {photos.map((photo, index) => (
-                  <span
-                    key={`${photo}-dot`}
-                    className={`h-1.5 rounded-full transition-all ${
-                      index === lightboxSlide ? "w-4 bg-white" : "w-1.5 bg-white/30"
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </ModalPortal>
-      )}
       <AppToast message={toastError} tone="error" />
     </article>
   );
