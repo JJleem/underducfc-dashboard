@@ -230,172 +230,14 @@ export default function MatchFeed({
     !upcoming && attendees.length > 0 && !isCasualMatch(match.result, match.type);
   const showFollowUp = showMom || storylines.length > 0;
 
-  return (
-    <article className="pb-8">
-      {/* 게시물 헤더 — 인스타의 계정 줄 자리. 여기선 상대팀이 그 자리다. */}
-      <header className="flex items-center gap-2.5 px-4 py-3">
-        {logo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={logo}
-            alt=""
-            width={ICON.logo}
-            height={ICON.logo}
-            className="shrink-0 rounded-full bg-white object-cover ring-1 ring-black/[0.06] dark:ring-white/10"
-          />
-        ) : (
-          <span
-            style={{ width: ICON.logo, height: ICON.logo }}
-            className="flex shrink-0 items-center justify-center rounded-full bg-gray-100 text-[13px] font-black text-gray-400 dark:bg-white/10"
-          >
-            {match.opponent.trim().charAt(0) || "?"}
-          </span>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[14px] font-black tracking-[-0.01em] text-gray-900 dark:text-white">
-            {internal ? match.opponent : `vs ${match.opponent}`}
-          </p>
-          <p className="mt-0.5 truncate text-[11px] font-bold text-gray-400 dark:text-white/35">
-            {shortDate(match.date)} · {match.location}
-          </p>
-        </div>
-        {isAdmin && (
-          <div className="flex shrink-0 items-center gap-0.5">
-            <Link
-              href={`/matches/${match.id}/edit`}
-              aria-label="라인업 설정"
-              title="라인업 설정"
-              className="flex w-9 flex-col items-center gap-0.5 py-0.5 text-[#FF8FA3] active:opacity-60 dark:text-[#FFB6C1]"
-            >
-              <ClipboardList width={17} height={17} strokeWidth={2.2} />
-              <span className="text-[8px] font-black leading-none">라인업</span>
-            </Link>
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              aria-label="경기 수정"
-              title="경기 수정"
-              className="flex w-9 flex-col items-center gap-0.5 py-0.5 text-gray-400 active:opacity-60 dark:text-white/40"
-            >
-              <Pencil width={17} height={17} strokeWidth={2.2} />
-              <span className="text-[8px] font-black leading-none">편집</span>
-            </button>
-          </div>
-        )}
-      </header>
+  // 사진이 있는 완료 경기는 결과 카드를 캐러셀 맨 끝에 한 장 더 붙인다.
+  // 예정 경기는 붙이지 않는다 — 아직 스코어도 MOM도 없어서 빈 판이 나온다.
+  const showResultSlide = photos.length > 0 && !upcoming;
+  const slideCount = photos.length + (showResultSlide ? 1 : 0);
 
-      {/* 이미지 — 화면 폭 그대로. 여기선 게시물 자체라 풀블리드가 맞다.
-          여러 장이면 옆으로 넘긴다(스냅). */}
-      {photos.length > 0 ? (
-        <div className="relative">
-          <div
-            onScroll={(e) => {
-              const el = e.currentTarget;
-              setSlide(Math.round(el.scrollLeft / el.clientWidth));
-            }}
-            className="flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {photos.map((url, i) => (
-              <FeedPinchPhoto
-                key={url}
-                src={full(url)}
-                className="w-full shrink-0 snap-center"
-                loading={firstInFeed && i === 0 ? "eager" : "lazy"}
-                fetchPriority={firstInFeed && i === 0 ? "high" : undefined}
-              />
-            ))}
-          </div>
-
-          {photos.length > 1 && (
-            <>
-              {/* 오른쪽 위 장수 — 인스타가 쓰는 방식 */}
-              <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-black tabular-nums text-white backdrop-blur-sm">
-                {slide + 1}/{photos.length}
-              </span>
-              {/* 아래 점 — 몇 장인지 한눈에 */}
-              <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
-                {photos.map((url, i) => (
-                  <span
-                    key={url}
-                    className={`h-1.5 w-1.5 rounded-full transition-colors ${
-                      i === slide ? "bg-white" : "bg-white/45"
-                    }`}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      ) : upcoming ? (
-        // 예정 경기도 피드에 자리를 갖는다. 스코어 대신 카운트다운을 세운다.
-        //
-        // 배경 그림(matchdayArt)은 얹는 층이다. 기존 그라디언트를 밑에 깔아 두므로
-        // 그림이 아직 없거나 못 받아와도 이 카드는 원래 모습으로 떨어진다.
-        // 숫자와 로고는 그림에 굽지 않고 여기서 그린다 — 이유는 lib/matchday-art.ts.
-        <div
-          className="relative flex aspect-square w-full flex-col items-center justify-center overflow-hidden"
-          style={{ background: "linear-gradient(160deg,#FFD9E1 0%,#FF8FA3 100%)" }}
-        >
-          {art && (
-            <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={art.src}
-                alt=""
-                aria-hidden
-                loading={firstInFeed ? "eager" : "lazy"}
-                fetchPriority={firstInFeed ? "high" : undefined}
-                draggable={false}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-              {/* 전체를 한 겹 가라앉힌 뒤(ART_VEIL), 글자 뒤를 한 번 더 누른다. */}
-              {!art.light && !art.soft && (
-                <div aria-hidden className="absolute inset-0" style={{ background: ART_VEIL }} />
-              )}
-              <div
-                aria-hidden
-                className="absolute inset-0"
-                style={{ background: art.light
-                    ? ART_SCRIM_LIGHT
-                    : art.soft
-                      ? ART_SCRIM_SOFT
-                      : ART_SCRIM_DARK }}
-              />
-            </>
-          )}
-
-          <div className="relative z-10 flex flex-col items-center">
-            <p
-              className={`text-[13px] font-black tracking-[0.24em] ${
-                art?.light ? "text-[#0f1729]/60" : "text-white/70"
-              }`}
-            >
-              {awaitingResult ? "MATCH DONE" : "NEXT MATCH"}
-            </p>
-            <p
-              className={`mt-3 font-black leading-none tracking-[-0.05em] tabular-nums ${
-                awaitingResult ? "text-[40px]" : "text-[64px]"
-              } ${
-                art?.light
-                  ? "text-[#0f1729]"
-                  : "text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.35)]"
-              }`}
-            >
-              {awaitingResult ? "경기 종료" : dDay === 0 ? "D-DAY" : `D-${dDay}`}
-            </p>
-            <p
-              className={`mt-4 text-[13px] font-bold ${
-                art?.light ? "text-[#0f1729]/70" : "text-white/80"
-              }`}
-            >
-              {shortDate(match.date)}
-              {match.time && match.time !== "미정" ? ` · ${match.time}` : ""}
-            </p>
-          </div>
-        </div>
-      ) : (
-        // 사진이 없는 완료 경기는 공유 카드의 나이트 매치 문법만 가져온다.
-        // 카드 이미지를 그대로 재사용하면 아래 결과·득점·MOM과 내용이 전부 중복된다.
+  // 사진 없는 완료 경기의 카드. 사진이 있는 경기에서는 캐러셀의 마지막 장으로도
+  // 쓰기 때문에 변수로 빼 둔다 — 두 곳에 복붙하면 한쪽만 고쳐져 조용히 달라진다.
+  const resultCard = (
         <div
           className="relative aspect-square w-full overflow-hidden bg-[#070d20] text-center text-white"
           style={{
@@ -548,6 +390,178 @@ export default function MatchFeed({
             )}
           </div>
         </div>
+  );
+
+  return (
+    <article className="pb-8">
+      {/* 게시물 헤더 — 인스타의 계정 줄 자리. 여기선 상대팀이 그 자리다. */}
+      <header className="flex items-center gap-2.5 px-4 py-3">
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logo}
+            alt=""
+            width={ICON.logo}
+            height={ICON.logo}
+            className="shrink-0 rounded-full bg-white object-cover ring-1 ring-black/[0.06] dark:ring-white/10"
+          />
+        ) : (
+          <span
+            style={{ width: ICON.logo, height: ICON.logo }}
+            className="flex shrink-0 items-center justify-center rounded-full bg-gray-100 text-[13px] font-black text-gray-400 dark:bg-white/10"
+          >
+            {match.opponent.trim().charAt(0) || "?"}
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[14px] font-black tracking-[-0.01em] text-gray-900 dark:text-white">
+            {internal ? match.opponent : `vs ${match.opponent}`}
+          </p>
+          <p className="mt-0.5 truncate text-[11px] font-bold text-gray-400 dark:text-white/35">
+            {shortDate(match.date)} · {match.location}
+          </p>
+        </div>
+        {isAdmin && (
+          <div className="flex shrink-0 items-center gap-0.5">
+            <Link
+              href={`/matches/${match.id}/edit`}
+              aria-label="라인업 설정"
+              title="라인업 설정"
+              className="flex w-9 flex-col items-center gap-0.5 py-0.5 text-[#FF8FA3] active:opacity-60 dark:text-[#FFB6C1]"
+            >
+              <ClipboardList width={17} height={17} strokeWidth={2.2} />
+              <span className="text-[8px] font-black leading-none">라인업</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              aria-label="경기 수정"
+              title="경기 수정"
+              className="flex w-9 flex-col items-center gap-0.5 py-0.5 text-gray-400 active:opacity-60 dark:text-white/40"
+            >
+              <Pencil width={17} height={17} strokeWidth={2.2} />
+              <span className="text-[8px] font-black leading-none">편집</span>
+            </button>
+          </div>
+        )}
+      </header>
+
+      {/* 이미지 — 화면 폭 그대로. 여기선 게시물 자체라 풀블리드가 맞다.
+          여러 장이면 옆으로 넘긴다(스냅). */}
+      {photos.length > 0 ? (
+        <div className="relative">
+          <div
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              setSlide(Math.round(el.scrollLeft / el.clientWidth));
+            }}
+            className="flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {photos.map((url, i) => (
+              <FeedPinchPhoto
+                key={url}
+                src={full(url)}
+                className="w-full shrink-0 snap-center"
+                loading={firstInFeed && i === 0 ? "eager" : "lazy"}
+                fetchPriority={firstInFeed && i === 0 ? "high" : undefined}
+              />
+            ))}
+            {/* 결과 카드를 맨 끝 장으로. 사진을 다 넘기면 그 경기의 스코어·득점자·MOM이
+                한 장으로 정리돼 나온다. 인스타에서 마지막에 결과 그래픽을 붙이는 문법. */}
+            {showResultSlide && (
+              <div className="w-full shrink-0 snap-center">{resultCard}</div>
+            )}
+          </div>
+
+          {slideCount > 1 && (
+            <>
+              {/* 오른쪽 위 장수 — 인스타가 쓰는 방식 */}
+              <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-black tabular-nums text-white backdrop-blur-sm">
+                {slide + 1}/{slideCount}
+              </span>
+              {/* 아래 점 — 몇 장인지 한눈에 */}
+              <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
+                {Array.from({ length: slideCount }, (_, i) => (
+                  <span
+                    key={i}
+                    className={`h-1.5 w-1.5 rounded-full transition-colors ${
+                      i === slide ? "bg-white" : "bg-white/45"
+                    }`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      ) : upcoming ? (
+        // 예정 경기도 피드에 자리를 갖는다. 스코어 대신 카운트다운을 세운다.
+        //
+        // 배경 그림(matchdayArt)은 얹는 층이다. 기존 그라디언트를 밑에 깔아 두므로
+        // 그림이 아직 없거나 못 받아와도 이 카드는 원래 모습으로 떨어진다.
+        // 숫자와 로고는 그림에 굽지 않고 여기서 그린다 — 이유는 lib/matchday-art.ts.
+        <div
+          className="relative flex aspect-square w-full flex-col items-center justify-center overflow-hidden"
+          style={{ background: "linear-gradient(160deg,#FFD9E1 0%,#FF8FA3 100%)" }}
+        >
+          {art && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={art.src}
+                alt=""
+                aria-hidden
+                loading={firstInFeed ? "eager" : "lazy"}
+                fetchPriority={firstInFeed ? "high" : undefined}
+                draggable={false}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              {/* 전체를 한 겹 가라앉힌 뒤(ART_VEIL), 글자 뒤를 한 번 더 누른다. */}
+              {!art.light && !art.soft && (
+                <div aria-hidden className="absolute inset-0" style={{ background: ART_VEIL }} />
+              )}
+              <div
+                aria-hidden
+                className="absolute inset-0"
+                style={{ background: art.light
+                    ? ART_SCRIM_LIGHT
+                    : art.soft
+                      ? ART_SCRIM_SOFT
+                      : ART_SCRIM_DARK }}
+              />
+            </>
+          )}
+
+          <div className="relative z-10 flex flex-col items-center">
+            <p
+              className={`text-[13px] font-black tracking-[0.24em] ${
+                art?.light ? "text-[#0f1729]/60" : "text-white/70"
+              }`}
+            >
+              {awaitingResult ? "MATCH DONE" : "NEXT MATCH"}
+            </p>
+            <p
+              className={`mt-3 font-black leading-none tracking-[-0.05em] tabular-nums ${
+                awaitingResult ? "text-[40px]" : "text-[64px]"
+              } ${
+                art?.light
+                  ? "text-[#0f1729]"
+                  : "text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.35)]"
+              }`}
+            >
+              {awaitingResult ? "경기 종료" : dDay === 0 ? "D-DAY" : `D-${dDay}`}
+            </p>
+            <p
+              className={`mt-4 text-[13px] font-bold ${
+                art?.light ? "text-[#0f1729]/70" : "text-white/80"
+              }`}
+            >
+              {shortDate(match.date)}
+              {match.time && match.time !== "미정" ? ` · ${match.time}` : ""}
+            </p>
+          </div>
+        </div>
+      ) : (
+        resultCard
       )}
 
       {/* 액션 줄 — 아이콘은 먼저 읽히고, 짧은 이름으로 기능을 확인한다.
