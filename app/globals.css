@@ -142,6 +142,23 @@ body {
   animation: udk-pulse-ring 1.5s ease-out infinite;
 }
 
+/* 새 공지 배지. 계속 떠 있는 표시라 amber 펄스(1.5s, 진한 링)를 그대로 쓰면
+   화면이 재촉하는 것처럼 읽힌다. 주기를 늘리고 링을 얇게 해서 "숨 쉬는" 정도로만 둔다. */
+@keyframes udk-pulse-new {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 143, 163, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 5px rgba(255, 143, 163, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 143, 163, 0);
+  }
+}
+.pulse-new {
+  animation: udk-pulse-new 2.6s ease-out infinite;
+}
+
 /* ── 인터랙션 피드백 ─────────────────────────────
    모든 링크를 똑같이 축소하지 않고 컨트롤의 역할에 맞춰 반응한다. */
 :where(button, [role="button"], .press-control) {
@@ -277,6 +294,7 @@ body {
   .animate-fade,
   .animate-tab,
   .pulse-ring,
+  .pulse-new,
   .skeleton-shimmer {
     animation: none;
   }

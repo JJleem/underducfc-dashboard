@@ -425,7 +425,9 @@ export default async function NewHome({
           <Disclosure
             className="text-left"
             seenKey="notice"
-            seenStamp={`${notice[0] || ""}|${notice[1] || ""}`}
+            /* 날짜·제목만 넣으면 본문만 고쳤을 때 표시가 안 뜬다 — 알림은 나가는데
+               화면은 조용한 상태가 된다. 내용까지 넣어 무엇이 바뀌든 잡히게 한다. */
+            seenStamp={`${notice[0] || ""}|${notice[1] || ""}|${notice[2] || ""}`}
             summary={
               <span className="flex min-w-0 flex-1 items-center gap-2">
                 <Bell width={14} height={14} strokeWidth={2.2} className="shrink-0 text-gray-400" />

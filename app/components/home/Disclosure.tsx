@@ -64,11 +64,15 @@ export default function Disclosure({
         className={`flex items-center gap-1.5 transition-colors ${shape} ${className}`}
       >
         {summary}
+        {/* 6px 점은 접힌 줄에서 너무 조용해 그냥 지나쳤다. 같은 자리에 글자를 넣어
+            "새 것이 있다"를 읽히게 한다. 펄스는 계속 떠 있는 표시라 아주 약하게만. */}
         {showDot && (
           <span
             aria-label="새 내용"
-            className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF8FA3] dark:bg-[#FFB6C1]"
-          />
+            className="pulse-new shrink-0 rounded-full bg-[#FF8FA3] px-1.5 py-[1px] text-[8px] font-black leading-[1.5] tracking-[0.06em] text-white dark:bg-[#FFB6C1] dark:text-gray-950"
+          >
+            NEW
+          </span>
         )}
         <ChevronDown
           width={CHEVRON}
