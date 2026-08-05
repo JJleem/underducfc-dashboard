@@ -120,7 +120,9 @@ export default function FeedPinchPhoto({
         ref={holderRef}
         data-pull-to-refresh-ignore
         className={className}
-        style={{ touchAction: "pan-x" }}
+        // 한 손가락은 피드의 세로 스크롤과 캐러셀의 가로 스와이프에 모두 양보한다.
+        // 두 손가락 핀치가 시작된 뒤에만 위 touchmove 핸들러가 기본 동작을 막는다.
+        style={{ touchAction: "pan-x pan-y" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
