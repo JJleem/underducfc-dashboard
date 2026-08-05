@@ -28,7 +28,7 @@ export interface MatchdayArt {
  * 여기 적힌 것만 쓰인다 — 파일 없는 이름을 넣으면 카드마다 404 가 나간다.
  */
 const ART: MatchdayArt[] = [
-  // 언더덕 크레스트 8장
+  // 언더덕 크레스트 15장
   { src: "/matchday/flag-1.webp" },
   { src: "/matchday/flag-2.webp" },
   { src: "/matchday/flag-3.webp" },
@@ -37,6 +37,13 @@ const ART: MatchdayArt[] = [
   { src: "/matchday/flag-6.webp", light: true },
   { src: "/matchday/flag-7.webp" },
   { src: "/matchday/flag-8.webp" },
+  { src: "/matchday/flag-9.webp" },
+  { src: "/matchday/flag-10.webp" },
+  { src: "/matchday/flag-11.webp" },
+  { src: "/matchday/flag-12.webp" },
+  { src: "/matchday/flag-13.webp" },
+  { src: "/matchday/flag-14.webp" },
+  { src: "/matchday/flag-15.webp" },
   // 흑백 + 핑크 한 색 5장
   { src: "/matchday/mono-1.webp", soft: true },
   { src: "/matchday/mono-4.webp", soft: true },

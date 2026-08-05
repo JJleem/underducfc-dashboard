@@ -786,6 +786,71 @@ const SHOTS: Shot[] = [
       "LOWER RIGHT of the frame, its light pooling on the wet ground below, " +
       "the upper left almost pure black" },
 
+  // ── 세 번째 묶음. 끝난 경기 카드에도 쓰이는 자리라 어둡고 묵직한 쪽으로만 간다.
+  //    소재는 기존 8장과 안 겹치게: 트로피·라커룸·서포터·티포·공.
+  { stage: "flag", index: 9, ref: "public/underducklogo.png", rules: FLAG_RULES,
+    look: "high contrast black and white documentary photograph, heavy 35mm grain, deep blacks, " +
+      "one single colour accent — the pink of the crest — everything else monochrome",
+    prompt:
+      "a supporter seen from behind holding a big flag with the crest over their shoulders, " +
+      "standing low in the frame on a dark terrace at night, floodlight haze above, " +
+      "the upper half almost pure black" },
+
+  { stage: "flag", index: 10, ref: "public/underducklogo.png", rules: FLAG_RULES,
+    look: "photorealistic cinematic interior photography, one hard overhead light, deep shadow, " +
+      "muted navy and rose pink, fine grain, quiet and premium",
+    prompt:
+      "the crest mounted as a metal emblem on a dark dressing room wall, lit hard from above, " +
+      "empty benches and hanging kit blurred in the shadows below, " +
+      "the wall above it left as flat darkness" },
+
+  { stage: "flag", index: 11, ref: "public/underducklogo.png", rules: FLAG_RULES,
+    look: "photorealistic macro product photography, wet surfaces catching light, " +
+      "deep navy background, rose pink rim light, shallow depth of field, premium and moody",
+    prompt:
+      "a football with the crest printed on it, resting on wet dark grass in the bottom right, " +
+      "rain beading on its surface, floodlight bokeh far behind, " +
+      "the upper left dissolving into darkness" },
+
+  { stage: "flag", index: 12, ref: "public/underducklogo.png", rules: FLAG_RULES,
+    look: "photorealistic cinematic wide shot at night, floodlight haze, deep navy, " +
+      "rose pink glow, film grain, epic and atmospheric",
+    prompt:
+      "an enormous tifo banner bearing the crest unfurled across a dark stand, filling the lower " +
+      "half of the frame, silhouetted heads along its bottom edge, " +
+      "black night sky above it" },
+
+  { stage: "flag", index: 13, ref: "public/underducklogo.png", rules: FLAG_RULES,
+    look: "dramatic still-life photography, single raking light, near-black surroundings, " +
+      "polished metal catching rose pink, extremely shallow depth of field, luxurious",
+    prompt:
+      "a trophy engraved with the crest standing on a dark reflective surface in the lower right, " +
+      "one shaft of light across it, everything else swallowed by black" },
+
+  // ── 네 번째 묶음. 앞선 13장에 없던 "시점"과 "질감"으로 벌린다.
+  //    지금까지는 전부 사람 눈높이에서 본 장면이었다.
+  // 첫 시도는 "항공샷"이 통째로 무시되고 로고만 허공에 떴다. 장면을 먼저 세우고
+  // 크레스트를 그 장면 안의 사물로 넣어야 시점이 잡힌다.
+  { stage: "flag", index: 14, ref: "public/underducklogo.png", rules: FLAG_RULES,
+    look: "cinematic night photography from a high vantage point, floodlight pools on wet turf, " +
+      "deep navy and rose pink, atmospheric haze, film grain",
+    prompt:
+      "A FOOTBALL PITCH PHOTOGRAPHED FROM HIGH ABOVE, looking down at a steep angle onto the grass. " +
+      "The pitch markings, centre circle and penalty box are clearly visible below. " +
+      "Painted large onto the turf in the lower half of the frame is the crest, seen at that same " +
+      "steep downward angle so it sits flat on the ground and follows the perspective of the pitch. " +
+      "This is a wide scene of a whole pitch — not a logo on a plain background. " +
+      "The upper part of the frame is dark empty grass" },
+
+  { stage: "flag", index: 15, ref: "public/underducklogo.png", rules: FLAG_RULES,
+    look: "extreme macro textile photography, individual embroidery threads visible, " +
+      "soft raking light across the weave, deep navy fabric with rose pink stitching, " +
+      "very shallow depth of field, tactile and luxurious",
+    prompt:
+      "the crest embroidered into dark knitted fabric, filling the lower right of the frame, " +
+      "thread texture sharp in focus and falling out of focus toward the edges, " +
+      "the upper left dissolving into soft dark blur" },
+
   // ── 두 번째 묶음. 소재를 깃발 밖으로 넓히고 화풍을 더 멀리 벌린다.
   { stage: "flag", index: 5, ref: "public/underducklogo.png", rules: FLAG_RULES,
     look: "high contrast black and white documentary film photograph, heavy 35mm grain, " +
