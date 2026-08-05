@@ -36,6 +36,13 @@ import {
   resultWord,
 } from "./match-result";
 import { getDDay } from "../../lib/home-state";
+import {
+  ART_SCRIM_DARK,
+  ART_SCRIM_SOFT,
+  ART_SCRIM_LIGHT,
+  ART_VEIL,
+  matchdayArt,
+} from "../../lib/matchday-art";
 import type { Storyline } from "../../lib/storylines";
 import Storylines from "./Storylines";
 import { shareStoryCard } from "../../lib/draw-story-card";
@@ -208,6 +215,7 @@ export default function MatchFeed({
   const scored = hasScore(match.ourScore, match.theirScore);
   const upcoming = match.result === "예정";
   const dDay = upcoming ? getDDay(match.date) : null;
+  const art = dDay === null ? null : matchdayArt(match.id, dDay);
   const showMom = !upcoming && attendees.length > 0;
   const showFollowUp = showMom || storylines.length > 0;
 
@@ -309,18 +317,68 @@ export default function MatchFeed({
         </div>
       ) : upcoming ? (
         // 예정 경기도 피드에 자리를 갖는다. 스코어 대신 카운트다운을 세운다.
+        //
+        // 배경 그림(matchdayArt)은 얹는 층이다. 기존 그라디언트를 밑에 깔아 두므로
+        // 그림이 아직 없거나 못 받아와도 이 카드는 원래 모습으로 떨어진다.
+        // 숫자와 로고는 그림에 굽지 않고 여기서 그린다 — 이유는 lib/matchday-art.ts.
         <div
-          className="flex aspect-square w-full flex-col items-center justify-center"
+          className="relative flex aspect-square w-full flex-col items-center justify-center overflow-hidden"
           style={{ background: "linear-gradient(160deg,#FFD9E1 0%,#FF8FA3 100%)" }}
         >
-          <p className="text-[13px] font-black tracking-[0.24em] text-white/70">NEXT MATCH</p>
-          <p className="mt-3 text-[64px] font-black leading-none tracking-[-0.05em] tabular-nums text-white">
-            {dDay === 0 ? "D-DAY" : `D-${dDay}`}
-          </p>
-          <p className="mt-4 text-[13px] font-bold text-white/80">
-            {shortDate(match.date)}
-            {match.time && match.time !== "미정" ? ` · ${match.time}` : ""}
-          </p>
+          {art && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={art.src}
+                alt=""
+                aria-hidden
+                loading={firstInFeed ? "eager" : "lazy"}
+                fetchPriority={firstInFeed ? "high" : undefined}
+                draggable={false}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              {/* 전체를 한 겹 가라앉힌 뒤(ART_VEIL), 글자 뒤를 한 번 더 누른다. */}
+              {!art.light && !art.soft && (
+                <div aria-hidden className="absolute inset-0" style={{ background: ART_VEIL }} />
+              )}
+              <div
+                aria-hidden
+                className="absolute inset-0"
+                style={{ background: art.light
+                    ? ART_SCRIM_LIGHT
+                    : art.soft
+                      ? ART_SCRIM_SOFT
+                      : ART_SCRIM_DARK }}
+              />
+            </>
+          )}
+
+          <div className="relative z-10 flex flex-col items-center">
+            <p
+              className={`text-[13px] font-black tracking-[0.24em] ${
+                art?.light ? "text-[#0f1729]/60" : "text-white/70"
+              }`}
+            >
+              NEXT MATCH
+            </p>
+            <p
+              className={`mt-3 text-[64px] font-black leading-none tracking-[-0.05em] tabular-nums ${
+                art?.light
+                  ? "text-[#0f1729]"
+                  : "text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.35)]"
+              }`}
+            >
+              {dDay === 0 ? "D-DAY" : `D-${dDay}`}
+            </p>
+            <p
+              className={`mt-4 text-[13px] font-bold ${
+                art?.light ? "text-[#0f1729]/70" : "text-white/80"
+              }`}
+            >
+              {shortDate(match.date)}
+              {match.time && match.time !== "미정" ? ` · ${match.time}` : ""}
+            </p>
+          </div>
         </div>
       ) : (
         // 사진이 없는 완료 경기는 공유 카드의 나이트 매치 문법만 가져온다.

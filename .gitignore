@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 배경 생성용 레퍼런스 원본 (scripts/gen-matchday-art.mts).
+# 31MB라 커밋하면 레포에 영구히 남는다 — 재생성할 때만 필요하니 로컬에만 둔다.
+/test/
