@@ -97,6 +97,13 @@ export const ART_SCRIM_DARK =
 /** 이미 어두운 그림용. 글자 뒤만 살짝 누르고 가운데는 거의 건드리지 않는다. */
 export const ART_SCRIM_SOFT =
   "linear-gradient(180deg,rgba(7,13,32,.42) 0%,rgba(7,13,32,0) 40%,rgba(7,13,32,.28) 100%)";
+/**
+ * 끝난 경기 카드용. 예정 경기보다 훨씬 두껍다 — 그 카드는 스코어·득점자·MOM까지
+ * 글자가 빽빽해서, 얇게 깔면 그림과 글자가 서로 잡아먹는다.
+ * 그림은 분위기만 남기고 내용이 주인공으로 남게 한다.
+ */
+export const ART_RESULT_VEIL =
+  "linear-gradient(180deg,rgba(7,13,32,.52) 0%,rgba(7,13,32,.26) 45%,rgba(7,13,32,.58) 100%)";
 export const ART_SCRIM_LIGHT =
   "linear-gradient(180deg,rgba(255,255,255,.72) 0%,rgba(255,255,255,.34) 46%,rgba(255,255,255,0) 72%)";
 
@@ -112,4 +119,25 @@ function hash(a: number, b: number): number {
 export function matchdayArt(matchId: number, dDay: number): MatchdayArt | null {
   if (ART.length === 0) return null;
   return ART[hash(matchId, dDay) % ART.length];
+}
+
+/**
+ * 끝난 경기 카드·타일에 쓸 배경 후보. 크레스트가 박힌 깃발 계열만 쓴다.
+ *
+ * 결과 카드에는 원래 언더덕 마크를 워터마크로 얹고 있었는데, 그림 안에 이미
+ * 크레스트가 있으니 둘이 겹친다. 그래서 워터마크를 걷고 그림 쪽에 맡겼다.
+ * 밝은 그림(수채화)은 뺀다 — 흰 글씨를 얹는 자리라 바탕이 밝으면 안 읽힌다.
+ */
+const RESULT_ART = ART.filter((a) => a.src.includes("/flag-") && !a.light);
+
+/**
+ * 이미 끝난 경기(사진 없는)의 배경. 날짜를 섞지 않는다 — 여기가 예정 경기와 다르다.
+ *
+ * 지난 경기는 기록이다. 하루마다 그림이 바뀌면 "그 경기의 사진"이 아니게 되고,
+ * 무엇보다 피드와 마이페이지가 서로 다른 그림을 띄우게 된다(자정을 걸쳐 보면
+ * 사람마다 달라지기도 한다). matchId 하나로만 뽑아 영구 고정한다.
+ */
+export function matchResultArt(matchId: number): MatchdayArt | null {
+  if (RESULT_ART.length === 0) return null;
+  return RESULT_ART[hash(matchId, 0x9e37) % RESULT_ART.length];
 }

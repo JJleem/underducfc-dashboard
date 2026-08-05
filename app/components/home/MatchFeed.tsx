@@ -37,11 +37,13 @@ import {
 } from "./match-result";
 import { getDDay } from "../../lib/home-state";
 import {
+  ART_RESULT_VEIL,
   ART_SCRIM_DARK,
   ART_SCRIM_SOFT,
   ART_SCRIM_LIGHT,
   ART_VEIL,
   matchdayArt,
+  matchResultArt,
 } from "../../lib/matchday-art";
 import type { Storyline } from "../../lib/storylines";
 import Storylines from "./Storylines";
@@ -216,6 +218,8 @@ export default function MatchFeed({
   const upcoming = match.result === "예정";
   const dDay = upcoming ? getDDay(match.date) : null;
   const art = dDay === null ? null : matchdayArt(match.id, dDay);
+  // 끝난 경기 카드의 배경. 날짜를 안 섞으므로 마이페이지 그리드와 항상 같은 그림이다.
+  const resultArt = upcoming ? null : matchResultArt(match.id);
   const showMom = !upcoming && attendees.length > 0;
   const showFollowUp = showMom || storylines.length > 0;
 
@@ -390,22 +394,46 @@ export default function MatchFeed({
               "radial-gradient(circle at 14% 5%,rgba(147,197,253,.16),transparent 34%),radial-gradient(circle at 86% 0%,rgba(255,182,193,.20),transparent 38%),linear-gradient(160deg,#070d20 0%,#111d3d 52%,#070d20 100%)",
           }}
         >
+          {/* 배경 그림. 이 카드는 스코어·득점자·MOM까지 글자가 빽빽해서 예정 경기보다
+              훨씬 두껍게 눌러야 한다. 분위기만 남기고 내용은 그대로 읽히게. */}
+          {resultArt && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={resultArt.src}
+                alt=""
+                aria-hidden
+                loading="lazy"
+                draggable={false}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div
+                aria-hidden
+                className="absolute inset-0"
+                style={{ background: ART_RESULT_VEIL }}
+              />
+            </>
+          )}
           <div className="pointer-events-none absolute -left-[15%] top-[4%] h-[72%] w-[38%] -rotate-[22deg] bg-gradient-to-r from-white/[0.055] to-transparent blur-xl" />
           <div className="pointer-events-none absolute -right-[15%] top-[2%] h-[72%] w-[38%] rotate-[22deg] bg-gradient-to-l from-[#FFB6C1]/[0.08] to-transparent blur-xl" />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[58%] w-[58%] -translate-x-1/2 -translate-y-1/2 bg-white/[0.045]"
-            style={{
-              WebkitMaskImage: "url(/underduck-mark.png)",
-              maskImage: "url(/underduck-mark.png)",
-              WebkitMaskSize: "contain",
-              maskSize: "contain",
-              WebkitMaskRepeat: "no-repeat",
-              maskRepeat: "no-repeat",
-              WebkitMaskPosition: "center",
-              maskPosition: "center",
-            }}
-          />
+          {/* 배경 그림이 없을 때만 언더덕 마크를 워터마크로 얹는다.
+              깃발 그림에는 크레스트가 이미 박혀 있어서 같이 띄우면 둘이 겹친다. */}
+          {!resultArt && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 top-1/2 h-[58%] w-[58%] -translate-x-1/2 -translate-y-1/2 bg-white/[0.045]"
+              style={{
+                WebkitMaskImage: "url(/underduck-mark.png)",
+                maskImage: "url(/underduck-mark.png)",
+                WebkitMaskSize: "contain",
+                maskSize: "contain",
+                WebkitMaskRepeat: "no-repeat",
+                maskRepeat: "no-repeat",
+                WebkitMaskPosition: "center",
+                maskPosition: "center",
+              }}
+            />
+          )}
 
           <div className="relative z-10 flex h-full flex-col px-6 py-[clamp(18px,5vw,28px)]">
             <div>

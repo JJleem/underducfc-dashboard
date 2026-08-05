@@ -16,6 +16,7 @@ import { flushSync } from "react-dom";
 import Link from "next/link";
 import { ChevronRight, Copy, Crown, MapPin, Spline, Volleyball, X } from "lucide-react";
 import ModalPortal from "./ModalPortal";
+import { matchResultArt } from "../lib/matchday-art";
 import PinchZoomImage from "./PinchZoomImage";
 
 export type GridMatch = {
@@ -171,6 +172,8 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
       <div className="grid grid-cols-3 gap-[2px]">
         {matches.slice(0, shown).map((m, i) => {
           const cover = m.photos[0];
+          // 사진 없는 칸의 배경. matchId 로만 뽑아 피드와 같은 그림이 나온다.
+          const art = cover ? null : matchResultArt(m.id);
           const vt = active === i && !open ? VT_NAME : undefined;
           const hasFoot = m.goals > 0 || m.assists > 0 || !!m.location;
 
@@ -192,29 +195,45 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
                   className="absolute inset-0 h-full w-full object-cover"
                   style={{ viewTransitionName: vt }}
                 />
-              ) : m.logo ? (
-                <span
-                  className="absolute inset-0 flex items-center justify-center bg-white p-[22%] dark:bg-white/[0.06]"
-                  style={{ viewTransitionName: vt }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={m.logo}
-                    alt=""
-                    loading={i < 6 ? "eager" : "lazy"}
-                    decoding="async"
-                    className="h-full w-full object-contain"
-                  />
-                </span>
               ) : (
+                /* 사진이 없는 경기. 예전엔 흰 바탕에 상대팀 로고만 덩그러니 띄웠는데,
+                   사진 칸과 섞이면 그리드가 누더기가 됐다. 배경 그림을 깔고 그 위에
+                   스코어를 얹으면 사진 그리드의 리듬이 유지된다.
+                   그림은 matchId 로만 뽑아 피드의 같은 경기 카드와 항상 일치한다. */
                 <span
-                  className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-1"
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 bg-[#070d20] px-1"
                   style={{ viewTransitionName: vt }}
                 >
-                  <span className={`text-[17px] font-black tabular-nums leading-none ${resultTone(m.result)}`}>
+                  {art && (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={art.src}
+                        alt=""
+                        aria-hidden
+                        loading={i < 6 ? "eager" : "lazy"}
+                        decoding="async"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                      <span
+                        aria-hidden
+                        className="absolute inset-0"
+                        style={{ background: "rgba(7,13,32,.22)" }}
+                      />
+                    </>
+                  )}
+                  <span
+                    className={`relative text-[17px] font-black tabular-nums leading-none drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)] ${
+                      art ? "text-white" : resultTone(m.result)
+                    }`}
+                  >
                     {m.ourScore}-{m.theirScore}
                   </span>
-                  <span className="max-w-full truncate text-[8.5px] font-bold text-gray-400 dark:text-gray-500">
+                  <span
+                    className={`relative max-w-full truncate text-[8.5px] font-bold ${
+                      art ? "text-white/70" : "text-gray-400 dark:text-gray-500"
+                    }`}
+                  >
                     {m.opponent}
                   </span>
                 </span>

@@ -2,6 +2,7 @@
 // - story: 1080x1920 (9:16, 인스타 스토리)
 // - feed:  1080x1350 (4:5, 인스타 게시글)
 import type { MatchData } from "../components/DashboardClient";
+import { matchResultArt } from "./matchday-art";
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -118,17 +119,43 @@ export async function drawStoryCanvas(
     ctx.fill();
   });
 
-  // 대형 로고 워터마크 (중앙)
-  try {
-    const logo = await loadImage("/underducklogo.png");
-    ctx.save();
-    ctx.globalAlpha = 0.05;
-    ctx.beginPath();
-    ctx.arc(W / 2, L.wmY, L.wmR, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.drawImage(logo, W / 2 - L.wmR, L.wmY - L.wmR, L.wmR * 2, L.wmR * 2);
-    ctx.restore();
-  } catch { /* 무시 */ }
+  // ── 배경 그림 ────────────────────────────────────────────────
+  // 피드의 결과 카드와 같은 그림·같은 막을 쓴다. 공유했더니 앱에서 보던 것과
+  // 다른 카드가 나오면 "그 경기의 카드"로 안 읽힌다.
+  // 그림은 1080 정사각이고 캔버스는 세로로 기니 가운데를 잘라 채운다(cover).
+  const art = matchResultArt(match.id);
+  let hasArt = false;
+  if (art) {
+    try {
+      const bgImage = await loadImage(art.src);
+      const scale = Math.max(W / bgImage.width, H / bgImage.height);
+      const dw = bgImage.width * scale;
+      const dh = bgImage.height * scale;
+      ctx.drawImage(bgImage, (W - dw) / 2, (H - dh) / 2, dw, dh);
+
+      const veil = ctx.createLinearGradient(0, 0, 0, H);
+      veil.addColorStop(0, "rgba(7,13,32,0.52)");
+      veil.addColorStop(0.45, "rgba(7,13,32,0.26)");
+      veil.addColorStop(1, "rgba(7,13,32,0.58)");
+      ctx.fillStyle = veil;
+      ctx.fillRect(0, 0, W, H);
+      hasArt = true;
+    } catch { /* 그림을 못 받으면 위의 그라디언트 배경으로 남는다 */ }
+  }
+
+  // 대형 로고 워터마크 (중앙). 깃발 그림에는 크레스트가 이미 박혀 있어 겹친다.
+  if (!hasArt) {
+    try {
+      const logo = await loadImage("/underducklogo.png");
+      ctx.save();
+      ctx.globalAlpha = 0.05;
+      ctx.beginPath();
+      ctx.arc(W / 2, L.wmY, L.wmR, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(logo, W / 2 - L.wmR, L.wmY - L.wmR, L.wmR * 2, L.wmR * 2);
+      ctx.restore();
+    } catch { /* 무시 */ }
+  }
 
   // ── 상단 브랜드 ──────────────────────────────────────────────
   ctx.textAlign = "center";
