@@ -51,7 +51,8 @@ export default function StatsTable({ players }: { players: PlayerStat[] }) {
         <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-400 dark:text-white/35">
           선수 기록
         </p>
-        <div className="flex gap-1.5" aria-label="선수 기록 필터">
+        {/* 필터 버튼이 곧 컬럼 헤더다 — 숫자 열과 같은 그리드 폭으로 맞춰 둔다 */}
+        <div className="grid w-[164px] shrink-0 grid-cols-4" aria-label="선수 기록 필터">
           {FILTERS.map(({ key, label }) => {
             const active = filter === key;
             return (
@@ -60,7 +61,7 @@ export default function StatsTable({ players }: { players: PlayerStat[] }) {
                 type="button"
                 onClick={() => setFilter((current) => (current === key ? null : key))}
                 aria-pressed={active}
-                className={`min-h-9 min-w-10 rounded-full px-2.5 text-[10.5px] font-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8FA3]/50 ${
+                className={`min-h-9 rounded-full text-[10.5px] font-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8FA3]/50 ${
                   active
                     ? "bg-gray-900 text-white shadow-sm dark:bg-white dark:text-gray-950"
                     : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-white/35 dark:hover:bg-white/[0.06] dark:hover:text-white/60"
@@ -70,25 +71,6 @@ export default function StatsTable({ players }: { players: PlayerStat[] }) {
               </button>
             );
           })}
-        </div>
-      </div>
-
-      <div className="mb-1 flex items-center justify-end">
-        <div className="grid w-[146px] grid-cols-4 text-center text-[9px] font-black text-gray-400 dark:text-white/30">
-          {FILTERS.map(({ key, label }) => (
-            <span
-              key={key}
-              className={
-                filter === key
-                  ? "text-gray-800 dark:text-white/80"
-                  : filter
-                    ? undefined
-                    : "text-gray-500 dark:text-white/45"
-              }
-            >
-              {label}
-            </span>
-          ))}
         </div>
       </div>
 
@@ -130,7 +112,7 @@ export default function StatsTable({ players }: { players: PlayerStat[] }) {
                   No. {p.no || "-"}
                 </p>
                 </div>
-                <div className="grid w-[146px] shrink-0 grid-cols-4 text-center text-[13px] font-black tabular-nums text-gray-800 dark:text-white/85">
+                <div className="grid w-[164px] shrink-0 grid-cols-4 text-center text-[13px] font-black tabular-nums text-gray-800 dark:text-white/85">
                 {FILTERS.map(({ key }) => (
                   <span
                     key={key}
