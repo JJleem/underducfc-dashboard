@@ -9,7 +9,6 @@ import { playerFaceOnSrc } from "../lib/player-faceons";
 
 export default function PlayerAvatar({
   name,
-  no,
   accent,
   width = 124,
   shape = "card",

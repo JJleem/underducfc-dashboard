@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Lightbulb, LockKeyhole, Sparkles } from "lucide-react";
 import { TitleBadge } from "../components/TitleBadges";
-import { titleIcon } from "../lib/title-icons";
+import { TitleIcon } from "../lib/title-icons";
 import {
   LEADER_TITLES,
   TITLES,
@@ -47,8 +47,6 @@ function earnedOf(def: TitleDef, tier: TierIndex | null): EarnedTitle {
 }
 
 function TitleCard({ title }: { title: TitleDef }) {
-  const Icon = titleIcon(title.icon);
-
   return (
     <article className="relative min-w-0 overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-3 shadow-sm dark:border-white/[0.08] dark:bg-[#111827]">
       {title.flagship && (
@@ -56,7 +54,7 @@ function TitleCard({ title }: { title: TitleDef }) {
       )}
       <div className="flex items-start gap-2.5 pr-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600 dark:bg-white/[0.06] dark:text-gray-300">
-          <Icon className="h-[18px] w-[18px]" strokeWidth={2.3} />
+          <TitleIcon name={title.icon} className="h-[18px] w-[18px]" strokeWidth={2.3} />
         </div>
         <div className="min-w-0">
           <h2 className="truncate text-[12px] font-black text-gray-900 dark:text-white">
@@ -227,7 +225,6 @@ export default function TitlesPage() {
           </div>
           <div className="grid grid-cols-2 gap-2">
             {LEADER_TITLES.map((title) => {
-              const Icon = titleIcon(title.icon);
               const earned: EarnedTitle = {
                 id: title.id,
                 name: title.name,
@@ -247,7 +244,7 @@ export default function TitlesPage() {
                       <h2 className="text-[11px] font-black">{title.name}</h2>
                       <p className="text-[8px] font-semibold text-gray-400">{title.desc}</p>
                     </div>
-                    <Icon className="ml-auto h-3 w-3 text-amber-400/50" />
+                    <TitleIcon name={title.icon} className="ml-auto h-3 w-3 text-amber-400/50" />
                   </div>
                 </article>
               );

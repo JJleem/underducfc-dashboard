@@ -1,7 +1,7 @@
 // 공유 카드: 나이트 매치 테마 결과 카드
 // - story: 1080x1920 (9:16, 인스타 스토리)
 // - feed:  1080x1350 (4:5, 인스타 게시글)
-import type { MatchData } from "../components/DashboardClient";
+import type { MatchData } from "./match-types";
 import { matchResultArt } from "./matchday-art";
 
 function loadImage(src: string): Promise<HTMLImageElement> {

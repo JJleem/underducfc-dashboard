@@ -27,7 +27,7 @@ import {
 import LineupViewer from "../LineupViewer";
 import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
-import type { LineupData, MatchData } from "../DashboardClient";
+import type { LineupData, MatchData } from "../../lib/match-types";
 import { getOpponentLogo } from "../../lib/opponent-logos";
 import {
   hasScore,

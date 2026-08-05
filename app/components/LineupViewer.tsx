@@ -16,7 +16,7 @@ import StartingElevenCard from "./StartingElevenCard";
 import { TitleBadges } from "./TitleBadges";
 import SubstitutionEvents from "./SubstitutionEvents";
 import type { EarnedTitle } from "../lib/titles";
-import type { LineupData, MatchData } from "./DashboardClient";
+import type { LineupData, MatchData } from "../lib/match-types";
 import { playerFaceOnSrc } from "../lib/player-faceons";
 
 const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
@@ -36,6 +36,8 @@ function BenchFaceOn({ name, no }: { name: string; no?: string }) {
         {no || "G"}
       </span>
       {src && !failed && (
+        // Cloudinary·페이스온은 외부 URL 이라 next/image 로 못 태운다.
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
           alt=""

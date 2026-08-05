@@ -17,7 +17,7 @@ import {
   Target,
   Users,
 } from "lucide-react";
-import type { MatchData, LineupData } from "../../components/DashboardClient";
+import type { MatchData, LineupData } from "../../lib/match-types";
 import LineupViewer from "../../components/LineupViewer";
 import ModalPortal from "../../components/ModalPortal";
 import OpponentLogo from "../../components/OpponentLogo";

@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Crown, ExternalLink, X } from "lucide-react";
 import { TitleBadges } from "./TitleBadges";
@@ -53,23 +53,35 @@ const GROUP_ORDER: Record<PosGroup, number> = { GK: 0, DF: 1, MF: 2, FW: 3 };
 const SHOW_ROLES_KEY = "ud:lineup:showRoles";
 const SHOW_TACTIC_KEY = "ud:lineup:showTactic";
 
-/** 표시 토글 — 새로고침해도 유지되도록 localStorage에 저장 */
+/** 표시 토글 — 새로고침해도 유지되도록 localStorage에 저장.
+ *
+ * localStorage 는 React 밖의 저장소라 effect 로 읽어 setState 하면 마운트마다
+ * 렌더가 한 번 더 돈다. useSyncExternalStore 로 "구독해서 읽는" 형태로 둔다
+ * (홈의 useUnseen 과 같은 방식). 서버 스냅샷은 기본값이라 SSR 과 어긋나지 않는다. */
+const toggleListeners = new Set<() => void>();
+
 function useDisplayToggle(key: string, initial: boolean) {
-  const [on, setOn] = useState(initial);
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(key);
-      if (saved !== null) setOn(saved === "1");
-    } catch { /* 접근 불가 시 기본값 */ }
-  }, [key]);
-  const toggle = () => {
-    setOn((prev) => {
-      const next = !prev;
+  const saved = useSyncExternalStore(
+    (notify) => {
+      toggleListeners.add(notify);
+      return () => toggleListeners.delete(notify);
+    },
+    () => {
       try {
-        localStorage.setItem(key, next ? "1" : "0");
-      } catch { /* 무시 */ }
-      return next;
-    });
+        return localStorage.getItem(key);
+      } catch {
+        return null; // 접근 불가 시 기본값
+      }
+    },
+    () => null,
+  );
+  const on = saved === null ? initial : saved === "1";
+  const toggle = () => {
+    try {
+      localStorage.setItem(key, on ? "0" : "1");
+    } catch { /* 무시 */ }
+    // 저장소가 바뀌었으니 이 훅을 쓰는 모든 곳이 다시 읽게 한다.
+    toggleListeners.forEach((notify) => notify());
   };
   return [on, toggle] as const;
 }

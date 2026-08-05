@@ -1,6 +1,6 @@
 import { getLineupRows, getRosterRows, getStatsRows, getFeaturedRows } from "../../lib/backend";
 import { getMatchesRows } from "../../lib/matches-backend";
-import { LineupData, MatchData } from "../../components/DashboardClient";
+import { LineupData, MatchData } from "../../lib/match-types";
 import MatchDetailClient from "./MatchDetailClient";
 import { notFound } from "next/navigation";
 import { parseSubstitutions } from "../../lib/lineup";

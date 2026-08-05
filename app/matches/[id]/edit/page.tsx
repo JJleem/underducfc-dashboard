@@ -1,6 +1,6 @@
 import { getLineupRows, getRosterRows } from "../../../lib/backend";
 import { getMatchesRows } from "../../../lib/matches-backend";
-import { LineupData, MatchData } from "../../../components/DashboardClient";
+import { LineupData, MatchData } from "../../../lib/match-types";
 import LineupEditor from "./LineupEditor";
 import { notFound, redirect } from "next/navigation";
 import { currentIsAdmin } from "../../../lib/admin";

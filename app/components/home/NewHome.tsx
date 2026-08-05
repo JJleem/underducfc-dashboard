@@ -25,7 +25,7 @@ import { parseSubstitutions } from "../../lib/lineup";
 import { buildMatchStorylines, type Storyline } from "../../lib/storylines";
 import { pickBadges, type EarnedTitle } from "../../lib/titles";
 import { getTeamTitleData } from "../../lib/titles-cache";
-import type { LineupData, MatchData } from "../DashboardClient";
+import type { LineupData, MatchData } from "../../lib/match-types";
 import {
   HOME_STATES,
   HOME_STATE_LABEL,

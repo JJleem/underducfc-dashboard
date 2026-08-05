@@ -88,6 +88,8 @@ function PlayerCell({
           </span>
         )}
         {showImg && (
+          // Cloudinary·페이스온은 외부 URL 이라 next/image 로 못 태운다.
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={src!}
             alt=""

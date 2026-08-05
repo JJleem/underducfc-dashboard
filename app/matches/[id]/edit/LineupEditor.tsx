@@ -1,9 +1,9 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Sun, Moon, RotateCcw, Save, Check, UserPlus, X, ArrowRightLeft, Plus, Trash2, Move, ClipboardList } from "lucide-react";
 import { useTheme } from "next-themes";
-import { MatchData, LineupData } from "../../../components/DashboardClient";
+import { MatchData, LineupData } from "../../../lib/match-types";
 import type { SubstitutionEvent } from "../../../lib/lineup";
 import LineupPitch from "../../../components/LineupPitch";
 import type { BoardLineupQuarter } from "../../../lib/board";
@@ -116,8 +116,14 @@ export default function LineupEditor({
     }>()).values(),
   );
 
-  // 쿼터 변경 시 기존 라인업 로드
-  useEffect(() => {
+  // 쿼터 변경 시 기존 라인업 로드.
+  //
+  // effect 로 하면 이미 그린 뒤에 값이 들어와서 이전 쿼터가 한 프레임 비친다.
+  // "prop 이 바뀌면 state 를 맞춘다"는 렌더 중에 하는 게 맞는 일이라(React 공식 패턴)
+  // 직전에 읽은 쿼터를 들고 있다가 달라졌을 때만 한 번 맞춘다.
+  const [loadedQuarter, setLoadedQuarter] = useState<string | null>(null);
+  if (loadedQuarter !== quarter) {
+    setLoadedQuarter(quarter);
     const existing = lineups.find((l) => l.quarter === quarter);
     if (existing) {
       const f = existing.formation || FORMATIONS[0];
@@ -141,7 +147,7 @@ export default function LineupEditor({
       setInstructions(Array.from({ length: 11 }, () => []));
     }
     setActiveSlot(null);
-  }, [quarter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }
 
   // 포메이션 변경 시 배치 초기화
   const handleFormationChange = (f: string) => {

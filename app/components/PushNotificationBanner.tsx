@@ -1,42 +1,34 @@
 "use client";
 
 import React from "react";
-import { Bell, BellOff, X } from "lucide-react";
+import { Bell, X } from "lucide-react";
 
 const STORAGE_KEY = "push_banner_dismissed";
 
+/** 지금 이 브라우저에 알림을 물어봐야 하는가. 브라우저 API만 보는 순수 판정. */
+function shouldAsk(): boolean {
+  try {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return false;
+    if (sessionStorage.getItem(STORAGE_KEY)) return false;   // 이번 세션에 이미 닫음
+    return Notification.permission === "default";            // granted·denied 면 물을 게 없다
+  } catch {
+    return false;
+  }
+}
+
 export default function PushNotificationBanner() {
-  const [show, setShow] = React.useState(false);
-  const [subscribed, setSubscribed] = React.useState(false);
+  // effect 안에서 setState 하면 마운트마다 렌더가 한 번 더 돈다. 이건 "지금 브라우저가
+  // 어떤 상태인가"를 읽는 일이라 외부 저장소를 읽는 것과 같다 — useUnseen 과 같은 방식.
+  // 서버 스냅샷은 false 라 SSR 에서는 배너가 아예 없고, 하이드레이션 후에 판정된다.
+  const ask = React.useSyncExternalStore(
+    () => () => {},   // 구독할 이벤트가 없다. 마운트 시 한 번 읽으면 된다.
+    shouldAsk,
+    () => false,
+  );
+  const [dismissed, setDismissed] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-
-  React.useEffect(() => {
-    // 서비스워커·Push API 지원 여부 확인
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-
-    // 이미 닫은 경우
-    if (sessionStorage.getItem(STORAGE_KEY)) return;
-
-    // 이미 허용된 경우
-    if (Notification.permission === "granted") {
-      checkAndRegisterSubscription();
-      return;
-    }
-
-    // 거부된 경우엔 배너 표시 안 함
-    if (Notification.permission === "denied") return;
-
-    // 아직 묻지 않은 경우 배너 표시
-    setShow(true);
-  }, []);
-
-  const checkAndRegisterSubscription = async () => {
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      const existing = await reg.pushManager.getSubscription();
-      if (existing) setSubscribed(true);
-    } catch {}
-  };
+  const show = ask && !dismissed;
+  const setShow = (v: boolean) => setDismissed(!v);
 
   const handleAllow = async () => {
     setLoading(true);
@@ -61,7 +53,6 @@ export default function PushNotificationBanner() {
         body: JSON.stringify(sub.toJSON()),
       });
 
-      setSubscribed(true);
       setShow(false);
     } catch (e) {
       console.error("Push 구독 실패", e);
@@ -71,7 +62,11 @@ export default function PushNotificationBanner() {
   };
 
   const handleDismiss = () => {
-    sessionStorage.setItem(STORAGE_KEY, "1");
+    try {
+      sessionStorage.setItem(STORAGE_KEY, "1");
+    } catch {
+      /* 사파리 프라이빗 모드 등. 저장이 막혀도 이번 화면에서는 닫힌다. */
+    }
     setShow(false);
   };
 

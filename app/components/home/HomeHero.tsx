@@ -10,7 +10,7 @@ import { CalendarDays, Check, Clock, Flame, MapPin } from "lucide-react";
 import LineupViewer from "../LineupViewer";
 import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
-import type { LineupData } from "../DashboardClient";
+import type { LineupData } from "../../lib/match-types";
 import { getOpponentLogo } from "../../lib/opponent-logos";
 import { parseWeather, weatherEmoji } from "../../lib/weather";
 import { matchdayMessage } from "../../lib/matchday-message";

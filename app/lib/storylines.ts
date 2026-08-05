@@ -5,7 +5,7 @@
 // 로직은 손대지 않았고, 팀 서사와 개인 기록을 구분할 kind 만 덧붙였다
 // (히어로에는 팀 서사 한 줄만 세우고 개인 기록은 경기 줄로 내리기 위해서다).
 
-import type { MatchData } from "../components/DashboardClient";
+import type { MatchData } from "./match-types";
 
 export interface Storyline {
   icon: string;

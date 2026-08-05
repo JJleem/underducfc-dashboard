@@ -35,6 +35,9 @@ export default function Error({
         >
           다시 시도
         </button>
+        {/* 에러 화면에서는 일부러 <Link> 가 아니라 전체 새로고침으로 나간다.
+            소프트 내비게이션은 망가진 상태를 그대로 들고 이동한다. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a
           href="/"
           className="rounded-full bg-gray-100 px-6 py-3 text-sm font-black text-gray-600 active:opacity-70 dark:bg-white/5 dark:text-gray-300"

@@ -26,7 +26,7 @@ import LineupViewer from "../LineupViewer";
 import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
 import ModalPortal from "../ModalPortal";
-import type { LineupData, MatchData } from "../DashboardClient";
+import type { LineupData, MatchData } from "../../lib/match-types";
 import { getOpponentLogo } from "../../lib/opponent-logos";
 import { hasScore, isInternalMatch, resultTextTone } from "./match-result";
 import { getDDay } from "../../lib/home-state";

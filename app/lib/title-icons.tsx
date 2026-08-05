@@ -12,6 +12,7 @@ import {
   Zap, Infinity as InfinityIcon, Trophy, Shield, Sword,
   Medal, Award, ClipboardList, CalendarHeart, WandSparkles, Droplets,
   type LucideIcon,
+  type LucideProps,
 } from "lucide-react";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -68,4 +69,11 @@ const ICONS: Record<string, LucideIcon> = {
 
 export function titleIcon(name: string): LucideIcon {
   return ICONS[name] ?? Shield;
+}
+
+/** 칭호 아이콘 한 개. 정적 맵에서 꺼내 쓰는 것뿐인데, 호출부에서 `const Icon = titleIcon(...)`
+ *  으로 받으면 "렌더 중에 컴포넌트를 만든다"로 잡힌다. 꺼내는 곳을 여기로 모은다. */
+export function TitleIcon({ name, ...props }: { name: string } & LucideProps) {
+  const Icon = ICONS[name] ?? Shield;
+  return <Icon {...props} />;
 }
