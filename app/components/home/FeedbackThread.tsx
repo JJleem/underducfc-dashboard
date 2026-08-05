@@ -38,6 +38,7 @@ export default function FeedbackThread({
   isAdmin = false,
   collapsedCount = 1,
   sheetLayout = false,
+  keyboardOpen = false,
 }: {
   matchId: number;
   initial: Feedback[];
@@ -48,6 +49,8 @@ export default function FeedbackThread({
   collapsedCount?: number;
   /** 댓글 전용 드로어: 목록만 스크롤하고 입력창은 하단에 고정한다. */
   sheetLayout?: boolean;
+  /** 키보드가 올라와 있으면 홈 인디케이터 여백을 걷어 입력창을 키보드에 붙인다. */
+  keyboardOpen?: boolean;
 }) {
   const router = useRouter();
   // 서버가 준 목록으로 시작하고, 쓰거나 지우면 그 자리에서 반영한다.
@@ -73,7 +76,8 @@ export default function FeedbackThread({
       if (list) list.scrollTop = list.scrollHeight;
     });
     return () => cancelAnimationFrame(frame);
-  }, [sheetLayout, shown.length]);
+    // 키보드로 시트 높이가 바뀔 때도 최신 댓글에 붙어 있게 한다.
+  }, [sheetLayout, shown.length, keyboardOpen]);
 
   const submit = async () => {
     const message = text.trim();
@@ -254,7 +258,11 @@ export default function FeedbackThread({
         >
           <div className="flex flex-col gap-3">{comments}</div>
         </div>
-        <div className="shrink-0 border-t border-gray-100 bg-white px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 dark:border-white/[0.06] dark:bg-[#161618]">
+        <div
+          className={`shrink-0 border-t border-gray-100 bg-white px-4 pt-3 dark:border-white/[0.06] dark:bg-[#161618] ${
+            keyboardOpen ? "pb-3" : "pb-[max(12px,env(safe-area-inset-bottom))]"
+          }`}
+        >
           {composer}
         </div>
         {confirmDialog}

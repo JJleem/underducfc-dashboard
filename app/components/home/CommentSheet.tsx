@@ -15,10 +15,15 @@ import FeedbackThread, { type Feedback } from "./FeedbackThread";
 
 const SHEET_HEIGHT_RATIO = 0.62;
 const KEYBOARD_THRESHOLD = 120;
+// 키보드가 뜨면 62% 시트를 그대로 밀어 올리는 대신, 키보드 위에 남은 공간으로 다시 그린다.
+// 밀어 올리기만 하면 시트 위쪽(손잡이·제목)이 화면 밖으로 잘려 나간다.
+const KEYBOARD_TOP_GAP = 56;
+const MIN_SHEET_HEIGHT = 240;
 
 interface KeyboardMetrics {
-  restingHeight: number;
+  height: number;
   bottomInset: number;
+  keyboardOpen: boolean;
 }
 
 export default function CommentSheet({
@@ -42,8 +47,9 @@ export default function CommentSheet({
 }) {
   const [open, setOpen] = useState(false);
   const [keyboardMetrics, setKeyboardMetrics] = useState<KeyboardMetrics>({
-    restingHeight: 0,
+    height: 0,
     bottomInset: 0,
+    keyboardOpen: false,
   });
   const triggerRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -56,8 +62,8 @@ export default function CommentSheet({
     setOpen(nextOpen);
   };
 
-  // 시트 높이는 처음 열린 62%로 고정한다. 키보드가 뜨면 실제로 가려진 거리만
-  // 측정해 시트 전체를 올린다. 브라우저가 이미 올린 기기에서는 inset이 0이 된다.
+  // 쉴 때는 62%. 키보드가 뜨면 가려진 거리만큼 시트를 올리고(브라우저가 이미 올린
+  // 기기에서는 inset이 0), 동시에 키보드 위 남은 높이로 시트를 다시 그린다.
   useEffect(() => {
     if (!open) return;
 
@@ -76,7 +82,7 @@ export default function CommentSheet({
 
         if (keyboardHeight <= KEYBOARD_THRESHOLD) {
           keyboardPositionMode.current = null;
-          setKeyboardMetrics({ restingHeight, bottomInset: 0 });
+          setKeyboardMetrics({ height: restingHeight, bottomInset: 0, keyboardOpen: false });
           return;
         }
 
@@ -90,7 +96,11 @@ export default function CommentSheet({
           keyboardPositionMode.current === "manual"
             ? Math.max(0, initialVisualBottom - visualBottom)
             : 0;
-        setKeyboardMetrics({ restingHeight, bottomInset });
+        setKeyboardMetrics({
+          height: Math.max(MIN_SHEET_HEIGHT, visualHeight - KEYBOARD_TOP_GAP),
+          bottomInset,
+          keyboardOpen: true,
+        });
       });
     };
 
@@ -105,7 +115,7 @@ export default function CommentSheet({
     };
   }, [open]);
 
-  const { restingHeight, bottomInset } = keyboardMetrics;
+  const { height, bottomInset, keyboardOpen } = keyboardMetrics;
 
   return (
     <>
@@ -126,7 +136,7 @@ export default function CommentSheet({
         preventScrollRestoration
         onAnimationEnd={(nextOpen) => {
           if (!nextOpen) {
-            setKeyboardMetrics({ restingHeight: 0, bottomInset: 0 });
+            setKeyboardMetrics({ height: 0, bottomInset: 0, keyboardOpen: false });
           }
         }}
       >
@@ -138,8 +148,8 @@ export default function CommentSheet({
           }}
           handleClassName="!absolute left-1/2 top-0 z-10 -translate-x-1/2"
           overlayClassName="touch-none overscroll-none"
-          className="mx-auto h-[62dvh] max-h-none w-full max-w-md overflow-visible bg-white transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-none dark:bg-[#161618]"
-          style={restingHeight > 0 ? { height: restingHeight, bottom: bottomInset } : undefined}
+          className="mx-auto h-[62dvh] max-h-none w-full max-w-md overflow-visible bg-white transition-[bottom,height] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-none dark:bg-[#161618]"
+          style={height > 0 ? { height, bottom: bottomInset } : undefined}
         >
           <div className="relative z-10 flex h-full min-h-0 w-full flex-col overflow-hidden rounded-t-lg bg-white dark:bg-[#161618]">
             <DrawerHeader className="shrink-0 border-b border-gray-100 pb-3 pt-7 dark:border-white/[0.06]">
@@ -160,6 +170,7 @@ export default function CommentSheet({
               isAdmin={isAdmin}
               collapsedCount={0}
               sheetLayout
+              keyboardOpen={keyboardOpen}
             />
           </div>
           {bottomInset > 0 && (
