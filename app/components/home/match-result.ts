@@ -9,6 +9,23 @@ export function isInternalMatch(result: string, opponent?: string): boolean {
   return result === "자체전" || (opponent || "").trim() === "자체전";
 }
 
+/**
+ * 가볍게 치르는 경기인가 — 자체전·풋살·야유회.
+ *
+ * 이런 경기는 결과를 입력해도 "경기가 종료되었어요" 전체 알림을 보내지 않고
+ * MOM 투표도 열지 않는다. 매주 자체전마다 전체 알림이 나가면 알림 피로만 쌓이고,
+ * MOM 이 매주 나오면 상 자체의 무게가 없어진다.
+ *
+ * ⚠️ 자체전은 type 이 아니라 **result** 에 들어간다(실제 데이터: result="자체전" 3건).
+ *    풋살·야유회는 type 이다. 그리고 type 에는 "일반 매칭"과 "일반매칭"처럼
+ *    띄어쓰기가 섞여 있어서, 공백을 지우고 비교해야 새지 않는다.
+ */
+export function isCasualMatch(result: string, type?: string): boolean {
+  if (isInternalMatch(result)) return true;
+  const t = (type || "").replace(/\s+/g, "");
+  return t === "풋살" || t === "야유회";
+}
+
 /** 스코어가 실제로 기록됐는가. 자체전은 대부분 비어 있다. */
 export function hasScore(our: string | number | undefined, their: string | number | undefined): boolean {
   const ok = (v: string | number | undefined) => {

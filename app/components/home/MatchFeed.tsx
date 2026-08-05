@@ -31,6 +31,7 @@ import type { LineupData, MatchData } from "../DashboardClient";
 import { getOpponentLogo } from "../../lib/opponent-logos";
 import {
   hasScore,
+  isCasualMatch,
   isInternalMatch,
   resultTextTone,
   resultWord,
@@ -220,7 +221,10 @@ export default function MatchFeed({
   const art = dDay === null ? null : matchdayArt(match.id, dDay);
   // 끝난 경기 카드의 배경. 날짜를 안 섞으므로 마이페이지 그리드와 항상 같은 그림이다.
   const resultArt = upcoming ? null : matchResultArt(match.id);
-  const showMom = !upcoming && attendees.length > 0;
+  // 자체전·풋살·야유회는 MOM 투표를 열지 않는다. 매주 치르는 경기라
+  // 매번 MOM 이 나오면 상 자체의 무게가 없어진다(match-result.isCasualMatch).
+  const showMom =
+    !upcoming && attendees.length > 0 && !isCasualMatch(match.result, match.type);
   const showFollowUp = showMom || storylines.length > 0;
 
   return (

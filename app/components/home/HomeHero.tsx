@@ -15,6 +15,7 @@ import { getOpponentLogo } from "../../lib/opponent-logos";
 import { parseWeather, weatherEmoji } from "../../lib/weather";
 import { matchdayMessage } from "../../lib/matchday-message";
 import { getDDay, isUndecided, type HomeState } from "../../lib/home-state";
+import { isCasualMatch } from "./match-result";
 import type { Storyline } from "../../lib/storylines";
 import MomVote, { type MomVote as MomVoteData } from "./MomVote";
 import AttendanceHeroVote from "./AttendanceHeroVote";
@@ -40,6 +41,8 @@ export interface HeroMatch {
   ourScore: string;
   theirScore: string;
   result: string;
+  /** 일반 매칭 · 풋살 · 야유회. 자체전은 여기가 아니라 result 에 들어간다. */
+  type: string;
   mom: string;
   attendees: string;
   photos: string;
@@ -443,7 +446,8 @@ function AfterMatch({
 }) {
   const attendees = match.attendees.split(",").map((s) => s.trim()).filter(Boolean);
   const { full } = formatDate(match.date);
-  const needsMom = !match.mom.trim();
+  // 자체전·풋살·야유회는 MOM 투표를 열지 않는다(match-result.isCasualMatch).
+  const needsMom = !match.mom.trim() && !isCasualMatch(match.result, match.type);
   const resultLabel =
     match.result === "승"
       ? "승리"

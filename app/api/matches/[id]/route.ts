@@ -3,6 +3,7 @@ import { revalidateAppData } from "@/app/lib/cache";
 import { finalizeAttendance, setAttendanceStatus, updateMatchResult } from "@/app/lib/sheets-write";
 import { sendPushToAll } from "@/app/lib/send-push";
 import { requireAdmin } from "@/app/lib/admin";
+import { isCasualMatch } from "@/app/components/home/match-result";
 
 export async function PUT(
   req: NextRequest,
@@ -54,14 +55,19 @@ export async function PUT(
         console.error("[match] 출석 투표 마감 실패 (무시):", e);
       }
 
-      try {
-        await sendPushToAll({
-          title: "경기가 종료되었어요. 모두 고생하셨습니다!",
-          body: "MOM투표 부탁드립니다! 🗳️",
-          url: "/",
-        });
-      } catch (e) {
-        console.error("[push] match 알림 실패:", e);
+      // 자체전·풋살·야유회는 알림을 보내지 않는다. 매주 치르는 경기라
+      // 전체 알림이 매주 나가면 알림 피로만 쌓이고, 본문이 MOM 투표를
+      // 재촉하는 내용인데 그 경기들은 MOM 투표 자체를 열지 않는다.
+      if (!isCasualMatch(result, type)) {
+        try {
+          await sendPushToAll({
+            title: "경기가 종료되었어요. 모두 고생하셨습니다!",
+            body: "MOM투표 부탁드립니다! 🗳️",
+            url: "/",
+          });
+        } catch (e) {
+          console.error("[push] match 알림 실패:", e);
+        }
       }
     }
     revalidateAppData();
