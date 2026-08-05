@@ -58,6 +58,8 @@ export default function FeedbackThread({
   const [items, setItems] = useState(initial);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  // 아직 서버에 닿지 않은 내 댓글. 이건 지울 수 없다(서버가 행을 못 찾는다).
+  const [pending, setPending] = useState<Feedback | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Feedback | null>(null);
@@ -67,7 +69,8 @@ export default function FeedbackThread({
   const shown = expanded || collapsedCount === 0 ? items : items.slice(-collapsedCount);
   const hidden = items.length - shown.length;
 
-  const canDelete = (fb: Feedback) => isAdmin || (!!userName && fb.name === userName);
+  const canDelete = (fb: Feedback) =>
+    fb !== pending && (isAdmin || (!!userName && fb.name === userName));
 
   useEffect(() => {
     if (!sheetLayout) return;
@@ -84,6 +87,17 @@ export default function FeedbackThread({
     if (!message || !userName || sending) return;
     setSending(true);
     setError(null);
+    // 낙관적 반영 — 누르는 즉시 목록에 올리고 입력창을 비운다.
+    // 서버를 기다렸다 올리면 왕복 동안 화면이 멈춘 것처럼 보인다.
+    const optimistic: Feedback = {
+      name: userName,
+      message,
+      timestamp: new Date().toISOString(),
+    };
+    setItems((prev) => [...prev, optimistic]);
+    setPending(optimistic);
+    setText("");
+    setExpanded(true);
     try {
       const res = await fetch("/api/feedback", {
         method: "POST",
@@ -92,15 +106,17 @@ export default function FeedbackThread({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "등록 실패");
-      // 서버가 돌려준 행을 그대로 쓴다. 화면에서 만든 timestamp 를 들고 있으면
+      // 서버가 돌려준 행으로 갈아끼운다. 화면에서 만든 timestamp 를 들고 있으면
       // 나중에 그 댓글을 지울 때 서버가 행을 못 찾는다(삭제가 조용히 실패).
-      setItems((prev) => [...prev, data.feedback]);
-      setText("");
-      setExpanded(true);
+      setItems((prev) => prev.map((x) => (x === optimistic ? data.feedback : x)));
       router.refresh();
     } catch (e) {
+      // 그 사이 다른 댓글이 오갔을 수 있어 스냅샷 복원 대신 이 항목만 걷어낸다.
+      setItems((prev) => prev.filter((x) => x !== optimistic));
+      setText(message);
       setError(e instanceof Error ? e.message : "등록 실패");
     } finally {
+      setPending(null);
       setSending(false);
     }
   };
@@ -138,7 +154,12 @@ export default function FeedbackThread({
       )}
 
       {shown.map((fb, i) => (
-        <div key={`${fb.timestamp}-${i}`} className="group flex items-start">
+        <div
+          key={`${fb.timestamp}-${i}`}
+          className={`group flex items-start transition-opacity duration-200 ${
+            fb === pending ? "opacity-50" : ""
+          }`}
+        >
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <Link

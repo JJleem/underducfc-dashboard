@@ -12,7 +12,7 @@
 // 처음엔 칩을 본문에 늘어놓았더니 "뭘 누르는 화면인지" 알 수가 없었다.
 // 결과(막대)와 투표(드로어)를 분리해야 각각이 무슨 화면인지 읽힌다.
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Crown, Loader2, Shield, Star, Target } from "lucide-react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer";
@@ -174,7 +174,7 @@ export default function MomVote({
   matchDate,
   matchTime,
   attendees,
-  votes,
+  votes: serverVotes,
   userName,
   positions = {},
   confirmedMoms = [],
@@ -205,6 +205,26 @@ export default function MomVote({
   const [def, setDef] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 낙관적 반영 — 서버 왕복을 기다리는 동안 내가 고른 표를 먼저 얹는다.
+  // 배열 전체를 복사해 두지 않고 "내 표"만 겹쳐 쓰기 때문에, 서버가 같은 값을
+  // 반영해 돌아와도 결과가 똑같아 다시 지울 필요도, 깜빡일 일도 없다.
+  const [myPending, setMyPending] = useState<{ atk: string; def: string } | null>(null);
+
+  const votes = useMemo(() => {
+    if (!myPending || !userName) return serverVotes;
+    let next = serverVotes;
+    for (const [votedFor, voteType] of [
+      [myPending.atk, "공격"],
+      [myPending.def, "수비"],
+    ] as const) {
+      if (!votedFor) continue;
+      next = [
+        ...next.filter((v) => !(v.voterName === userName && v.voteType === voteType)),
+        { matchId, voterName: userName, votedFor, voteType },
+      ];
+    }
+    return next;
+  }, [serverVotes, myPending, userName, matchId]);
 
   const atkTally = tallyOf(votes, "공격");
   const defTally = tallyOf(votes, "수비");
@@ -250,7 +270,11 @@ export default function MomVote({
   };
 
   const submit = async () => {
-    if (!userName || (!atk && !def)) return;
+    if (!userName || (!atk && !def) || saving) return;
+    // 두 번의 왕복이 끝날 때까지 드로어를 붙잡아 두면 투표가 멈칫한다.
+    // 막대에 내 표를 먼저 얹고 바로 닫은 뒤, 실패했을 때만 되돌려 다시 연다.
+    setMyPending({ atk, def });
+    setOpen(false);
     setSaving(true);
     setError(null);
     try {
@@ -267,9 +291,10 @@ export default function MomVote({
         if (!res.ok) throw new Error((await res.json()).error || "투표 저장 실패");
       }
       router.refresh();
-      setOpen(false);
     } catch (e) {
+      setMyPending(null);
       setError(e instanceof Error ? e.message : "투표 저장에 실패했어요. 다시 시도해주세요.");
+      setOpen(true);
     } finally {
       setSaving(false);
     }

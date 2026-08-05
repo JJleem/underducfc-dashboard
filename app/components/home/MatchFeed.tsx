@@ -96,6 +96,7 @@ export default function MatchFeed({
   roster = [],
   positions = {},
   momCountdownPreview = false,
+  firstInFeed = false,
 }: {
   match: MatchData;
   lineups: LineupData[];
@@ -113,6 +114,8 @@ export default function MatchFeed({
   roster?: string[];
   positions?: Record<string, string>;
   momCountdownPreview?: boolean;
+  /** 피드 첫 게시물. 첫 장만 즉시 받아 첫 화면이 빈 채로 뜨지 않게 한다. */
+  firstInFeed?: boolean;
 }) {
   // 캐러셀 현재 장수. 인디케이터가 없으면 사진이 더 있다는 걸 알 방법이 없다.
   const [slide, setSlide] = useState(0);
@@ -247,7 +250,8 @@ export default function MatchFeed({
                 <img
                   src={full(url)}
                   alt=""
-                  loading="lazy"
+                  loading={firstInFeed && i === 0 ? "eager" : "lazy"}
+                  fetchPriority={firstInFeed && i === 0 ? "high" : undefined}
                   draggable={false}
                   className="aspect-square w-full bg-gray-100 object-cover dark:bg-white/5"
                 />

@@ -474,7 +474,7 @@ export default async function NewHome({
         {/* 경기 목록 — 두 방향 중 하나를 통째로 갈아 끼운다 */}
         <div className="divide-y divide-gray-100 dark:divide-white/[0.06]">
           <FeedList>
-          {recent.map((m) => {
+          {recent.map((m, idx) => {
             const match: MatchData = { ...m };
             const common = {
               match,
@@ -494,7 +494,7 @@ export default async function NewHome({
               playerTitles,
             };
             return layout === "feed" ? (
-              <MatchFeed key={m.id} {...common} />
+              <MatchFeed key={m.id} {...common} firstInFeed={idx === 0} />
             ) : (
               <MatchRow key={m.id} {...common} />
             );
