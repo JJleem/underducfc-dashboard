@@ -14,7 +14,7 @@ import type { LineupData } from "../../lib/match-types";
 import { parseWeather, weatherEmoji } from "../../lib/weather";
 import { matchdayMessage } from "../../lib/matchday-message";
 import { getDDay, isUndecided, type HomeState } from "../../lib/home-state";
-import { isCasualMatch, matchLogo } from "./match-result";
+import { isCasualMatch, matchLogo, matchTitle, matchTitleVs } from "./match-result";
 import type { Storyline } from "../../lib/storylines";
 import MomVote, { type MomVote as MomVoteData } from "./MomVote";
 import AttendanceHeroVote from "./AttendanceHeroVote";
@@ -344,7 +344,7 @@ function NeedVote({
 
       <div className="mt-3">
         <p className="truncate text-[13px] font-black text-gray-800 dark:text-white/80">
-          {isUndecided(match.opponent) ? "상대 미정" : `vs ${match.opponent}`}
+          {matchTitleVs(match)}
         </p>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px] font-bold text-gray-500 dark:text-white/50">
           <span className="flex items-center gap-1">
@@ -452,7 +452,8 @@ function AfterMatch({
   const attendees = match.attendees.split(",").map((s) => s.trim()).filter(Boolean);
   const { full } = formatDate(match.date);
   // 자체전·풋살·야유회는 MOM 투표를 열지 않는다(match-result.isCasualMatch).
-  const needsMom = !match.mom.trim() && !isCasualMatch(match.result, match.type, match.opponent);
+  const casual = isCasualMatch(match.result, match.type, match.opponent);
+  const needsMom = !match.mom.trim() && !casual;
   const resultLabel =
     match.result === "승"
       ? "승리"
@@ -464,16 +465,32 @@ function AfterMatch({
   return (
     <div className="pb-3">
       <p className="text-center text-[9.5px] font-black tracking-[0.18em] text-gray-400 dark:text-white/40">
-        {full} · {isUndecided(match.opponent) ? "상대 미정" : match.opponent}
+        {full} · {matchTitle(match)}
       </p>
+      {/* 자체전은 스코어가 없다. 그냥 두면 이 자리에 44px 짜리 ":" 하나만 남는다.
+          기록으로 남는 게 인원뿐이라 스코어 자리에 참석 인원을 세운다. */}
       <p className="mt-1.5 text-center text-[44px] font-black leading-none tracking-[-0.05em] tabular-nums text-gray-900 dark:text-white">
-        <span className="text-gray-400 dark:text-white/40">{match.ourScore}</span>
-        <span className="mx-1.5 text-gray-300 dark:text-white/20">:</span>
-        {match.theirScore}
+        {casual ? (
+          <>
+            {attendees.length}
+            <span className="ml-1 text-[20px] text-gray-400 dark:text-white/40">명</span>
+          </>
+        ) : (
+          <>
+            <span className="text-gray-400 dark:text-white/40">{match.ourScore}</span>
+            <span className="mx-1.5 text-gray-300 dark:text-white/20">:</span>
+            {match.theirScore}
+          </>
+        )}
       </p>
       <p className="mt-1.5 text-center text-[11px] font-black text-gray-400 dark:text-white/40">
-        {resultLabel}
-        <span className="mx-1.5 text-gray-300 dark:text-white/20">·</span>
+        {/* 제목이 이미 "우리끼리 자체전" 이라 결과 라벨을 또 쓰면 같은 말이 두 번이다. */}
+        {!casual && (
+          <>
+            {resultLabel}
+            <span className="mx-1.5 text-gray-300 dark:text-white/20">·</span>
+          </>
+        )}
         모두 고생하셨습니다
       </p>
 
@@ -599,7 +616,7 @@ function Upcoming({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logo} alt="" className="h-5 w-5 shrink-0 rounded-full bg-white object-contain ring-1 ring-black/5" />
             )}
-            <span className="truncate">{match.opponent}</span>
+            <span className="truncate">{matchTitle(match)}</span>
           </h2>
           <p className="mt-2 flex items-center gap-1.5 text-[10.5px] font-bold text-gray-500 dark:text-white/50">
             <CalendarDays width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.base} className="shrink-0" />

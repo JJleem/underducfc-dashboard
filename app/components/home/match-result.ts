@@ -8,6 +8,7 @@
 // 기존 홈도 자체전은 보라색으로 따로 빼고 승률·상대전적 집계에서 제외한다.
 
 import { getOpponentLogo } from "../../lib/opponent-logos";
+import { isUndecided } from "../../lib/home-state";
 
 /** 승패를 매기지 않는 경기인가. */
 export function isInternalMatch(result: string, opponent?: string): boolean {
@@ -38,6 +39,35 @@ export function isCasualMatch(result: string, type?: string, opponent?: string):
   if (isInternalMatch(result, opponent)) return true;
   const t = (type || "").replace(/\s+/g, "");
   return t === "자체전" || t === "풋살" || t === "야유회";
+}
+
+/**
+ * 상대 자리에 쓸 제목.
+ *
+ * 자체전은 opponent 에 "자체전"·"3파전" 이 들어 있어서 그대로 쓰면 그런 이름의
+ * 팀과 붙는 것처럼 읽힌다. 종목을 살리면서 "우리끼리"임을 한 줄에 담는다.
+ */
+export function matchTitle(match: {
+  opponent: string;
+  result: string;
+  type?: string;
+}): string {
+  if (isCasualMatch(match.result, match.type, match.opponent)) {
+    return `우리끼리 ${casualKind(match.result, match.type).ko}`;
+  }
+  return isUndecided(match.opponent) ? "상대 미정" : match.opponent;
+}
+
+/** 같은 제목에 "vs" 를 붙인 것. 상대가 없는 자리(자체전·미정)에는 안 붙는다. */
+export function matchTitleVs(match: {
+  opponent: string;
+  result: string;
+  type?: string;
+}): string {
+  const title = matchTitle(match);
+  const hasOpponent =
+    !isCasualMatch(match.result, match.type, match.opponent) && !isUndecided(match.opponent);
+  return hasOpponent ? `vs ${title}` : title;
 }
 
 /** 우리 팀 로고. 자체전엔 상대가 없어서 상대 로고 자리에 이걸 넣는다. */
