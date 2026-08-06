@@ -157,3 +157,20 @@ export function matchResultArt(matchId: number): MatchdayArt | null {
   if (RESULT_ART.length === 0) return null;
   return RESULT_ART[hash(matchId, 0x9e37) % RESULT_ART.length];
 }
+
+/**
+ * 자체전·풋살·야유회 카드의 배경. 팀·펀 계열만 쓴다.
+ *
+ * 깃발(크레스트)은 "상대와 붙으러 나간 날"의 그림이다. 자체전은 우리끼리 편을
+ * 갈라 하는 훈련이라 같은 그림을 깔면 결과 카드와 구분이 안 된다 — 카드 내용을
+ * 아무리 바꿔도 첫인상이 같으면 스크롤에서는 같은 카드로 읽힌다.
+ */
+const CASUAL_ART = ART.filter(
+  (a) => (a.src.includes("/team-") || a.src.includes("/fun-")) && !a.light,
+);
+
+/** 자체전 카드의 배경. 결과 카드와 같은 이유로 날짜를 섞지 않는다(영구 고정). */
+export function matchCasualArt(matchId: number): MatchdayArt | null {
+  if (CASUAL_ART.length === 0) return null;
+  return CASUAL_ART[hash(matchId, 0x51ed) % CASUAL_ART.length];
+}

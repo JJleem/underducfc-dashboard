@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Crown, Flame, Spline, Volleyball } from "lucide-react";
 import { auth } from "@/auth";
 import { getMatchesRows } from "../../lib/matches-backend";
-import { isMomOf } from "../../components/home/match-result";
+import { isMomOf, matchLogo } from "../../components/home/match-result";
 import { getOpponentLogo } from "../../lib/opponent-logos";
 import {
   getStatsRows,
@@ -238,7 +238,7 @@ export default async function PlayerPage({
       ourScore: m.ourScore,
       theirScore: m.theirScore,
       photos: m.photos.split(",").map((s) => s.trim()).filter((s) => s.startsWith("http")),
-      logo: getOpponentLogo(m.opponent),
+      logo: matchLogo(m),
       goals: countIn(m.goals),
       assists: countIn(m.assists),
       isMom: isMomOf(m.mom, name),

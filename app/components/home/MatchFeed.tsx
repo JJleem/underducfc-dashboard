@@ -28,12 +28,12 @@ import LineupViewer from "../LineupViewer";
 import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
 import type { LineupData, MatchData } from "../../lib/match-types";
-import { getOpponentLogo } from "../../lib/opponent-logos";
 import { cldSquare } from "../../lib/cloudinary";
 import {
+  casualKind,
   hasScore,
   isCasualMatch,
-  isInternalMatch,
+  matchLogo,
   resultTextTone,
   resultWord,
 } from "./match-result";
@@ -44,6 +44,7 @@ import {
   ART_SCRIM_SOFT,
   ART_SCRIM_LIGHT,
   ART_VEIL,
+  matchCasualArt,
   matchdayArt,
   matchResultArt,
 } from "../../lib/matchday-art";
@@ -69,6 +70,9 @@ import AppToast from "../AppToast";
 const ICON = { action: 17, logo: 32 } as const;
 
 const full = (url: string) => cldSquare(url);
+
+/** 자체전 카드에 얼굴로 띄우는 최대 인원. 넘치면 +N 으로 받는다. */
+const CASUAL_FACES = 12;
 
 function shortDate(raw: string): string {
   const d = new Date(raw);
@@ -195,7 +199,7 @@ export default function MatchFeed({
     return () => window.clearTimeout(timer);
   }, [toastError]);
 
-  const logo = getOpponentLogo(match.opponent);
+  const logo = matchLogo(match);
   const photos = (match.photos || "").split(",").map((s) => s.trim()).filter((s) => s.startsWith("http"));
   const attendees = (match.attendees || "").split(",").map((s) => s.trim()).filter(Boolean);
   const goals = (match.goals || "").split(",").map((s) => s.trim()).filter(Boolean);
@@ -213,8 +217,6 @@ export default function MatchFeed({
     ? { attack: splitMomNames(momParts[0] || ""), defense: splitMomNames(momParts[1] || "") }
     : undefined;
   const won = match.result === "승";
-  // 자체전은 승패가 없다. 스코어도 비어 있어서 그냥 두면 "- : - 패배"가 뜬다.
-  const internal = isInternalMatch(match.result, match.opponent);
   const scored = hasScore(match.ourScore, match.theirScore);
   const upcoming = match.result === "예정";
   const dDay = upcoming ? getDDay(match.date) : null;
@@ -222,12 +224,14 @@ export default function MatchFeed({
   // 관리자가 결과를 채우기 전까지 이 상태로 남으므로 문구를 따로 준다.
   const awaitingResult = dDay !== null && dDay < 0;
   const art = dDay === null ? null : matchdayArt(match.id, dDay);
+  // 자체전·풋살·야유회. 승패도 스코어도 없고 MOM 투표도 열지 않는다.
+  const casual = isCasualMatch(match.result, match.type, match.opponent);
+  const kind = casualKind(match.result, match.type);
   // 끝난 경기 카드의 배경. 날짜를 안 섞으므로 마이페이지 그리드와 항상 같은 그림이다.
-  const resultArt = upcoming ? null : matchResultArt(match.id);
-  // 자체전·풋살·야유회는 MOM 투표를 열지 않는다. 매주 치르는 경기라
-  // 매번 MOM 이 나오면 상 자체의 무게가 없어진다(match-result.isCasualMatch).
-  const showMom =
-    !upcoming && attendees.length > 0 && !isCasualMatch(match.result, match.type);
+  // 자체전은 깃발 대신 팀·펀 계열을 깐다(matchday-art.matchCasualArt).
+  const resultArt = upcoming ? null : casual ? matchCasualArt(match.id) : matchResultArt(match.id);
+  // 매주 치르는 경기라 매번 MOM 이 나오면 상 자체의 무게가 없어진다.
+  const showMom = !upcoming && attendees.length > 0 && !casual;
   const showFollowUp = showMom || storylines.length > 0;
 
   // 사진이 있는 완료 경기는 결과 카드를 캐러셀 맨 끝에 한 장 더 붙인다.
@@ -235,9 +239,86 @@ export default function MatchFeed({
   const showResultSlide = photos.length > 0 && !upcoming;
   const slideCount = photos.length + (showResultSlide ? 1 : 0);
 
+  // 자체전 카드. 스코어 카드를 그대로 쓰면 "언더덕 A : 언더덕 B" 라는 있지도 않은
+  // 대진이 생기고("A/B" 명단은 어디에도 없다) 큰 글씨와 뱃지에 "자체전"이 두 번 찍힌다.
+  //
+  // 자체전이 실제로 남기는 기록은 "누가 나왔는가" 하나뿐이다. 그래서 스코어 자리에
+  // 종목을, 득점자 자리에 참석자 얼굴을 넣는다. 구조는 결과 카드와 같게 두고
+  // 내용만 바꾼다 — 캐러셀에서 나란히 넘어가는 카드라 뼈대가 달라지면 튄다.
+  const casualCard = (
+    <div
+      className="relative aspect-square w-full overflow-hidden bg-[#0b0a1a] text-center text-white"
+      style={{
+        background:
+          "radial-gradient(circle at 16% 4%,rgba(196,181,253,.18),transparent 36%),radial-gradient(circle at 84% 0%,rgba(255,182,193,.14),transparent 38%),linear-gradient(160deg,#0b0a1a 0%,#1d1740 52%,#0b0a1a 100%)",
+      }}
+    >
+      {resultArt && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={resultArt.src}
+            alt=""
+            aria-hidden
+            loading="lazy"
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div aria-hidden className="absolute inset-0" style={{ background: ART_RESULT_VEIL }} />
+        </>
+      )}
+      <div className="pointer-events-none absolute -left-[15%] top-[4%] h-[72%] w-[38%] -rotate-[22deg] bg-gradient-to-r from-white/[0.055] to-transparent blur-xl" />
+      <div className="pointer-events-none absolute -right-[15%] top-[2%] h-[72%] w-[38%] rotate-[22deg] bg-gradient-to-l from-violet-300/[0.10] to-transparent blur-xl" />
+
+      <div className="relative z-10 flex h-full flex-col px-6 py-[clamp(18px,5vw,28px)]">
+        <div>
+          <p className="text-[10px] font-black tracking-[0.28em] text-white/35">{kind.en}</p>
+          <p className="mt-1.5 text-[12px] font-black tracking-[0.08em] text-[#FFB6C1]">
+            UNDERDUCK FC
+          </p>
+        </div>
+
+        <div className="my-auto w-full">
+          <p className="text-[clamp(38px,12vw,52px)] font-black leading-none tracking-[-0.05em] text-violet-200">
+            {kind.ko}
+          </p>
+
+          {attendees.length > 0 && (
+            <>
+              {/* 얼굴이 이 카드의 본문이다. 한 줄에 다 못 넣으니 접어서 쌓고,
+                  넘치는 인원은 숫자로 받는다 — 얼굴을 더 줄이면 누군지 안 보인다. */}
+              <div className="mx-auto mt-5 flex max-w-[280px] flex-wrap items-center justify-center gap-1.5">
+                {attendees.slice(0, CASUAL_FACES).map((name, i) => (
+                  <span key={`${name}-casual-${i}`} className="rounded-full ring-2 ring-violet-200/25">
+                    <PlayerFace name={name} size={30} />
+                  </span>
+                ))}
+                {attendees.length > CASUAL_FACES && (
+                  <span className="flex h-[30px] min-w-[30px] items-center justify-center rounded-full bg-white/[0.09] px-1.5 text-[10px] font-black text-white/55">
+                    +{attendees.length - CASUAL_FACES}
+                  </span>
+                )}
+              </div>
+
+              <p className="mt-3.5 text-[12px] font-black text-white/60">
+                {attendees.length}명이 함께 뛰었어요
+              </p>
+            </>
+          )}
+        </div>
+
+        <p className="min-h-9 text-[10px] font-bold text-white/25">
+          {[shortDate(match.date), match.location !== "미정" ? match.location : ""]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      </div>
+    </div>
+  );
+
   // 사진 없는 완료 경기의 카드. 사진이 있는 경기에서는 캐러셀의 마지막 장으로도
   // 쓰기 때문에 변수로 빼 둔다 — 두 곳에 복붙하면 한쪽만 고쳐져 조용히 달라진다.
-  const resultCard = (
+  const scoreCard = (
         <div
           className="relative aspect-square w-full overflow-hidden bg-[#070d20] text-center text-white"
           style={{
@@ -298,8 +379,8 @@ export default function MatchFeed({
 
             <div className="my-auto w-full">
               <div className="grid grid-cols-2 gap-10 px-1 text-[11px] font-black text-white/65">
-                <span className="truncate">{internal ? "언더덕 A" : "언더덕"}</span>
-                <span className="truncate">{internal ? "언더덕 B" : match.opponent}</span>
+                <span className="truncate">언더덕</span>
+                <span className="truncate">{match.opponent}</span>
               </div>
 
               {scored ? (
@@ -310,7 +391,7 @@ export default function MatchFeed({
                 </div>
               ) : (
                 <p className="mt-4 text-[32px] font-black leading-tight tracking-[-0.04em] text-white/85">
-                  {internal ? "자체전" : "기록 없음"}
+                  기록 없음
                 </p>
               )}
 
@@ -318,9 +399,7 @@ export default function MatchFeed({
                 className={`${goals.length > 0 ? "mt-3" : "mt-5"} inline-flex min-w-16 justify-center rounded-full border px-4 py-1.5 text-[11px] font-black ${
                   won
                     ? "border-[#FF8FA3]/70 bg-[#FF8FA3] text-white shadow-[0_0_28px_rgba(255,143,163,.28)]"
-                    : internal
-                      ? "border-violet-300/25 bg-violet-300/10 text-violet-200"
-                      : "border-white/10 bg-white/[0.06] text-white/55"
+                    : "border-white/10 bg-white/[0.06] text-white/55"
                 }`}
               >
                 {resultWord(match.result)}
@@ -392,6 +471,8 @@ export default function MatchFeed({
         </div>
   );
 
+  const resultCard = casual ? casualCard : scoreCard;
+
   return (
     <article className="pb-8">
       {/* 게시물 헤더 — 인스타의 계정 줄 자리. 여기선 상대팀이 그 자리다. */}
@@ -414,8 +495,11 @@ export default function MatchFeed({
           </span>
         )}
         <div className="min-w-0 flex-1">
+          {/* 자체전은 상대가 없다. opponent 에도 "자체전"이 들어 있어서 그대로 쓰면
+              헤더와 카드 큰 글씨가 "자체전 / 자체전"으로 겹친다. 인스타로 치면
+              여기는 계정 줄이고, 우리끼리 하는 날의 계정은 우리다. */}
           <p className="truncate text-[14px] font-black tracking-[-0.01em] text-gray-900 dark:text-white">
-            {internal ? match.opponent : `vs ${match.opponent}`}
+            {casual ? "언더덕 FC" : `vs ${match.opponent}`}
           </p>
           <p className="mt-0.5 truncate text-[11px] font-bold text-gray-400 dark:text-white/35">
             {shortDate(match.date)} · {match.location}

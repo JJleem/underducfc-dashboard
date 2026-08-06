@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import AppConfirmDialog from "../components/AppConfirmDialog";
 import AppToast from "../components/AppToast";
-import { getOpponentLogo } from "../lib/opponent-logos";
+import { matchLogo } from "../components/home/match-result";
 import { weatherEmoji } from "../lib/weather";
 import PastVoteRow, { type PastVoteComment, type VoteTally } from "./PastVoteRow";
 
@@ -338,7 +338,7 @@ export default function VoteClient({
       : undefined;
     const dDay = getDDay(match.date);
     const weather = weatherMap[match.id];
-    const logo = getOpponentLogo(match.opponent);
+    const logo = matchLogo(match);
     const matchComments = comments.filter((c) => c.matchId === match.id);
     const saved = savedVote?.matchId === match.id ? savedVote.response : null;
 
@@ -662,6 +662,8 @@ export default function VoteClient({
                 <div key={m.id}>
                   <PastVoteRow
                     opponent={isUndecided(m.opponent) ? "상대 미정" : m.opponent}
+                    result={m.result}
+                    type={m.type}
                     date={m.date}
                     location={isUndecided(m.location) ? "장소 미정" : m.location}
                     closed={closedIds.has(m.id)}

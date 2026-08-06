@@ -11,11 +11,10 @@ import LineupViewer from "../LineupViewer";
 import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
 import type { LineupData } from "../../lib/match-types";
-import { getOpponentLogo } from "../../lib/opponent-logos";
 import { parseWeather, weatherEmoji } from "../../lib/weather";
 import { matchdayMessage } from "../../lib/matchday-message";
 import { getDDay, isUndecided, type HomeState } from "../../lib/home-state";
-import { isCasualMatch } from "./match-result";
+import { isCasualMatch, matchLogo } from "./match-result";
 import type { Storyline } from "../../lib/storylines";
 import MomVote, { type MomVote as MomVoteData } from "./MomVote";
 import AttendanceHeroVote from "./AttendanceHeroVote";
@@ -453,7 +452,7 @@ function AfterMatch({
   const attendees = match.attendees.split(",").map((s) => s.trim()).filter(Boolean);
   const { full } = formatDate(match.date);
   // 자체전·풋살·야유회는 MOM 투표를 열지 않는다(match-result.isCasualMatch).
-  const needsMom = !match.mom.trim() && !isCasualMatch(match.result, match.type);
+  const needsMom = !match.mom.trim() && !isCasualMatch(match.result, match.type, match.opponent);
   const resultLabel =
     match.result === "승"
       ? "승리"
@@ -583,7 +582,7 @@ function Upcoming({
 }) {
   const dDay = getDDay(match.date);
   const { full, weekday } = formatDate(match.date);
-  const logo = getOpponentLogo(match.opponent);
+  const logo = matchLogo(match);
   const weather = parseWeather(match.weather);
   return (
     <div className="pb-3">

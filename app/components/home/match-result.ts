@@ -1,8 +1,13 @@
 // 경기 결과 표시 규칙. 피드·목록·최근 폼이 같은 판단을 써야 해서 한 군데로 모았다.
 //
+// 로고 고르기도 여기 있다. "상대가 누구인가"와 "승패를 매기는가"는 같은 질문이라
+// (자체전이면 상대도 없고 승패도 없다) 판단이 갈리면 로고만 남 팀 걸로 뜬다.
+//
 // 자체전(내전·풋살·3파전)은 승패가 없는 경기다. 실제 데이터에도 스코어가 비어 있다.
 // 이걸 승/무/패 축에 태우면 "- : - 패배"처럼 있지도 않은 패배가 생긴다.
 // 기존 홈도 자체전은 보라색으로 따로 빼고 승률·상대전적 집계에서 제외한다.
+
+import { getOpponentLogo } from "../../lib/opponent-logos";
 
 /** 승패를 매기지 않는 경기인가. */
 export function isInternalMatch(result: string, opponent?: string): boolean {
@@ -27,10 +32,45 @@ export function isInternalMatch(result: string, opponent?: string): boolean {
  *    그리고 type 에는 "일반 매칭"과 "일반매칭"처럼 띄어쓰기가 섞여 있어서,
  *    공백을 지우고 비교해야 새지 않는다.
  */
-export function isCasualMatch(result: string, type?: string): boolean {
-  if (isInternalMatch(result)) return true;
+export function isCasualMatch(result: string, type?: string, opponent?: string): boolean {
+  // opponent 까지 본다. 세 자리 중 하나만 빠져도 그 경기가 일반 매칭으로 새어
+  // "언더덕 A : 언더덕 B" 같은 없는 대진이 다시 생긴다.
+  if (isInternalMatch(result, opponent)) return true;
   const t = (type || "").replace(/\s+/g, "");
   return t === "자체전" || t === "풋살" || t === "야유회";
+}
+
+/** 우리 팀 로고. 자체전엔 상대가 없어서 상대 로고 자리에 이걸 넣는다. */
+export const UNDERDUCK_LOGO = "/icons/icon-192.png";
+
+/**
+ * 상대 로고 자리에 넣을 그림.
+ *
+ * 자체전·풋살은 상대가 없다. 그냥 두면 opponent("자체전"·"3파전")에 매핑된 로고가
+ * 없어서 "자"·"3" 같은 첫 글자 동그라미가 뜬다 — 상대팀인 척하는 자리만 남는다.
+ */
+export function matchLogo(match: {
+  opponent: string;
+  result: string;
+  type?: string;
+}): string | null {
+  if (isCasualMatch(match.result, match.type, match.opponent)) return UNDERDUCK_LOGO;
+  return getOpponentLogo(match.opponent);
+}
+
+/**
+ * 자체전류 경기의 이름. 카드 제목과 큰 글씨에 쓴다.
+ *
+ * type 을 먼저 본다 — 지난 자체전 3건이 전부 result="자체전" · type="풋살" 이라
+ * result 만 보면 풋살까지 싸잡아 "자체전"이 된다. 실제로 한 종목을 적어준다.
+ */
+export function casualKind(_result: string, type?: string): { ko: string; en: string } {
+  const t = (type || "").replace(/\s+/g, "");
+  if (t === "풋살") return { ko: "풋살", en: "FUTSAL" };
+  if (t === "야유회") return { ko: "야유회", en: "TEAM DAY" };
+  // result 를 그대로 내보내면 안 된다. 자체전은 경기가 끝나기 전까지 result 가
+  // "예정"이라, 그걸 받아 쓰면 카드에 "예정"이 대문짝만하게 찍힌다.
+  return { ko: "자체전", en: "TRAINING DAY" };
 }
 
 /**

@@ -2,7 +2,8 @@
 // - story: 1080x1920 (9:16, 인스타 스토리)
 // - feed:  1080x1350 (4:5, 인스타 게시글)
 import type { MatchData } from "./match-types";
-import { matchResultArt } from "./matchday-art";
+import { matchCasualArt, matchResultArt } from "./matchday-art";
+import { casualKind, isCasualMatch } from "../components/home/match-result";
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -74,11 +75,17 @@ export async function drawStoryCanvas(
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
 
-  // ── 배경: 다크 네이비 그라데이션 ─────────────────────────────
+  // 자체전·풋살·야유회는 스코어가 없다. 피드 카드와 같은 판단을 써야
+  // 공유한 그림이 앱에서 보던 카드와 달라지지 않는다(MatchFeed.casual).
+  const casual = isCasualMatch(match.result, match.type, match.opponent);
+  const kind = casualKind(match.result, match.type);
+  const attendees = (match.attendees || "").split(",").map((s) => s.trim()).filter(Boolean);
+
+  // ── 배경: 다크 네이비 / 자체전은 보라 ────────────────────────
   const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, "#070d20");
-  bg.addColorStop(0.5, "#0d1733");
-  bg.addColorStop(1, "#070d20");
+  bg.addColorStop(0, casual ? "#0b0a1a" : "#070d20");
+  bg.addColorStop(0.5, casual ? "#1d1740" : "#0d1733");
+  bg.addColorStop(1, casual ? "#0b0a1a" : "#070d20");
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
@@ -123,7 +130,7 @@ export async function drawStoryCanvas(
   // 피드의 결과 카드와 같은 그림·같은 막을 쓴다. 공유했더니 앱에서 보던 것과
   // 다른 카드가 나오면 "그 경기의 카드"로 안 읽힌다.
   // 그림은 1080 정사각이고 캔버스는 세로로 기니 가운데를 잘라 채운다(cover).
-  const art = matchResultArt(match.id);
+  const art = casual ? matchCasualArt(match.id) : matchResultArt(match.id);
   let hasArt = false;
   if (art) {
     try {
@@ -162,7 +169,7 @@ export async function drawStoryCanvas(
   setLetterSpacing(ctx, 10);
   ctx.fillStyle = "rgba(255,255,255,0.4)";
   ctx.font = `700 26px ${FONT}`;
-  ctx.fillText("MATCH RESULT", W / 2, L.brandSmallY);
+  ctx.fillText(casual ? kind.en : "MATCH RESULT", W / 2, L.brandSmallY);
   setLetterSpacing(ctx, 0);
 
   const brand = ctx.createLinearGradient(W / 2 - 260, 0, W / 2 + 260, 0);
@@ -182,17 +189,24 @@ export async function drawStoryCanvas(
   ctx.fillText(subtitle, W / 2, L.subY);
 
   // 구분선 (양끝 페이드)
+  const line = casual ? "196,181,253" : "255,182,193";
   const divider = ctx.createLinearGradient(140, 0, W - 140, 0);
-  divider.addColorStop(0, "rgba(255,182,193,0)");
-  divider.addColorStop(0.5, "rgba(255,182,193,0.45)");
-  divider.addColorStop(1, "rgba(255,182,193,0)");
+  divider.addColorStop(0, `rgba(${line},0)`);
+  divider.addColorStop(0.5, `rgba(${line},0.45)`);
+  divider.addColorStop(1, `rgba(${line},0)`);
   ctx.fillStyle = divider;
   ctx.fillRect(140, L.divY, W - 280, 2);
 
   // ── 팀명 + 스코어 ────────────────────────────────────────────
-  const isInternal = match.opponent === "자체전";
-  const ourName = isInternal ? "언더덕 A" : "언더덕";
-  const theirName = isInternal ? "언더덕 B" : (match.opponent || "상대팀");
+  // 자체전은 이 자리를 통째로 비운다. "언더덕 A : 언더덕 B" 는 어디에도 없는
+  // 대진이고(A/B 명단을 저장하지 않는다) 스코어도 비어 있다. 대신 종목을 크게 쓴다.
+  if (casual) {
+    ctx.fillStyle = "#ddd6fe";
+    ctx.font = `900 ${Math.round(L.scoreSize * 0.72)}px ${FONT}`;
+    ctx.fillText(kind.ko, W / 2, L.scoreY - Math.round(L.scoreSize * 0.12));
+  } else {
+  const ourName = "언더덕";
+  const theirName = match.opponent || "상대팀";
 
   ctx.fillStyle = "rgba(255,255,255,0.92)";
   const fitFont = (text: string, maxW: number, base: number) => {
@@ -255,6 +269,7 @@ export async function drawStoryCanvas(
     ctx.font = `900 38px ${FONT}`;
     ctx.fillText(match.result, W / 2, by + bh / 2 + 14);
   }
+  }
 
   // ── 골 기록 패널 ─────────────────────────────────────────────
   let curY = L.goalsY;
@@ -304,8 +319,50 @@ export async function drawStoryCanvas(
     curY += panelH + (format === "story" ? 44 : 32);
   }
 
+  // ── 참석자 패널 (자체전) ──────────────────────────────────────
+  // 자체전이 남기는 기록은 "누가 나왔는가" 하나뿐이라 이게 카드의 본문이다.
+  // 앱에서는 얼굴로 보여주지만 공유 카드에는 이름을 쓴다 — 정지된 그림이라
+  // 나중에 다시 봤을 때 읽히는 쪽이 이름이다.
+  if (casual && attendees.length > 0) {
+    const font = format === "story" ? 34 : 30;
+    const lineH = format === "story" ? 52 : 46;
+    const padX = 150;
+    const maxW = W - padX * 2 - 60;
+
+    // 이름을 한 줄에 담을 수 있는 만큼 담고 넘치면 줄을 바꾼다.
+    ctx.font = `800 ${font}px ${FONT}`;
+    const lines: string[] = [];
+    let cur = "";
+    for (const name of attendees) {
+      const next = cur ? `${cur}  ·  ${name}` : name;
+      if (ctx.measureText(next).width > maxW && cur) {
+        lines.push(cur);
+        cur = name;
+      } else {
+        cur = next;
+      }
+    }
+    if (cur) lines.push(cur);
+
+    const titleDy = format === "story" ? 58 : 50;
+    const firstDy = titleDy + (format === "story" ? 64 : 56);
+    const panelH = firstDy + (lines.length - 1) * lineH + (format === "story" ? 44 : 38);
+    glassPanel(ctx, padX, curY, W - padX * 2, panelH, "rgba(196,181,253,0.07)", "rgba(196,181,253,0.28)");
+
+    setLetterSpacing(ctx, 8);
+    ctx.fillStyle = "rgba(196,181,253,0.7)";
+    ctx.font = `800 24px ${FONT}`;
+    ctx.fillText(`${attendees.length}명이 함께 뛰었어요`, W / 2, curY + titleDy);
+    setLetterSpacing(ctx, 0);
+
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.font = `800 ${font}px ${FONT}`;
+    lines.forEach((text, i) => ctx.fillText(text, W / 2, curY + firstDy + i * lineH));
+    curY += panelH + (format === "story" ? 44 : 32);
+  }
+
   // ── MOM 패널 ─────────────────────────────────────────────────
-  if (match.mom) {
+  if (match.mom && !casual) {
     glassPanel(ctx, 110, curY, W - 220, L.momH, "rgba(251,191,36,0.07)", "rgba(251,191,36,0.3)");
 
     setLetterSpacing(ctx, 8);
@@ -324,9 +381,9 @@ export async function drawStoryCanvas(
 
   // ── 푸터 ─────────────────────────────────────────────────────
   const accent = ctx.createLinearGradient(W / 2 - 90, 0, W / 2 + 90, 0);
-  accent.addColorStop(0, "rgba(255,182,193,0)");
-  accent.addColorStop(0.5, "#FF8FA3");
-  accent.addColorStop(1, "rgba(255,182,193,0)");
+  accent.addColorStop(0, `rgba(${line},0)`);
+  accent.addColorStop(0.5, casual ? "#c4b5fd" : "#FF8FA3");
+  accent.addColorStop(1, `rgba(${line},0)`);
   ctx.fillStyle = accent;
   ctx.fillRect(W / 2 - 90, H - (format === "story" ? 158 : 108), 180, 3);
 

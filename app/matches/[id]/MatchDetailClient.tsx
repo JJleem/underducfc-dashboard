@@ -27,8 +27,9 @@ import useAppOverlay from "../../components/useAppOverlay";
 import { parseWeather, weatherEmoji } from "../../lib/weather";
 import type { EarnedTitle } from "../../lib/titles";
 import {
+  casualKind,
   hasScore,
-  isInternalMatch,
+  isCasualMatch,
   resultTextTone,
   resultWord,
 } from "../../components/home/match-result";
@@ -86,7 +87,8 @@ export default function MatchDetailClient({
     .split(",")
     .map((name) => name.trim())
     .filter(Boolean);
-  const internal = isInternalMatch(match.result, match.opponent);
+  const casual = isCasualMatch(match.result, match.type, match.opponent);
+  const kind = casualKind(match.result, match.type);
   const scored = hasScore(match.ourScore, match.theirScore);
   const upcoming = match.result === "예정";
 
@@ -138,13 +140,30 @@ export default function MatchDetailClient({
           </span>
         </div>
 
+        {/* 자체전은 상대가 없다. "언더덕 A vs 언더덕 B"는 어디에도 저장하지 않는
+            대진이라(A/B 명단이 없다) 오리 로고만 두 번 찍힌다. 종목과 인원으로 바꾼다. */}
+        {casual ? (
+          <div className="mt-6 flex flex-col items-center">
+            <div className="relative h-14 w-14 overflow-hidden rounded-full bg-white ring-1 ring-black/[0.06] dark:bg-black dark:ring-white/10">
+              <Image src="/icons/icon-192.png" alt="언더덕" fill sizes="56px" className="object-cover" />
+            </div>
+            <span className="mt-2.5 text-[22px] font-black leading-none tracking-[-0.04em] text-violet-500 dark:text-violet-300">
+              {kind.ko}
+            </span>
+            {attendees.length > 0 && (
+              <span className="mt-2 text-[12px] font-bold text-gray-400 dark:text-white/40">
+                {attendees.length}명이 함께 뛰었어요
+              </span>
+            )}
+          </div>
+        ) : (
         <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
           <div className="flex min-w-0 flex-col items-center">
             <div className="relative h-14 w-14 overflow-hidden rounded-full bg-white ring-1 ring-black/[0.06] dark:bg-black dark:ring-white/10">
               <Image src="/icons/icon-192.png" alt="언더덕" fill sizes="56px" className="object-cover" />
             </div>
             <span className="mt-2 max-w-full truncate text-[13px] font-black">
-              {internal ? "언더덕 A" : "언더덕"}
+              언더덕
             </span>
           </div>
 
@@ -167,18 +186,13 @@ export default function MatchDetailClient({
           </div>
 
           <div className="flex min-w-0 flex-col items-center">
-            {internal ? (
-              <div className="relative h-14 w-14 overflow-hidden rounded-full bg-white ring-1 ring-black/[0.06] dark:bg-black dark:ring-white/10">
-                <Image src="/icons/icon-192.png" alt="언더덕 B" fill sizes="56px" className="object-cover" />
-              </div>
-            ) : (
-              <OpponentLogo name={match.opponent} />
-            )}
+            <OpponentLogo name={match.opponent} />
             <span className="mt-2 max-w-full truncate text-center text-[13px] font-black">
-              {internal ? "언더덕 B" : match.opponent}
+              {match.opponent}
             </span>
           </div>
         </div>
+        )}
 
         {weather.available && (
           <p className="mt-5 text-center text-[10.5px] font-bold text-gray-400 dark:text-white/35">

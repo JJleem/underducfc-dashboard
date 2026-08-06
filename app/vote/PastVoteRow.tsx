@@ -9,7 +9,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { getOpponentLogo } from "../lib/opponent-logos";
+import { matchLogo } from "../components/home/match-result";
 
 export interface VoteTally {
   attending: string[];
@@ -61,6 +61,8 @@ function shortDate(raw: string): string {
 
 export default function PastVoteRow({
   opponent,
+  result,
+  type,
   date,
   location,
   closed,
@@ -68,6 +70,9 @@ export default function PastVoteRow({
   comments,
 }: {
   opponent: string;
+  /** 로고 판단용. 자체전엔 상대가 없어서 우리 로고를 쓴다(match-result.matchLogo). */
+  result: string;
+  type?: string;
   date: string;
   location: string;
   closed: boolean;
@@ -75,7 +80,7 @@ export default function PastVoteRow({
   comments: PastVoteComment[];
 }) {
   const [open, setOpen] = useState(false);
-  const logo = getOpponentLogo(opponent);
+  const logo = matchLogo({ opponent, result, type });
   const total = tally.attending.length + tally.maybe.length + tally.absent.length;
   const pct = (n: number) => (total > 0 ? `${(n / total) * 100}%` : "0%");
 

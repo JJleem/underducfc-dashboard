@@ -27,8 +27,7 @@ import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
 import ModalPortal from "../ModalPortal";
 import type { LineupData, MatchData } from "../../lib/match-types";
-import { getOpponentLogo } from "../../lib/opponent-logos";
-import { hasScore, isInternalMatch, resultTextTone } from "./match-result";
+import { hasScore, isInternalMatch, matchLogo, resultTextTone } from "./match-result";
 import { getDDay } from "../../lib/home-state";
 import type { Storyline } from "../../lib/storylines";
 import { useUnseen } from "./useUnseen";
@@ -122,7 +121,7 @@ export default function MatchRow({
     return () => window.clearTimeout(timer);
   }, [shareError]);
 
-  const logo = getOpponentLogo(match.opponent);
+  const logo = matchLogo(match);
   const photos = (match.photos || "").split(",").map((s) => s.trim()).filter((s) => s.startsWith("http"));
   const attendees = (match.attendees || "").split(",").map((s) => s.trim()).filter(Boolean);
   const goals = (match.goals || "").split(",").map((s) => s.trim()).filter(Boolean);
