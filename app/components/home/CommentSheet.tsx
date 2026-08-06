@@ -51,7 +51,6 @@ export default function CommentSheet({
     bottomInset: 0,
     keyboardOpen: false,
   });
-  const triggerRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const keyboardPositionMode = useRef<"native" | "manual" | null>(null);
 
@@ -120,7 +119,6 @@ export default function CommentSheet({
   return (
     <>
       <button
-        ref={triggerRef}
         type="button"
         onClick={() => handleOpenChange(true)}
         className={className}
@@ -142,11 +140,10 @@ export default function CommentSheet({
       >
         <DrawerContent
           ref={sheetRef}
-          onCloseAutoFocus={(event) => {
-            event.preventDefault();
-            triggerRef.current?.focus({ preventScroll: true });
-          }}
-          handleClassName="!absolute left-1/2 top-0 z-10 -translate-x-1/2"
+          // 핸들은 본문보다 위여야 잡힌다. 둘 다 z-10 이면 DOM 뒤쪽인 본문이
+          // 덮어서 손가락이 핸들에 닿지 않는다 — handleOnly 라 핸들 말고는
+          // 드래그가 안 되니, 결과적으로 이 시트만 내릴 방법이 없었다.
+          handleClassName="!absolute left-1/2 top-0 z-20 -translate-x-1/2"
           overlayClassName="touch-none overscroll-none"
           className="mx-auto h-[62dvh] max-h-none w-full max-w-md overflow-visible bg-white transition-[bottom,height] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-none dark:bg-[#161618]"
           style={height > 0 ? { height, bottom: bottomInset } : undefined}
