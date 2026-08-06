@@ -25,28 +25,43 @@ interface Metal {
   foil?: string;
 }
 
-// 0 루키(브론즈) → 3 프로(핑크·퍼플)
+// 0 루키(브론즈) → 3 프로(핑크·퍼플) → 4 GOAT(옵시디언)
+//
+// 4단계까지 밝고 채도 있는 계열을 다 썼다. 다섯 번째는 반대로 가야 위로 읽힌다 —
+// 거의 검정인 금속에 팀 핑크를 포일로만 얹어, 가만히 있을 땐 절제되고
+// 기울일 때만 무지갯빛이 훑는다. 히든(밝은 시안)과도 겹치지 않는다.
 const TIER_METAL: Record<TierIndex, Metal> = {
   0: { ramp: ["#FBE6CB", "#EBB782", "#C07C3C", "#7C4A1C", "#452508"], aura: false },
   1: { ramp: ["#FFFFFF", "#E3EBF4", "#AEBCCD", "#616F81", "#333C49"], aura: false },
   2: { ramp: ["#FFF8DA", "#F7DE93", "#DCAA2C", "#8E6109", "#553904"], aura: false },
   3: { ramp: ["#FFE6EE", "#FFB3CC", "#C983EE", "#6B2FA6", "#3A1760"], aura: true },
+  4: { ramp: ["#E6EAF5", "#AEB7D2", "#242A3E", "#10131F", "#05070D"], aura: true, foil: "#FF6E8E" },
 };
 
 // 달성형(등급 없음) — 백랍
 const FLAT_METAL: Metal = { ramp: ["#EEF2F8", "#C6CFDC", "#8A96A8", "#4A5462", "#282F3A"], aura: false };
 // 난도가 높은 달성형 — 청강
 const ELITE_METAL: Metal = { ramp: ["#E4F1FF", "#A9CBF7", "#5B8DEF", "#26417F", "#132449"], aura: false };
-// 리더(팀 1위) — 골드
-const LEADER_METAL: Metal = { ramp: ["#FFFCE8", "#FFE49B", "#F0B818", "#8C5C00", "#513400"], aura: true };
+// 리더(팀 1위) — 톱니 메달에 팀 핑크. 예전엔 골드였는데 준프로와 같은 금색이라
+// 12px 에서 구분이 안 됐다(기준색 차이 765 중 54). 모양으로 가르고 색은 팀 것으로 옮겼다.
+const LEADER_METAL: Metal = {
+  ramp: ["#FFF3F6", "#FFC4D0", "#FF8FA3", "#A63A50", "#571A28"],
+  aura: true,
+  foil: "#FFF2F5",
+};
 // 히든 — 시안/틸에 보랏빛 포일. 히든만 재질이 다르다.
 const HIDDEN_METAL: Metal = {
   ramp: ["#E6FCFF", "#9CEEFC", "#38C6E2", "#0B6076", "#053544"],
   aura: true,
   foil: "#B98CFF",
 };
-// 감독 — 로열 골드 (모양으로 구분하므로 금속은 리더보다 더 깊게)
-const MANAGER_METAL: Metal = { ramp: ["#FFF6CE", "#FFDF8F", "#E8B21C", "#7A4A00", "#3C2200"], aura: true };
+// 감독 — 턱시도. 단 한 사람만 다는 뱃지라 다른 금속과의 구분보다
+// "딱 봐도 감독"이 먼저다. 순검정 바탕에 흰 넥타이, 흰 광택만 쓴다.
+const MANAGER_METAL: Metal = {
+  ramp: ["#FFFFFF", "#EAEDF4", "#0F1116", "#07080B", "#020304"],
+  aura: true,
+  foil: "#FFFFFF",
+};
 
 /** 칭호 → 금속. 뱃지 밖(개인 페이지 카드 등)에서도 같은 색을 쓰라고 내보낸다. */
 export function titleMetal(t: EarnedTitle): Metal {
@@ -88,7 +103,24 @@ const rgba = (hex: string, alpha: number) => {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
 };
 
-/** 코인 한 장. shape="circle" 일반 / "shield" 감독 */
+/**
+ * 톱니 메달(로제트) 가장자리. 원 둘레를 n번 물결지게 한다.
+ *
+ * 리더는 준프로와 같은 금색이었어서 12px 에서 구분이 안 됐다. 작은 크기에서
+ * 살아남는 건 색이 아니라 모양이라, 감독이 방패로 하는 걸 여기서도 한다.
+ */
+function rosettePath(n = 16, outer = 49, inner = 43.5): string {
+  const pts: string[] = [];
+  for (let i = 0; i < n * 2; i++) {
+    const a = (Math.PI * i) / n - Math.PI / 2;
+    const r = i % 2 ? inner : outer;
+    pts.push(`${(50 + r * Math.cos(a)).toFixed(2)} ${(50 + r * Math.sin(a)).toFixed(2)}`);
+  }
+  return "M" + pts.join(" L") + " Z";
+}
+const ROSETTE = rosettePath();
+
+/** 코인 한 장. circle 일반 / shield 감독 / rosette 리더 */
 function Coin({
   title,
   size,
@@ -98,7 +130,7 @@ function Coin({
   title: EarnedTitle;
   size: number;
   metal: Metal;
-  shape?: "circle" | "shield";
+  shape?: "circle" | "shield" | "rosette";
 }) {
   const [xhi, hi, base, shadow, dark] = metal.ramp;
   // 14px 미만에선 스페큘러·이너베벨을 끈다. 작을 때 디테일은 노이즈가 된다.
@@ -124,7 +156,9 @@ function Coin({
   const outer =
     shape === "shield"
       ? "M50 3 L93 17 V50 C93 74 73 90 50 97 C27 90 7 74 7 50 V17 Z"
-      : "M50 1 A49 49 0 1 1 49.9 1 Z";
+      : shape === "rosette"
+        ? ROSETTE
+        : "M50 1 A49 49 0 1 1 49.9 1 Z";
   // 칠보는 테두리 금속을 넉넉히 남겨야 메달처럼 보인다
   const faceR = detail ? 36 : 37;
 
@@ -177,14 +211,14 @@ function Coin({
       </defs>
 
       <path d={outer} fill={`url(#${uid}-r)`} />
-      {shape === "shield" ? (
+      {shape === "circle" ? (
+        <circle cx="50" cy="50" r={faceR} fill={`url(#${uid}-f)`} />
+      ) : (
         <path
           d={outer}
           fill={`url(#${uid}-f)`}
-          transform="translate(50 50) scale(0.74) translate(-50 -50)"
+          transform={`translate(50 50) scale(${shape === "shield" ? 0.74 : 0.8}) translate(-50 -50)`}
         />
-      ) : (
-        <circle cx="50" cy="50" r={faceR} fill={`url(#${uid}-f)`} />
       )}
 
       {detail && shape === "circle" && (
@@ -200,7 +234,7 @@ function Coin({
       )}
       {/* 포일 전용: 테두리 바깥 모서리의 광택선.
           히든의 표식이라 작은 크기에서도 끄지 않는다 (대신 얇아지지 않게 굵기를 키운다). */}
-      {metal.foil && shape === "circle" && (
+      {metal.foil && shape !== "shield" && (
         <circle
           cx="50"
           cy="50"
@@ -221,11 +255,19 @@ function Coin({
 export function TitleBadge({ title, size = 26 }: { title: EarnedTitle; size?: number }) {
   const label = title.tierLabel ? `${title.name} · ${title.tierLabel}` : title.name;
 
-  // 감독은 방패꼴로 실루엣부터 다르게 간다 (금속 언어는 나머지와 동일)
+  // 감독은 방패, 리더는 톱니 메달. 등급 사다리 밖의 칭호는 실루엣부터 다르게 간다 —
+  // 작은 크기에서는 색이 거의 안 남고 모양만 남는다.
   if (title.variant === "manager") {
     return (
       <span title="감독" aria-label="감독" style={{ display: "inline-flex", flex: "0 0 auto" }}>
         <Coin title={title} size={Math.round(size * 1.12)} metal={MANAGER_METAL} shape="shield" />
+      </span>
+    );
+  }
+  if (title.variant === "leader") {
+    return (
+      <span title={label} aria-label={label} style={{ display: "inline-flex", flex: "0 0 auto" }}>
+        <Coin title={title} size={size} metal={LEADER_METAL} shape="rosette" />
       </span>
     );
   }

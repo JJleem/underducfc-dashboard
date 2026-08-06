@@ -2,6 +2,7 @@
 // 칭호 icon(kebab 문자열) → lucide-react 컴포넌트 매핑.
 // 트리쉐이킹: 실제 쓰는 아이콘만 import 됩니다.
 
+import { forwardRef } from "react";
 import {
   Hand, ShieldCheck, Footprints, Goal, Volleyball, Spline, Crown,
   CalendarCheck, TrendingUp, PartyPopper, Crosshair, GitFork, Star,
@@ -15,7 +16,39 @@ import {
   type LucideProps,
 } from "lucide-react";
 
+/**
+ * 넥타이 — lucide 에 없어서 직접 그렸다. 감독 전용.
+ *
+ * 매듭(위)과 아래로 좁아지는 날(아래) 두 조각이다. 날을 얇게 그리면 12px 에서
+ * 선 하나로 뭉개져서, 방패 안쪽 폭을 거의 다 쓰도록 넉넉히 잡았다.
+ * lucide 와 같은 24 그리드·같은 stroke 규약을 따라야 다른 아이콘과 굵기가 맞는다.
+ */
+const Tie: LucideIcon = forwardRef<SVGSVGElement, LucideProps>(function Tie(
+  { size = 24, strokeWidth = 2, color = "currentColor", ...rest },
+  ref,
+) {
+  return (
+    <svg
+      ref={ref}
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...rest}
+    >
+      <path d="M8.4 2.4h7.2l1.3 4.3-4.9 2.4-4.9-2.4z" />
+      <path d="M10.1 9.6 8.6 17.1 12 21.8l3.4-4.7-1.5-7.5z" />
+    </svg>
+  );
+}) as LucideIcon;
+
 const ICONS: Record<string, LucideIcon> = {
+  tie: Tie,
   hand: Hand,
   "shield-check": ShieldCheck,
   footprints: Footprints,

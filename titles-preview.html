@@ -233,22 +233,22 @@
 /* tiers: [{label, req}]  — 등급 칭호. 평면 뱃지는 flat:true + cond */
 const CATS = [
   {name:"포지션 커리어", icon:"layers", color:"#38BDF8", note:"각 포지션 출전 경기수로 승급", titles:[
-    {n:"골키퍼", icon:"hand", state:"live", flagship:true, desc:"GK 슬롯 출전 누적", ladder:[10,20,30,40]},
-    {n:"수비수", icon:"shield-check", state:"live", desc:"DF 슬롯 출전 누적", ladder:[10,20,30,40]},
-    {n:"미드필더", icon:"footprints", state:"live", desc:"MF 슬롯 출전 누적", ladder:[10,20,30,40]},
-    {n:"공격수", icon:"goal", state:"live", desc:"FW 슬롯 출전 누적", ladder:[10,20,30,40]},
+    {n:"골키퍼", icon:"hand", state:"live", flagship:true, desc:"GK 슬롯 출전 누적", ladder:[10,20,30,40,60]},
+    {n:"수비수", icon:"shield-check", state:"live", desc:"DF 슬롯 출전 누적", ladder:[10,20,30,40,60]},
+    {n:"미드필더", icon:"footprints", state:"live", desc:"MF 슬롯 출전 누적", ladder:[10,20,30,40,60]},
+    {n:"공격수", icon:"goal", state:"live", desc:"FW 슬롯 출전 누적", ladder:[10,20,30,40,60]},
   ]},
   {name:"통산 스탯", icon:"bar-chart-3", color:"#FF8FA3", note:"누적 기록(리셋 없음)으로 승급", titles:[
-    {n:"골게터", icon:"volleyball", state:"live", flagship:true, desc:"통산 득점", ladder:[5,15,30,50], unit:"골"},
-    {n:"플레이메이커", icon:"spline", state:"live", desc:"통산 도움", ladder:[5,15,30,50], unit:"어시"},
-    {n:"미스터 MVP", icon:"crown", state:"live", flagship:true, desc:"MOM 선정 횟수", ladder:[3,7,15,30], unit:"회"},
-    {n:"철인", icon:"calendar-check", state:"live", desc:"통산 출전", ladder:[10,25,50,100], unit:"경기"},
-    {n:"공격포인트", icon:"trending-up", state:"live", desc:"골+도움 합계", ladder:[10,30,60,100], unit:"P"},
+    {n:"골게터", icon:"volleyball", state:"live", flagship:true, desc:"통산 득점", ladder:[5,15,30,50,100], unit:"골"},
+    {n:"플레이메이커", icon:"spline", state:"live", desc:"통산 도움", ladder:[5,15,30,50,100], unit:"어시"},
+    {n:"미스터 MVP", icon:"crown", state:"live", flagship:true, desc:"MOM 선정 횟수", ladder:[3,7,15,30,50], unit:"회"},
+    {n:"철인", icon:"calendar-check", state:"live", desc:"통산 출전", ladder:[10,25,50,100,200], unit:"경기"},
+    {n:"공격포인트", icon:"trending-up", state:"live", desc:"골+도움 합계", ladder:[10,30,60,100,200], unit:"P"},
   ]},
   {name:"한 경기 폭발", icon:"flame", color:"#FB923C", note:"단일 경기 활약", titles:[
-    {n:"해트트릭 영웅", icon:"party-popper", state:"live", flagship:true, desc:"한 경기 3골+ 달성 횟수", ladder:[1,3,5,10], unit:"회", labels:["첫 해트트릭","3회","5회","10회"]},
-    {n:"멀티골 사냥꾼", icon:"crosshair", state:"live", desc:"한 경기 2골+ 기록한 경기 수", ladder:[3,7,15,30], unit:"경기"},
-    {n:"멀티어시", icon:"git-fork", state:"live", desc:"한 경기 2도움+ 기록한 경기 수", ladder:[3,7,15,30], unit:"경기"},
+    {n:"해트트릭 영웅", icon:"party-popper", state:"live", flagship:true, desc:"한 경기 3골+ 달성 횟수", ladder:[1,3,5,10,20], unit:"회", labels:["첫 해트트릭","3회","5회","10회","20회"]},
+    {n:"멀티골 사냥꾼", icon:"crosshair", state:"live", desc:"한 경기 2골+ 기록한 경기 수", ladder:[3,7,15,30,50], unit:"경기"},
+    {n:"멀티어시", icon:"git-fork", state:"live", desc:"한 경기 2도움+ 기록한 경기 수", ladder:[3,7,15,30,50], unit:"경기"},
     {n:"원맨쇼", icon:"star", state:"live", flat:true, cond:"한 경기 골+도움 합 4 이상"},
   ]},
   {name:"포지션 특성", icon:"swords", color:"#34D399", note:"뛴 자리의 성향", titles:[
@@ -261,9 +261,9 @@ const CATS = [
     {n:"스위퍼 키퍼", icon:"hand-metal", state:"live", flat:true, cond:"GK로 뛴 경기에서 도움 기록"},
   ]},
   {name:"근성 · 출석", icon:"battery-full", color:"#F472B6", note:"꾸준함과 헌신", titles:[
-    {n:"연속출석", icon:"flame", state:"live", flagship:true, desc:"연속으로 참석한 경기 수", ladder:[3,5,10,20], unit:"연속"},
+    {n:"연속출석", icon:"flame", state:"live", flagship:true, desc:"연속으로 참석한 경기 수", ladder:[3,5,10,20,40], unit:"연속"},
     {n:"아이언맨", icon:"battery-full", state:"live", flat:true, cond:"한 경기 전 쿼터 출전 경험"},
-    {n:"캡틴", icon:"badge-check", state:"live", desc:"주장(C)으로 출전", ladder:[5,15,30,50], unit:"경기"},
+    {n:"캡틴", icon:"badge-check", state:"live", desc:"주장(C)으로 출전", ladder:[5,15,30,50,100], unit:"경기"},
     {n:"새내기", icon:"sprout", state:"live", flat:true, cond:"통산 출전 3경기 미만"},
     {n:"리턴 오브 더 킹", icon:"rotate-ccw", state:"future", flat:true, cond:"장기 결장 후 복귀 출전(공백 5경기+)"},
   ]},
@@ -276,16 +276,16 @@ const CATS = [
   ]},
   {name:"맞대결 · 승부", icon:"trophy", color:"#A78BFA", note:"상대와 결과 기반", titles:[
     {n:"천적 킬러", icon:"swords", state:"live", flagship:true, flat:true, cond:"한 상대 팀에게 통산 3골 이상"},
-    {n:"무실점 수문장", icon:"lock", state:"live", desc:"GK로 무실점(상대 0골) 경기 수", ladder:[1,3,5,10], unit:"경기"},
+    {n:"무실점 수문장", icon:"lock", state:"live", desc:"GK로 무실점(상대 0골) 경기 수", ladder:[1,3,5,10,20], unit:"경기"},
     {n:"대승의 주역", icon:"rocket", state:"live", flat:true, cond:"5골차 이상 승리에 출전"},
-    {n:"승리요정", icon:"sparkles", state:"live", desc:"출전 경기 중 승리 수", ladder:[5,15,30,50], unit:"승"},
+    {n:"승리요정", icon:"sparkles", state:"live", desc:"출전 경기 중 승리 수", ladder:[5,15,30,50,100], unit:"승"},
     {n:"천하무적", icon:"trophy", state:"live", flat:true, cond:"출전 10경기+ & 승률 70%+"},
   ]},
   {name:"대시보드 활동", icon:"activity", color:"#2DD4BF", note:"투표·댓글 참여 데이터", titles:[
-    {n:"투표러", icon:"vote", state:"live", desc:"출석 투표 참여 횟수", ladder:[5,15,30,50], unit:"회"},
-    {n:"수다왕", icon:"message-circle", state:"live", flagship:true, desc:"댓글 작성 수", ladder:[5,15,30,50], unit:"개"},
+    {n:"투표러", icon:"vote", state:"live", desc:"출석 투표 참여 횟수", ladder:[5,15,30,50,100], unit:"회"},
+    {n:"수다왕", icon:"message-circle", state:"live", flagship:true, desc:"댓글 작성 수", ladder:[5,15,30,50,100], unit:"개"},
     {n:"얼리버드", icon:"alarm-clock", state:"live", flat:true, cond:"한 경기에서 가장 먼저 투표한 횟수 3회+"},
-    {n:"활동왕", icon:"activity", state:"live", desc:"투표+댓글 종합 활동량", ladder:[20,50,100,150], unit:"P"},
+    {n:"활동왕", icon:"activity", state:"live", desc:"투표+댓글 종합 활동량", ladder:[20,50,100,150,300], unit:"P"},
     {n:"오프너", icon:"message-square-plus", state:"live", flat:true, cond:"경기 댓글의 첫 댓글 작성 3회+"},
   ]},
   {name:"언성히어로 · 반전", icon:"heart-handshake", color:"#FBBF24", note:"숫자 뒤의 가치", titles:[
@@ -308,7 +308,7 @@ const CATS = [
   ]},
 ];
 
-const TIER_NAMES4 = ["루키","아마추어","준프로","프로"];
+const TIER_NAMES4 = ["루키","아마추어","준프로","프로","GOAT"];
 
 let FILTER = "all";
 function setFilter(f){
