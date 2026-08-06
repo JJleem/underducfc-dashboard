@@ -6,7 +6,7 @@
 // (히어로에는 팀 서사 한 줄만 세우고 개인 기록은 경기 줄로 내리기 위해서다).
 
 import type { MatchData } from "./match-types";
-import { isCasualMatch } from "../components/home/match-result";
+import { isCasualMatch, isOuting } from "../components/home/match-result";
 
 export interface Storyline {
   icon: string;
@@ -27,13 +27,9 @@ export function buildMatchStorylines(
   // 이름 목록 파싱: 한 셀에 여러 명이 "," 또는 "/"로 묶여 들어올 수 있음 (특히 MOM)
   const parseNames = (csv?: string) =>
     (csv || "").split(/[,/]/).map((s) => s.trim()).filter(Boolean);
-  // 정식 경기만. 자체전·풋살·야유회는 통째로 빼고 그 앞뒤를 이어 붙인다.
-  //
-  // 전에는 야유회만 뺐는데, 그러면 자체전이 흐름을 끊는다. result 가 "자체전"이라
-  // 연패 루프가 거기서 멈춰 4연패가 0연패가 되고 "연패 탈출 도전"이 사라진다.
-  // 연승·클린시트·개인 연속 공격P 도 똑같이 끊긴다 — 우리끼리 한 판 뛰었다고
-  // 지난 넉 달의 흐름이 없던 일이 될 이유가 없다.
-  const isReal = (m: MatchData) => !isCasualMatch(m.result, m.type, m.opponent);
+  // 야유회는 경기가 아니라 행사다(백엔드 stats 도 뺀다). 자체전·풋살은 경기이므로
+  // 여기 남긴다 — 대신 아래에서 "세는 것"과 "흐름"을 나눠 쓴다.
+  const isReal = (m: MatchData) => !isOuting(m.type);
   const validScore = (v: string | number | undefined) =>
     v !== undefined && v !== null && String(v).trim() !== "" && !Number.isNaN(Number(v));
   const targetTime = new Date(target.date).getTime();
@@ -51,6 +47,14 @@ export function buildMatchStorylines(
       return d !== 0 ? d : a.id - b.id;
     });
 
+  // 자체전을 어디에 넣고 뺄지가 갈린다. 하나로 뭉치면 반드시 한쪽이 틀린다.
+  //
+  //   세는 것(출전·골·도움 이정표) — 자체전 포함. 순위 페이지 apps 와 같은 모집단이라야
+  //     "프로필은 22경기인데 주목포인트는 20경기 출전" 같은 게 안 생긴다.
+  //   흐름(연패·연승·클린시트·연속 공격P·상대 전적) — 자체전 제외. 결과도 골 기록도
+  //     없어서 그대로 두면 루프가 거기서 멈춰 4연패가 0연패가 된다.
+  const real = prior.filter((m) => !isCasualMatch(m.result, m.type, m.opponent));
+
   const apps: Record<string, number> = {};
   const goals: Record<string, number> = {};
   const assists: Record<string, number> = {};
@@ -58,7 +62,9 @@ export function buildMatchStorylines(
   const lastAppIdx: Record<string, number> = {}; // 선수별 마지막 출전 경기의 prior 인덱스
   const attSets: Set<string>[] = []; // 경기별 출전자 집합 (개근 계산용)
 
+  const casualIdx = new Set<number>();
   prior.forEach((m, idx) => {
+    if (isCasualMatch(m.result, m.type, m.opponent)) casualIdx.add(idx);
     const att = Array.from(new Set(parseNames(m.attendees)));
     attSets.push(new Set(att));
     const gs = parseNames(m.goals);
@@ -70,7 +76,9 @@ export function buildMatchStorylines(
       goals[name] = (goals[name] || 0) + g;
       assists[name] = (assists[name] || 0) + a;
       lastAppIdx[name] = idx;
-      (seq[name] ||= []).push({ goals: g, point: g + a > 0 });
+      // 연속 공격포인트는 정식 경기만. 자체전엔 득점 기록을 안 남겨서
+      // 그대로 넣으면 나온 사람이 오히려 연속이 끊긴다.
+      if (!casualIdx.has(idx)) (seq[name] ||= []).push({ goals: g, point: g + a > 0 });
     }
   });
 
@@ -86,7 +94,7 @@ export function buildMatchStorylines(
   const assistLeaderCount = statList.filter((s) => s.assists === teamMaxAssists).length;
   const momLeaderCount = statList.filter((s) => s.mom === teamMaxMom).length;
   // 팀의 실제 직전 경기 득점자 (결장 선수에게 "지난 경기"가 잘못 뜨지 않도록)
-  const lastMatchScorers = prior.length > 0 ? parseNames(prior[prior.length - 1].goals) : [];
+  const lastMatchScorers = real.length > 0 ? parseNames(real[real.length - 1].goals) : [];
   for (const name of attendees) {
     const a = apps[name] || 0;
     const g = goals[name] || 0;
@@ -100,7 +108,10 @@ export function buildMatchStorylines(
     }
 
     // 복귀 매치 (마지막 출전 후 팀 경기를 3경기 이상 결장하다 복귀)
-    const missed = lastAppIdx[name] !== undefined ? prior.length - 1 - lastAppIdx[name] : 0;
+    let missed = 0;
+    if (lastAppIdx[name] !== undefined) {
+      for (let i = lastAppIdx[name] + 1; i < prior.length; i++) if (!casualIdx.has(i)) missed++;
+    }
     if (missed >= 3) {
       out.push({ icon: "🔙", text: `${name} ${missed}경기 결장 후 복귀`, priority: 82 , kind: "player" });
     }
@@ -151,7 +162,11 @@ export function buildMatchStorylines(
 
     // 개근 (팀 최근 경기를 연속으로 전부 출전 중)
     let attendStreak = 0;
-    for (let i = attSets.length - 1; i >= 0 && attSets[i].has(name); i--) attendStreak++;
+    for (let i = attSets.length - 1; i >= 0; i--) {
+      if (attSets[i].has(name)) attendStreak++;
+      else if (casualIdx.has(i)) continue;   // 자체전 결석은 없던 경기로
+      else break;
+    }
     if (attendStreak >= 5) {
       out.push({ icon: "🎖️", text: `${name} ${attendStreak}경기 연속 출전, 개근 행진`, priority: 46 , kind: "player" });
     }
@@ -160,8 +175,8 @@ export function buildMatchStorylines(
   // ── 팀 스토리라인
   // 연속 클린시트
   let cleanStreak = 0;
-  for (let i = prior.length - 1; i >= 0; i--) {
-    if (validScore(prior[i].theirScore) && Number(prior[i].theirScore) === 0) cleanStreak++;
+  for (let i = real.length - 1; i >= 0; i--) {
+    if (validScore(real[i].theirScore) && Number(real[i].theirScore) === 0) cleanStreak++;
     else break;
   }
   if (cleanStreak >= 1) {
@@ -170,8 +185,8 @@ export function buildMatchStorylines(
 
   // 연승
   let winStreak = 0;
-  for (let i = prior.length - 1; i >= 0; i--) {
-    if (prior[i].result === "승") winStreak++;
+  for (let i = real.length - 1; i >= 0; i--) {
+    if (real[i].result === "승") winStreak++;
     else break;
   }
   if (winStreak >= 2) {
@@ -180,8 +195,8 @@ export function buildMatchStorylines(
 
   // 연패 탈출 도전 (2연패 이상)
   let loseStreak = 0;
-  for (let i = prior.length - 1; i >= 0; i--) {
-    if (prior[i].result === "패") loseStreak++;
+  for (let i = real.length - 1; i >= 0; i--) {
+    if (real[i].result === "패") loseStreak++;
     else break;
   }
   if (loseStreak >= 2) {
@@ -189,7 +204,7 @@ export function buildMatchStorylines(
   }
 
   // 최근 5경기 폼
-  const recent = prior.slice(-5);
+  const recent = real.slice(-5);
   if (recent.length >= 3) {
     const w = recent.filter((m) => m.result === "승").length;
     const d = recent.filter((m) => m.result === "무").length;
@@ -199,7 +214,7 @@ export function buildMatchStorylines(
   }
 
   // 상대 전적 (같은 상대와의 최근 경기)
-  const vsSame = prior.filter((m) => (m.opponent || "").trim() === (target.opponent || "").trim());
+  const vsSame = real.filter((m) => (m.opponent || "").trim() === (target.opponent || "").trim());
   if (vsSame.length > 0 && validScore(vsSame[vsSame.length - 1].ourScore) && validScore(vsSame[vsSame.length - 1].theirScore)) {
     const last = vsSame[vsSame.length - 1];
     const r = last.result === "승" ? "승리" : last.result === "패" ? "패배" : "무승부";
