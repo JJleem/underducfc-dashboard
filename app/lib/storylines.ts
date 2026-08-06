@@ -161,6 +161,8 @@ export function buildMatchStorylines(
     }
 
     // 개근 (팀 최근 경기를 연속으로 전부 출전 중)
+    // 이 파일의 다른 줄과 같이 "이 경기를 치르면" 기준으로 쓴다 — prior 는 대상 경기를
+    // 빼고 세므로 +1 해야 화면에 뜨는 숫자가 칭호(maxAttendStreak)와 맞는다.
     let attendStreak = 0;
     for (let i = attSets.length - 1; i >= 0; i--) {
       if (attSets[i].has(name)) attendStreak++;
@@ -168,7 +170,7 @@ export function buildMatchStorylines(
       else break;
     }
     if (attendStreak >= 5) {
-      out.push({ icon: "🎖️", text: `${name} ${attendStreak}경기 연속 출전, 개근 행진`, priority: 46 , kind: "player" });
+      out.push({ icon: "🎖️", text: `${name} ${attendStreak + 1}경기 연속 출전 도전`, priority: 46 , kind: "player" });
     }
   }
 
