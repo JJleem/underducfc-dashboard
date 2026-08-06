@@ -9,7 +9,7 @@
 // 임계값(숫자)은 전부 TITLES 안에 모여 있고, TITLES_SPEC.md 와 1:1로 대응됩니다.
 // 숫자만 바꾸면 등급 컷이 바뀝니다 — 구조/로직은 건드릴 필요 없음.
 
-import { isMomOf } from "../components/home/match-result";
+import { isCasualMatch, isMomOf } from "../components/home/match-result";
 import {
   CENTERBACK_ROLES,
   FORMATION_PRESETS,
@@ -258,6 +258,7 @@ interface MatchInfo {
   ourScore: number;
   theirScore: number;
   isReal: boolean; // 야유회 제외 실제 경기
+  isCasual: boolean; // 자체전·풋살·야유회 (연속 계산에서 제외)
 }
 
 export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
@@ -291,6 +292,9 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     ourScore: parseInt(r[4]) || 0,
     theirScore: parseInt(r[5]) || 0,
     isReal: (r[7] || "일반 매칭") !== "야유회",
+    // 자체전·풋살·야유회. 출석의 "흐름"(연속출석·연속결장·복귀)에서만 뺀다 —
+    // 통산 출전(playedReal)은 백엔드 apps 와 같은 모집단이어야 해서 건드리지 않는다.
+    isCasual: isCasualMatch(r[6] || "", r[7] || "", r[3] || ""),
   }));
   const matchById = new Map(matches.map((m) => [m.id, m]));
 
@@ -495,8 +499,10 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       const inLineup = matchPlayerPos.get(m.id)?.has(name) ?? false;
       const played = inAttendees || inLineup;
 
-      if (m.isReal) participatedDates.push({ date: m.date, played });
-      if (m.isReal && m.result !== "예정") {
+      // 자체전을 끼우면 연속이 끊긴다. 훈련 한 번 빠졌다고 10연속 출석이 0이 될
+      // 이유가 없고, 반대로 자체전만 나와서 연속이 이어지는 것도 아니다 — 통째로 뺀다.
+      if (m.isReal && !m.isCasual) participatedDates.push({ date: m.date, played });
+      if (m.isReal && !m.isCasual && m.result !== "예정") {
         completedParticipation.push({ date: m.date, played, goals: g });
       }
 
