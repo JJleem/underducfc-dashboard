@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "verify:positions": "node --no-warnings scripts/verify-positions.mts",
-    "gen:matchday": "node --no-warnings --env-file=.env.local scripts/gen-matchday-art.mts"
+    "gen:matchday": "node --no-warnings --env-file=.env.local scripts/gen-matchday-art.mts",
+    "backup:photos": "node --no-warnings --env-file=.env.local scripts/backup-photos.mts"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
