@@ -272,8 +272,10 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
 
   // 주장 역할
   const captainRoles: Record<string, string> = {};
+  const rosterNames = new Set<string>();
   rawRoster.slice(1).forEach((r) => {
     const name = r[1]?.trim();
+    if (name) rosterNames.add(name);
     const role = r[5]?.trim().toUpperCase();
     if (name && (role === "C" || role === "VC")) captainRoles[name] = role;
   });
@@ -412,12 +414,18 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     likesGivenByNick.set(nick, (likesGivenByNick.get(nick) ?? 0) + (Number(r[1]) || 0));
   });
 
-  // ── 선수별 컨텍스트 빌드 (stats 시트의 선수 = 정식 명단)
+  // ── 선수별 컨텍스트 빌드 (로스터에 있는 사람만)
+  //
+  // 예전엔 "stats 시트의 선수 = 정식 명단" 이었지만 백엔드로 옮기면서 깨졌다.
+  // 지금은 명단 밖 이름도 같이 내려온다 — OG(자책골), 게스트, 그리고 팀을 떠난 사람.
+  // 그대로 두면 이들이 리더 칭호 후보에 낀다. 특히 "게스트"는 한 사람이 아니라
+  // 여러 명이 공유하는 이름이라 기록이 계속 누적된다.
+  // (/stats 순위표는 이미 로스터로 거르고 있다 — 여기만 빠져 있었다.)
   const contexts = new Map<string, PlayerContext>();
 
   rawStats.slice(1).forEach((row) => {
     const name = (row[1] || "").trim();
-    if (!name) return;
+    if (!name || !rosterNames.has(name)) return;
 
     const apps = Number(row[3]) || 0;
     const goals = Number(row[4]) || 0;
