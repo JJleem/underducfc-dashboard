@@ -22,6 +22,7 @@ import LineupViewer from "../../components/LineupViewer";
 import ModalPortal from "../../components/ModalPortal";
 import OpponentLogo from "../../components/OpponentLogo";
 import PinchZoomImage from "../../components/PinchZoomImage";
+import { cldFit, cldThumb } from "../../lib/cloudinary";
 import useAppOverlay from "../../components/useAppOverlay";
 import { parseWeather, weatherEmoji } from "../../lib/weather";
 import type { EarnedTitle } from "../../lib/titles";
@@ -258,7 +259,7 @@ export default function MatchDetailClient({
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={url.replace("/upload/", "/upload/c_fill,w_360,h_360,q_auto,f_auto/")}
+                  src={cldThumb(url, 360)}
                   alt=""
                   loading="lazy"
                   className="h-full w-full object-cover transition-opacity active:opacity-75"
@@ -349,10 +350,7 @@ export default function MatchDetailClient({
               </button>
             )}
             <PinchZoomImage
-              src={lightbox.urls[lightbox.index].replace(
-                "/upload/",
-                "/upload/w_1200,c_limit,q_auto,f_auto/",
-              )}
+              src={cldFit(lightbox.urls[lightbox.index])}
               alt={`경기 사진 ${lightbox.index + 1}`}
               className="p-[5vw]"
               imageClassName="max-h-[85vh] max-w-[90vw]"

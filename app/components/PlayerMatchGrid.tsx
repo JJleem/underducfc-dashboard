@@ -19,6 +19,7 @@ import ModalPortal from "./ModalPortal";
 import { ART_RESULT_VEIL, matchResultArt } from "../lib/matchday-art";
 import { hasScore, resultWord } from "./home/match-result";
 import PinchZoomImage from "./PinchZoomImage";
+import { cldFit, cldThumb } from "../lib/cloudinary";
 
 export type GridMatch = {
   id: number;
@@ -43,14 +44,10 @@ const PAGE_STEP = 36;
 const VT_NAME = "ud-match-visual";
 
 /** 그리드용 썸네일. 타일은 최대 150px 안팎이라 320이면 2x 까지 충분하고, eco 로 용량을 줄인다. */
-const thumb = (url: string) =>
-  url.includes("/upload/")
-    ? url.replace("/upload/", "/upload/c_fill,g_auto,w_320,h_320,q_auto:eco,f_auto/")
-    : url;
+const thumb = (url: string) => cldThumb(url, 320, true);
 
-/** 오버레이용 원본. 썸네일이 이미 캐시돼 있어서 이게 도착하기 전에도 화면은 차 있다. */
-const full = (url: string) =>
-  url.includes("/upload/") ? url.replace("/upload/", "/upload/w_1080,q_auto,f_auto/") : url;
+/** 오버레이용 큰 그림. 썸네일이 이미 캐시돼 있어서 이게 도착하기 전에도 화면은 차 있다. */
+const full = (url: string) => cldFit(url);
 
 const resultTone = (result: string) =>
   result === "승"

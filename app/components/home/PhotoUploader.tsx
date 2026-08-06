@@ -9,6 +9,42 @@ import { useRouter } from "next/navigation";
 import { ImagePlus, Loader2 } from "lucide-react";
 import AppToast from "../AppToast";
 
+// 요즘 폰은 한 장에 5~8MB(4284×5712)를 찍는다. 다섯 장이면 30MB 를 셀룰러로 올리게 된다.
+// 화면에 가장 크게 쓰는 곳이 1600px(lib/cloudinary.ts)이라 3000 이면 두 배 여유가 있다.
+// 원본을 작게 만드는 게 목적이 아니라 "쓸데없이 큰 것만" 깎는 거라 상한을 넉넉히 뒀다.
+const MAX_EDGE = 3000;
+const SKIP_UNDER = 3 * 1024 * 1024;
+
+/**
+ * 너무 큰 사진만 줄여서 올린다. 이미 작거나 줄이다 실패하면 원본을 그대로 쓴다 —
+ * 사진을 못 올리는 것보다 크게 올리는 편이 낫다.
+ */
+async function shrink(file: File): Promise<Blob> {
+  if (file.size <= SKIP_UNDER) return file;
+  try {
+    // from-image: 아이폰 세로 사진의 EXIF 회전을 캔버스에 그리기 전에 반영한다.
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    // 상한보다 작으면 크기는 그대로 두고 다시 인코딩만 한다. 2048px 인데 8.5MB 인
+    // PNG 같은 게 실제로 올라와 있어서, 크기만 보고 넘기면 그런 건 안 잡힌다.
+    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.92),
+    );
+    return blob && blob.size < file.size ? blob : file;
+  } catch {
+    return file;   // HEIC 등 브라우저가 못 여는 형식. Cloudinary 가 알아서 받는다.
+  }
+}
+
 export default function PhotoUploader({
   matchId,
   count,
@@ -40,7 +76,7 @@ export default function PhotoUploader({
       const urls = await Promise.all(
         list.map(async (file) => {
           const fd = new FormData();
-          fd.append("file", file);
+          fd.append("file", await shrink(file), file.name);
           fd.append("api_key", apiKey);
           fd.append("timestamp", String(timestamp));
           fd.append("signature", signature);

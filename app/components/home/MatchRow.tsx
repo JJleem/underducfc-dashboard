@@ -36,6 +36,7 @@ import FeedbackThread, { type Feedback } from "./FeedbackThread";
 import Storylines from "./Storylines";
 import { shareStoryCard } from "../../lib/draw-story-card";
 import PinchZoomImage from "../PinchZoomImage";
+import { cldFit, cldThumb } from "../../lib/cloudinary";
 import AppToast from "../AppToast";
 import useAppOverlay from "../useAppOverlay";
 
@@ -55,8 +56,7 @@ const STROKE = { base: 2.2, bold: 2.6 } as const;
 // 라벨은 전부 같은 모양이어야 여섯 섹션이 한 규칙으로 읽힌다.
 const LABEL = "text-[10px] font-black uppercase tracking-[0.16em] text-gray-400 dark:text-white/35";
 
-const thumb = (url: string, size: number) =>
-  url.replace("/upload/", `/upload/c_fill,w_${size},h_${size},q_auto,f_auto/`);
+const thumb = (url: string, size: number) => cldThumb(url, size);
 
 function shortDate(raw: string): string {
   const d = new Date(raw);
@@ -488,7 +488,7 @@ export default function MatchRow({
             </button>
             <div className="h-full w-full" onClick={(event) => event.stopPropagation()}>
               <PinchZoomImage
-                src={photos[lightbox]}
+                src={cldFit(photos[lightbox])}
                 alt=""
                 className="p-4"
               />

@@ -29,6 +29,7 @@ import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
 import type { LineupData, MatchData } from "../../lib/match-types";
 import { getOpponentLogo } from "../../lib/opponent-logos";
+import { cldSquare } from "../../lib/cloudinary";
 import {
   hasScore,
   isCasualMatch,
@@ -67,8 +68,7 @@ import AppToast from "../AppToast";
 //   글자    11 보조 · 13 본문 · 15 강조 · 34 스코어
 const ICON = { action: 17, logo: 32 } as const;
 
-const full = (url: string) =>
-  url.replace("/upload/", "/upload/c_fill,w_1080,h_1080,q_auto,f_auto/");
+const full = (url: string) => cldSquare(url);
 
 function shortDate(raw: string): string {
   const d = new Date(raw);
