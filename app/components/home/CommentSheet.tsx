@@ -129,7 +129,12 @@ export default function CommentSheet({
       <Drawer
         open={open}
         onOpenChange={handleOpenChange}
-        handleOnly
+        // handleOnly 를 쓰지 않는다. 그러면 상단 모서리의 좁은 핸들에 정확히
+        // 닿아야만 내려가서, 다른 드로어처럼 헤더를 잡고 내릴 수가 없다.
+        //
+        // 잘못 끌릴 자리는 이미 막혀 있다 — 댓글 목록과 입력창에 data-vaul-no-drag
+        // 가 붙어 있어서(FeedbackThread) 목록은 스크롤되고 입력은 타이핑된다.
+        // 남는 건 헤더와 핸들뿐이고, 거기가 원래 잡으라고 만든 자리다.
         repositionInputs={false}
         preventScrollRestoration
         onAnimationEnd={(nextOpen) => {
