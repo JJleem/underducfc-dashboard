@@ -510,7 +510,13 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       // 자체전도 넣되 casual 로 표시한다. 나온 사람은 정식 경기와 똑같이 +1 이고
       // (실제로 나온 건 나온 거다), 빠진 사람만 없던 일로 친다 — 훈련 한 번
       // 빠졌다고 10연속 출석이 0이 될 이유는 없기 때문이다. 판정은 아래 루프에서.
-      if (m.isReal) participatedDates.push({ date: m.date, played, casual: m.isCasual });
+      // 예정 경기는 뺀다. 출석 투표·사전 입력으로 명단이 미리 차 있어서 그대로 세면
+      // 경기 전에 연속 출석이 올라간다 — 실제로 임재준이 8/8 을 치르기도 전에
+      // 15연속이 돼서 히든 칭호("출석부의 지배자")가 먼저 달렸다.
+      // (백엔드 stats 도 같은 이유로 예정을 뺀다: routers/stats.py)
+      if (m.isReal && m.result !== "예정") {
+        participatedDates.push({ date: m.date, played, casual: m.isCasual });
+      }
       if (m.isReal && m.result !== "예정") {
         completedParticipation.push({ date: m.date, played, goals: g, casual: m.isCasual });
       }
