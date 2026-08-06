@@ -249,15 +249,14 @@ export default async function PlayerPage({
     .reverse();
 
   // 현재 연속 출석 (최근 경기부터 거슬러 연속 참석).
-  // 자체전·풋살·야유회는 빼고 앞뒤를 잇는다 — 훈련 한 번 빠졌다고 10연속이 0이 될
-  // 이유가 없고, 자체전만 나와서 연속이 이어지는 것도 아니다(titles.maxAttendStreak 과 같은 규칙).
-  const streakMatches = withAttendees.filter(
-    (m) => !isCasualMatch(m.result, m.type, m.opponent),
-  );
+  // 자체전·풋살·야유회는 나오면 정식 경기와 똑같이 +1 이고, 빠지면 없던 경기로 넘긴다 —
+  // 훈련 한 번 빠졌다고 10연속이 0이 될 이유는 없다(titles.maxAttendStreak 과 같은 규칙).
   let currentStreak = 0;
-  for (let i = streakMatches.length - 1; i >= 0; i--) {
-    const present = streakMatches[i].attendees.split(",").map((s) => s.trim()).includes(name);
+  for (let i = withAttendees.length - 1; i >= 0; i--) {
+    const m = withAttendees[i];
+    const present = m.attendees.split(",").map((s) => s.trim()).includes(name);
     if (present) currentStreak += 1;
+    else if (isCasualMatch(m.result, m.type, m.opponent)) continue;
     else break;
   }
 

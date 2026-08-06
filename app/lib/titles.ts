@@ -480,8 +480,8 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     let ironman = false;
     const goalsByOpp = new Map<string, number>();
 
-    const participatedDates: { date: string; played: boolean }[] = [];
-    const completedParticipation: { date: string; played: boolean; goals: number }[] = [];
+    const participatedDates: { date: string; played: boolean; casual: boolean }[] = [];
+    const completedParticipation: { date: string; played: boolean; goals: number; casual: boolean }[] = [];
 
     matches.forEach((m) => {
       const g = countInCsv(m.goals, name);
@@ -499,11 +499,12 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       const inLineup = matchPlayerPos.get(m.id)?.has(name) ?? false;
       const played = inAttendees || inLineup;
 
-      // 자체전을 끼우면 연속이 끊긴다. 훈련 한 번 빠졌다고 10연속 출석이 0이 될
-      // 이유가 없고, 반대로 자체전만 나와서 연속이 이어지는 것도 아니다 — 통째로 뺀다.
-      if (m.isReal && !m.isCasual) participatedDates.push({ date: m.date, played });
-      if (m.isReal && !m.isCasual && m.result !== "예정") {
-        completedParticipation.push({ date: m.date, played, goals: g });
+      // 자체전도 넣되 casual 로 표시한다. 나온 사람은 정식 경기와 똑같이 +1 이고
+      // (실제로 나온 건 나온 거다), 빠진 사람만 없던 일로 친다 — 훈련 한 번
+      // 빠졌다고 10연속 출석이 0이 될 이유는 없기 때문이다. 판정은 아래 루프에서.
+      if (m.isReal) participatedDates.push({ date: m.date, played, casual: m.isCasual });
+      if (m.isReal && m.result !== "예정") {
+        completedParticipation.push({ date: m.date, played, goals: g, casual: m.isCasual });
       }
 
       if (played && m.isReal) {
@@ -547,6 +548,8 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
         curStreak += 1;
         maxAttendStreak = Math.max(maxAttendStreak, curStreak);
         curGap = 0;
+      } else if (d.casual) {
+        // 자체전 결석은 끊지도, 결장으로 세지도 않는다. 그냥 없던 경기로 넘긴다.
       } else {
         curGap += 1;
         maxAbsenceGap = Math.max(maxAbsenceGap, curGap);
@@ -568,7 +571,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
         }
         hasPlayedBefore = true;
         absenceAfterPlaying = 0;
-      } else if (hasPlayedBefore) {
+      } else if (hasPlayedBefore && !d.casual) {
         absenceAfterPlaying += 1;
       }
     });
