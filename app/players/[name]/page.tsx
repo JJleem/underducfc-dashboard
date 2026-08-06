@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Crown, Flame, Spline, Volleyball } from "lucide-react";
 import { auth } from "@/auth";
 import { getMatchesRows } from "../../lib/matches-backend";
-import { isCasualMatch, isMomOf, matchLogo } from "../../components/home/match-result";
+import { isCasualMatch, isMomOf, isOuting, matchLogo } from "../../components/home/match-result";
 import { getOpponentLogo } from "../../lib/opponent-logos";
 import {
   getStatsRows,
@@ -217,7 +217,9 @@ export default async function PlayerPage({
     })
     .filter((m) => m.result !== "예정");
 
-  const withAttendees = completed.filter((m) => m.attendees.trim());
+  // 야유회는 경기가 아니라 행사다. 출석률·연속출석 어디에도 넣지 않는다 —
+  // 백엔드 stats 도 출전 수에서 뺀다(routers/stats.py._is_outing).
+  const withAttendees = completed.filter((m) => m.attendees.trim() && !isOuting(m.type));
   const attendCount = withAttendees.filter((m) =>
     m.attendees.split(",").map((s) => s.trim()).includes(name)
   ).length;
@@ -231,6 +233,7 @@ export default async function PlayerPage({
   // 경기 그리드 — 골·도움이 있는 경기만이 아니라 "출전한 모든 경기". 인스타 프로필이
   // 잘 나온 사진만이 아니라 내 게시물 전부인 것과 같다. 최신순.
   const myMatches: GridMatch[] = completed
+    .filter((m) => !isOuting(m.type))
     .filter((m) => m.attendees.split(",").map((s) => s.trim()).includes(name))
     .map((m) => ({
       id: m.id,

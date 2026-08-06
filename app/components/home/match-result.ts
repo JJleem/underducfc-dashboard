@@ -89,6 +89,17 @@ export function matchLogo(match: {
 }
 
 /**
+ * 야유회인가 — 경기가 아니라 행사다.
+ *
+ * 자체전·풋살과 다르게 취급한다. 자체전은 실제로 공을 찬 경기라 나온 사람은
+ * 출전으로 세지만, 야유회는 어떤 집계에도 안 들어간다(백엔드 stats 도 같다).
+ * goals 칸에 선수 대신 종목이 적혀 있는 것도 그래서다 — "바베큐, 족구, 피구".
+ */
+export function isOuting(type?: string): boolean {
+  return (type || "").replace(/\s+/g, "") === "야유회";
+}
+
+/**
  * 자체전류 경기의 이름. 카드 제목과 큰 글씨에 쓴다.
  *
  * type 을 먼저 본다 — 지난 자체전 3건이 전부 result="자체전" · type="풋살" 이라
