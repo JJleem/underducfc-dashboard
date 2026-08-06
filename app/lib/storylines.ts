@@ -6,6 +6,7 @@
 // (히어로에는 팀 서사 한 줄만 세우고 개인 기록은 경기 줄로 내리기 위해서다).
 
 import type { MatchData } from "./match-types";
+import { isCasualMatch } from "../components/home/match-result";
 
 export interface Storyline {
   icon: string;
@@ -26,7 +27,13 @@ export function buildMatchStorylines(
   // 이름 목록 파싱: 한 셀에 여러 명이 "," 또는 "/"로 묶여 들어올 수 있음 (특히 MOM)
   const parseNames = (csv?: string) =>
     (csv || "").split(/[,/]/).map((s) => s.trim()).filter(Boolean);
-  const isReal = (m: MatchData) => m.type !== "야유회";
+  // 정식 경기만. 자체전·풋살·야유회는 통째로 빼고 그 앞뒤를 이어 붙인다.
+  //
+  // 전에는 야유회만 뺐는데, 그러면 자체전이 흐름을 끊는다. result 가 "자체전"이라
+  // 연패 루프가 거기서 멈춰 4연패가 0연패가 되고 "연패 탈출 도전"이 사라진다.
+  // 연승·클린시트·개인 연속 공격P 도 똑같이 끊긴다 — 우리끼리 한 판 뛰었다고
+  // 지난 넉 달의 흐름이 없던 일이 될 이유가 없다.
+  const isReal = (m: MatchData) => !isCasualMatch(m.result, m.type, m.opponent);
   const validScore = (v: string | number | undefined) =>
     v !== undefined && v !== null && String(v).trim() !== "" && !Number.isNaN(Number(v));
   const targetTime = new Date(target.date).getTime();
