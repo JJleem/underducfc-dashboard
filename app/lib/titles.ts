@@ -718,9 +718,9 @@ export const TITLES: TitleDef[] = [
   { id: "points", name: "공격포인트", icon: "trending-up", category: "통산 스탯", state: "live", desc: "골+도움", tiers: [10, 30, 60, 100], unit: "P", value: (c) => c.points },
 
   // ── 한 경기 폭발
-  { id: "hattrick", name: "해트트릭 영웅", icon: "party-popper", category: "한 경기 폭발", state: "live", flagship: true, desc: "한 경기 3골+ 횟수", tiers: [1, 3, 5], tierLabels: ["첫 해트트릭", "3회", "5회"], unit: "회", value: (c) => c.hatTricks },
-  { id: "multigoal", name: "멀티골 사냥꾼", icon: "crosshair", category: "한 경기 폭발", state: "live", desc: "2골+ 경기 수", tiers: [3, 7, 15], unit: "경기", value: (c) => c.multiGoalGames },
-  { id: "multiassist", name: "멀티어시", icon: "git-fork", category: "한 경기 폭발", state: "live", desc: "2도움+ 경기 수", tiers: [3, 7, 15], unit: "경기", value: (c) => c.multiAssistGames },
+  { id: "hattrick", name: "해트트릭 영웅", icon: "party-popper", category: "한 경기 폭발", state: "live", flagship: true, desc: "한 경기 3골+ 횟수", tiers: [1, 3, 5, 10], tierLabels: ["첫 해트트릭", "3회", "5회", "10회"], unit: "회", value: (c) => c.hatTricks },
+  { id: "multigoal", name: "멀티골 사냥꾼", icon: "crosshair", category: "한 경기 폭발", state: "live", desc: "2골+ 경기 수", tiers: [3, 7, 15, 30], unit: "경기", value: (c) => c.multiGoalGames },
+  { id: "multiassist", name: "멀티어시", icon: "git-fork", category: "한 경기 폭발", state: "live", desc: "2도움+ 경기 수", tiers: [3, 7, 15, 30], unit: "경기", value: (c) => c.multiAssistGames },
   { id: "onemanshow", name: "원맨쇼", icon: "star", category: "한 경기 폭발", state: "live", flat: true, desc: "한 경기 골+도움 4 이상", check: (c) => c.bestSingleGamePoints >= 4 },
 
   // ── 포지션 특성
@@ -735,9 +735,9 @@ export const TITLES: TitleDef[] = [
   { id: "attacking_centerback", name: "공격적인 센터백", icon: "shield-check", category: "포지션 특성", state: "live", flat: true, desc: "센터백 10경기+ & 공격P 8+", check: (c) => c.centerbackGames >= 10 && c.points >= 8 },
 
   // ── 근성 · 출석
-  { id: "streak", name: "연속출석", icon: "flame", category: "근성 · 출석", state: "live", flagship: true, desc: "최대 연속 참석", tiers: [3, 5, 10], unit: "연속", value: (c) => c.maxAttendStreak },
+  { id: "streak", name: "연속출석", icon: "flame", category: "근성 · 출석", state: "live", flagship: true, desc: "최대 연속 참석", tiers: [3, 5, 10, 20], unit: "연속", value: (c) => c.maxAttendStreak },
   { id: "ironman_q", name: "아이언맨", icon: "battery-full", category: "근성 · 출석", state: "live", flat: true, desc: "한 경기 전 쿼터 출전", check: (c) => c.ironman },
-  { id: "captain", name: "캡틴", icon: "badge-check", category: "근성 · 출석", state: "live", desc: "주장으로 출전", tiers: [5, 15, 30], unit: "경기", gate: (c) => c.isCaptain, value: (c) => c.captainGames },
+  { id: "captain", name: "캡틴", icon: "badge-check", category: "근성 · 출석", state: "live", desc: "주장으로 출전", tiers: [5, 15, 30, 50], unit: "경기", gate: (c) => c.isCaptain, value: (c) => c.captainGames },
   { id: "rookie", name: "새내기", icon: "sprout", category: "근성 · 출석", state: "live", flat: true, desc: "통산 출전 3경기 미만", check: (c) => c.apps > 0 && c.apps < 3 },
   { id: "return", name: "리턴 오브 더 킹", icon: "rotate-ccw", category: "근성 · 출석", state: "future", flat: true, desc: "기존 출전자가 5경기 이상 결장 후 복귀", check: (c) => c.returnedAfterLongAbsence },
 
@@ -752,14 +752,14 @@ export const TITLES: TitleDef[] = [
   { id: "nemesis", name: "천적 킬러", icon: "swords", category: "맞대결 · 승부", state: "live", flagship: true, flat: true, desc: "한 상대 3골+", check: (c) => c.maxOpponentGoals >= 3 },
   { id: "cleansheet", name: "무실점 수문장", icon: "lock", category: "맞대결 · 승부", state: "live", desc: "GK 무실점 경기", tiers: [1, 3, 5, 10], unit: "경기", gate: (c) => c.playedGK, value: (c) => c.cleanSheetsAsGK },
   { id: "bigwin", name: "대승의 주역", icon: "rocket", category: "맞대결 · 승부", state: "live", flat: true, desc: "5골차+ 승리 출전", check: (c) => c.bigWinGames >= 1 },
-  { id: "winfairy", name: "승리요정", icon: "sparkles", category: "맞대결 · 승부", state: "live", desc: "출전 경기 승수", tiers: [5, 15, 30], unit: "승", value: (c) => c.wins },
+  { id: "winfairy", name: "승리요정", icon: "sparkles", category: "맞대결 · 승부", state: "live", desc: "출전 경기 승수", tiers: [5, 15, 30, 50], unit: "승", value: (c) => c.wins },
   { id: "invincible", name: "천하무적", icon: "trophy", category: "맞대결 · 승부", state: "live", flat: true, desc: "10경기+ & 승률 70%+", check: (c) => c.apps >= 10 && c.winRate >= 0.7 },
 
   // ── 대시보드 활동
-  { id: "voter", name: "투표러", icon: "vote", category: "대시보드 활동", state: "live", desc: "출석 투표 참여", tiers: [5, 15, 30], unit: "회", value: (c) => c.votesCast },
-  { id: "chatter", name: "수다왕", icon: "message-circle", category: "대시보드 활동", state: "live", flagship: true, desc: "댓글 작성", tiers: [5, 15, 30], unit: "개", value: (c) => c.commentsCount },
+  { id: "voter", name: "투표러", icon: "vote", category: "대시보드 활동", state: "live", desc: "출석 투표 참여", tiers: [5, 15, 30, 50], unit: "회", value: (c) => c.votesCast },
+  { id: "chatter", name: "수다왕", icon: "message-circle", category: "대시보드 활동", state: "live", flagship: true, desc: "댓글 작성", tiers: [5, 15, 30, 50], unit: "개", value: (c) => c.commentsCount },
   { id: "earlybird", name: "얼리버드", icon: "alarm-clock", category: "대시보드 활동", state: "live", flat: true, desc: "최초 투표 3회+", check: (c) => c.firstVoteCount >= 3 },
-  { id: "activeking", name: "활동왕", icon: "activity", category: "대시보드 활동", state: "live", desc: "투표+댓글 종합", tiers: [20, 50, 100], unit: "P", value: (c) => c.activityPoints },
+  { id: "activeking", name: "활동왕", icon: "activity", category: "대시보드 활동", state: "live", desc: "투표+댓글 종합", tiers: [20, 50, 100, 150], unit: "P", value: (c) => c.activityPoints },
   { id: "opener", name: "오프너", icon: "message-square-plus", category: "대시보드 활동", state: "live", flat: true, desc: "첫 댓글 3회+", check: (c) => c.firstCommentCount >= 3 },
 
   // ── 언성히어로 · 반전
