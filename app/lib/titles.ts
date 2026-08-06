@@ -757,9 +757,9 @@ export const TITLES: TitleDef[] = [
 
   // ── 대시보드 활동
   { id: "voter", name: "투표러", icon: "vote", category: "대시보드 활동", state: "live", desc: "출석 투표 참여", tiers: [5, 15, 30, 50, 100], unit: "회", value: (c) => c.votesCast },
-  { id: "chatter", name: "수다왕", icon: "message-circle", category: "대시보드 활동", state: "live", flagship: true, desc: "댓글 작성", tiers: [5, 15, 30, 50, 100], unit: "개", value: (c) => c.commentsCount },
+  { id: "chatter", name: "수다왕", icon: "message-circle", category: "대시보드 활동", state: "live", flagship: true, desc: "댓글 작성", tiers: [5, 15, 30, 50, 200], unit: "개", value: (c) => c.commentsCount },
   { id: "earlybird", name: "얼리버드", icon: "alarm-clock", category: "대시보드 활동", state: "live", flat: true, desc: "최초 투표 3회+", check: (c) => c.firstVoteCount >= 3 },
-  { id: "activeking", name: "활동왕", icon: "activity", category: "대시보드 활동", state: "live", desc: "투표+댓글 종합", tiers: [20, 50, 100, 150, 300], unit: "P", value: (c) => c.activityPoints },
+  { id: "activeking", name: "활동왕", icon: "activity", category: "대시보드 활동", state: "live", desc: "투표+댓글 종합", tiers: [20, 50, 100, 150, 400], unit: "P", value: (c) => c.activityPoints },
   { id: "opener", name: "오프너", icon: "message-square-plus", category: "대시보드 활동", state: "live", flat: true, desc: "첫 댓글 3회+", check: (c) => c.firstCommentCount >= 3 },
 
   // ── 언성히어로 · 반전
