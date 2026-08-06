@@ -46,6 +46,14 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* 손가락으로 눌러서 생긴 포커스에는 테두리를 그리지 않는다.
+   앱에서 버튼을 누르고 나면 파란 링이 남아 있을 이유가 없다.
+   키보드로 이동했을 때(:focus-visible)는 그대로 둔다 — 그건 어디 있는지
+   보여 주는 유일한 단서라 지우면 키보드로는 화면을 쓸 수 없게 된다. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

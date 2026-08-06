@@ -81,6 +81,13 @@ function DrawerContent({
           "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:sm:max-w-sm",
           className,
         )}
+        // 닫을 때 트리거로 포커스를 되돌리지 않는다.
+        //
+        // 되돌리면 그 버튼에 파란 포커스 링이 남는다. 손가락으로 눌러 연 건데도
+        // 링이 뜨는 이유는, 드로어 안에서 포커스가 :focus-visible 상태였다가
+        // 그대로 트리거로 옮겨오기 때문이다 — CSS 로는 걸러낼 수 없다.
+        // 모바일 앱에서 링이 남아 있을 이유가 없다.
+        onCloseAutoFocus={(e) => e.preventDefault()}
         {...props}
       >
         <DrawerHandle
