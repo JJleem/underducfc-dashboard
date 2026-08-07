@@ -399,6 +399,7 @@ function DDay({
   const dDay = getDDay(match.date);
   const weather = parseWeather(match.weather);
   const cheer = matchdayMessage(`${match.id}-${match.date}`, weather.pop);
+  const logo = matchLogo(match);
 
   return (
     <div className="relative pb-3">
@@ -408,10 +409,38 @@ function DDay({
         </p>
         <HeroWeather weather={weather} />
       </div>
-      <h2 className="mt-1.5 text-[26px] font-black leading-none tracking-[-0.04em] text-gray-900 dark:text-white">
-        {isUndecided(match.time) ? "시간 미정" : `${match.time} 킥오프`}
-      </h2>
-      <p className="mt-2 text-[12px] font-black text-gray-700 dark:text-white/70">{cheer}</p>
+      {/* 경기 임박 히어로의 중심은 장식이 아니라 대진이다. 엠블럼·상대·시간을 한 덩어리로
+          묶어, 스크롤을 멈추는 순간 오늘 어디로 몇 시에 가는지 읽히게 한다. */}
+      <div className="mt-3 flex items-center gap-3">
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logo}
+            alt=""
+            width={42}
+            height={42}
+            className="h-[42px] w-[42px] shrink-0 rounded-full bg-white object-cover ring-1 ring-black/[0.07] shadow-sm dark:ring-white/10"
+          />
+        ) : (
+          <span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-gray-100 text-[15px] font-black text-gray-400 ring-1 ring-black/[0.05] dark:bg-white/10 dark:text-white/45 dark:ring-white/10">
+            {match.opponent.trim().charAt(0) || "?"}
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-black text-gray-600 dark:text-white/60">
+            {matchTitleVs(match)}
+          </p>
+          <h2 className="mt-0.5 text-[29px] font-black leading-none tracking-[-0.045em] text-gray-900 tabular-nums dark:text-white">
+            {isUndecided(match.time) ? "시간 미정" : match.time}
+            {!isUndecided(match.time) && (
+              <span className="ml-1.5 text-[10px] tracking-[0.12em] text-[#FF8FA3] dark:text-[#FFB6C1]">
+                KICKOFF
+              </span>
+            )}
+          </h2>
+        </div>
+      </div>
+      <p className="mt-2.5 text-[12px] font-black text-gray-700 dark:text-white/70">{cheer}</p>
 
       <HeroLocationActions location={match.location} matchId={match.id} className="mt-3" />
 
