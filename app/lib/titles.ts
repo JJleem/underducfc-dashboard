@@ -65,6 +65,7 @@ export interface PlayerContext {
 
   ironman: boolean; // 한 경기 전 쿼터 출전 경험
   maxAttendStreak: number; // 최대 연속 출석
+  currentAttendStreak: number; // 현재 이어지고 있는 연속 출석
   maxAbsenceGap: number; // 최대 연속 결장 (리턴 칭호용)
   returnedAfterLongAbsence: boolean; // 과거 출전 → 5경기+ 결장 → 실제 복귀
 
@@ -134,6 +135,15 @@ export interface EarnedTitle {
   desc?: string; // 칭호 설명 (개인 페이지 카드용)
   hidden?: boolean; // 히든 칭호
   stats?: { label: string; value: string }[]; // 개인 페이지 상세 기록
+  /** 단계형 칭호의 다음 등급 진행도. 개인 페이지 상세에서만 펼쳐 보인다. */
+  progress?: {
+    current: number;
+    target: number;
+    remaining: number;
+    unit: string;
+    nextLabel: string | null;
+    maxed: boolean;
+  };
   /** 특수 뱃지 스타일: leader=팀 1위 왕관, manager=감독 전용 */
   variant?: "leader" | "manager";
 }
@@ -675,6 +685,7 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
       cleanSheetsAsGK,
       ironman,
       maxAttendStreak,
+      currentAttendStreak: curStreak,
       maxAbsenceGap,
       returnedAfterLongAbsence,
       isCaptain,
@@ -855,7 +866,37 @@ export function evaluatePlayer(c: PlayerContext, defs: TitleDef[] = TITLES): Ear
       if (tier !== null) {
         const labels = d.tierLabels ?? TIER_NAMES;
         const value = d.value(c);
-        out.push({ id: d.id, name: d.name, icon: d.icon, category: d.category, flagship: !!d.flagship, tier, tierLabel: labels[tier] ?? `Lv${tier + 1}`, desc: d.desc, hidden: !!d.hidden, stats: [{ label: "현재 기록", value: `${value}${d.unit ?? ""}` }] });
+        const nextTier = tier < 4 ? ((tier + 1) as TierIndex) : null;
+        const target = nextTier === null ? d.tiers[tier] : d.tiers[nextTier];
+        // 연속출석의 등급은 역대 최고 기록으로 유지하지만, 다음 등급 도전은 현재 이어지는
+        // 연속 기록에서 다시 시작한다. 끊긴 20연속에 새 2연속을 더할 수는 없다.
+        const progressCurrent = d.id === "streak" ? c.currentAttendStreak : value;
+        out.push({
+          id: d.id,
+          name: d.name,
+          icon: d.icon,
+          category: d.category,
+          flagship: !!d.flagship,
+          tier,
+          tierLabel: labels[tier] ?? `Lv${tier + 1}`,
+          desc: d.desc,
+          hidden: !!d.hidden,
+          stats:
+            d.id === "streak"
+              ? [
+                  { label: "역대 최대", value: `${c.maxAttendStreak}${d.unit ?? ""}` },
+                  { label: "현재 연속", value: `${c.currentAttendStreak}${d.unit ?? ""}` },
+                ]
+              : [{ label: "현재 기록", value: `${value}${d.unit ?? ""}` }],
+          progress: {
+            current: progressCurrent,
+            target,
+            remaining: Math.max(0, target - progressCurrent),
+            unit: d.unit ?? "",
+            nextLabel: nextTier === null ? null : (labels[nextTier] ?? `Lv${nextTier + 1}`),
+            maxed: nextTier === null,
+          },
+        });
       }
     }
   }

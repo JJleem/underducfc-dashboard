@@ -123,6 +123,11 @@ export default function PlayerTitleCards({
   // 대표 칭호를 고른 순서대로 앞에, 나머지는 희귀도순 — 라인업 뱃지와 같은 규칙.
   const ordered = pickBadges(titles, featuredIds, titles.length);
   const selectedSurface = selected ? titleSurface(selected, isLight) : null;
+  const progressPct = selected?.progress
+    ? selected.progress.maxed
+      ? 100
+      : Math.min(100, Math.round((selected.progress.current / selected.progress.target) * 100))
+    : 0;
 
   return (
     <>
@@ -212,6 +217,49 @@ export default function PlayerTitleCards({
                     <p className="mt-0.5 text-[13px] font-black tabular-nums" style={{ color: selectedSurface.fg }}>{stat.value}</p>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {selected.progress && (
+              <div className="relative mt-3 rounded-2xl bg-white/45 px-3.5 py-3 dark:bg-black/20">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[8px] font-bold tracking-[0.08em] text-gray-500 dark:text-white/40">
+                      {selected.progress.maxed ? "등급 진행" : "다음 등급"}
+                    </p>
+                    <p className="mt-0.5 text-[11px] font-black" style={{ color: selectedSurface.fg }}>
+                      {selected.progress.maxed ? "최고 등급 달성" : selected.progress.nextLabel}
+                    </p>
+                  </div>
+                  {!selected.progress.maxed && (
+                    <p className="shrink-0 text-[9px] font-black text-gray-500 tabular-nums dark:text-white/45">
+                      {selected.progress.remaining}{selected.progress.unit} 남음
+                    </p>
+                  )}
+                </div>
+
+                <div
+                  role="progressbar"
+                  aria-label={`${selected.name} 등급 진행도`}
+                  aria-valuemin={0}
+                  aria-valuemax={selected.progress.target}
+                  aria-valuenow={Math.min(selected.progress.current, selected.progress.target)}
+                  className="mt-2.5 h-2 overflow-hidden rounded-full bg-black/[0.07] dark:bg-white/10"
+                >
+                  <div
+                    className="h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none"
+                    style={{
+                      width: `${progressPct}%`,
+                      background: `linear-gradient(90deg, ${selectedSurface.border}, ${selectedSurface.fg})`,
+                      boxShadow: selectedSurface.glow ? `0 0 10px ${selectedSurface.glow}` : undefined,
+                    }}
+                  />
+                </div>
+
+                <div className="mt-1.5 flex items-center justify-between text-[8.5px] font-bold text-gray-500 tabular-nums dark:text-white/40">
+                  <span>{selected.progress.current}{selected.progress.unit}</span>
+                  <span>{selected.progress.target}{selected.progress.unit}</span>
+                </div>
               </div>
             )}
           </div>
