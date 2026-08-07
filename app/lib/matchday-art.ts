@@ -44,20 +44,14 @@ const ART: MatchdayArt[] = [
   { src: "/matchday/flag-13.webp" },
   { src: "/matchday/flag-14.webp" },
   { src: "/matchday/flag-15.webp" },
-  // 흑백 + 핑크 한 색 5장
-  { src: "/matchday/mono-1.webp", soft: true },
-  { src: "/matchday/mono-4.webp", soft: true },
+  // 흑백 + 핑크 한 색 3장
   { src: "/matchday/mono-5.webp", soft: true },
   { src: "/matchday/mono-6.webp", soft: true },
   { src: "/matchday/mono-8.webp", soft: true },
-  // 골키퍼 3장
-  { src: "/matchday/gk-2.webp", soft: true },
-  { src: "/matchday/gk-5.webp", soft: true },
-  { src: "/matchday/gk-6.webp", soft: true },
   // 듀오 2장
-  { src: "/matchday/duo-1.webp", soft: true },
   { src: "/matchday/duo-2.webp", soft: true },
-  // 팀 사진 변환 18장
+  { src: "/matchday/duo-3.webp", soft: true },
+  // 팀 사진 변환 17장
   { src: "/matchday/team-1.webp", soft: true },
   { src: "/matchday/team-3.webp", soft: true },
   { src: "/matchday/team-4.webp", soft: true },
@@ -69,26 +63,42 @@ const ART: MatchdayArt[] = [
   { src: "/matchday/team-18.webp", soft: true },
   { src: "/matchday/team-20.webp", soft: true },
   { src: "/matchday/team-22.webp", soft: true },
-  { src: "/matchday/team-24.webp", soft: true },
   { src: "/matchday/team-25.webp", soft: true },
   { src: "/matchday/team-29.webp", soft: true },
   { src: "/matchday/team-30.webp", soft: true },
   { src: "/matchday/team-32.webp", soft: true },
   { src: "/matchday/team-33.webp", soft: true },
   { src: "/matchday/team-34.webp", soft: true },
-  // 위트 12장
-  { src: "/matchday/fun-2.webp", soft: true },
-  { src: "/matchday/fun-3.webp", soft: true },
-  { src: "/matchday/fun-7.webp", soft: true },
-  { src: "/matchday/fun-8.webp", soft: true },
-  { src: "/matchday/fun-9.webp", soft: true },
-  { src: "/matchday/fun-10.webp", soft: true },
+  { src: "/matchday/team-35.webp", soft: true },
+  { src: "/matchday/team-36.webp", soft: true },
+  { src: "/matchday/team-37.webp", soft: true },
+  { src: "/matchday/team-38.webp", soft: true },
+  // 종이공예 크림 배경. 밝아서 카드가 어두운 글씨로 뒤집는다.
+  { src: "/matchday/team-39.webp", light: true },
+  // 위트 5장
   { src: "/matchday/fun-11.webp", soft: true },
-  { src: "/matchday/fun-12.webp", soft: true },
-  { src: "/matchday/fun-15.webp", soft: true },
   { src: "/matchday/fun-16.webp", soft: true },
-  { src: "/matchday/fun-17.webp", soft: true },
   { src: "/matchday/fun-18.webp", soft: true },
+  // 콜라주. 바탕이 밝은 편이라 기본 막을 그대로 쓴다.
+  { src: "/matchday/fun-19.webp" },
+  { src: "/matchday/fun-20.webp", light: true },
+  // 단독 인물 3장(제록스 시리즈와 별개 화풍)
+  { src: "/matchday/solo-1.webp", soft: true },
+  { src: "/matchday/solo-2.webp", soft: true },
+  // 실크스크린 GK. 가운데가 크림색이라 기본 막을 그대로 쓴다.
+  { src: "/matchday/solo-3.webp" },
+  // 제록스 단독 선수 포스터 9장. 원본부터 어두워서 전부 soft.
+  // (xerox-7은 강환국이었는데 뺐다. 번호는 나머지를 건드리지 않으려고 비워 둔다.)
+  // 만드는 법과 규칙은 HANDOFF-matchday-xerox-portraits.md 에 있다.
+  { src: "/matchday/xerox-1.webp", soft: true }, // 시리즈 기준(test36)
+  { src: "/matchday/xerox-2.webp", soft: true }, // 황동주
+  { src: "/matchday/xerox-3.webp", soft: true }, // 박상민
+  { src: "/matchday/xerox-4.webp", soft: true }, // 김준수
+  { src: "/matchday/xerox-5.webp", soft: true }, // 임재준
+  { src: "/matchday/xerox-6.webp", soft: true }, // 강창훈
+  { src: "/matchday/xerox-8.webp", soft: true }, // 금상덕
+  { src: "/matchday/xerox-9.webp", soft: true }, // 김한별
+  { src: "/matchday/xerox-10.webp", soft: true }, // 문대영
 ];
 
 /**
@@ -129,12 +139,51 @@ function hash(a: number, b: number): number {
  * 날마다 바뀌는 값이라 다시 섞여도 잃는 게 없다.
  * ⚠️ 끝난 경기(matchResultArt)는 이걸 쓰지 않는다 — 그건 고정이어야 한다.
  */
-const DDAY_SALT = 5;
+const DDAY_SALT = 2482;
 
-/** 이 경기·이 날짜에 쓸 배경. 그림이 하나도 없으면 null(카드는 기존 그라디언트). */
+/** 32비트 정수를 고루 흩뜨린다(murmur3 fmix32). */
+function mix32(n: number): number {
+  let h = n | 0;
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+
+/**
+ * 이 경기·이 날짜에 쓸 배경. 그림이 하나도 없으면 null(카드는 기존 그라디언트).
+ *
+ * 위 `hash` 를 쓰지 않는다. 그 함수는 matchId·dDay 처럼 작고 인접한 입력에서
+ * 뭉갠다 — 경기 36개 × D-0~21 로 792번 뽑아 봤더니 서로 다른 값이 64개뿐이었고,
+ * 그림 59장 중 17장은 한 번도 안 걸렸다. 애써 만든 그림이 영영 안 보이는 것이다.
+ * 뒤에 fmix32 를 덧대도 소용없다. 이미 사라진 정보는 되살아나지 않는다.
+ *
+ * 그래서 경기마다 그림 순서를 통째로 섞어 두고 D-day 로 그 순서를 훑는다. 매번
+ * 새로 뽑으면 D-9 와 D-7 에 같은 그림이 걸리는 일이 생기는데(실제로 생겼다),
+ * 카운트다운은 같은 사람이 며칠을 이어 보는 화면이라 그 중복이 제일 눈에 띈다.
+ * 순열을 훑으면 59장을 다 쓸 때까지 절대 겹치지 않는다.
+ *
+ * ⚠️ 끝난 경기(matchResultArt·matchCasualArt)는 `hash` 를 그대로 쓴다. 그쪽은
+ *    한 번 정해진 그림이 바뀌면 안 되므로 여기서만 바꿨다.
+ */
+function shuffledOrder(seed: number): number[] {
+  const order = ART.map((_, i) => i);
+  let s = mix32(seed);
+  for (let i = order.length - 1; i > 0; i--) {
+    s = mix32(s);
+    const j = s % (i + 1);
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+}
+
 export function matchdayArt(matchId: number, dDay: number): MatchdayArt | null {
   if (ART.length === 0) return null;
-  return ART[hash(matchId + DDAY_SALT * 7919, dDay) % ART.length];
+  const order = shuffledOrder(Math.imul(matchId + DDAY_SALT * 7919, 0x9e3779b1));
+  // 결과 입력이 늦어 D 가 음수인 카드도 들어온다(MatchFeed 의 awaitingResult).
+  return ART[order[((dDay % ART.length) + ART.length) % ART.length]];
 }
 
 /**
