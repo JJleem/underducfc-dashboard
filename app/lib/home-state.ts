@@ -46,12 +46,23 @@ export function isHomeState(value: string | undefined): value is HomeState {
  */
 export function getDDay(dateStr: string, now: Date = new Date()): number | null {
   if (!dateStr) return null;
-  const target = new Date(dateStr);
-  if (isNaN(target.getTime())) return null;
-  const today = new Date(now);
-  today.setHours(0, 0, 0, 0);
-  target.setHours(0, 0, 0, 0);
-  return Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  // 경기 날짜는 시각이 아니라 한국의 달력 날짜다. `new Date()`와 로컬 자정을 쓰면
+  // Vercel(UTC)은 한국 시간 오전 9시까지 전날로 계산해 D-1을 보여 준다.
+  const targetParts = dateStr.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+  if (!targetParts) return null;
+
+  const todayParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(now);
+  const part = (type: "year" | "month" | "day") =>
+    Number(todayParts.find((item) => item.type === type)?.value);
+
+  const targetDay = Date.UTC(Number(targetParts[1]), Number(targetParts[2]) - 1, Number(targetParts[3]));
+  const todayDay = Date.UTC(part("year"), part("month") - 1, part("day"));
+  return Math.round((targetDay - todayDay) / (1000 * 60 * 60 * 24));
 }
 
 /** 백엔드는 미정을 빈 문자열이 아니라 "미정" 문자열로 준다. 둘 다 미정으로 본다. */
