@@ -17,6 +17,8 @@ type Countdown = "0" | "1" | "7";
 const IMAGE_EXT = /\.(?:avif|jpe?g|png|webp)$/i;
 // test2.png처럼 숫자를 바로 붙여도, test-2/candidate_2처럼 구분자를 써도 잡는다.
 const CANDIDATE_NAME = /^(?:test|candidate)(?:\d+|[-_.].*)?$/i;
+// 이번 후보 비교용. 실제 로테이션에는 넣지 않고 이 실험실 화면에서만 보여 준다.
+const PICKED_CANDIDATES = new Set(["solo-4.webp", "solo-5.webp", "team-40.webp"]);
 
 function candidates(): string[] {
   const dir = path.join(process.cwd(), "public", "matchday");
@@ -24,7 +26,10 @@ function candidates(): string[] {
     return fs
       .readdirSync(dir)
       .filter((file) => IMAGE_EXT.test(file))
-      .filter((file) => CANDIDATE_NAME.test(file.replace(IMAGE_EXT, "")))
+      .filter((file) => {
+        const name = file.replace(IMAGE_EXT, "");
+        return CANDIDATE_NAME.test(name) || PICKED_CANDIDATES.has(file);
+      })
       .sort((a, b) => a.localeCompare(b, "ko", { numeric: true }));
   } catch {
     return [];
@@ -162,7 +167,7 @@ export default async function MatchdayPreviewPage({
           </p>
           <h1 className="mt-1 text-[18px] font-black tracking-[-0.04em]">피드 이미지 미리보기</h1>
           <p className="mt-1 text-[10px] font-bold text-gray-400 dark:text-white/35">
-            test·candidate 이름의 이미지를 실제 피드 크롭으로 확인합니다.
+            선택한 후보 이미지를 실제 피드 크롭으로 확인합니다.
           </p>
 
           <div className="mt-3 flex flex-wrap gap-1.5">

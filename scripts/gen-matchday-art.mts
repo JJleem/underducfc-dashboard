@@ -62,6 +62,8 @@ interface Shot {
    * 말로 설명해서 그리게 하면 매번 다른 것이 나온다(실제로 서양 팀이 나왔다).
    */
   ref?: string;
+  /** 첫 이미지는 편집 대상, 나머지는 화풍 전용 참고 이미지다. */
+  refs?: string[];
   /** 이 컷만 다른 화풍으로 갈 때. 비우면 공통 LOOK 을 쓴다. */
   look?: string;
   /** 이 컷만 다른 금지 규칙을 쓸 때. 비우면 공통 RULES. */
@@ -182,9 +184,433 @@ const COACH_RULES = [
   "square 1:1 composition",
 ].join(", ");
 
+// 단체 하트 사진 전용. 인원이 많아 일반 TEAM_RULES처럼 장면을 다시 지으면 얼굴과
+// 손이 무너지므로, 원본 사진을 고정하고 하트와 조명만 더하는 정밀 편집으로 간다.
+const HEART_RULES = [
+  "preserve every person from the reference exactly — same number of people, identities, faces, " +
+    "body shapes, positions, poses, clothing and camera angle",
+  "do not add, remove, merge, duplicate or relocate any person",
+  "preserve all hands and fingers exactly as photographed; do not redraw or reshape them",
+  "change only the atmosphere and add heart objects inside the existing hand-heart gestures",
+  "keep the original football pitch and recognizable team-photo composition",
+  "no new words, captions, logos or watermarks",
+  "square 1:1 crop, keep the full group visible in the lower half",
+  "leave the upper centre dark, simple and uncluttered for a large D-DAY overlay",
+].join(", ");
+
 // 단계가 올라갈수록 조여든다: 멀리·차분 → 가까이·핑크가 올라옴 → 코앞·가장 강렬.
 // 소재는 매 장 다르게 간다. 같은 그림을 밝기만 바꿔 아홉 번 내면 "다양"이 아니다.
 const SHOTS: Shot[] = [
+  { stage: "chrome", index: 1, ref: "test/junsutra.jpeg",
+    rules: [
+      "preserve the single Korean player's identity, side profile, hairstyle, body proportions and exact juggling pose",
+      "preserve the raised leg angle and the football floating immediately above his boot",
+      "keep the black Underduck football kit silhouette with restrained rose-pink trim",
+      "remove the pitch, fence, trees, rocks, poles and all daylight photographic scenery",
+      "replace the setting with a seamless near-black deep-navy studio void",
+      "render the player and ball with selective liquid-chrome highlights, not as a full metal statue",
+      "soft Underduck rose pink #FF8FA3 light flows along the shoulders, back, raised leg and boot edge",
+      "add one elegant circular pink energy ripple connecting the boot and hovering football",
+      "the football remains clearly recognizable and becomes a bright polished energy core",
+      "place the player in the lower-right third and preserve generous dark negative space above and left",
+      "no city, no neon signs, no sci-fi machinery, no extra people, no duplicated limbs or balls",
+      "no text, letters, numbers, typography, logo, border or watermark",
+      "square 1:1 edge-to-edge premium sports advertising composition",
+    ].join(", "),
+    look:
+      "futuristic liquid-chrome luxury sports campaign, black mirror surfaces, deep navy void, " +
+      "controlled Underduck rose-pink #FF8FA3 rim light, sleek sculptural reflections, crisp high-end " +
+      "commercial finish, subtle atmospheric haze, dramatic but minimal, photorealistic editorial polish",
+    prompt:
+      "transform the football juggling moment into an iconic futuristic Underduck sports advertisement, " +
+      "capturing the instant the boot magnetically suspends the glowing ball" },
+
+  { stage: "chrome", index: 2, ref: "test/junsutra.jpeg",
+    rules: [
+      "preserve the player's exact side-on juggling pose, body proportions, hairstyle silhouette, raised leg angle and ball position",
+      "keep the player facing left exactly as in the reference",
+      "the player is strongly backlit and reads as a near-black silhouette; facial features are naturally hidden in shadow",
+      "do not invent, beautify or clearly render a new face; show only a subtle dark side-profile outline",
+      "retain the black Underduck kit silhouette with a thin rose-pink #FF8FA3 edge light",
+      "remove the pitch, fence, trees, rocks, poles and all daylight scenery",
+      "replace the background with a vast deep-navy night void and distant diffused stadium floodlight haze",
+      "place one intense soft pink-white floodlight directly behind the upper body to create a heroic halo",
+      "the football and raised boot are sharply rim-lit, with a restrained pink energy arc between them",
+      "keep the player in the lower-right third and leave the upper-left and upper-centre empty and dark",
+      "no extra people, limbs, footballs, city, signs, machinery or reflective floor",
+      "no text, letters, numbers, typography, logo, border or watermark",
+      "square 1:1 premium sports advertising composition",
+    ].join(", "),
+    look:
+      "photorealistic cinematic backlit sports campaign, powerful near-black silhouette, deep navy " +
+      "night atmosphere, blinding diffused floodlight halo, controlled Underduck rose-pink #FF8FA3 " +
+      "rim light, volumetric haze, fine film grain, minimal premium editorial finish",
+    prompt:
+      "turn the football juggling instant into a mysterious heroic night campaign where identity " +
+      "comes from the exact pose and kit silhouette while the face disappears naturally into backlight" },
+
+  { stage: "mandala", index: 1, ref: "test/junsutra.jpeg",
+    rules: [
+      "preserve the reference player's recognizable identity, exact left-facing side profile, hairstyle, body proportions and juggling pose",
+      "preserve the raised leg angle and the football floating at the same distance above his boot",
+      "keep the black Underduck kit with its soft rose-pink trim and white arm sleeves",
+      "render the person as a polished graphic editorial illustration based closely on the reference, not as a new photorealistic person",
+      "keep the face small, natural and recognizably traced from the reference side profile; do not beautify or invent facial features",
+      "remove the pitch, fence, trees, rocks, poles and all photographic scenery",
+      "the hovering football is the exact centre of a large intricate techno-mandala made of concentric circles, radial lines, arcs and fine geometric nodes",
+      "the mandala glows in Underduck rose pink #FF8FA3, hot pink and restrained pale white against deep navy-black",
+      "geometric rings radiate behind and around the ball without covering the player's face or body",
+      "place the player in the lower-right third with the mandala extending toward centre-left",
+      "keep the upper third dark and relatively quiet for interface overlay",
+      "mystical and futuristic, but no religious symbols, letters, numbers, words or readable glyphs",
+      "no extra people, duplicated limbs, duplicated footballs, city, machinery, border, logo or watermark",
+      "square 1:1 edge-to-edge premium sports poster composition",
+    ].join(", "),
+    look:
+      "mystical techno-mandala sports poster, premium graphic editorial illustration, precise luminous " +
+      "geometric linework, deep navy-black negative space, Underduck rose pink #FF8FA3 energy, subtle " +
+      "screenprint grain, elegant high contrast, cinematic and enigmatic rather than cyberpunk",
+    prompt:
+      "transform the exact football juggling moment into an iconic Underduck poster where the hovering " +
+      "ball activates a vast rose-pink geometric energy mandala" },
+
+  { stage: "junsutra", index: 1, ref: "test/junsutra.jpeg",
+    rules: [
+      "preserve the reference player's recognizable identity, exact left-facing side profile, hairstyle, body proportions and juggling pose",
+      "preserve the raised leg angle and football position immediately above the boot",
+      "keep the black Underduck kit, white arm sleeves and soft rose-pink trim",
+      "remove the pitch, fence, trees, rocks, poles and all daylight scenery",
+      "place a monumental dark solar eclipse directly behind the hovering football, with a precise luminous corona",
+      "the eclipse corona glows Underduck rose pink #FF8FA3 fading into pale white, with restrained lens bloom",
+      "the player remains visible as a polished dark editorial illustration with recognizable side-profile features",
+      "player and ball occupy the lower-right half; keep the upper-left and top edge quiet and dark",
+      "no extra people, limbs, footballs, planets, stars, text, letters, numbers, logo, border or watermark",
+      "square 1:1 edge-to-edge premium sports poster",
+    ].join(", "),
+    look:
+      "cinematic pink-eclipse sports poster, deep navy-black cosmic void without stars, monumental " +
+      "rose-pink corona, elegant high contrast, subtle film grain, premium mysterious editorial polish",
+    prompt:
+      "transform the exact juggling instant into a mythic Underduck eclipse campaign where the ball " +
+      "appears to control a vast dark sun" },
+
+  { stage: "junsutra", index: 2, ref: "test/junsutra.jpeg",
+    rules: [
+      "preserve the reference player's recognizable identity, exact left-facing side profile, hairstyle, body proportions and juggling pose",
+      "preserve the raised leg angle and football position immediately above the boot",
+      "keep the black Underduck kit, white arm sleeves and soft rose-pink trim",
+      "remove the pitch, fence, trees, rocks, poles and all daylight scenery",
+      "replace the setting with a seamless deep navy-black field crossed by elegant topographic contour lines",
+      "thin Underduck rose pink #FF8FA3 contour lines wrap around the player silhouette and radiate from the football like terrain disturbed by energy",
+      "use varying line density and a few brighter nodes to describe motion, but no readable data or symbols",
+      "the player remains close to the reference and is rendered as a refined dark editorial illustration, not a new person",
+      "player and ball occupy the lower-right half; leave the upper third sparse and quiet",
+      "no extra people, limbs, footballs, maps, letters, numbers, text, logo, border or watermark",
+      "square 1:1 edge-to-edge premium sports poster",
+    ].join(", "),
+    look:
+      "minimal topographic energy-map sports poster, precise luminous contour linework, deep navy-black " +
+      "negative space, Underduck rose pink #FF8FA3, subtle paper grain, sophisticated contemporary editorial design",
+    prompt:
+      "transform the exact juggling moment into a field of rose-pink topographic energy, with the " +
+      "hovering football acting as the source of flowing contour lines" },
+
+  { stage: "junsutra", index: 3, ref: "test/junsutra.jpeg",
+    rules: [
+      "preserve the reference player's recognizable identity, exact left-facing side profile, hairstyle, body proportions and juggling pose",
+      "preserve the raised leg angle and football position immediately above the boot",
+      "keep the black Underduck kit, white arm sleeves and soft rose-pink trim",
+      "remove the pitch, fence, trees, rocks, poles and all daylight scenery",
+      "freeze the juggling impact as the dark space around the football fractures into large elegant transparent glass planes",
+      "glass shards radiate from the ball without covering or cutting through the player's face or body",
+      "shard edges catch restrained Underduck rose pink #FF8FA3 light and pale white highlights",
+      "avoid chaotic tiny debris; use a few bold cinematic planes with clean reflections and strong negative space",
+      "the player remains close to the reference and is rendered as a polished dark editorial illustration, not a new person",
+      "player and ball occupy the lower-right half; leave the upper third dark and uncluttered",
+      "no blood, injury, extra people, limbs, footballs, text, letters, numbers, logo, border or watermark",
+      "square 1:1 edge-to-edge premium sports poster",
+    ].join(", "),
+    look:
+      "high-end shattered-glass sports campaign, dark navy studio void, large crystalline planes, " +
+      "rose-pink #FF8FA3 edge reflections, frozen high-speed impact, sharp luxurious commercial polish",
+    prompt:
+      "transform the exact juggling instant into a suspended fracture in space, as if the hovering " +
+      "football has cracked reality into a few beautiful glass planes" },
+
+  { stage: "newstyle", index: 1, ref: "test/junsutra.jpeg",
+    rules: [
+      "borrow only the single Korean player's left-facing side silhouette, juggling pose, raised leg, floating football and black kit with pink trim",
+      "fully redraw the player, face, body, clothing, ball and entire scene as a handmade linocut woodblock print",
+      "do not leave any photographic skin, fabric, grass or background",
+      "use bold carved gouges, rough ink edges, visible block texture and expressive directional hatch marks",
+      "strict three-colour palette: near-black navy, warm cream and Underduck rose pink #FF8FA3",
+      "pink carved motion curves radiate from the football and raised boot like wood grain under pressure",
+      "remove all pitch, fence, trees, rocks and poles; replace them with a spare graphic ink field",
+      "place the figure in the lower-right half with ample dark open space above and left",
+      "no extra people, limbs or footballs; no text, letters, numbers, logos, border or watermark",
+      "square edge-to-edge premium print poster",
+    ].join(", "),
+    look:
+      "bold contemporary linocut sports poster, hand-carved woodblock marks, rough tactile ink, " +
+      "dramatic black shapes, warm cream highlights and Underduck rose pink #FF8FA3 accents, " +
+      "raw gallery-print energy, clearly illustrated and never photographic",
+    prompt:
+      "reinterpret the exact football juggling gesture as a powerful hand-pulled linocut print, " +
+      "with the athlete and ball carved from the same energetic field of ink" },
+
+  { stage: "newstyle", index: 2, ref: "test/junsutra.jpeg",
+    rules: [
+      "borrow only the single Korean player's left-facing side silhouette, juggling pose, raised leg, floating football and black kit with pink trim",
+      "fully rebuild the player, face, body, clothing, ball and entire scene from luminous stained-glass pieces",
+      "do not leave any photographic skin, fabric, grass or background",
+      "use confident dark lead lines and large elegant glass facets, not a tiny noisy mosaic",
+      "palette is deep navy-black glass, smoky cream skin glass and glowing Underduck rose pink #FF8FA3",
+      "the football is a bright circular stained-glass rose window and sends soft pink light through nearby facets",
+      "remove the pitch, fence, trees, rocks and poles; replace them with a dark cathedral-like glass void without architecture",
+      "place the figure in the lower-right half with broad dark negative space above",
+      "no religious figures or symbols, no extra people, limbs or balls, no text, letters, numbers, logos, frame or watermark",
+      "square edge-to-edge premium sports poster",
+    ].join(", "),
+    look:
+      "neon stained-glass sports illustration, bold black leading, luminous jewel-like glass, large " +
+      "angular facets, deep navy darkness and radiant Underduck rose pink #FF8FA3, heroic and elegant, " +
+      "clearly crafted artwork rather than photography",
+    prompt:
+      "reinterpret the exact juggling gesture as a modern stained-glass sports icon, with the hovering " +
+      "football glowing like an energy rose window" },
+
+  { stage: "newstyle", index: 3, ref: "test/junsutra.jpeg",
+    rules: [
+      "borrow only the single Korean player's left-facing side silhouette, juggling pose, raised leg, floating football and black kit with pink trim",
+      "fully repaint the player, face, body, clothing, ball and scene as a 1980s retro-futurist airbrush illustration",
+      "do not leave any photographic skin, fabric, grass or background",
+      "use smooth hand-painted gradients, soft specular highlights, dreamy mist and elegant analogue poster grain",
+      "palette is midnight navy, black, smoky violet and dominant Underduck rose pink #FF8FA3",
+      "a luminous pink orbital trail curves from the raised boot around the floating football",
+      "remove the pitch, fence, trees, rocks and poles; replace them with an abstract cosmic studio horizon",
+      "place the figure in the lower-right half with a vast gradient night sky above and left",
+      "no city, machinery, grids, text, letters, numbers, logos, border or watermark",
+      "no extra people, limbs or footballs; square edge-to-edge premium sports poster",
+    ].join(", "),
+    look:
+      "luxurious 1980s retro-futurist airbrushed sports advertising illustration, smooth painted anatomy, " +
+      "velvety gradients, analogue print grain, midnight navy and glowing Underduck rose pink #FF8FA3, " +
+      "dreamlike heroic polish, fully illustrated and never photographic",
+    prompt:
+      "reinterpret the exact juggling gesture as a lost premium 1980s future-sport campaign painted " +
+      "entirely by airbrush" },
+
+  { stage: "newstyle", index: 4, ref: "test/junsutra.jpeg",
+    rules: [
+      "borrow only the single Korean player's left-facing side silhouette, juggling pose, raised leg, floating football and black kit with pink trim",
+      "fully redraw the player, face, body, clothing, ball and scene as scratchboard engraving",
+      "do not leave any photographic skin, fabric, grass or background",
+      "build all form from sharp hand-scratched white and pink lines cut into a dense black surface",
+      "use energetic cross-hatching, curved contour scratches and a few bold scraped highlights",
+      "palette is near-black navy board, warm off-white scratches and Underduck rose pink #FF8FA3 accent scratches",
+      "scratched motion lines explode from the football and trace the lifted leg without obscuring the pose",
+      "remove the pitch, fence, trees, rocks and poles; leave a mostly black engraved field",
+      "place the figure in the lower-right half with large untouched black space above and left",
+      "no extra people, limbs or footballs; no text, letters, numbers, logos, border or watermark",
+      "square edge-to-edge premium print poster",
+    ].join(", "),
+    look:
+      "dramatic scratchboard sports engraving, hand-cut white and rose-pink lines on deep black board, " +
+      "dense expressive hatching, raw tactile marks, high contrast gallery-poster finish, entirely drawn",
+    prompt:
+      "reinterpret the exact juggling gesture as a fierce hand-scratched engraving where the athlete " +
+      "emerges from darkness through carved light" },
+
+  { stage: "hyunjun", index: 1, ref: "test/hyunjun.jpeg",
+    rules: [
+      "borrow the single Korean player's three-quarter profile, hairstyle, body build, black-and-pink kit, lowered gaze, walking juggling pose and floating football",
+      "fully remake the player, face, clothing, football and entire scene as traditional Korean mother-of-pearl inlay set into glossy black lacquer",
+      "no photographic skin, fabric, grass, fence, trees, rocks or poles remain",
+      "build the figure from elegant iridescent shell fragments with precise dark lacquer seams",
+      "use black lacquer, deep navy, pearl white, restrained teal iridescence and dominant Underduck rose pink #FF8FA3 shell accents",
+      "the football is a luminous circular mother-of-pearl medallion; curved pink shell trails imply controlled motion",
+      "place the full figure in the lower-right half and leave a vast polished black lacquer field above and left",
+      "no ornate border, flowers, birds, landscapes, text, letters, numbers, extra people, limbs, balls, logo or watermark",
+      "square edge-to-edge luxury sports artwork",
+    ].join(", "),
+    look:
+      "luxurious Korean mother-of-pearl lacquerware sports art, glossy obsidian-black lacquer, finely " +
+      "cut iridescent shell inlay, deep navy and Underduck rose pink #FF8FA3 shimmer, handcrafted museum-quality depth",
+    prompt:
+      "reinterpret the football control moment as a modern najeonchilgi masterpiece, with the athlete " +
+      "and ball assembled entirely from luminous shell inlay" },
+
+  { stage: "hyunjun", index: 2, ref: "test/hyunjun.jpeg",
+    rules: [
+      "borrow the single Korean player's three-quarter profile, hairstyle, body build, black-and-pink kit, lowered gaze, walking juggling pose and floating football",
+      "fully sculpt the player, face, clothing, football and scene as matte black ceramic; no photographic material remains",
+      "remove the pitch, fence, trees, rocks and poles and replace them with a seamless dark ceramic studio void",
+      "fine cracks run through the ceramic figure and football, repaired with glowing Underduck rose pink #FF8FA3 lacquer seams",
+      "use only a few elegant structural cracks, not shattered rubble or horror damage",
+      "the ball floats as a complete black ceramic sphere with pink repaired seams; no fragments obscure the pose",
+      "place the full figure in the lower-right half with a broad near-black empty field above and left",
+      "no pedestal, pottery vessel, border, text, letters, numbers, extra people, limbs, balls, logo or watermark",
+      "square edge-to-edge gallery sports poster",
+    ].join(", "),
+    look:
+      "monumental matte black ceramic sports sculpture, subtle hand-built clay texture, luminous rose-pink " +
+      "#FF8FA3 kintsugi-like repair seams, deep navy-black studio light, refined contemporary gallery photography",
+    prompt:
+      "reinterpret the football control moment as a living black ceramic sculpture held together by " +
+      "glowing Underduck-pink seams" },
+
+  { stage: "hyunjun", index: 3, ref: "test/hyunjun.jpeg",
+    rules: [
+      "borrow the single Korean player's three-quarter profile, hairstyle, body build, black-and-pink kit, lowered gaze, walking juggling pose and floating football",
+      "fully stitch the player, face, clothing, football and entire scene as tactile embroidery on black woven fabric",
+      "no photographic skin, fabric, grass, fence, trees, rocks or poles remain",
+      "use dense satin stitch, chain stitch, visible thread direction and slightly raised padded embroidery",
+      "palette is black and deep navy cloth, warm skin-tone thread, pearl white and dominant Underduck rose pink #FF8FA3 thread accents",
+      "pink loose threads curl from the boot around the embroidered football to suggest motion",
+      "place the full stitched figure in the lower-right half and leave broad untouched black fabric above and left",
+      "no patch border, hoop, text, letters, numbers, extra people, limbs, balls, logo or watermark",
+      "square edge-to-edge premium textile sports poster",
+    ].join(", "),
+    look:
+      "high-end embroidered textile illustration, macro-visible threads, layered satin and chain stitch, " +
+      "black woven cloth, deep navy shadows and Underduck rose pink #FF8FA3 highlights, tactile handcrafted luxury",
+    prompt:
+      "reinterpret the football control moment as a richly embroidered sports tapestry where every " +
+      "part of the athlete and ball is made from thread" },
+
+  { stage: "hyunjun", index: 4, ref: "test/hyunjun.jpeg",
+    rules: [
+      "borrow the single Korean player's three-quarter profile, hairstyle, body build, black-and-pink kit, lowered gaze, walking juggling pose and floating football",
+      "turn the player into a bold deep-black silhouette whose interior contains a complete cinematic night football world",
+      "inside the silhouette show tiny floodlights, mist, wet turf reflections and drifting Underduck rose-pink #FF8FA3 light",
+      "keep a thin recognizable warm skin-and-pink rim along the profile, hair, shoulders, hands and legs so the pose remains readable",
+      "the football stays outside the silhouette as a sharply defined dark sphere containing a miniature pink-lit pitch",
+      "remove all original daylight scenery and use a vast clean deep-navy void",
+      "place the full figure in the lower-right half with generous empty darkness above and left",
+      "no extra people visible at normal scale, city, text, letters, numbers, border, logo or watermark",
+      "square edge-to-edge surreal editorial sports poster",
+    ].join(", "),
+    look:
+      "surreal cinematic double-exposure sports art, crisp human silhouette filled with a miniature " +
+      "night stadium atmosphere, deep navy-black, misty floodlights and Underduck rose pink #FF8FA3 glow, poetic and premium",
+    prompt:
+      "reinterpret the football control moment as a double exposure in which the player's silhouette " +
+      "contains the emotional world of a pink-lit night match" },
+
+  { stage: "heart", index: 1, ref: "test/heart.jpeg", rules: HEART_RULES,
+    look: "photorealistic premium night football campaign photography with a witty playful twist, " +
+      "deep navy evening atmosphere, cinematic floodlights, subtle film grain, realistic skin, " +
+      "restrained red glow and polished editorial sports-poster finish",
+    prompt:
+      "turn the existing daylight team photo into a cinematic evening matchday image while keeping " +
+      "every player and pose intact. Place one small glossy bright-red three-dimensional heart " +
+      "precisely inside each heart shape already formed by the players' hands. Most hearts stay " +
+      "small and tasteful; make the heart held by the central standing player slightly larger and " +
+      "glass-like as the visual hero. Each heart casts only a faint believable red reflection onto " +
+      "the nearby fingers and jersey. Add just a few tiny red hearts drifting upward, sparse and " +
+      "subtle. The joke is that the serious football poster treats the cute hearts with absurdly " +
+      "premium cinematic importance" },
+
+  { stage: "heart", index: 2,
+    refs: [
+      "test/heart-composite.png",
+      "public/matchday/team-36.webp",
+      "public/matchday/team-37.webp",
+      "public/matchday/team-38.webp",
+    ],
+    rules: [
+      "IMAGE 1 is the sole content and composition source; IMAGES 2, 3 and 4 are style references only",
+      "preserve all 13 people from IMAGE 1 — exact count, identity, face, position, pose and clothing",
+      "preserve every red heart from IMAGE 1 at its exact size and position",
+      "do not add, remove, duplicate, merge or relocate any person, hand or heart",
+      "apply only the layered cut-paper, faceted portrait and tactile collage rendering from the style references",
+      "replace the style references' cream and pale-blue paper accents with Underduck rose pink #FF8FA3",
+      "use a deep navy-black background and keep the upper centre empty for a D-DAY overlay",
+      "no readable words, captions, invented badges, logos or watermarks",
+      "square 1:1 composition with the full group visible in the lower half",
+    ].join(", "),
+    look:
+      "premium editorial cut-paper collage, layered handmade paper texture, subtly faceted Korean " +
+      "portrait illustration, deep navy and black with Underduck rose pink #FF8FA3 accents",
+    prompt:
+      "restyle the confirmed heart team photo as a witty premium Underduck matchday poster. Keep the " +
+      "serious team-photo composition and treat the bright red hearts with playful visual importance" },
+
+  { stage: "heart", index: 3,
+    refs: [
+      "test/heart-composite.png",
+      "public/matchday/team-36.webp",
+      "public/matchday/team-37.webp",
+      "public/matchday/team-38.webp",
+    ],
+    rules: [
+      "IMAGE 1 supplies the 13-person group, poses and red-heart arrangement; IMAGES 2, 3 and 4 supply the rendering style",
+      "re-render every person fully as a faceted layered cut-paper portrait — no photographic people remain",
+      "keep exactly 13 distinct Korean players in roughly the same two-row arrangement and recognizable poses",
+      "keep one glossy bright-red heart inside each existing hand-heart gesture",
+      "faces may be simplified into confident paper illustration but must remain complete, expressive and human",
+      "remove the football pitch, fence, trees, rocks and all photographic scenery",
+      "replace the entire setting with layered deep navy and black handmade paper",
+      "use Underduck rose pink #FF8FA3 for paper edges, kit trim and restrained graphic accents",
+      "the players occupy only the bottom 45 percent and may be cropped naturally by the bottom edge",
+      "the upper 55 percent is empty, dark navy and uncluttered for a large D-DAY overlay",
+      "no readable words, captions, invented badges, logos or watermarks",
+      "square 1:1 editorial poster composition",
+    ].join(", "),
+    look:
+      "bold premium editorial paper-cut collage, clearly illustrated rather than photographic, " +
+      "angular faceted faces, layered torn-paper depth, tactile fibres, deep navy-black and " +
+      "Underduck rose pink #FF8FA3 with vivid red hearts",
+    prompt:
+      "create a witty Underduck matchday poster of the full heart-posing squad. Rebuild the players " +
+      "as a cohesive paper-art cast clustered along the very bottom, with a vast quiet dark field above" },
+
+  { stage: "heart", index: 4, ref: "test/heart-composite.png",
+    rules: [
+      "use the reference only for the 13-person group, their identities, poses and heart arrangement",
+      "keep exactly 13 distinct Korean players in roughly the same two-row arrangement",
+      "re-render every person as a complete confident illustration; no photographic people remain",
+      "keep one vivid glossy red heart inside each existing hand-heart gesture",
+      "remove the football pitch, fence, trees, rocks and every photographic background element",
+      "players fill only the bottom 45 percent and may crop naturally at the bottom edge",
+      "the entire upper 55 percent is a plain uninterrupted field of near-black deep navy handmade paper",
+      "ABSOLUTELY NO TEXT, NO LETTERS, NO NUMBERS, NO TYPOGRAPHY, NO SYMBOLS in the upper space or anywhere",
+      "no logos, invented badges, watermark, border or frame",
+      "square 1:1 editorial poster composition",
+    ].join(", "),
+    look:
+      "premium editorial cut-paper portrait collage, angular low-poly facial planes recreated as " +
+      "layered handmade paper, crisp confident ink-like edges, subtle paper fibres and stacked depth, " +
+      "deep navy-black palette with restrained Underduck rose pink #FF8FA3 paper accents and kit trim, " +
+      "warm natural skin-toned paper, vivid candy-red folded-paper hearts, sophisticated and witty",
+    prompt:
+      "transform the heart-posing squad into a cohesive illustrated paper-art cast clustered along " +
+      "the very bottom of a minimal dark sports poster, leaving a vast completely blank field above" },
+
+  { stage: "heart", index: 5, ref: "test/heart-composite.png",
+    rules: [
+      "apply one unified illustration treatment across the ENTIRE reference photo like a full-image artistic filter",
+      "do not redesign, reconstruct or replace the people; trace the existing 13 people, faces, poses, hands and arrangement from the reference",
+      "keep every player's recognizable facial structure, hair, body position and clothing silhouette from the reference",
+      "preserve every manually placed red heart at the same position and approximate size",
+      "convert all people, clothing and remaining scene surfaces consistently into angular layered cut-paper illustration",
+      "remove the football pitch, ball, fence, trees, rocks and photographic scenery completely",
+      "replace the removed scenery with seamless layered near-black and deep-navy handmade paper",
+      "UNDERDUCK PINK #FF8FA3 is the dominant accent colour across background layers, rim shapes, kit trim and graphic shadows",
+      "keep the hearts vivid candy red so they remain distinct from the softer Underduck pink",
+      "players sit along the lower 48 percent, with the bottom edge cropping them naturally",
+      "leave the upper 52 percent dark, plain and empty",
+      "no white border, no frame, no text, no letters, no numbers, no typography, no logo, no watermark",
+      "square edge-to-edge poster composition",
+    ].join(", "),
+    look:
+      "full-frame stylized paper-cut transformation, angular faceted portrait planes, tactile layered " +
+      "paper fibres, crisp ink-like contours, premium Korean editorial sports illustration, deep " +
+      "navy-black base flooded with soft Underduck rose pink #FF8FA3 accents, playful vivid red hearts",
+    prompt:
+      "transform the whole confirmed team photograph into a single cohesive Underduck-pink paper " +
+      "collage artwork without changing who the people are or borrowing any outside faces" },
+
   // ── 팀 사진 기반. 화풍을 서로 멀리 벌려 같은 사진의 필터 놀이가 되지 않게 한다.
   { stage: "team", index: 1, ref: "test/stretching.jpeg", rules: TEAM_RULES,
     look: "photorealistic cinematic night football photography, day turned into dramatic night, " +
@@ -920,9 +1346,10 @@ const SHOTS: Shot[] = [
 
 async function generate(shot: Shot, key: string): Promise<Buffer> {
   const prompt = `${shot.prompt}. ${shot.look ?? LOOK}. ${shot.rules ?? RULES}`;
-  const model = shot.ref ? EDIT_MODEL : MODEL;
-  const body: Record<string, unknown> = shot.ref
-    ? { prompt, image_urls: [await refDataUri(shot.ref)], num_images: 1, output_format: "jpeg", aspect_ratio: "1:1" }
+  const referenceFiles = shot.refs ?? (shot.ref ? [shot.ref] : []);
+  const model = referenceFiles.length > 0 ? EDIT_MODEL : MODEL;
+  const body: Record<string, unknown> = referenceFiles.length > 0
+    ? { prompt, image_urls: await Promise.all(referenceFiles.map(refDataUri)), num_images: 1, output_format: "jpeg", aspect_ratio: "1:1" }
     : {
         prompt,
         aspect_ratio: "1:1",

@@ -87,6 +87,12 @@ const ART: MatchdayArt[] = [
   { src: "/matchday/solo-2.webp", soft: true },
   // 실크스크린 GK. 가운데가 크림색이라 기본 막을 그대로 쓴다.
   { src: "/matchday/solo-3.webp" },
+  // 핑크 만다라 단독 선수. 원본부터 어두워 얇은 막을 쓴다.
+  { src: "/matchday/solo-4.webp", soft: true },
+  // 핑크 라인 스튜디오 단독 선수.
+  { src: "/matchday/solo-5.webp", soft: true },
+  // 하트 단체사진도 인물과 종이 질감을 살리려고 얇은 막을 쓴다.
+  { src: "/matchday/team-40.webp", soft: true },
   // 제록스 단독 선수 포스터 9장. 원본부터 어두워서 전부 soft.
   // (xerox-7은 강환국이었는데 뺐다. 번호는 나머지를 건드리지 않으려고 비워 둔다.)
   // 만드는 법과 규칙은 HANDOFF-matchday-xerox-portraits.md 에 있다.
@@ -139,7 +145,7 @@ function hash(a: number, b: number): number {
  * 날마다 바뀌는 값이라 다시 섞여도 잃는 게 없다.
  * ⚠️ 끝난 경기(matchResultArt)는 이걸 쓰지 않는다 — 그건 고정이어야 한다.
  */
-const DDAY_SALT = 2482;
+const DDAY_SALT = 989;
 
 /** 32비트 정수를 고루 흩뜨린다(murmur3 fmix32). */
 function mix32(n: number): number {
