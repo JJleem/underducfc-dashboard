@@ -72,9 +72,9 @@ export interface HomeStateInput {
 }
 
 /**
- * 급한 것부터 본다. 경기 임박(D-1~당일) > 새 출석 투표 > 방금 끝난 경기 > 매칭 대기 > 평시.
- * 다음 경기 투표가 열린 뒤에도 직전 경기 종료 화면이 홈을 가리면 새 투표를 놓치므로,
- * 로그인 사용자의 미투표 상태를 경기 직후보다 먼저 처리한다.
+ * 급한 것부터 본다. 경기 임박(D-1~당일) > 새 출석 투표 > 매칭 대기 > 다음 경기 > 방금 끝난 경기.
+ * 다음 경기 투표가 열린 뒤에는 로그인·투표 여부와 관계없이 다음 경기 흐름을 유지한다.
+ * 그렇지 않으면 투표를 마친 직후 다시 직전 경기 종료 화면으로 돌아갈 수 있다.
  */
 export function resolveHomeState(input: HomeStateInput): HomeState {
   const { nextMatch, lastMatch, hasMyVote, loggedIn } = input;
@@ -83,6 +83,8 @@ export function resolveHomeState(input: HomeStateInput): HomeState {
   if (nextDDay !== null && nextDDay >= 0 && nextDDay <= 1) return "dday";
 
   if (nextMatch && loggedIn && !hasMyVote) return "needVote";
+  if (nextMatch && isUndecided(nextMatch.opponent)) return "matching";
+  if (nextMatch) return "idle";
 
   if (lastMatch) {
     // 경기 당일까지만. 토요일에 경기가 끝나면 그날 저녁에 다음 경기 카드가 생기므로,
@@ -92,8 +94,6 @@ export function resolveHomeState(input: HomeStateInput): HomeState {
     const needsWrapUp = !lastMatch.mom.trim() || !lastMatch.photos.trim();
     if (justPlayed && needsWrapUp) return "afterMatch";
   }
-
-  if (nextMatch && isUndecided(nextMatch.opponent)) return "matching";
 
   return "idle";
 }
