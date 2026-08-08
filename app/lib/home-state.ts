@@ -72,14 +72,17 @@ export interface HomeStateInput {
 }
 
 /**
- * 급한 것부터 본다. 경기 임박(D-1~당일) > 방금 끝난 경기 > 내 투표 > 매칭 대기 > 평시.
- * 투표를 매칭보다 앞에 두는 이유: 상대가 안 정해져도 인원은 먼저 받아야 매칭을 잡는다.
+ * 급한 것부터 본다. 경기 임박(D-1~당일) > 새 출석 투표 > 방금 끝난 경기 > 매칭 대기 > 평시.
+ * 다음 경기 투표가 열린 뒤에도 직전 경기 종료 화면이 홈을 가리면 새 투표를 놓치므로,
+ * 로그인 사용자의 미투표 상태를 경기 직후보다 먼저 처리한다.
  */
 export function resolveHomeState(input: HomeStateInput): HomeState {
   const { nextMatch, lastMatch, hasMyVote, loggedIn } = input;
 
   const nextDDay = nextMatch ? getDDay(nextMatch.date) : null;
   if (nextDDay !== null && nextDDay >= 0 && nextDDay <= 1) return "dday";
+
+  if (nextMatch && loggedIn && !hasMyVote) return "needVote";
 
   if (lastMatch) {
     // 경기 당일까지만. 토요일에 경기가 끝나면 그날 저녁에 다음 경기 카드가 생기므로,
@@ -90,7 +93,6 @@ export function resolveHomeState(input: HomeStateInput): HomeState {
     if (justPlayed && needsWrapUp) return "afterMatch";
   }
 
-  if (nextMatch && loggedIn && !hasMyVote) return "needVote";
   if (nextMatch && isUndecided(nextMatch.opponent)) return "matching";
 
   return "idle";
