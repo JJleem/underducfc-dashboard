@@ -51,12 +51,11 @@ const ART: MatchdayArt[] = [
   // 듀오 2장
   { src: "/matchday/duo-2.webp", soft: true },
   { src: "/matchday/duo-3.webp", soft: true },
-  // 팀 사진 변환 17장
+  // 팀 사진 변환 20장
   { src: "/matchday/team-1.webp", soft: true },
   { src: "/matchday/team-3.webp", soft: true },
   { src: "/matchday/team-4.webp", soft: true },
   { src: "/matchday/team-7.webp", soft: true },
-  { src: "/matchday/team-10.webp", soft: true },
   { src: "/matchday/team-13.webp", soft: true },
   { src: "/matchday/team-14.webp", soft: true },
   { src: "/matchday/team-16.webp", soft: true },
@@ -93,18 +92,25 @@ const ART: MatchdayArt[] = [
   { src: "/matchday/solo-5.webp", soft: true },
   // 하트 단체사진도 인물과 종이 질감을 살리려고 얇은 막을 쓴다.
   { src: "/matchday/team-40.webp", soft: true },
-  // 제록스 단독 선수 포스터 9장. 원본부터 어두워서 전부 soft.
+  // 제록스 단독 선수 포스터 8장. 원본부터 어두워서 전부 soft.
   // (xerox-7은 강환국이었는데 뺐다. 번호는 나머지를 건드리지 않으려고 비워 둔다.)
   // 만드는 법과 규칙은 HANDOFF-matchday-xerox-portraits.md 에 있다.
   { src: "/matchday/xerox-1.webp", soft: true }, // 시리즈 기준(test36)
   { src: "/matchday/xerox-2.webp", soft: true }, // 황동주
   { src: "/matchday/xerox-3.webp", soft: true }, // 박상민
   { src: "/matchday/xerox-4.webp", soft: true }, // 김준수
-  { src: "/matchday/xerox-5.webp", soft: true }, // 임재준
   { src: "/matchday/xerox-6.webp", soft: true }, // 강창훈
   { src: "/matchday/xerox-8.webp", soft: true }, // 금상덕
   { src: "/matchday/xerox-9.webp", soft: true }, // 김한별
   { src: "/matchday/xerox-10.webp", soft: true }, // 문대영
+  // 다크 시네마틱 단독 선수 7장. 검은 경기장 배경이라 전부 soft.
+  { src: "/matchday/dark-1.webp", soft: true }, // 강환국
+  { src: "/matchday/dark-2.webp", soft: true }, // 공도하
+  { src: "/matchday/dark-3.webp", soft: true }, // 김광민
+  { src: "/matchday/dark-4.webp", soft: true }, // 김주성
+  { src: "/matchday/dark-5.webp", soft: true }, // 원석희
+  { src: "/matchday/dark-6.webp", soft: true }, // 이재욱
+  { src: "/matchday/dark-7.webp", soft: true }, // 임재준
 ];
 
 /**

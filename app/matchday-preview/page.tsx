@@ -17,8 +17,16 @@ type Countdown = "0" | "1" | "7";
 const IMAGE_EXT = /\.(?:avif|jpe?g|png|webp)$/i;
 // test2.png처럼 숫자를 바로 붙여도, test-2/candidate_2처럼 구분자를 써도 잡는다.
 const CANDIDATE_NAME = /^(?:test|candidate)(?:\d+|[-_.].*)?$/i;
-// 이번 후보 비교용. 실제 로테이션에는 넣지 않고 이 실험실 화면에서만 보여 준다.
-const PICKED_CANDIDATES = new Set(["solo-4.webp", "solo-5.webp", "team-40.webp"]);
+// 채택된 다크 시리즈를 실제 카드 오버레이로 다시 확인하기 위한 목록.
+const PICKED_CANDIDATES = new Set([
+  "dark-1.webp",
+  "dark-2.webp",
+  "dark-3.webp",
+  "dark-4.webp",
+  "dark-5.webp",
+  "dark-6.webp",
+  "dark-7.webp",
+]);
 
 function candidates(): string[] {
   const dir = path.join(process.cwd(), "public", "matchday");
