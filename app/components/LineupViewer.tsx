@@ -21,6 +21,33 @@ import { playerFaceOnSrc } from "../lib/player-faceons";
 
 const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
 
+/** 이미 로드된 <img>를 canvas로 data URL 변환. 네트워크 요청 없음. */
+function inlineImgs(root: HTMLElement): { imgs: HTMLImageElement[]; originals: string[] } {
+  const imgs = Array.from(root.querySelectorAll("img"));
+  const originals = imgs.map((img) => img.getAttribute("src") || "");
+  for (const img of imgs) {
+    if (!img.src || img.src.startsWith("data:") || !img.naturalWidth) continue;
+    try {
+      const c = document.createElement("canvas");
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+      const ctx = c.getContext("2d");
+      if (!ctx) continue;
+      ctx.drawImage(img, 0, 0);
+      img.src = c.toDataURL();
+    } catch {
+      // cross-origin 등 실패 시 원본 유지
+    }
+  }
+  return { imgs, originals };
+}
+
+function restoreImgs(imgs: HTMLImageElement[], originals: string[]) {
+  imgs.forEach((img, i) => {
+    if (originals[i] && img.getAttribute("src") !== originals[i]) img.src = originals[i];
+  });
+}
+
 function BenchFaceOn({ name, no }: { name: string; no?: string }) {
   const src = playerFaceOnSrc(name);
   const [loaded, setLoaded] = useState(false);
@@ -87,31 +114,7 @@ export default function LineupViewer({
       await document.fonts.ready;
 
       const captureNode = captureRef.current;
-
-      // saveLineupCard 와 같은 이유: html-to-image가 캡처 시점에 img를 다시 fetch하는데
-      // 11명+ 동시 요청 중 일부가 타임아웃되면 그 선수 사진만 랜덤 누락된다.
-      const imgs = Array.from(captureNode.querySelectorAll("img"));
-      const originalSrcs = imgs.map((img) => img.getAttribute("src") || "");
-      await Promise.all(
-        imgs.map(async (img, i) => {
-          const src = originalSrcs[i];
-          if (!src || src.startsWith("data:")) return;
-          try {
-            const res = await fetch(src, { cache: "force-cache" });
-            const imgBlob = await res.blob();
-            const dataUrl = await new Promise<string>((resolve, reject) => {
-              const fr = new FileReader();
-              fr.onload = () => resolve(fr.result as string);
-              fr.onerror = () => reject(new Error("read fail"));
-              fr.readAsDataURL(imgBlob);
-            });
-            img.src = dataUrl;
-            await img.decode?.().catch(() => undefined);
-          } catch {
-            /* 실패 시 원본 src 유지 */
-          }
-        })
-      );
+      const { imgs, originals } = inlineImgs(captureNode);
 
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
@@ -139,9 +142,7 @@ export default function LineupViewer({
             !(node instanceof HTMLElement && node.dataset.shareHide === "true"),
         });
       } finally {
-        imgs.forEach((img, i) => {
-          if (originalSrcs[i] && img.getAttribute("src") !== originalSrcs[i]) img.src = originalSrcs[i];
-        });
+        restoreImgs(imgs, originals);
       }
       if (!blob) throw new Error("이미지 생성 실패");
 
@@ -182,33 +183,7 @@ export default function LineupViewer({
       const node = cardRef.current;
       await document.fonts.ready;
 
-      // 캡처 전에 모든 이미지를 dataURL로 직접 인라인한다.
-      // html-to-image는 캡처 시점에 각 img를 새로 네트워크 fetch(+cacheBust)하는데,
-      // 선수 11명+ 동시 요청 중 일부가 실패/타임아웃하면 그 선수 사진만 랜덤 누락됐다.
-      // 미리 dataURL로 박아두면 html-to-image가 더 fetch할 게 없어 누락이 사라진다.
-      // (face-on은 same-origin `/players/*.webp` 이라 fetch 안전)
-      const imgs = Array.from(node.querySelectorAll("img"));
-      const originalSrcs = imgs.map((img) => img.getAttribute("src") || "");
-      await Promise.all(
-        imgs.map(async (img, i) => {
-          const src = originalSrcs[i];
-          if (!src || src.startsWith("data:")) return;
-          try {
-            const res = await fetch(src, { cache: "force-cache" });
-            const imgBlob = await res.blob();
-            const dataUrl = await new Promise<string>((resolve, reject) => {
-              const fr = new FileReader();
-              fr.onload = () => resolve(fr.result as string);
-              fr.onerror = () => reject(new Error("read fail"));
-              fr.readAsDataURL(imgBlob);
-            });
-            img.src = dataUrl;
-            await img.decode?.().catch(() => undefined);
-          } catch {
-            /* 실패 시 원본 src 유지 (html-to-image가 재시도) */
-          }
-        })
-      );
+      const { imgs, originals } = inlineImgs(node);
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
       );
@@ -229,10 +204,7 @@ export default function LineupViewer({
           },
         });
       } finally {
-        // 라이브 DOM 원상 복구
-        imgs.forEach((img, i) => {
-          if (originalSrcs[i] && img.getAttribute("src") !== originalSrcs[i]) img.src = originalSrcs[i];
-        });
+        restoreImgs(imgs, originals);
       }
       if (!blob) throw new Error("이미지 생성 실패");
 
