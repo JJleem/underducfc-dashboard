@@ -85,31 +85,64 @@ export default function LineupViewer({
     setSharing(true);
     try {
       await document.fonts.ready;
+
+      const captureNode = captureRef.current;
+
+      // saveLineupCard 와 같은 이유: html-to-image가 캡처 시점에 img를 다시 fetch하는데
+      // 11명+ 동시 요청 중 일부가 타임아웃되면 그 선수 사진만 랜덤 누락된다.
+      const imgs = Array.from(captureNode.querySelectorAll("img"));
+      const originalSrcs = imgs.map((img) => img.getAttribute("src") || "");
+      await Promise.all(
+        imgs.map(async (img, i) => {
+          const src = originalSrcs[i];
+          if (!src || src.startsWith("data:")) return;
+          try {
+            const res = await fetch(src, { cache: "force-cache" });
+            const imgBlob = await res.blob();
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+              const fr = new FileReader();
+              fr.onload = () => resolve(fr.result as string);
+              fr.onerror = () => reject(new Error("read fail"));
+              fr.readAsDataURL(imgBlob);
+            });
+            img.src = dataUrl;
+            await img.decode?.().catch(() => undefined);
+          } catch {
+            /* 실패 시 원본 src 유지 */
+          }
+        })
+      );
+
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
       );
 
-      const captureNode = captureRef.current;
       const captureWidth = captureNode.scrollWidth;
       const captureHeight = captureNode.scrollHeight;
-      const blob = await toBlob(captureNode, {
-        cacheBust: true,
-        pixelRatio: 2,
-        width: captureWidth,
-        height: captureHeight,
-        canvasWidth: captureWidth * 2,
-        canvasHeight: captureHeight * 2,
-        style: {
-          width: `${captureWidth}px`,
-          height: `${captureHeight}px`,
-          overflow: "visible",
-        },
-        backgroundColor: document.documentElement.classList.contains("dark")
-          ? "#070b18"
-          : "#f9fafb",
-        filter: (node) =>
-          !(node instanceof HTMLElement && node.dataset.shareHide === "true"),
-      });
+      let blob: Blob | null = null;
+      try {
+        blob = await toBlob(captureNode, {
+          pixelRatio: 2,
+          width: captureWidth,
+          height: captureHeight,
+          canvasWidth: captureWidth * 2,
+          canvasHeight: captureHeight * 2,
+          style: {
+            width: `${captureWidth}px`,
+            height: `${captureHeight}px`,
+            overflow: "visible",
+          },
+          backgroundColor: document.documentElement.classList.contains("dark")
+            ? "#070b18"
+            : "#f9fafb",
+          filter: (node) =>
+            !(node instanceof HTMLElement && node.dataset.shareHide === "true"),
+        });
+      } finally {
+        imgs.forEach((img, i) => {
+          if (originalSrcs[i] && img.getAttribute("src") !== originalSrcs[i]) img.src = originalSrcs[i];
+        });
+      }
       if (!blob) throw new Error("이미지 생성 실패");
 
       const fileName = `언더덕_${match.opponent}_${activeQuarter}_라인업.png`;
