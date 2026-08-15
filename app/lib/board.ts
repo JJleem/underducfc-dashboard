@@ -31,6 +31,7 @@ export interface BoardPost {
   likeCount: number;
   viewCount: number;
   likedByMe: boolean;
+  pinned: boolean;
 }
 
 export interface BoardComment {
@@ -58,6 +59,7 @@ interface PostRow {
   youtube_url: string | null; body: string | null; created_at: string | null;
   updated_at: string | null; lineup: LineupRow | null;
   comment_count: number; like_count: number; view_count?: number | null;
+  pinned?: boolean | null;
 }
 
 // 백엔드는 좌표를 [[x,y],…], 개인 전술을 ["id,id",…]로 준다.
@@ -94,6 +96,7 @@ const toPost = (r: PostRow): BoardPost => ({
   likeCount: r.like_count ?? 0,
   viewCount: r.view_count ?? 0,
   likedByMe: false,
+  pinned: r.pinned ?? false,
 });
 
 const toComment = (r: CommentRow): BoardComment => ({
@@ -187,6 +190,13 @@ export async function toggleBoardLike(
     { kakao_id: kakaoId },
   );
   return { liked: r.liked, likeCount: r.like_count };
+}
+
+/** 관리자 전용 — 글 고정/해제 토글. */
+export async function toggleBoardPin(
+  postId: number,
+): Promise<{ pinned: boolean }> {
+  return udPost<{ pinned: boolean }>(`/api/underduck/board/${postId}/pin`, {});
 }
 
 /** 상세 진입 조회수 증가. 백엔드는 증가 후 최신 누적값을 돌려준다. */

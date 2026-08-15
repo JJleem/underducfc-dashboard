@@ -12,7 +12,7 @@
 // content-visibility 로 렌더를 미루고 이미지는 lazy 로 받는다.
 
 import Link from "next/link";
-import { Eye, Heart, Instagram, LayoutGrid, MessageCircle, Play } from "lucide-react";
+import { Eye, Heart, Instagram, LayoutGrid, MessageCircle, Pin, Play } from "lucide-react";
 import LineupMini from "../components/LineupMini";
 import { youtubeThumb } from "../lib/youtube";
 import { instagramMedia } from "../lib/instagram";
@@ -116,13 +116,20 @@ function Cell({ post }: { post: BoardPost }) {
         )}
       </div>
 
-      {/* NEW · 수정 — 오른쪽 위. 둘 다 해당되면 NEW 가 우선이다(더 새 정보라서). */}
+      {/* 고정 핀 — 오른쪽 위 */}
+      {post.pinned && (
+        <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#FF8FA3] text-white">
+          <Pin width={10} height={10} strokeWidth={2.6} className="fill-current" />
+        </span>
+      )}
+
+      {/* NEW · 수정 — 고정 핀이 있으면 아래로 밀어준다 */}
       {fresh ? (
-        <span className="absolute right-1.5 top-1.5 rounded bg-[#FF8FA3] px-1.5 py-0.5 text-[9px] font-black tracking-wide text-white">
+        <span className={`absolute right-1.5 ${post.pinned ? "top-8" : "top-1.5"} rounded bg-[#FF8FA3] px-1.5 py-0.5 text-[9px] font-black tracking-wide text-white`}>
           NEW
         </span>
       ) : edited ? (
-        <span className="absolute right-1.5 top-1.5 rounded bg-black/55 px-1.5 py-0.5 text-[9px] font-black tracking-wide text-white backdrop-blur-[2px]">
+        <span className={`absolute right-1.5 ${post.pinned ? "top-8" : "top-1.5"} rounded bg-black/55 px-1.5 py-0.5 text-[9px] font-black tracking-wide text-white backdrop-blur-[2px]`}>
           수정
         </span>
       ) : null}

@@ -65,11 +65,13 @@ export default function BoardClient({
           [p.title, p.author, p.body ?? ""].some((f) => f.toLowerCase().includes(q)),
         )
       : posts;
+    const pinFirst = (a: BoardPost, b: BoardPost) =>
+      (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
     // 최신순은 수정 시각 우선 (백엔드 정렬과 동일) — 수정한 전술 글이 위로 올라온다
     const freshness = (p: BoardPost) =>
       new Date(p.updatedAt ?? p.createdAt ?? 0).getTime();
     if (sort === "latest")
-      return [...filtered].sort((a, b) => freshness(b) - freshness(a) || b.id - a.id);
+      return [...filtered].sort((a, b) => pinFirst(a, b) || freshness(b) - freshness(a) || b.id - a.id);
     const score = (p: BoardPost) =>
       sort === "views"
         ? p.viewCount
@@ -78,7 +80,7 @@ export default function BoardClient({
           : sort === "comments"
             ? p.commentCount
             : p.likeCount + p.commentCount + p.viewCount;
-    return [...filtered].sort((a, b) => score(b) - score(a) || b.id - a.id);
+    return [...filtered].sort((a, b) => pinFirst(a, b) || score(b) - score(a) || b.id - a.id);
   }, [posts, query, sort]);
 
   async function submit() {

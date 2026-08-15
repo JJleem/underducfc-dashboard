@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ChevronLeft, ChevronUp, ChevronDown, Trash2, Send, Heart, MessageCircle, Eye, Pencil, Instagram } from "lucide-react";
+import { ChevronLeft, ChevronUp, ChevronDown, Trash2, Send, Heart, MessageCircle, Eye, Pencil, Instagram, Pin } from "lucide-react";
 import { youtubeEmbed } from "../../lib/youtube";
 import { instagramEmbed } from "../../lib/instagram";
 import SwipeNav from "./SwipeNav";
@@ -116,6 +116,8 @@ export default function BoardDetailClient({
     | null
   >(null);
   const [deleting, setDeleting] = useState(false);
+  const [pinned, setPinned] = useState(post.pinned);
+  const [pinBusy, setPinBusy] = useState(false);
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   const embed = youtubeEmbed(post.youtubeUrl);
   const instaEmbed = embed ? null : instagramEmbed(post.youtubeUrl);
@@ -163,6 +165,23 @@ export default function BoardDetailClient({
       setLiked(before.liked);
       setLikeCount(before.likeCount);
       setToast({ message: "좋아요를 반영하지 못했어요.", tone: "error" });
+    }
+  }
+
+  async function togglePin() {
+    if (pinBusy) return;
+    setPinBusy(true);
+    try {
+      const res = await fetch(`/api/board/${post.id}/pin`, { method: "POST" });
+      if (!res.ok) throw new Error();
+      const j = await res.json();
+      setPinned(j.pinned);
+      router.refresh();
+      setToast({ message: j.pinned ? "게시글을 고정했어요." : "고정을 해제했어요.", tone: "success" });
+    } catch {
+      setToast({ message: "고정 상태를 변경하지 못했어요.", tone: "error" });
+    } finally {
+      setPinBusy(false);
     }
   }
 
@@ -223,11 +242,18 @@ export default function BoardDetailClient({
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <h1 className="truncate text-[12px] font-black tracking-widest text-gray-400">BOARD</h1>
-        {canDeletePost && (
-          <button onClick={() => setDeleteTarget({ kind: "post" })} className="-my-2.5 ml-auto flex h-11 w-11 items-center justify-center rounded-full text-gray-400 active:bg-red-50 active:text-red-500 dark:active:bg-red-500/10" aria-label="글 삭제">
-            <Trash2 className="h-4 w-4" />
-          </button>
-        )}
+        <div className="ml-auto flex items-center">
+          {admin && (
+            <button onClick={togglePin} disabled={pinBusy} className={`-my-2.5 flex h-11 w-11 items-center justify-center rounded-full active:opacity-60 ${pinned ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : "text-gray-400"}`} aria-label={pinned ? "고정 해제" : "글 고정"}>
+              <Pin className={`h-4 w-4 ${pinned ? "fill-current" : ""}`} />
+            </button>
+          )}
+          {canDeletePost && (
+            <button onClick={() => setDeleteTarget({ kind: "post" })} className="-my-2.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 active:bg-red-50 active:text-red-500 dark:active:bg-red-500/10" aria-label="글 삭제">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="px-4 pt-4">
@@ -318,7 +344,13 @@ export default function BoardDetailClient({
         )}
 
         {/* 제목/작성자/본문 */}
-        <h2 className="mt-3 text-lg font-black leading-snug">{post.title}</h2>
+        {pinned && (
+          <div className="mt-3 flex items-center gap-1 text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+            <Pin className="h-3 w-3 fill-current" />
+            고정된 게시글
+          </div>
+        )}
+        <h2 className={`${pinned ? "mt-1" : "mt-3"} text-lg font-black leading-snug`}>{post.title}</h2>
         <p className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-gray-500 dark:text-gray-400">
           <span>{post.author} · {fmt(post.createdAt)}</span>
           {post.updatedAt && (
