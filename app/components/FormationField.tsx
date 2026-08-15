@@ -129,8 +129,8 @@ function FaceOnMarker({
     <div
       className="relative flex items-end justify-center"
       style={{
-        width: 56,
-        height: 65,
+        width: 50,
+        height: 59,
       }}
     >
       {(!src || failed) && (
