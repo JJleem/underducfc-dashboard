@@ -149,7 +149,7 @@ function FaceOnMarker({
           loading="eager"
           fetchPriority="high"
           onError={() => setFailed(true)}
-          className="absolute inset-0 h-[51px] w-[44px] object-contain object-bottom drop-shadow-[0_4px_4px_rgba(0,0,0,0.75)]"
+          className="absolute inset-0 h-[51px] w-[44px] object-cover object-[center_20%] drop-shadow-[0_4px_4px_rgba(0,0,0,0.75)]"
         />
       )}
     </div>
