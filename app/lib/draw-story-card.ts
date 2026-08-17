@@ -362,7 +362,7 @@ export async function drawStoryCanvas(
   }
 
   // ── MOM 패널 ─────────────────────────────────────────────────
-  if (match.mom && !casual) {
+  if (match.mom?.trim()) {
     glassPanel(ctx, 110, curY, W - 220, L.momH, "rgba(251,191,36,0.07)", "rgba(251,191,36,0.3)");
 
     setLetterSpacing(ctx, 8);
