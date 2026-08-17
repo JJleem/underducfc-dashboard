@@ -74,6 +74,28 @@ const full = (url: string) => cldSquare(url);
 /** 자체전 카드에 얼굴로 띄우는 최대 인원. 넘치면 +N 으로 받는다. */
 const CASUAL_FACES = 12;
 
+function momFromVotes(votes: MomVoteData[]): string {
+  if (votes.length === 0) return "";
+  const tally = (type: string) => {
+    const t: Record<string, number> = {};
+    votes.filter((v) => v.voteType === type && v.votedFor).forEach((v) => {
+      t[v.votedFor] = (t[v.votedFor] || 0) + 1;
+    });
+    const entries = Object.entries(t).sort((a, b) => b[1] - a[1]);
+    if (entries.length === 0) return [];
+    const max = entries[0][1];
+    return entries.filter(([, c]) => c === max).map(([n]) => n);
+  };
+  const atk = tally("공격");
+  const def = tally("수비");
+  const atkSet = new Set(atk);
+  const defOnly = def.filter((n) => !atkSet.has(n));
+  if (atk.length > 0 && defOnly.length > 0) return `${atk.join(",")} / ${defOnly.join(",")}`;
+  if (atk.length > 0) return atk.join(",");
+  if (def.length > 0) return def.join(",");
+  return "";
+}
+
 function shortDate(raw: string): string {
   const d = new Date(raw);
   if (isNaN(d.getTime())) return "";
@@ -828,7 +850,10 @@ export default function MatchFeed({
           onClick={async () => {
             setSharing(true);
             try {
-              await shareStoryCard(match);
+              const shareMatch = match.mom?.trim()
+                ? match
+                : { ...match, mom: momFromVotes(momVotes) };
+              await shareStoryCard(shareMatch);
             } catch (e) {
               if (e instanceof Error && e.name !== "AbortError") {
                 setToastError("공유 이미지를 만들지 못했어요. 다시 시도해 주세요.");

@@ -21,10 +21,20 @@ import { playerFaceOnSrc } from "../lib/player-faceons";
 
 const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
 
-/** 이미 로드된 <img>를 canvas로 data URL 변환. 네트워크 요청 없음. */
-function inlineImgs(root: HTMLElement): { imgs: HTMLImageElement[]; originals: string[] } {
+async function inlineImgs(root: HTMLElement): Promise<{ imgs: HTMLImageElement[]; originals: string[] }> {
   const imgs = Array.from(root.querySelectorAll("img"));
   const originals = imgs.map((img) => img.getAttribute("src") || "");
+
+  await Promise.all(
+    imgs.map((img) => {
+      if (!img.src || img.src.startsWith("data:") || img.complete) return;
+      return new Promise<void>((resolve) => {
+        img.addEventListener("load", () => resolve(), { once: true });
+        img.addEventListener("error", () => resolve(), { once: true });
+      });
+    }),
+  );
+
   for (const img of imgs) {
     if (!img.src || img.src.startsWith("data:") || !img.naturalWidth) continue;
     try {
@@ -36,7 +46,18 @@ function inlineImgs(root: HTMLElement): { imgs: HTMLImageElement[]; originals: s
       ctx.drawImage(img, 0, 0);
       img.src = c.toDataURL();
     } catch {
-      // cross-origin 등 실패 시 원본 유지
+      try {
+        const res = await fetch(img.src);
+        const blob = await res.blob();
+        img.src = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch {
+        // 인라인 변환 실패 시 원본 유지
+      }
     }
   }
   return { imgs, originals };
@@ -114,7 +135,7 @@ export default function LineupViewer({
       await document.fonts.ready;
 
       const captureNode = captureRef.current;
-      const { imgs, originals } = inlineImgs(captureNode);
+      const { imgs, originals } = await inlineImgs(captureNode);
 
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
@@ -183,7 +204,7 @@ export default function LineupViewer({
       const node = cardRef.current;
       await document.fonts.ready;
 
-      const { imgs, originals } = inlineImgs(node);
+      const { imgs, originals } = await inlineImgs(node);
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
       );

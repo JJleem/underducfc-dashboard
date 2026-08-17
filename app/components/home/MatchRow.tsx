@@ -34,6 +34,7 @@ import { useUnseen } from "./useUnseen";
 import FeedbackThread, { type Feedback } from "./FeedbackThread";
 import Storylines from "./Storylines";
 import { shareStoryCard } from "../../lib/draw-story-card";
+import type { MomVote as MomVoteData } from "./MomVote";
 import PinchZoomImage from "../PinchZoomImage";
 import { cldFit, cldThumb } from "../../lib/cloudinary";
 import AppToast from "../AppToast";
@@ -77,6 +78,28 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <p className={`mb-2.5 ${LABEL}`}>{children}</p>;
 }
 
+function momFromVotes(votes: MomVoteData[]): string {
+  if (votes.length === 0) return "";
+  const tally = (type: string) => {
+    const t: Record<string, number> = {};
+    votes.filter((v) => v.voteType === type && v.votedFor).forEach((v) => {
+      t[v.votedFor] = (t[v.votedFor] || 0) + 1;
+    });
+    const entries = Object.entries(t).sort((a, b) => b[1] - a[1]);
+    if (entries.length === 0) return [];
+    const max = entries[0][1];
+    return entries.filter(([, c]) => c === max).map(([n]) => n);
+  };
+  const atk = tally("공격");
+  const def = tally("수비");
+  const atkSet = new Set(atk);
+  const defOnly = def.filter((n) => !atkSet.has(n));
+  if (atk.length > 0 && defOnly.length > 0) return `${atk.join(",")} / ${defOnly.join(",")}`;
+  if (atk.length > 0) return atk.join(",");
+  if (def.length > 0) return def.join(",");
+  return "";
+}
+
 export default function MatchRow({
   match,
   lineups,
@@ -89,6 +112,7 @@ export default function MatchRow({
   isAdmin = false,
   playerStats,
   playerTitles = {},
+  momVotes = [],
 }: {
   match: MatchData;
   lineups: LineupData[];
@@ -102,6 +126,7 @@ export default function MatchRow({
   /** 라인업 뷰어가 쓰는 시즌 기록·칭호. 안 넘기면 칭호가 통째로 안 뜬다. */
   playerStats?: Record<string, SeasonStat>;
   playerTitles?: Record<string, EarnedTitle[]>;
+  momVotes?: MomVoteData[];
 }) {
   const [open, setOpen] = useState(false);
   // 접힌 줄만 봐서는 새 댓글이 달렸는지 알 수 없다. 개수가 늘면 점을 찍는다.
@@ -436,7 +461,10 @@ export default function MatchRow({
             onClick={async () => {
               setSharing(true);
               try {
-                await shareStoryCard(match);
+                const shareMatch = match.mom?.trim()
+                  ? match
+                  : { ...match, mom: momFromVotes(momVotes) };
+                await shareStoryCard(shareMatch);
               } catch (e) {
                 if (e instanceof Error && e.name !== "AbortError") {
                   setShareError("공유하지 못했어요.");
