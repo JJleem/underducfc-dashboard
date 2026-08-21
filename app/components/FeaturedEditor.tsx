@@ -1,11 +1,11 @@
 "use client";
 // 대표 칭호 선택 (본인만). 라인업/순위에 보일 최대 3개를 순서대로 고른다.
 
-import { createElement, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, Pencil } from "lucide-react";
 import { EarnedTitle } from "../lib/titles";
-import { titleIcon } from "../lib/title-icons";
+import { TitleBadge, titleMetal } from "./TitleBadges";
 
 export default function FeaturedEditor({
   titles,
@@ -32,17 +32,23 @@ export default function FeaturedEditor({
   const [sel, setSel] = useState<string[]>(validCurrent);
   const [saved, setSaved] = useState<string[]>(validCurrent);
   const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   if (!titles.length) return null;
 
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    if (saving) return;
+    setSuccess(false);
+    setErr(null);
     setSel((cur) =>
       cur.includes(id) ? cur.filter((x) => x !== id) : cur.length >= 3 ? cur : [...cur, id]
     );
+  };
 
   const save = async () => {
     setSaving(true);
+    setSuccess(false);
     setErr(null);
     try {
       const res = await fetch("/api/featured", {
@@ -50,13 +56,15 @@ export default function FeaturedEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ titleIds: sel }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "저장 실패");
-      setSaved(sel);
-      setOpen(false);
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || `저장하지 못했습니다. (${res.status})`);
+      setSaved([...sel]);
+      setSuccess(true);
       // 서버 캐시는 /api/featured 가 무효화하지만, 이미 방문한 라인업·순위 화면은
       // 클라이언트 라우터 캐시에 남아 옛 뱃지를 그대로 보여준다. refresh 가 그걸 비운다.
       router.refresh();
+      // 완료 상태를 사용자가 인지한 뒤 편집기를 닫는다.
+      window.setTimeout(() => setOpen(false), 900);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "저장 실패");
     } finally {
@@ -89,23 +97,33 @@ export default function FeaturedEditor({
         {titles.map((t) => {
           const order = sel.indexOf(t.id);
           const on = order >= 0;
-          const icon = createElement(titleIcon(t.icon), { size: 13, strokeWidth: 2.4 });
+          const [, highlight, base] = titleMetal(t).ramp;
           return (
             <button
               key={t.id}
               type="button"
               onClick={() => toggle(t.id)}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
+              disabled={saving}
+              aria-pressed={on}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-bold border transition-all disabled:cursor-wait disabled:opacity-60 ${
                 on
-                  ? "bg-[#FF8FA3] text-white border-[#FF8FA3]"
+                  ? "text-gray-900 shadow-sm dark:text-white"
                   : "bg-gray-50 dark:bg-white/[0.04] text-gray-600 dark:text-gray-300 border-gray-200 dark:border-white/10"
               }`}
+              style={on ? {
+                borderColor: base,
+                background: `linear-gradient(135deg, ${highlight}55, ${base}30)`,
+                boxShadow: `0 0 0 1px ${base}20, 0 3px 10px ${base}22`,
+              } : undefined}
             >
-              {icon}
+              <TitleBadge title={t} size={16} />
               {t.name}
               {t.tierLabel ? ` ${t.tierLabel}` : ""}
               {on && (
-                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-white/30 text-[9px] font-black">
+                <span
+                  className="flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black text-white"
+                  style={{ backgroundColor: base }}
+                >
                   {order + 1}
                 </span>
               )}
@@ -113,7 +131,24 @@ export default function FeaturedEditor({
           );
         })}
       </div>
-      {err && <p className="text-[11px] font-bold text-red-500 mt-2">{err}</p>}
+      <div aria-live="polite" className="min-h-6">
+        {saving && (
+          <p className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-gray-300">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" /> 대표 칭호를 저장하고 있습니다…
+          </p>
+        )}
+        {success && !saving && (
+          <p className="mt-2 flex items-center gap-1.5 text-[11px] font-black text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 className="h-3.5 w-3.5" /> 저장 완료! 라인업에 바로 반영됩니다.
+          </p>
+        )}
+        {err && !saving && (
+          <p className="mt-2 flex items-start gap-1.5 text-[11px] font-bold text-red-500">
+            <AlertCircle className="mt-px h-3.5 w-3.5 shrink-0" />
+            <span>저장하지 못했습니다. {err}</span>
+          </p>
+        )}
+      </div>
       <div className="flex gap-2 mt-3">
         <button
           type="button"
@@ -121,7 +156,9 @@ export default function FeaturedEditor({
             setOpen(false);
             setSel(saved);
             setErr(null);
+            setSuccess(false);
           }}
+          disabled={saving}
           className="flex-1 py-2 rounded-xl text-[12px] font-black bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300"
         >
           취소
@@ -129,10 +166,15 @@ export default function FeaturedEditor({
         <button
           type="button"
           onClick={save}
-          disabled={saving}
-          className="flex-1 py-2 rounded-xl text-[12px] font-black bg-[#FF8FA3] text-white disabled:opacity-50"
+          disabled={saving || success}
+          className="flex flex-1 items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-black bg-[#FF8FA3] text-white disabled:opacity-60"
         >
-          {saving ? "저장 중…" : "저장"}
+          {saving ? (
+            <><Loader2 className="h-3.5 w-3.5 animate-spin" /> 저장 중…</>
+          ) : success ? (
+            <><CheckCircle2 className="h-3.5 w-3.5" /> 저장 완료</>
+          ) : err ? "다시 시도" : "저장"
+          }
         </button>
       </div>
     </div>
