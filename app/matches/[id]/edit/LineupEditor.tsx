@@ -232,7 +232,10 @@ export default function LineupEditor({
     setSubs((prev) => prev.map((s) => (s === name ? null : s)));
   };
 
-  const allPlayers = [...attendees, ...guests];
+  // 참석 명단 자체에 중복/공백 변형이 있어도 자동 대기 배치에서 중복 생성하지 않는다.
+  const allPlayers = Array.from(
+    new Set([...attendees, ...guests].map((name) => name.trim()).filter(Boolean)),
+  );
   const substitutionPlayers = Array.from(new Set([
     ...allPlayers,
     ...assignments.filter((player): player is string => !!player),

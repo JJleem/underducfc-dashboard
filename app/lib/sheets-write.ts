@@ -4,15 +4,31 @@
 //   함수 시그니처는 그대로라 API 라우트/호출부는 변경 불필요.
 // ⚠️ 서버사이드 전용([[underduck.ts]] window 가드).
 
-import { udGet, udPost, udPut, udDelete, underduckFetch } from "./underduck";
+import {
+  udGet,
+  udPost,
+  udPut,
+  udDelete,
+  underduckFetch,
+  type UnderduckIdentity,
+} from "./underduck";
 import { createMatch, patchMatch, addMatchPhotos, removeMatchPhoto } from "./matches-backend";
 import { instructionCells, parsePositions } from "./positions";
+import { normalizeLineupMembers } from "./lineup";
 
 const s = (v: unknown): string => (v === null || v === undefined ? "" : String(v));
 
 // ── 대표 칭호 (featured) ──
-export async function writeFeaturedTitles(playerName: string, ids: string[]): Promise<void> {
-  await udPut("/api/underduck/featured", { player_name: playerName.trim(), title_ids: ids });
+export async function writeFeaturedTitles(
+  playerName: string,
+  ids: string[],
+  identity?: UnderduckIdentity,
+): Promise<void> {
+  await udPut(
+    "/api/underduck/featured",
+    { player_name: playerName.trim(), title_ids: ids },
+    identity,
+  );
 }
 
 // ── 경기 사진 (matches 도메인) ──
@@ -237,8 +253,12 @@ export async function writeLineup({
   tactic?: string;
   instructions?: string;
 }) {
-  const playerCells = [...players, ...Array(Math.max(0, 11 - players.length)).fill("")].slice(0, 11);
-  const subCells = subs.filter(Boolean);
+  const normalized = normalizeLineupMembers(players, subs);
+  const playerCells = [
+    ...normalized.players,
+    ...Array(Math.max(0, 11 - normalized.players.length)).fill(""),
+  ].slice(0, 11);
+  const subCells = normalized.subs.slice(0, 9);
   const cleanSubstitutions = substitutions
     .map((event) => ({
       out: String(event.out || "").trim(),

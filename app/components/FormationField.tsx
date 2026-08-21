@@ -124,13 +124,17 @@ function FaceOnMarker({
 }) {
   const src = playerFaceOnSrc(name);
   const [failed, setFailed] = useState(false);
+  // 신태민 사진은 측면 구도라 같은 캔버스에서도 인물의 가로 점유율이 작다.
+  // 포메이션 마커에서만 확대해 다른 선수와 체감 크기를 맞춘다.
+  const imageTransform = name.trim() === "신태민" ? "scale(1.2)" : undefined;
 
   return (
     <div
       className="relative flex items-end justify-center"
       style={{
-        width: 50,
-        height: 59,
+        // 포메이션 전체를 가리지 않도록 기존 50×59에서 약 12% 축소.
+        width: 44,
+        height: 52,
       }}
     >
       {(!src || failed) && (
@@ -150,6 +154,7 @@ function FaceOnMarker({
           fetchPriority="high"
           onError={() => setFailed(true)}
           className="absolute inset-0 h-full w-full object-cover object-[center_20%] drop-shadow-[0_4px_4px_rgba(0,0,0,0.75)]"
+          style={{ transform: imageTransform, transformOrigin: "50% 100%" }}
         />
       )}
     </div>

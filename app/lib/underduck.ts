@@ -22,6 +22,11 @@ interface NextFetchOptions {
   tags?: string[];
 }
 
+export interface UnderduckIdentity {
+  userId: string;
+  isAdmin?: boolean;
+}
+
 interface UnderduckRequest {
   method?: HttpMethod;
   /** JSON으로 직렬화해 보낼 본문. 생략 시 본문 없음. */
@@ -34,6 +39,8 @@ interface UnderduckRequest {
    * (세션이 아직 없거나, auth() → jwt 콜백 → 이 함수로 재귀가 도는 경로).
    */
   anonymous?: boolean;
+  /** 이미 세션을 읽은 API 라우트가 넘기는 신원. auth()를 다시 호출하지 않는다. */
+  identity?: UnderduckIdentity;
 }
 
 /**
@@ -68,7 +75,7 @@ async function identityHeaders(): Promise<Record<string, string>> {
  */
 export async function underduckFetch<T = unknown>(
   path: string,
-  { method = "GET", body, cache = "no-store", next, anonymous }: UnderduckRequest = {},
+  { method = "GET", body, cache = "no-store", next, anonymous, identity }: UnderduckRequest = {},
 ): Promise<T> {
   const base = process.env.UNDERDUCK_API_BASE;
   const secret = process.env.UNDERDUCK_API_SECRET;
@@ -90,7 +97,14 @@ export async function underduckFetch<T = unknown>(
 
   const headers: Record<string, string> = {
     "X-Underduck-Secret": secret,
-    ...(needsIdentity ? await identityHeaders() : {}),
+    ...(needsIdentity
+      ? identity
+        ? {
+            "X-Underduck-User": identity.userId,
+            "X-Underduck-Role": identity.isAdmin ? "admin" : "member",
+          }
+        : await identityHeaders()
+      : {}),
   };
   if (body !== undefined) headers["Content-Type"] = "application/json";
 
@@ -122,7 +136,22 @@ export async function underduckFetch<T = unknown>(
       /* 본문 파싱 실패 무시 */
     }
     console.error(`[underduck] ${method} ${normalized} 실패 (${status}) ${detail}`.trim());
-    throw new Error(`underduck 요청 실패: ${method} ${normalized} (${status})`);
+    // 백엔드가 준 원인은 서버 내부 로그에만 묻지 말고 호출 라우트까지 전달한다.
+    // HTML 오류 페이지는 사용자에게 노출하지 않는다.
+    let reason = "";
+    if (detail && !/^\s*</.test(detail)) {
+      try {
+        const parsed = JSON.parse(detail) as { detail?: unknown; error?: unknown; message?: unknown };
+        reason = String(parsed.detail ?? parsed.error ?? parsed.message ?? "").trim();
+      } catch {
+        reason = detail.trim();
+      }
+    }
+    throw new Error(
+      reason
+        ? `underduck 요청 실패: ${reason}`
+        : `underduck 요청 실패: ${method} ${normalized} (${status})`,
+    );
   }
 
   // 204 No Content 등 본문 없는 응답 대응
@@ -173,8 +202,12 @@ export function udPatch<T = unknown>(path: string, body?: unknown): Promise<T> {
   return underduckFetch<T>(path, { method: "PATCH", body });
 }
 
-export function udPut<T = unknown>(path: string, body?: unknown): Promise<T> {
-  return underduckFetch<T>(path, { method: "PUT", body });
+export function udPut<T = unknown>(
+  path: string,
+  body?: unknown,
+  identity?: UnderduckIdentity,
+): Promise<T> {
+  return underduckFetch<T>(path, { method: "PUT", body, identity });
 }
 
 export function udDelete<T = unknown>(path: string, body?: unknown): Promise<T> {
