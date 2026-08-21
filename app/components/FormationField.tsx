@@ -592,7 +592,7 @@ export function FormationField({
                         </div>
                         {mode === "faceon" ? (
                           <div className="mt-1 flex items-center justify-center gap-1" style={{ maxWidth: 88 }}>
-                            {!isTbd && showRoles && (
+                            {!isTbd && (
                               <span
                                 className="shrink-0 rounded px-1 py-0.5 text-[9px] font-black leading-none text-white"
                                 style={{
