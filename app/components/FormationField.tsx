@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Crown, ExternalLink, X } from "lucide-react";
 import { TitleBadges } from "./TitleBadges";
@@ -50,41 +50,6 @@ const GROUP_COLOR: Record<PosGroup, { bg: string; border: string; text: string }
 // 등장 스태거 순서 (뒤에서 앞으로)
 const GROUP_ORDER: Record<PosGroup, number> = { GK: 0, DF: 1, MF: 2, FW: 3 };
 
-const SHOW_ROLES_KEY = "ud:lineup:showRoles";
-const SHOW_TACTIC_KEY = "ud:lineup:showTactic";
-
-/** 표시 토글 — 새로고침해도 유지되도록 localStorage에 저장.
- *
- * localStorage 는 React 밖의 저장소라 effect 로 읽어 setState 하면 마운트마다
- * 렌더가 한 번 더 돈다. useSyncExternalStore 로 "구독해서 읽는" 형태로 둔다
- * (홈의 useUnseen 과 같은 방식). 서버 스냅샷은 기본값이라 SSR 과 어긋나지 않는다. */
-const toggleListeners = new Set<() => void>();
-
-function useDisplayToggle(key: string, initial: boolean) {
-  const saved = useSyncExternalStore(
-    (notify) => {
-      toggleListeners.add(notify);
-      return () => toggleListeners.delete(notify);
-    },
-    () => {
-      try {
-        return localStorage.getItem(key);
-      } catch {
-        return null; // 접근 불가 시 기본값
-      }
-    },
-    () => null,
-  );
-  const on = saved === null ? initial : saved === "1";
-  const toggle = () => {
-    try {
-      localStorage.setItem(key, on ? "0" : "1");
-    } catch { /* 무시 */ }
-    // 저장소가 바뀌었으니 이 훅을 쓰는 모든 곳이 다시 읽게 한다.
-    toggleListeners.forEach((notify) => notify());
-  };
-  return [on, toggle] as const;
-}
 
 // 경기 상세의 토큰 모드는 중계 시점, 전술게시판 face-on은 평면 전술판으로 보여준다.
 const TILT = 30;
@@ -184,8 +149,8 @@ export function FormationField({
   const tactic = tacticOf(lineup.tactic);
   const instructions = parseInstructions(lineup.instructions);
   const shapeIsCustom = isCustomShape(lineup.formation, lineup.positions);
-  const [showRoles, toggleRoles] = useDisplayToggle(SHOW_ROLES_KEY, true);
-  const [showTactic, toggleTactic] = useDisplayToggle(SHOW_TACTIC_KEY, true);
+  const showRoles = true;
+  const showTactic = true;
   const [selected, setSelected] = useState<string | null>(null);
   // 등장 스태거는 마운트 직후 한 번만 — 이후 탭/쿼터 전환엔 딜레이 없음
   const [entered, setEntered] = useState(false);
@@ -799,24 +764,6 @@ export function FormationField({
           <span className="text-[9px] font-black tracking-[0.25em] text-gray-500 dark:text-white/50">
             STARTING XI
           </span>
-          {[
-            { label: "포지션", on: showRoles, toggle: toggleRoles },
-            { label: "전술", on: showTactic, toggle: toggleTactic },
-          ].map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              onClick={item.toggle}
-              aria-pressed={item.on}
-              className={`rounded-md px-1.5 py-0.5 text-[9px] font-black transition-colors ${
-                item.on
-                  ? "bg-[#FF8FA3]/15 text-[#FF8FA3] dark:text-[#FFB6C1]"
-                  : "text-gray-400 dark:text-white/30"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
         </div>
         <div className="flex items-center gap-3">
           {[
