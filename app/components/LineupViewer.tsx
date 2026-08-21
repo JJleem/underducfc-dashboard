@@ -13,6 +13,7 @@ import {
 } from "./ui/dialog";
 import { FormationField, type SeasonStat } from "./FormationField";
 import StartingElevenCard from "./StartingElevenCard";
+import AppToast from "./AppToast";
 import { TitleBadges } from "./TitleBadges";
 import SubstitutionEvents from "./SubstitutionEvents";
 import type { EarnedTitle } from "../lib/titles";
@@ -21,6 +22,8 @@ import { playerFaceOnSrc } from "../lib/player-faceons";
 
 const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
 const DECODED_FACEONS = new Set<string>();
+const FACEON_RETRY_AFTER = new Map<string, number>();
+const FACEON_RETRY_MS = 60_000;
 const SKELETON_PLAYERS = [
   [50, 89],
   [17, 70], [39, 74], [61, 74], [83, 70],
@@ -34,6 +37,10 @@ function lineupFaceOnSources(lineups: LineupData[]) {
       item.players.map(playerFaceOnSrc).filter((src): src is string => !!src),
     ),
   ));
+}
+
+function faceOnIsSettled(src: string) {
+  return DECODED_FACEONS.has(src) || (FACEON_RETRY_AFTER.get(src) ?? 0) > Date.now();
 }
 
 async function inlineImgs(root: HTMLElement): Promise<{ imgs: HTMLImageElement[]; originals: string[] }> {
@@ -141,6 +148,7 @@ export default function LineupViewer({
   const [imagesReady, setImagesReady] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [savingCard, setSavingCard] = useState(false);
+  const [toastError, setToastError] = useState<string | null>(null);
   const captureRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const lineup = lineups.find((item) => item.quarter === activeQuarter) ?? lineups[0];
@@ -151,7 +159,7 @@ export default function LineupViewer({
     if (!open) return;
     let cancelled = false;
     const sources = lineupFaceOnSources(lineups);
-    const missingSources = sources.filter((src) => !DECODED_FACEONS.has(src));
+    const missingSources = sources.filter((src) => !faceOnIsSettled(src));
     if (missingSources.length === 0) return;
 
     const images = missingSources.map((src) => {
@@ -163,8 +171,15 @@ export default function LineupViewer({
     // 나타나는 화면보다 짧고 명확한 준비 상태가 시각적으로 안정적이다.
     void Promise.all(
       images.map(async ({ img, src }) => {
-        await (img.decode?.().catch(() => undefined) ?? Promise.resolve());
-        DECODED_FACEONS.add(src);
+        try {
+          await (img.decode?.() ?? Promise.resolve());
+          DECODED_FACEONS.add(src);
+          FACEON_RETRY_AFTER.delete(src);
+        } catch {
+          // 깨진 한 장 때문에 전체 라인업을 계속 스켈레톤에 가두지 않는다.
+          // 번호 폴백을 보여주되, 일시적 네트워크 오류일 수 있으므로 1분 뒤 재시도한다.
+          FACEON_RETRY_AFTER.set(src, Date.now() + FACEON_RETRY_MS);
+        }
       }),
     ).then(() => {
       if (!cancelled) setImagesReady(true);
@@ -173,6 +188,12 @@ export default function LineupViewer({
       cancelled = true;
     };
   }, [lineups, open]);
+
+  useEffect(() => {
+    if (!toastError) return;
+    const timer = window.setTimeout(() => setToastError(null), 2600);
+    return () => window.clearTimeout(timer);
+  }, [toastError]);
 
   const share = async () => {
     if (!lineup || !captureRef.current) return;
@@ -236,7 +257,7 @@ export default function LineupViewer({
       }
     } catch (error) {
       if (error instanceof Error && error.name !== "AbortError") {
-        alert(`공유 실패: ${error.message}`);
+        setToastError(`공유 실패: ${error.message}`);
       }
     } finally {
       setSharing(false);
@@ -294,7 +315,7 @@ export default function LineupViewer({
       }
     } catch (error) {
       if (error instanceof Error && error.name !== "AbortError") {
-        alert(`이미지 저장 실패: ${error.message}`);
+        setToastError(`이미지 저장 실패: ${error.message}`);
       }
     } finally {
       setSavingCard(false);
@@ -309,7 +330,7 @@ export default function LineupViewer({
       onOpenChange={(next) => {
         if (next) {
           const sources = lineupFaceOnSources(lineups);
-          setImagesReady(sources.every((src) => DECODED_FACEONS.has(src)));
+          setImagesReady(sources.every(faceOnIsSettled));
         }
         setOpen(next);
       }}
@@ -456,7 +477,6 @@ export default function LineupViewer({
         <div className="space-y-4 px-3 pb-10 pt-3">
           {imagesReady ? (
             <FormationField
-              key={`${match.id}-${activeQuarter}-${lineup.formation}`}
               lineup={lineup}
               rosterMap={rosterMap}
               captainRoles={captainRoles}
@@ -535,6 +555,7 @@ export default function LineupViewer({
         </div>
         </div>
       </DialogContent>
+      <AppToast message={toastError} tone="error" />
     </Dialog>
   );
 }

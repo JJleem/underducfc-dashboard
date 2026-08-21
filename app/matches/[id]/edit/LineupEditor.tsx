@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { MatchData, LineupData } from "../../../lib/match-types";
 import type { SubstitutionEvent } from "../../../lib/lineup";
 import LineupPitch from "../../../components/LineupPitch";
+import AppToast from "../../../components/AppToast";
 import type { BoardLineupQuarter } from "../../../lib/board";
 import {
   FORMATION_PRESETS,
@@ -89,6 +90,13 @@ export default function LineupEditor({
   const [guestInput, setGuestInput] = useState("");
   const [moveTarget, setMoveTarget] = useState<string | null>(null);
   const [moving, setMoving] = useState(false);
+  const [toastError, setToastError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!toastError) return;
+    const timer = window.setTimeout(() => setToastError(null), 2800);
+    return () => window.clearTimeout(timer);
+  }, [toastError]);
   // 드래그 중 LineupPitch가 알려주는 실시간 포메이션 이름 (끝나면 null)
   const [liveShape, setLiveShape] = useState<string | null>(null);
   // 게시판 불러오기
@@ -377,7 +385,7 @@ export default function LineupEditor({
       setMoveTarget(null);
       router.refresh();
     } catch (e) {
-      alert("이동 실패: " + (e instanceof Error ? e.message : e));
+      setToastError("이동 실패: " + (e instanceof Error ? e.message : e));
     } finally {
       setMoving(false);
     }
@@ -418,7 +426,7 @@ export default function LineupEditor({
         router.push(`/matches/${match.id}`);
       }, 1200);
     } catch (e) {
-      alert("저장 실패: " + (e instanceof Error ? e.message : e));
+      setToastError("저장 실패: " + (e instanceof Error ? e.message : e));
     } finally {
       setSaving(false);
     }
@@ -1086,6 +1094,7 @@ export default function LineupEditor({
           )}
         </div>
       </main>
+      <AppToast message={toastError} tone="error" />
     </div>
   );
 }

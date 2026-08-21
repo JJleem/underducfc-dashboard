@@ -107,22 +107,39 @@ export default async function NewHome({
   const kakaoId = (session?.user as { kakaoId?: string } | undefined)?.kakaoId ?? "";
   const userName = session?.user?.name?.trim() || undefined;
   const admin = isAdmin(session?.user);
+  const failedSections: string[] = [];
+  const optionalRows = async (label: string, read: Promise<string[][]>) => {
+    try {
+      return await read;
+    } catch {
+      failedSections.push(label);
+      return [] as string[][];
+    }
+  };
 
-  const [rawMatches, rawVotes, rawNotices, rawLineups, rawRoster, rawFeedback, rawStats, rawMomVotes, rawFeatured, myLikedMatchIds] =
+  const [rawMatches, rawVotes, rawNotices, rawLineups, rawRoster, rawFeedback, rawStats, rawMomVotes, rawFeatured, myLikedMatchIds, teamTitleData] =
     await Promise.all([
       getMatchesRows(),
-      getAttendanceVoteRows().catch((): string[][] => []),
-      getNoticeRows().catch((): string[][] => []),
-      getLineupRows().catch((): string[][] => []),
-      getRosterRows().catch((): string[][] => []),
-      getFeedbackRows().catch((): string[][] => []),
-      getStatsRows().catch((): string[][] => []),
-      getMomVoteRows().catch((): string[][] => []),
-      getFeaturedRows().catch((): string[][] => []),
+      optionalRows("출석", getAttendanceVoteRows()),
+      optionalRows("공지", getNoticeRows()),
+      optionalRows("라인업", getLineupRows()),
+      optionalRows("선수 명단", getRosterRows()),
+      optionalRows("피드백", getFeedbackRows()),
+      optionalRows("스탯", getStatsRows()),
+      optionalRows("MOM 투표", getMomVoteRows()),
+      optionalRows("칭호", getFeaturedRows()),
       // 로그인했으면 내가 누른 좋아요를 같이 받아 온다. 실패해도 피드는 그대로 뜬다.
       kakaoId
-        ? getMyLikedMatchIds(kakaoId).catch(() => new Set<number>())
+        ? getMyLikedMatchIds(kakaoId).catch(() => {
+            failedSections.push("좋아요");
+            return new Set<number>();
+          })
         : Promise.resolve(new Set<number>()),
+      // 전체 칭호 계산도 나머지 읽기와 동시에 시작해 홈의 두 번째 데이터 폭포를 없앤다.
+      getTeamTitleData().catch(() => {
+        failedSections.push("칭호 계산");
+        return { allTitles: {}, posLineupCounts: {} };
+      }),
     ]);
 
   const matches = rawMatches.slice(1).map(toMatch);
@@ -280,7 +297,7 @@ export default async function NewHome({
   });
   // 라인업 뷰어에 들어갈 칭호. 기존 홈과 같은 기준(대표 칭호 우선, 없으면 자동 상위 3).
   // 안 넘기면 LineupViewer 가 조용히 빈 값으로 그려서 칭호가 통째로 사라진다.
-  const { allTitles } = await getTeamTitleData();
+  const { allTitles } = teamTitleData;
   const featuredMap: Record<string, string[]> = {};
   rawFeatured.forEach((r) => {
     const name = (r[0] || "").trim();
@@ -383,6 +400,17 @@ export default async function NewHome({
       )}
 
       <AppHeader newMatchRoster={admin ? rosterNames : undefined} />
+
+      {failedSections.length > 0 && (
+        <div role="status" className="mx-4 mt-3 flex items-center gap-3 rounded-2xl border border-amber-300/60 bg-amber-50 px-3 py-2.5 text-amber-800 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-200">
+          <p className="min-w-0 flex-1 text-[10.5px] font-bold leading-relaxed">
+            {failedSections.join(" · ")} 정보를 잠시 불러오지 못했어요.
+          </p>
+          <Link href="/" replace className="shrink-0 rounded-lg bg-amber-400/20 px-2.5 py-1.5 text-[10px] font-black">
+            다시 시도
+          </Link>
+        </div>
+      )}
 
       {staged && (
         <p className="px-5 pt-2 text-[9px] font-bold text-gray-400 dark:text-white/35">

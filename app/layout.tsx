@@ -18,6 +18,7 @@ import Link from "next/link";
 import LoginGate from "./components/LoginGate";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://underducfc-dashboard.vercel.app"),
   title: "UNDERDUCK FC | 언더덕 FC",
   description: "언더덕 FC 팀 대시보드 - Not 'Because of', but 'Thanks to'",
   // 💡 공유 시 보여줄 오픈 그래프(Open Graph) 설정

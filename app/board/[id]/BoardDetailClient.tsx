@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -109,6 +109,7 @@ export default function BoardDetailClient({
   const [busy, setBusy] = useState(false);
   const [liked, setLiked] = useState(post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount);
+  const likeBusy = useRef(false);
   const [viewCount, setViewCount] = useState(post.viewCount);
   const [deleteTarget, setDeleteTarget] = useState<
     | { kind: "post" }
@@ -151,6 +152,8 @@ export default function BoardDetailClient({
 
   async function toggleLike() {
     if (!currentUser) { signIn("kakao"); return; }
+    if (likeBusy.current) return;
+    likeBusy.current = true;
     const before = { liked, likeCount };
     setLiked((v) => !v);
     setLikeCount((n) => n + (liked ? -1 : 1));
@@ -165,6 +168,8 @@ export default function BoardDetailClient({
       setLiked(before.liked);
       setLikeCount(before.likeCount);
       setToast({ message: "좋아요를 반영하지 못했어요.", tone: "error" });
+    } finally {
+      likeBusy.current = false;
     }
   }
 

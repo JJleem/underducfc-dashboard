@@ -27,6 +27,7 @@ export default function PrefPosEditor({
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [sel, setSel] = useState<string[]>(initial);
+  const [saved, setSaved] = useState<string[]>(initial);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +47,7 @@ export default function PrefPosEditor({
         body: JSON.stringify({ positions: sel }),
       });
       if (!res.ok) throw new Error();
+      setSaved([...sel]);
       setEditing(false);
       router.refresh();
     } catch {
@@ -59,8 +61,8 @@ export default function PrefPosEditor({
   if (!editing) {
     return (
       <div className="flex flex-wrap items-center gap-1.5">
-        {initial.length > 0 ? (
-          initial.map((p) => (
+        {saved.length > 0 ? (
+          saved.map((p) => (
             <span
               key={p}
               style={{ color: posColor(p), backgroundColor: `${posColor(p)}1a` }}
@@ -78,7 +80,7 @@ export default function PrefPosEditor({
         {canEdit && (
           // 보조 동작이라 테두리 없이 조용하게
           <button
-            onClick={() => { setSel(initial); setEditing(true); }}
+            onClick={() => { setSel(saved); setEditing(true); }}
             className="flex items-center gap-1 py-1 text-[10px] font-bold text-gray-400 active:opacity-60 dark:text-white/40"
           >
             <Pencil className="h-3 w-3" /> 편집

@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/*.test.mjs",
+    "check": "npm run lint -- --quiet && npm run typecheck && npm test",
     "verify:positions": "node --no-warnings scripts/verify-positions.mts",
     "gen:matchday": "node --no-warnings --env-file=.env.local scripts/gen-matchday-art.mts",
     "backup:photos": "node --no-warnings --env-file=.env.local scripts/backup-photos.mts"
