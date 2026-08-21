@@ -14,7 +14,7 @@ export default function Loading() {
       aria-busy="true"
     >
       {/* 상단 바 */}
-      <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-gray-200/60 bg-gray-50/80 px-4 safe-header-py-3 backdrop-blur dark:border-white/[0.06] dark:bg-[#09090b]/80">
+      <div className="app-page-header safe-header-py-3">
         <div className={`h-[18px] w-[18px] rounded ${SHIMMER}`} />
         <div className={`h-3 w-14 rounded ${SOFT}`} />
       </div>

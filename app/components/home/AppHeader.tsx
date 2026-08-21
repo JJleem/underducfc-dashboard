@@ -41,7 +41,7 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
           href="/titles"
           prefetch={false}
           aria-label="칭호 도감"
-          className="press-icon flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3]/10 text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
+          className="press-icon touch-target flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3]/10 text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
         >
           <Trophy className="h-4 w-4" />
         </Link>
@@ -119,7 +119,7 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
           type="button"
           onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
           aria-label="테마 전환"
-          className="press-icon flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10"
+          className="press-icon touch-target flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10"
         >
           <Moon className="block h-4 w-4 text-gray-700 dark:hidden" />
           <Sun className="hidden h-4 w-4 text-[#FFB6C1] dark:block" />

@@ -2,7 +2,7 @@
 export default function Loading() {
   return (
     <div>
-      <header className="sticky top-0 z-40 flex safe-header-h-14 items-center gap-3 border-b border-gray-200/70 bg-white/85 px-4 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/85">
+      <header className="app-header-surface sticky top-0 z-40 flex safe-header-h-14 items-center gap-3 px-4">
         <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-white/10" />
         <div className="space-y-1.5">
           <div className="h-2 w-24 rounded bg-gray-200 dark:bg-white/10" />

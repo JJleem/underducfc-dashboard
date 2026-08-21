@@ -232,11 +232,11 @@ export default function BoardLineupClient({
 
   return (
     <div className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100 font-sans max-w-md mx-auto shadow-2xl">
-      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white/70 px-4 safe-header-py-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/70">
+      <header className="app-workspace-header safe-header-py-3">
         <Link href="/board" aria-label="전술 게시판으로" className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300">
           <ArrowLeft className="h-[18px] w-[18px]" />
         </Link>
-        <span className="mr-auto text-[12px] font-black tracking-widest text-gray-400">TACTICS</span>
+        <span className="app-header-label mr-auto">TACTICS</span>
         <button
           onClick={submit}
           disabled={submitting || done}
@@ -261,14 +261,14 @@ export default function BoardLineupClient({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="제목 (예: 어미새전 이렇게 가면 어때요)"
-            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold outline-none focus:border-[#FF8FA3] dark:border-white/10 dark:bg-white/5"
+            className="app-field-surface app-control-md w-full rounded-xl border border-gray-200 px-3 py-2.5 font-bold dark:border-white/10"
           />
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="설명 (선택)"
             rows={2}
-            className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-[13px] outline-none focus:border-[#FF8FA3] dark:border-white/10 dark:bg-white/5"
+            className="app-field-surface app-control-md w-full resize-none rounded-xl border border-gray-200 px-3 py-2.5 dark:border-white/10"
           />
           <p className="px-1 text-[11px] font-bold text-gray-400">작성자 · {author}</p>
         </div>

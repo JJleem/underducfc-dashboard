@@ -288,9 +288,9 @@ export default async function PlayerPage({
     <main className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-white">
       <div className="max-w-md mx-auto pb-28">
         {/* 상단 바 */}
-        <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-gray-200/60 bg-gray-50/80 px-4 safe-header-py-3 backdrop-blur dark:border-white/[0.06] dark:bg-[#09090b]/80">
+        <div className="app-page-header safe-header-py-3">
           <PlayerProfileBackButton />
-          <span className="text-[12px] font-black tracking-widest text-gray-400">PLAYER</span>
+          <span className="app-header-label">PLAYER</span>
         </div>
 
         {/* 히어로 — 인스타 프로필 구조.

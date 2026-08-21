@@ -2,7 +2,7 @@
 export default function Loading() {
   return (
     <div>
-      <header className="sticky top-0 z-40 flex items-center gap-2 border-b border-gray-200/60 bg-gray-50/85 px-4 safe-header-py-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/85">
+      <header className="app-page-header safe-header-py-3">
         <div className="h-5 w-5 rounded bg-gray-200 dark:bg-white/10" />
         <div className="h-3 w-14 rounded bg-gray-200 dark:bg-white/10" />
         <div className="ml-auto h-8 w-8 rounded-full bg-gray-200 dark:bg-white/10" />

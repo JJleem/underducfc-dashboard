@@ -435,7 +435,7 @@ export default function LineupEditor({
   return (
     <div className="min-h-dvh bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto shadow-2xl overflow-hidden">
       {/* 헤더 */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-5 safe-header-py-35 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/[0.06]">
+      <header className="app-workspace-header app-workspace-header-wide safe-header-py-35">
         <button
           type="button"
           onClick={() => {
@@ -451,7 +451,11 @@ export default function LineupEditor({
           <span className="font-extrabold text-sm uppercase tracking-tight">라인업 편집</span>
         </button>
         <div className="flex items-center gap-2">
-          <button onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/10">
+          <button
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            aria-label="테마 전환"
+            className="touch-target flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10"
+          >
             <Moon className="block dark:hidden w-4 h-4 text-gray-700" />
             <Sun className="hidden dark:block w-4 h-4 text-[#FFB6C1]" />
           </button>
@@ -950,7 +954,7 @@ export default function LineupEditor({
                         )
                       }
                       placeholder="시점 (예: 12분)"
-                      className="h-8 flex-1 rounded-lg border border-gray-200 bg-white px-2.5 text-[11px] font-bold outline-none focus:border-[#FF8FA3] dark:border-white/10 dark:bg-white/5"
+                      className="app-field-surface h-8 flex-1 rounded-lg border border-gray-200 px-2.5 text-[11px] font-bold dark:border-white/10"
                     />
                     <button
                       type="button"
@@ -1004,7 +1008,7 @@ export default function LineupEditor({
                   if (e.key === "Enter" && !e.nativeEvent.isComposing) addGuest();
                 }}
                 placeholder="게스트 이름 입력"
-                className="flex-1 text-[12px] font-bold bg-transparent outline-none text-gray-800 dark:text-gray-100 placeholder-gray-400"
+                className="flex-1 bg-transparent text-[12px] font-bold text-gray-800 outline-none placeholder-gray-400 focus-visible:ring-2 focus-visible:ring-[#FF8FA3]/30 dark:text-gray-100"
               />
             </div>
             <button

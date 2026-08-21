@@ -242,11 +242,11 @@ export default function BoardDetailClient({
   return (
     <div data-pull-to-refresh-ignore className="pb-24 text-gray-900 dark:text-white">
       <SwipeNav prevId={prev?.id ?? null} nextId={next?.id ?? null} />
-      <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-gray-200/70 bg-white/90 px-4 safe-header-py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#101013]/90">
+      <header className="app-page-header safe-header-py-3">
         <Link href="/board" aria-label="목록으로" className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 active:opacity-60 dark:text-gray-300">
           <ChevronLeft className="h-5 w-5" />
         </Link>
-        <h1 className="truncate text-[12px] font-black tracking-widest text-gray-400">BOARD</h1>
+        <h1 className="app-header-label truncate">BOARD</h1>
         <div className="ml-auto flex items-center">
           {admin && (
             <button onClick={togglePin} disabled={pinBusy} className={`-my-2.5 flex h-11 w-11 items-center justify-center rounded-full active:opacity-60 ${pinned ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : "text-gray-400"}`} aria-label={pinned ? "고정 해제" : "글 고정"}>
@@ -438,12 +438,12 @@ export default function BoardDetailClient({
                 }}
                 enterKeyHint="send"
                 placeholder="댓글 달기…"
-                className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm outline-none focus:border-[#FF8FA3] dark:border-white/10 dark:bg-white/5"
+                className="app-field-surface app-control-md flex-1 rounded-full border border-gray-200 px-4 py-2.5 dark:border-white/10"
               />
               <button
                 onClick={addComment}
                 disabled={!message.trim() || busy}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FF8FA3] text-white active:opacity-80 disabled:opacity-40 dark:bg-[#FFB6C1] dark:text-black"
+                className="app-action-primary flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:opacity-80 disabled:opacity-40"
                 aria-label="댓글 등록"
               >
                 <Send className="h-4 w-4" />

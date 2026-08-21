@@ -108,11 +108,11 @@ export default function TitlesPage() {
 
   return (
     <main className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-white">
-      <header className="sticky top-0 z-40 flex safe-header-h-14 items-center gap-3 border-b border-gray-200/70 bg-white/85 px-4 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/85">
+      <header className="app-header-surface sticky top-0 z-40 flex safe-header-h-14 items-center gap-3 px-4">
         <Link
           href="/"
           aria-label="홈으로"
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-white"
+          className="press-icon touch-target flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-white"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>

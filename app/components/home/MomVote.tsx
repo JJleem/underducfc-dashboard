@@ -346,7 +346,7 @@ export default function MomVote({
         <button
           type="button"
           onClick={openDrawer}
-          className="press-cta mt-5 w-full rounded-2xl bg-[#FF8FA3] px-4 py-3.5 text-center text-white shadow-sm active:bg-[#F97E95] dark:bg-[#FF8FA3]"
+          className="app-action-primary press-cta mt-5 w-full rounded-2xl px-4 py-3.5 text-center shadow-sm"
         >
           <span className="flex items-center justify-center gap-1.5 text-[13px] font-black">
             <Crown
@@ -564,7 +564,7 @@ export default function MomVote({
                   type="button"
                   onClick={submit}
                   disabled={(!atk && !def) || saving}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#FF8FA3] py-3 text-[12px] font-black text-white shadow-[0_6px_18px_rgba(255,143,163,0.24)] active:bg-[#F97E95] disabled:bg-[#FF8FA3]/20 disabled:text-white disabled:shadow-none dark:disabled:bg-[#FFB6C1]/15 dark:disabled:text-white/30"
+                  className="app-action-primary flex flex-1 items-center justify-center gap-1.5 rounded-xl py-3 text-[12px] font-black shadow-[0_6px_18px_rgba(255,143,163,0.24)] disabled:bg-[#FF8FA3]/20 disabled:text-white disabled:shadow-none dark:disabled:bg-[#FFB6C1]/15 dark:disabled:text-white/30"
                 >
                   {saving && <Loader2 width={14} height={14} className="animate-spin" />}
                   {selectedCount > 0 ? `${selectedCount}명 선택 · 투표하기` : "선수를 선택해 주세요"}

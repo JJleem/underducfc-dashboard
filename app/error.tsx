@@ -31,7 +31,7 @@ export default function Error({
       <div className="flex items-center gap-2">
         <button
           onClick={reset}
-          className="rounded-full bg-[#FF8FA3] px-6 py-3 text-sm font-black text-white shadow-sm active:opacity-80 dark:bg-[#FFB6C1] dark:text-black"
+          className="app-action-primary rounded-full px-6 py-3 text-sm font-black shadow-sm active:opacity-80"
         >
           다시 시도
         </button>

@@ -177,7 +177,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
 
   return (
     <div className="relative mx-auto min-h-[100dvh] max-w-md overflow-hidden bg-gray-50 font-sans text-gray-900 transition-colors duration-300 dark:bg-[#09090b] dark:text-zinc-100">
-      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/60 bg-gray-50/80 px-4 safe-header-py-3 backdrop-blur dark:border-white/[0.06] dark:bg-[#09090b]/80">
+      <header className="app-workspace-header safe-header-py-3">
         <div className="flex items-center gap-2">
           <Link
             href="/"
@@ -186,7 +186,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
           >
             <ArrowLeft width={18} height={18} strokeWidth={2.4} />
           </Link>
-          <span className="text-[12px] font-black tracking-widest text-gray-400">SQUAD</span>
+          <span className="app-header-label">SQUAD</span>
         </div>
         <div className="flex items-center gap-2">
           {isAdmin && (
@@ -195,7 +195,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
               onClick={openAdd}
               aria-label="선수 추가"
               title="선수 추가"
-              className="press-icon -my-1 flex h-10 w-10 items-center justify-center rounded-full bg-[#FF8FA3] text-white shadow-sm active:opacity-70"
+              className="app-icon-action app-icon-action-primary press-icon -my-1"
             >
               <UserPlus width={16} height={16} strokeWidth={2.4} />
             </button>
@@ -204,7 +204,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
             type="button"
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
             aria-label="테마 전환"
-            className="press-icon -my-1 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10"
+            className="app-icon-action app-icon-action-neutral press-icon -my-1"
           >
             <Moon className="block h-4 w-4 text-gray-700 dark:hidden" />
             <Sun className="hidden h-4 w-4 text-[#FFB6C1] dark:block" />
@@ -390,7 +390,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                 value={form.name}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                 placeholder="선수 이름"
-                className="w-full rounded-xl bg-gray-100 px-3.5 py-2.5 text-[13px] font-medium text-gray-900 outline-none placeholder:text-gray-400 dark:bg-white/10 dark:text-white dark:placeholder:text-white/25"
+                className="app-field-surface app-control-md w-full rounded-xl px-3.5 py-2.5 font-medium"
               />
             </div>
 
@@ -404,7 +404,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                 placeholder="등번호"
                 min={0}
                 max={99}
-                className="w-full rounded-xl bg-gray-100 px-3.5 py-2.5 text-[13px] font-medium text-gray-900 outline-none placeholder:text-gray-400 dark:bg-white/10 dark:text-white dark:placeholder:text-white/25"
+                className="app-field-surface app-control-md w-full rounded-xl px-3.5 py-2.5 font-medium"
               />
             </div>
 
@@ -470,7 +470,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
               type="button"
               onClick={submit}
               disabled={saving || !form.name.trim()}
-              className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-[#FF8FA3] py-3 text-[13px] font-black text-white transition-opacity active:bg-[#F97E95] disabled:opacity-40"
+              className="app-button app-button-primary app-cta-md w-full"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : mode === "add" ? "추가하기" : "수정하기"}
             </button>

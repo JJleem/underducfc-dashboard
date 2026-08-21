@@ -94,7 +94,7 @@ export default function MatchDetailClient({
 
   return (
     <main className="min-h-dvh bg-gray-50 pb-6 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100">
-      <header className="sticky top-0 z-40 flex items-center gap-2 border-b border-gray-200/60 bg-gray-50/85 px-4 safe-header-py-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/85">
+      <header className="app-page-header safe-header-py-3">
         <Link
           href="/"
           aria-label="홈으로"
@@ -102,7 +102,7 @@ export default function MatchDetailClient({
         >
           <ArrowLeft width={18} height={18} strokeWidth={2.4} />
         </Link>
-        <span className="text-[12px] font-black tracking-widest text-gray-400">MATCH</span>
+        <span className="app-header-label">MATCH</span>
         <button
           type="button"
           onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}

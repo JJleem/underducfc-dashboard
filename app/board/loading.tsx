@@ -14,7 +14,7 @@ export default function Loading() {
       aria-label="전술게시판을 불러오는 중"
       aria-busy="true"
     >
-      <header className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/90 px-4 safe-header-py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#101013]/90">
+      <header className="app-header-surface sticky top-0 z-40 px-4 safe-header-py-3">
         <div className="flex items-center gap-2">
           <div className={`h-5 w-5 shrink-0 rounded-full ${SHIMMER}`} />
           <div className={`h-4 w-24 rounded ${SHIMMER}`} />

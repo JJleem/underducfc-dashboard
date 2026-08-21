@@ -126,7 +126,7 @@ export default function PrefPosEditor({
       <button
         onClick={save}
         disabled={saving}
-        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#FF8FA3] py-2.5 text-sm font-black text-white active:opacity-80 disabled:opacity-40 dark:bg-[#FFB6C1] dark:text-black"
+        className="app-action-primary app-cta-md mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 font-black active:opacity-80 disabled:opacity-40"
       >
         <Check className="h-4 w-4" /> {saving ? "저장 중…" : "저장"}
       </button>

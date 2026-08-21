@@ -110,9 +110,9 @@ const ROSTER_GROUPS = [
 ] as const;
 
 const OPTIONS = [
-  { key: "참석", tone: "bg-[#FF8FA3] text-white" },
-  { key: "미정", tone: "bg-amber-400 text-white" },
-  { key: "불참", tone: "bg-gray-500 text-white dark:bg-white/25" },
+  { key: "참석", tone: "app-choice-attending" },
+  { key: "미정", tone: "app-choice-maybe" },
+  { key: "불참", tone: "app-choice-absent" },
 ] as const;
 
 function getDDay(dateStr: string): number | null {
@@ -415,10 +415,10 @@ export default function VoteClient({
                     onClick={() => submitVote(match.id, key)}
                     disabled={!!submittingVote}
                     aria-pressed={selected}
-                    className={`flex items-center justify-center gap-1 rounded-2xl py-3.5 text-[14px] font-black transition-colors disabled:opacity-60 ${
+                    className={`app-choice flex items-center justify-center gap-1 rounded-2xl py-3.5 text-[14px] font-black ${
                       selected
                         ? tone
-                        : "bg-gray-100 text-gray-500 dark:bg-white/[0.07] dark:text-white/45"
+                        : "app-choice-idle"
                     }`}
                   >
                     {busy ? (
@@ -622,7 +622,7 @@ export default function VoteClient({
 
   return (
     <main className="relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100">
-      <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-gray-200/60 bg-gray-50/80 px-4 safe-header-py-3 backdrop-blur dark:border-white/[0.06] dark:bg-[#09090b]/80">
+      <div className="app-page-header safe-header-py-3">
         <Link
           href="/"
           aria-label="뒤로"
@@ -630,7 +630,7 @@ export default function VoteClient({
         >
           <ArrowLeft width={18} height={18} strokeWidth={2.4} />
         </Link>
-        <span className="text-[12px] font-black tracking-widest text-gray-400">VOTE</span>
+        <span className="app-header-label">VOTE</span>
       </div>
 
       {activeMatches.length > 0 ? (

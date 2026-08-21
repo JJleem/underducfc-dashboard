@@ -16,7 +16,7 @@ export default function Loading() {
       aria-label="라인업 편집 화면을 불러오는 중"
       aria-busy="true"
     >
-      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white/70 px-5 safe-header-py-35 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/70">
+      <header className="app-workspace-header app-workspace-header-wide safe-header-py-35">
         <div className="flex h-11 items-center gap-2" aria-hidden>
           <span className={`h-4 w-4 rounded ${SHIMMER}`} />
           <span className={`h-3.5 w-[72px] rounded ${SHIMMER}`} />

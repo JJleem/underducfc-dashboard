@@ -195,7 +195,7 @@ function PrimaryLink({ href, children }: { href: string; children: React.ReactNo
   return (
     <Link
       href={href}
-      className="press-cta flex items-center justify-center rounded-xl bg-[#FF8FA3] py-2.5 text-[11px] font-black text-white shadow-sm"
+      className="app-action-primary press-cta flex items-center justify-center rounded-xl py-2.5 text-[11px] font-black shadow-sm"
     >
       {children}
     </Link>

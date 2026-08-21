@@ -116,7 +116,7 @@ export default function BoardClient({
     <div className="pb-24 text-gray-900 dark:text-white">
       {/* 헤더 — /vote·/stats·/record 와 같은 문법: 뒤로가기 + 영문 라벨.
           페이지마다 상단 바가 다르면 같은 앱으로 안 읽힌다. */}
-      <header className="sticky top-0 z-30 border-b border-gray-200/60 bg-gray-50/80 px-4 safe-header-py-3 backdrop-blur dark:border-white/[0.06] dark:bg-[#09090b]/80">
+      <header className="app-header-surface sticky top-0 z-40 px-4 safe-header-py-3">
         <div className="flex items-center gap-2">
           <Link
             href="/"
@@ -125,7 +125,7 @@ export default function BoardClient({
           >
             <ArrowLeft width={18} height={18} strokeWidth={2.4} />
           </Link>
-          <span className="text-[12px] font-black tracking-widest text-gray-400">BOARD</span>
+          <span className="app-header-label">BOARD</span>
           <button
             onClick={() => (currentUser ? setComposer("choose") : signIn("kakao"))}
             aria-label="글쓰기"
@@ -143,7 +143,7 @@ export default function BoardClient({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="제목·작성자·내용 검색"
-            className="w-full rounded-full bg-gray-100 py-2 pl-9 pr-3 text-[13px] outline-none placeholder:text-gray-400 dark:bg-white/[0.07] dark:placeholder:text-white/25"
+            className="app-field-surface app-control-md w-full rounded-full py-2 pl-9 pr-3"
           />
         </div>
 
@@ -189,7 +189,7 @@ export default function BoardClient({
           onClick={dismissComposer}
         >
           <div
-            className="animate-rise max-h-[92dvh] w-full max-w-md space-y-2.5 overflow-y-auto overscroll-contain rounded-t-3xl border border-gray-200 bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] dark:border-white/10 dark:bg-[#161618] sm:rounded-3xl"
+            className="app-modal-surface animate-rise max-h-[92dvh] w-full max-w-md space-y-2.5 overflow-y-auto overscroll-contain rounded-t-3xl border p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-1 flex items-center justify-between">
@@ -233,7 +233,7 @@ export default function BoardClient({
         <ModalPortal>
         <div role="dialog" aria-modal="true" className="animate-fade fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={dismissComposer}>
           <div
-            className="animate-rise max-h-[92dvh] w-full max-w-md space-y-2.5 overflow-y-auto overscroll-contain rounded-t-3xl border border-gray-200 bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] dark:border-white/10 dark:bg-[#161618] sm:rounded-3xl"
+            className="app-modal-surface animate-rise max-h-[92dvh] w-full max-w-md space-y-2.5 overflow-y-auto overscroll-contain rounded-t-3xl border p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-1 flex items-center justify-between">
@@ -246,13 +246,13 @@ export default function BoardClient({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="제목"
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-[#FF8FA3] dark:border-white/10 dark:bg-white/5"
+              className="app-field-surface app-control-md w-full rounded-xl border border-gray-200 px-3 py-2.5 dark:border-white/10"
             />
             <input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="유튜브 또는 인스타그램 릴스 링크"
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-[#FF8FA3] dark:border-white/10 dark:bg-white/5"
+              className="app-field-surface app-control-md w-full rounded-xl border border-gray-200 px-3 py-2.5 dark:border-white/10"
             />
             {url && !linkOk && (
               <p className="text-[11px] font-bold text-red-500">
@@ -264,13 +264,13 @@ export default function BoardClient({
               onChange={(e) => setBody(e.target.value)}
               placeholder="설명 (선택)"
               rows={3}
-              className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-[#FF8FA3] dark:border-white/10 dark:bg-white/5"
+              className="app-field-surface app-control-md w-full resize-none rounded-xl border border-gray-200 px-3 py-2.5 dark:border-white/10"
             />
             {error && <p className="text-[11px] font-bold text-red-500">{error}</p>}
             <button
               onClick={submit}
               disabled={!canSubmit || submitting}
-              className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#FF8FA3] py-3 text-sm font-black text-white active:opacity-80 disabled:opacity-40 dark:bg-[#FFB6C1] dark:text-black"
+              className="app-action-primary app-cta-md mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl py-3 font-black active:opacity-80 disabled:opacity-40"
             >
               {submitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> 올리는 중…</>) : "등록"}
             </button>

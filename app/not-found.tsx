@@ -23,7 +23,7 @@ export default function NotFound() {
 
       <Link
         href="/"
-        className="rounded-full bg-[#FF8FA3] px-6 py-3 text-sm font-black text-white shadow-sm active:opacity-80 dark:bg-[#FFB6C1] dark:text-black"
+        className="app-action-primary rounded-full px-6 py-3 text-sm font-black shadow-sm active:opacity-80"
       >
         홈으로 돌아가기
       </Link>

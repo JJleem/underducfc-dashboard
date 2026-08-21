@@ -41,8 +41,8 @@ export default function NoticeEditor({
     }
   };
 
-  const field = "w-full rounded-xl bg-gray-100 px-3.5 py-2.5 text-[13px] font-medium text-gray-900 outline-none placeholder:text-gray-400 dark:bg-white/10 dark:text-white dark:placeholder:text-white/25";
-  const label = "mb-1.5 block text-[10px] font-black tracking-[0.14em] text-gray-400 dark:text-white/35";
+  const field = "app-field-surface app-control-md w-full rounded-xl px-3.5 py-2.5 font-medium";
+  const label = "app-section-label mb-1.5 block text-[10px]";
 
   return (
     <>
@@ -126,7 +126,7 @@ export default function NoticeEditor({
                   type="button"
                   onClick={save}
                   disabled={saving}
-                  className="mt-1 flex items-center justify-center gap-1.5 rounded-2xl bg-[#FF8FA3] py-3 text-[13px] font-black text-white disabled:opacity-40"
+                  className="app-action-primary app-cta-md mt-1 flex items-center justify-center gap-1.5 rounded-2xl py-3 font-black disabled:opacity-40"
                 >
                   {saving && <Loader2 width={15} height={15} className="animate-spin" />}
                   저장하기

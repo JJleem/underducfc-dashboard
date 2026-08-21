@@ -22,7 +22,7 @@ export default function NewMatchButton({
         title="경기 등록"
         className={
           variant === "header"
-            ? "press-icon flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3] text-white shadow-sm active:opacity-70 dark:bg-[#FF8FA3]"
+            ? "press-icon touch-target flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3] text-white shadow-sm active:opacity-70 dark:bg-[#FF8FA3]"
             : "flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-gray-300 py-3 text-[12px] font-black text-gray-400 active:opacity-60 dark:border-white/15 dark:text-white/35"
         }
       >

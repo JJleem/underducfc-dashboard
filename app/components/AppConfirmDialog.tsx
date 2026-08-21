@@ -77,7 +77,7 @@ export default function AppConfirmDialog({
               onClick={onConfirm}
               disabled={busy}
               className={`min-h-11 rounded-2xl px-3 text-[12px] font-black text-white disabled:opacity-50 ${
-                destructive ? "bg-red-500" : "bg-[#FF8FA3]"
+                destructive ? "app-action-danger" : "app-action-primary"
               }`}
             >
               {busy ? "처리 중…" : confirmLabel}

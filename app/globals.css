@@ -6,6 +6,15 @@
 :root {
   --background: #f6f6f7;
   --foreground: #18181b;
+  --app-brand: #ff8fa3;
+  --app-brand-strong: #f56f88;
+  --app-surface: #f9fafb;
+  --app-surface-raised: rgba(255, 255, 255, 0.86);
+  --app-border-subtle: rgba(17, 24, 39, 0.08);
+  --app-text-muted: #9ca3af;
+  --app-page-gutter: 1rem;
+  --app-control-radius: 0.75rem;
+  --app-card-radius: 1rem;
   /* 라인업 피치: 라이트(주간 경기장) */
   --pitch-frame: linear-gradient(180deg, #c7d7ee 0%, #e2ebf8 55%, #c7d7ee 100%);
   --pitch-frame-shadow: 0 12px 40px rgba(80, 110, 160, 0.25),
@@ -17,6 +26,12 @@
 .dark {
   --background: #09090b;
   --foreground: #f4f4f5;
+  --app-brand: #ffb6c1;
+  --app-brand-strong: #ff8fa3;
+  --app-surface: #09090b;
+  --app-surface-raised: rgba(9, 9, 11, 0.86);
+  --app-border-subtle: rgba(255, 255, 255, 0.065);
+  --app-text-muted: rgba(255, 255, 255, 0.38);
   /* 라인업 피치: 다크(야간 경기장) */
   --pitch-frame: linear-gradient(180deg, #070d20 0%, #0d1733 55%, #070d20 100%);
   --pitch-frame-shadow: 0 12px 40px rgba(5, 10, 30, 0.55),
@@ -282,6 +297,240 @@ body {
 .safe-header-h-61 {
   height: calc(61px + env(safe-area-inset-top));
   padding-top: env(safe-area-inset-top);
+}
+
+/* ── 앱 공통 시각 문법 ────────────────────────────────
+   기능별 헤더 구조는 유지하고 표면·간격·타이포만 공유한다. */
+.app-page-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline: var(--app-page-gutter);
+  border-bottom: 1px solid var(--app-border-subtle);
+  background: var(--app-surface-raised);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+/* 검색·필터처럼 두 줄 구조인 헤더는 레이아웃을 유지하고 표면만 공유한다. */
+.app-header-surface {
+  border-bottom: 1px solid var(--app-border-subtle);
+  background: var(--app-surface-raised);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.app-workspace-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: var(--app-page-gutter);
+  border-bottom: 1px solid var(--app-border-subtle);
+  background: var(--app-surface-raised);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+/* 라인업 편집처럼 원래 20px 여백을 쓰던 집중 작업 화면은 기존 치수를 보존한다. */
+.app-workspace-header-wide {
+  padding-inline: 1.25rem;
+}
+
+.app-header-label {
+  color: var(--app-text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+/* 버튼은 역할만 공유한다. 포지션·상태 선택처럼 의미색이 있는 컨트롤은 제외한다. */
+.app-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: var(--app-card-radius);
+  padding-block: 0.75rem;
+  padding-inline: 1rem;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.16s ease, opacity 0.16s ease;
+}
+.app-button:active:not(:disabled) {
+  transform: translateY(1px) scale(0.985);
+}
+.app-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+.app-button-primary {
+  background: var(--app-brand);
+  color: white;
+  box-shadow: 0 8px 22px -12px rgba(245, 111, 136, 0.7);
+}
+.app-button-primary:active:not(:disabled) {
+  background: var(--app-brand-strong);
+  box-shadow: none;
+}
+
+/* 기존 화면의 폭·높이·여백을 건드리지 않는 역할 기반 액션 색상. */
+.app-action-primary {
+  background: var(--app-brand);
+  color: white;
+  transition: background-color 0.16s ease, opacity 0.16s ease, transform 0.16s ease;
+}
+.app-action-primary:active:not(:disabled) {
+  background: var(--app-brand-strong);
+}
+.app-action-primary:focus-visible,
+.app-action-secondary:focus-visible,
+.app-action-danger:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--app-brand) 55%, transparent);
+  outline-offset: 2px;
+}
+.app-action-primary:disabled,
+.app-action-secondary:disabled,
+.app-action-danger:disabled {
+  cursor: not-allowed;
+}
+.dark .app-action-primary {
+  color: #18181b;
+}
+.app-action-secondary {
+  background: #f3f4f6;
+  color: #4b5563;
+  transition: background-color 0.16s ease, opacity 0.16s ease;
+}
+.dark .app-action-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.72);
+}
+.app-action-danger {
+  background: #ef4444;
+  color: white;
+}
+.dark .app-button-primary {
+  color: #18181b;
+}
+
+.app-icon-action {
+  position: relative;
+  display: inline-flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+}
+.app-icon-action::after {
+  position: absolute;
+  inset: -2px;
+  content: "";
+}
+.app-icon-action-primary {
+  background: var(--app-brand);
+  color: white;
+  box-shadow: 0 4px 14px -8px rgba(245, 111, 136, 0.9);
+}
+.app-icon-action-neutral {
+  background: #f3f4f6;
+}
+.dark .app-icon-action-neutral {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 출석 선택 상태. 치수는 화면이 소유하고 공통층은 색·포커스만 담당한다. */
+.app-choice {
+  transition: background-color 0.16s ease, color 0.16s ease, opacity 0.16s ease;
+}
+.app-choice:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--app-brand) 55%, transparent);
+  outline-offset: 2px;
+}
+.app-choice:disabled {
+  opacity: 0.6;
+}
+.app-choice-idle {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+.dark .app-choice-idle {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.45);
+}
+.app-choice-attending {
+  background: #ff8fa3;
+  color: white;
+}
+.app-choice-maybe {
+  background: #fbbf24;
+  color: white;
+}
+.app-choice-absent {
+  background: #6b7280;
+  color: white;
+}
+.dark .app-choice-absent {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* 입력 필드도 크기는 각 화면이 유지하고 표면·포커스만 공유한다. */
+.app-field-surface {
+  background: #f3f4f6;
+  color: #111827;
+  outline: none;
+  transition: background-color 0.16s ease, box-shadow 0.16s ease;
+}
+.app-field-surface::placeholder {
+  color: #9ca3af;
+}
+.app-field-surface:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--app-brand) 30%, transparent);
+}
+.dark .app-field-surface {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+.dark .app-field-surface::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* 일반 폼 전용 크기 체계. 특수 화면은 이 클래스를 사용하지 않는다. */
+.app-control-md {
+  min-height: 2.5rem;
+  font-size: 0.8125rem;
+}
+.app-cta-md {
+  min-height: 2.75rem;
+  font-size: 0.8125rem;
+}
+
+/* 라벨과 모달은 타이포 크기·패딩을 소유하지 않고 톤만 맞춘다. */
+.app-section-label {
+  color: var(--app-text-muted);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+.app-modal-surface {
+  border-color: var(--app-border-subtle);
+  background: var(--app-surface);
+}
+
+/* 32px 아이콘의 보이는 크기는 유지하면서 손가락 판정 영역만 44px로 넓힌다. */
+.touch-target {
+  position: relative;
+}
+.touch-target::after {
+  position: absolute;
+  inset: -6px;
+  content: "";
 }
 
 /* iOS PWA: 입력 시 자동 확대 방지

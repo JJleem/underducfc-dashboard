@@ -64,7 +64,7 @@ function toMatchDateStr(date: Date): string {
 }
 
 const FIELD =
-  "w-full rounded-xl bg-gray-100 px-4 py-2.5 text-[13px] font-medium text-gray-900 outline-none placeholder:text-gray-400 dark:bg-white/10 dark:text-white dark:placeholder:text-gray-600";
+  "app-field-surface app-control-md w-full rounded-xl px-4 py-2.5 font-medium";
 const LABEL = "mb-2 text-[10px] font-semibold tracking-widest text-gray-400";
 const CHIP = "rounded-xl px-3 py-1.5 text-[11px] font-black transition-colors";
 const CHIP_ON = "bg-[#FF8FA3] text-white dark:bg-[#FFB6C1] dark:text-black";
@@ -307,7 +307,7 @@ export default function MatchEditor({
                         value={ourScore}
                         onChange={(e) => setOurScore(e.target.value)}
                         placeholder="0"
-                        className="w-full rounded-xl bg-gray-100 px-3 py-3 text-center text-[20px] font-black text-gray-900 outline-none dark:bg-white/10 dark:text-white"
+                        className="app-field-surface w-full rounded-xl px-3 py-3 text-center text-[20px] font-black"
                       />
                     </div>
                     <span className="text-[20px] font-black text-gray-300 dark:text-gray-600">:</span>
@@ -319,7 +319,7 @@ export default function MatchEditor({
                         value={theirScore}
                         onChange={(e) => setTheirScore(e.target.value)}
                         placeholder="0"
-                        className="w-full rounded-xl bg-gray-100 px-3 py-3 text-center text-[20px] font-black text-gray-900 outline-none dark:bg-white/10 dark:text-white"
+                        className="app-field-surface w-full rounded-xl px-3 py-3 text-center text-[20px] font-black"
                       />
                     </div>
                   </div>
@@ -502,7 +502,7 @@ export default function MatchEditor({
                               setPickerOpen(false);
                             }}
                             disabled={!pickScorer}
-                            className="flex-1 rounded-xl bg-[#FF8FA3] py-2.5 text-[12px] font-black text-white disabled:opacity-40 dark:bg-[#FFB6C1] dark:text-black"
+                            className="app-action-primary app-cta-md flex-1 rounded-xl py-2.5 font-black disabled:opacity-40"
                           >
                             확인
                           </button>
@@ -520,7 +520,7 @@ export default function MatchEditor({
               type="button"
               onClick={save}
               disabled={saving || !date}
-              className="flex items-center justify-center gap-1.5 rounded-2xl bg-[#FF8FA3] py-3 text-[13px] font-black text-white disabled:opacity-40 dark:bg-[#FFB6C1] dark:text-black"
+              className="app-action-primary app-cta-md flex items-center justify-center gap-1.5 rounded-2xl py-3 font-black disabled:opacity-40"
             >
               {saving && <Loader2 width={16} height={16} className="animate-spin" />}
               {mode === "create" ? "등록하기" : "저장하기"}

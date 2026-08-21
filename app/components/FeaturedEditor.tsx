@@ -167,7 +167,7 @@ export default function FeaturedEditor({
           type="button"
           onClick={save}
           disabled={saving || success}
-          className="flex flex-1 items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-black bg-[#FF8FA3] text-white disabled:opacity-60"
+          className="app-action-primary flex flex-1 items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-black disabled:opacity-60"
         >
           {saving ? (
             <><Loader2 className="h-3.5 w-3.5 animate-spin" /> 저장 중…</>
