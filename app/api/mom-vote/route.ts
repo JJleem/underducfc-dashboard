@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidateAppData } from "@/app/lib/cache";
+import { revalidateAppData, UD_TAG } from "@/app/lib/cache";
 import { getMomVoteRows } from "../../lib/backend";
 import { appendMomVote, deleteMomVote } from "../../lib/sheets-write";
 import { requireUser } from "@/app/lib/admin";
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     // 같은 matchId + voterName + voteType 투표가 있으면 삭제 후 재등록
     await deleteMomVote(numericMatchId, voterName.trim(), voteType.trim());
     await appendMomVote({ matchId: numericMatchId, voterName, votedFor, voteType });
-    revalidateAppData();
+    revalidateAppData(UD_TAG.momVote, UD_TAG.stats, UD_TAG.titles);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
@@ -72,7 +72,7 @@ export async function DELETE(request: NextRequest) {
     const unavailable = await assertVotingOpen(numericMatchId);
     if (unavailable) return NextResponse.json({ error: unavailable }, { status: 409 });
     await deleteMomVote(numericMatchId, voterName, voteType);
-    revalidateAppData();
+    revalidateAppData(UD_TAG.momVote, UD_TAG.stats, UD_TAG.titles);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Download, Maximize2, Pencil, Share2 } from "lucide-react";
 import { toBlob } from "html-to-image";
@@ -20,6 +20,21 @@ import type { LineupData, MatchData } from "../lib/match-types";
 import { playerFaceOnSrc } from "../lib/player-faceons";
 
 const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
+const DECODED_FACEONS = new Set<string>();
+const SKELETON_PLAYERS = [
+  [50, 89],
+  [17, 70], [39, 74], [61, 74], [83, 70],
+  [24, 49], [50, 54], [76, 49],
+  [18, 25], [50, 20], [82, 25],
+] as const;
+
+function lineupFaceOnSources(lineups: LineupData[]) {
+  return Array.from(new Set(
+    lineups.flatMap((item) =>
+      item.players.map(playerFaceOnSrc).filter((src): src is string => !!src),
+    ),
+  ));
+}
 
 async function inlineImgs(root: HTMLElement): Promise<{ imgs: HTMLImageElement[]; originals: string[] }> {
   const imgs = Array.from(root.querySelectorAll("img"));
@@ -122,11 +137,42 @@ export default function LineupViewer({
     lineups.some((lineup) => lineup.quarter === quarter)
   );
   const [activeQuarter, setActiveQuarter] = useState(sortedQuarters[0] || "");
+  const [open, setOpen] = useState(false);
+  const [imagesReady, setImagesReady] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [savingCard, setSavingCard] = useState(false);
   const captureRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const lineup = lineups.find((item) => item.quarter === activeQuarter) ?? lineups[0];
+
+  // 라인업을 연 순간 다른 쿼터의 페이스온까지 브라우저 캐시에서 디코딩한다.
+  // 탭을 누른 뒤 네트워크·디코딩을 시작하면 짧게 사라져 보이므로 한 박자 앞당긴다.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    const sources = lineupFaceOnSources(lineups);
+    const missingSources = sources.filter((src) => !DECODED_FACEONS.has(src));
+    if (missingSources.length === 0) return;
+
+    const images = missingSources.map((src) => {
+      const img = new window.Image();
+      img.src = src;
+      return { img, src };
+    });
+    // 모든 쿼터의 사진이 준비된 다음 필드를 한 번에 공개한다. 일부 선수만 늦게
+    // 나타나는 화면보다 짧고 명확한 준비 상태가 시각적으로 안정적이다.
+    void Promise.all(
+      images.map(async ({ img, src }) => {
+        await (img.decode?.().catch(() => undefined) ?? Promise.resolve());
+        DECODED_FACEONS.add(src);
+      }),
+    ).then(() => {
+      if (!cancelled) setImagesReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [lineups, open]);
 
   const share = async () => {
     if (!lineup || !captureRef.current) return;
@@ -258,7 +304,16 @@ export default function LineupViewer({
   if (!lineup) return null;
 
   return (
-    <Dialog>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (next) {
+          const sources = lineupFaceOnSources(lineups);
+          setImagesReady(sources.every((src) => DECODED_FACEONS.has(src)));
+        }
+        setOpen(next);
+      }}
+    >
       <div className="space-y-2">
         {/* 쿼터 선택 + 우측 이미지 저장 */}
         <div className="flex items-center gap-2">
@@ -399,15 +454,43 @@ export default function LineupViewer({
         </div>
 
         <div className="space-y-4 px-3 pb-10 pt-3">
-          <FormationField
-            lineup={lineup}
-            rosterMap={rosterMap}
-            captainRoles={captainRoles}
-            matchInfo={{ goals: match.goals, assists: match.assists, mom: match.mom }}
-            playerStats={playerStats}
-            playerTitles={playerTitles}
-            mode="faceon"
-          />
+          {imagesReady ? (
+            <FormationField
+              key={`${match.id}-${activeQuarter}-${lineup.formation}`}
+              lineup={lineup}
+              rosterMap={rosterMap}
+              captainRoles={captainRoles}
+              matchInfo={{ goals: match.goals, assists: match.assists, mom: match.mom }}
+              playerStats={playerStats}
+              playerTitles={playerTitles}
+              mode="faceon"
+            />
+          ) : (
+            <div
+              aria-label="라인업 불러오는 중"
+              className="relative w-full overflow-hidden rounded-2xl bg-[#0f4a25] ring-1 ring-black/5 dark:ring-white/10"
+              style={{ paddingBottom: "190%" }}
+            >
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,#15592e_0%,#15592e_12.5%,#0f4a25_12.5%,#0f4a25_25%)] bg-[length:100%_25%]">
+                <div className="absolute inset-[3%] rounded-xl border border-white/20" />
+                <div className="absolute left-[3%] right-[3%] top-1/2 border-t border-white/20" />
+                <div className="absolute left-1/2 top-1/2 h-[13%] w-[24%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-white/20" />
+                {SKELETON_PLAYERS.map(([left, top], index) => (
+                  <div
+                    key={`${left}-${top}`}
+                    className="absolute flex w-[19%] -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+                    style={{ left: `${left}%`, top: `${top}%` }}
+                  >
+                    <div
+                      className="skeleton-shimmer h-14 w-12 rounded-t-[45%] rounded-b-xl bg-white/20"
+                      style={{ animationDelay: `${index * 45}ms` }}
+                    />
+                    <div className="skeleton-shimmer mt-1.5 h-2.5 w-full rounded-full bg-white/20" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {lineup.subs.length > 0 && (
             <section className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.04]">

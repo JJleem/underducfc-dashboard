@@ -22,7 +22,7 @@
 //    쓰기(method !== "GET")에만 붙이므로 세션을 건드리지 않는다.
 
 import { unstable_cache } from "next/cache";
-import { UD_READ_REVALIDATE, UD_READ_TAG } from "./cache";
+import { UD_READ_REVALIDATE, UD_READ_TAG, UD_TAG } from "./cache";
 import { getMatchesRows } from "./matches-backend";
 import {
   getStatsRows,
@@ -114,5 +114,5 @@ async function computeTeamTitleData(): Promise<TeamTitleData> {
 export const getTeamTitleData = unstable_cache(
   computeTeamTitleData,
   ["underduck-team-titles"],
-  { revalidate: UD_READ_REVALIDATE, tags: [UD_READ_TAG] },
+  { revalidate: UD_READ_REVALIDATE, tags: [UD_READ_TAG, UD_TAG.titles] },
 );

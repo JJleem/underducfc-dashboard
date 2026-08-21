@@ -151,6 +151,7 @@ function FaceOnMarker({
           src={src}
           alt={name}
           loading="eager"
+          decoding="async"
           fetchPriority="high"
           onError={() => setFailed(true)}
           className="absolute inset-0 h-full w-full object-cover object-[center_20%] drop-shadow-[0_4px_4px_rgba(0,0,0,0.75)]"
@@ -409,7 +410,8 @@ export function FormationField({
                 const goalCount = isTbd ? 0 : countNames(matchInfo?.goals, name);
                 const assistCount = isTbd ? 0 : countNames(matchInfo?.assists, name);
                 const isMom = !isTbd && momNames.includes(name);
-                // 쿼터 전환 시 같은 선수는 새 포지션으로 모핑(FLIP)하도록 이름 키 사용
+                // 같은 쿼터 안에서 슬롯이 바뀔 때는 이름 기준으로 자연스럽게 이동한다.
+                // 쿼터 전환 자체는 LineupViewer가 필드를 새 장면으로 마운트한다.
                 const key = isTbd ? `tbd-${i}` : name;
 
                 return (

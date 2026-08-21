@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidateAppData } from "@/app/lib/cache";
+import { revalidateAppData, UD_TAG } from "@/app/lib/cache";
 import { revalidatePath } from "next/cache";
 import { writeLineup } from "../../lib/sheets-write";
 import { requireAdmin } from "@/app/lib/admin";
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     revalidatePath(`/matches/${matchId}`);
     revalidatePath("/");
 
-    revalidateAppData();
+    revalidateAppData(UD_TAG.lineup, UD_TAG.titles);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

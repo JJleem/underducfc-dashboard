@@ -7,7 +7,7 @@
 // ⚠️ 서버사이드 전용([[underduck.ts]]의 window 가드). route handler / server component에서만.
 
 import { udGet } from "./underduck";
-import { udReadOpts } from "./cache";
+import { UD_TAG, udReadOptsFor } from "./cache";
 import { normalizeLineupMembers } from "./lineup";
 
 const s = (v: unknown): string => (v === null || v === undefined ? "" : String(v));
@@ -20,7 +20,7 @@ const pad = (arr: (string | null)[] | null | undefined, n: number): string[] => 
 // ── board 댓글 (칭호 집계용: author만 필요) ──
 interface BoardCommentRow { author: string | null; created_at: string | null; }
 export async function getBoardCommentRows(): Promise<string[][]> {
-  const rows = await udGet<BoardCommentRow[]>("/api/underduck/board/comments/all", udReadOpts);
+  const rows = await udGet<BoardCommentRow[]>("/api/underduck/board/comments/all", udReadOptsFor(UD_TAG.board));
   const HEADER = ["author", "created_at"];
   return [HEADER, ...rows.map((r) => [s(r.author), s(r.created_at)])];
 }
@@ -28,7 +28,7 @@ export async function getBoardCommentRows(): Promise<string[][]> {
 // ── board 글 (칭호 집계용: author + 받은 좋아요 수) ──
 interface BoardPostRow { author: string | null; like_count: number | null; }
 export async function getBoardPostRows(): Promise<string[][]> {
-  const rows = await udGet<BoardPostRow[]>("/api/underduck/board", udReadOpts);
+  const rows = await udGet<BoardPostRow[]>("/api/underduck/board", udReadOptsFor(UD_TAG.board));
   const HEADER = ["author", "like_count"];
   return [HEADER, ...rows.map((r) => [s(r.author), s(r.like_count)])];
 }
@@ -36,7 +36,7 @@ export async function getBoardPostRows(): Promise<string[][]> {
 // ── board 좋아요 누른 사람 (칭호 집계용: 실명 + 누른 좋아요 수) ──
 interface BoardLikeGiverRow { name: string | null; count: number | null; }
 export async function getBoardLikeGiverRows(): Promise<string[][]> {
-  const rows = await udGet<BoardLikeGiverRow[]>("/api/underduck/board/like-givers", udReadOpts);
+  const rows = await udGet<BoardLikeGiverRow[]>("/api/underduck/board/like-givers", udReadOptsFor(UD_TAG.board));
   const HEADER = ["name", "count"];
   return [HEADER, ...rows.map((r) => [s(r.name), s(r.count)])];
 }
@@ -47,7 +47,7 @@ interface RosterOut {
   pos: string | null; status: string | null; memo: string | null; pref_pos: string | null;
 }
 export async function getRosterRows(): Promise<string[][]> {
-  const rows = await udGet<RosterOut[]>("/api/underduck/roster", udReadOpts);
+  const rows = await udGet<RosterOut[]>("/api/underduck/roster", udReadOptsFor(UD_TAG.roster));
   // index: 0 no,1 name,2 pos,3 status,4(미사용),5 memo,6 id,7 pref_pos
   const HEADER = ["no", "name", "pos", "status", "", "memo", "id", "pref_pos"];
   return [HEADER, ...rows.map((r) => [s(r.no), s(r.name), s(r.pos), s(r.status), "", s(r.memo), s(r.id), s(r.pref_pos)])];
@@ -61,8 +61,8 @@ interface StatOut {
 }
 export async function getStatsRows(): Promise<string[][]> {
   const [stats, roster] = await Promise.all([
-    udGet<StatOut[]>("/api/underduck/stats", udReadOpts),
-    udGet<RosterOut[]>("/api/underduck/roster", udReadOpts),
+    udGet<StatOut[]>("/api/underduck/stats", udReadOptsFor(UD_TAG.stats)),
+    udGet<RosterOut[]>("/api/underduck/roster", udReadOptsFor(UD_TAG.roster)),
   ]);
   const byName = new Map<string, { no: string; pos: string }>();
   for (const r of roster) {
@@ -82,7 +82,7 @@ interface NoticeOut {
   content: string | null; important: boolean; location: string | null;
 }
 export async function getNoticeRows(): Promise<string[][]> {
-  const n = await udGet<NoticeOut | null>("/api/underduck/notice", udReadOpts);
+  const n = await udGet<NoticeOut | null>("/api/underduck/notice", udReadOptsFor(UD_TAG.notice));
   const HEADER = ["date", "title", "content", "important", "location"];
   if (!n) return [HEADER];
   return [HEADER, [s(n.date), s(n.title), s(n.content), n.important ? "Y" : "N", s(n.location)]];
@@ -95,7 +95,7 @@ interface LineupOut {
   positions: number[][] | null; tactic: string | null; instructions: string[] | null;
 }
 export async function getLineupRows(): Promise<string[][]> {
-  const rows = await udGet<LineupOut[]>("/api/underduck/lineup", udReadOpts);
+  const rows = await udGet<LineupOut[]>("/api/underduck/lineup", udReadOptsFor(UD_TAG.lineup));
   const HEADER = ["matchId", "quarter", "formation",
     "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10", "p11",
     "sub1", "sub2", "sub3", "sub4", "sub5", "sub6", "sub7", "sub8", "sub9", "substitutions",
@@ -121,7 +121,7 @@ interface AttendanceOut {
   nickname: string | null; response: string | null; timestamp: string | null;
 }
 export async function getAttendanceVoteRows(): Promise<string[][]> {
-  const rows = await udGet<AttendanceOut[]>("/api/underduck/attendance", udReadOpts);
+  const rows = await udGet<AttendanceOut[]>("/api/underduck/attendance", udReadOptsFor(UD_TAG.attendance));
   const HEADER = ["matchId", "kakaoId", "nickname", "response", "timestamp"];
   return [HEADER, ...rows.map((r) => [s(r.match_id), s(r.kakao_id), s(r.nickname), s(r.response), s(r.timestamp)])];
 }
@@ -132,7 +132,7 @@ interface VoteCommentOut {
   nickname: string | null; message: string | null; timestamp: string | null;
 }
 export async function getVoteCommentRows(): Promise<string[][]> {
-  const rows = await udGet<VoteCommentOut[]>("/api/underduck/vote-comment", udReadOpts);
+  const rows = await udGet<VoteCommentOut[]>("/api/underduck/vote-comment", udReadOptsFor(UD_TAG.voteComment));
   const HEADER = ["matchId", "kakaoId", "nickname", "message", "timestamp"];
   return [HEADER, ...rows.map((r) => [s(r.match_id), s(r.kakao_id), s(r.nickname), s(r.message), s(r.timestamp)])];
 }
@@ -142,7 +142,7 @@ interface FeaturedOut {
   player_name: string; title_id1: string | null; title_id2: string | null; title_id3: string | null;
 }
 export async function getFeaturedRows(): Promise<string[][]> {
-  const rows = await udGet<FeaturedOut[]>("/api/underduck/featured", udReadOpts);
+  const rows = await udGet<FeaturedOut[]>("/api/underduck/featured", udReadOptsFor(UD_TAG.featured));
   const HEADER = ["선수명", "칭호id", "칭호id", "칭호id"];
   return [HEADER, ...rows.map((r) => [s(r.player_name), s(r.title_id1), s(r.title_id2), s(r.title_id3)])];
 }
@@ -152,7 +152,7 @@ interface FeedbackOut {
   id: number; match_id: number | null; timestamp: string | null; name: string | null; message: string | null;
 }
 export async function getFeedbackRows(): Promise<string[][]> {
-  const rows = await udGet<FeedbackOut[]>("/api/underduck/feedback", udReadOpts);
+  const rows = await udGet<FeedbackOut[]>("/api/underduck/feedback", udReadOptsFor(UD_TAG.feedback));
   const HEADER = ["matchId", "timestamp", "name", "message"];
   return [HEADER, ...rows.map((r) => [s(r.match_id), s(r.timestamp), s(r.name), s(r.message)])];
 }
@@ -163,7 +163,7 @@ interface MomVoteOut {
   voted_for: string | null; vote_type: string | null; timestamp: string | null;
 }
 export async function getMomVoteRows(): Promise<string[][]> {
-  const rows = await udGet<MomVoteOut[]>("/api/underduck/mom-vote", udReadOpts);
+  const rows = await udGet<MomVoteOut[]>("/api/underduck/mom-vote", udReadOptsFor(UD_TAG.momVote));
   const HEADER = ["matchId", "voterName", "votedFor", "voteType", "timestamp"];
   return [HEADER, ...rows.map((r) => [s(r.match_id), s(r.voter_name), s(r.voted_for), s(r.vote_type), s(r.timestamp)])];
 }
@@ -174,7 +174,7 @@ interface UserOut {
   joined_at: string | null; last_login: string | null;
 }
 export async function getUsersRows(): Promise<string[][]> {
-  const rows = await udGet<UserOut[]>("/api/underduck/users", udReadOpts);
+  const rows = await udGet<UserOut[]>("/api/underduck/users", udReadOptsFor(UD_TAG.users));
   const HEADER = ["kakaoId", "nickname", "profileImage", "joinedAt", "lastLogin"];
   return [HEADER, ...rows.map((r) => [s(r.kakao_id), s(r.nickname), s(r.profile_image), s(r.joined_at), s(r.last_login)])];
 }

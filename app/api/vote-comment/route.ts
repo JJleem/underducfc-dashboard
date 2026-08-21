@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidateAppData } from "@/app/lib/cache";
+import { revalidateAppData, UD_TAG } from "@/app/lib/cache";
 import { getVoteCommentRows } from "../../lib/backend";
 import { appendVoteComment, deleteVoteComment } from "../../lib/sheets-write";
 import { requireUser } from "@/app/lib/admin";
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     // 저장된 행을 그대로 돌려준다. 화면이 임의로 만든 timestamp 를 들고 있으면
     // 그 댓글을 지울 때 서버에서 행을 못 찾는다(삭제가 조용히 실패).
     const comment = await appendVoteComment({ matchId: Number(matchId), kakaoId, nickname, message });
-    revalidateAppData();
+    revalidateAppData(UD_TAG.voteComment, UD_TAG.titles);
     return NextResponse.json({ ok: true, comment });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
@@ -70,7 +70,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     await deleteVoteComment(Number(matchId), deleteTarget, timestamp);
-    revalidateAppData();
+    revalidateAppData(UD_TAG.voteComment, UD_TAG.titles);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

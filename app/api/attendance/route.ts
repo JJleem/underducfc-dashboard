@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidateAppData } from "@/app/lib/cache";
+import { revalidateAppData, UD_TAG } from "@/app/lib/cache";
 import { getMatchesRows } from "../../lib/matches-backend";
 import { getAttendanceVoteRows } from "../../lib/backend";
 import { upsertAttendanceVote } from "../../lib/sheets-write";
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       nickname,
       response,
     });
-    revalidateAppData();
+    revalidateAppData(UD_TAG.attendance, UD_TAG.titles);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

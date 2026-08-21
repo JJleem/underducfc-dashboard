@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { requireUser } from "@/app/lib/admin";
-import { revalidateAppData } from "@/app/lib/cache";
+import { revalidateAppData, UD_TAG } from "@/app/lib/cache";
 import { udPut } from "@/app/lib/underduck";
 
 // 선호 포지션은 본인만 설정 → name은 세션에서 강제(클라이언트 입력 무시).
@@ -23,7 +23,7 @@ export async function PUT(request: NextRequest) {
       .slice(0, 3);
 
     await udPut("/api/underduck/roster/pref-pos", { name, pref_pos: cleaned.join(",") });
-    revalidateAppData();
+    revalidateAppData(UD_TAG.roster);
     return NextResponse.json({ ok: true, pref_pos: cleaned });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
