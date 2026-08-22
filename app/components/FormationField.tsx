@@ -94,9 +94,8 @@ function FaceOnMarker({
     <div
       className="relative flex items-end justify-center"
       style={{
-        // 12% 축소안에서 6% 되키워, 시야는 확보하면서 인물이 너무 작아지지 않게 한다.
-        width: 47,
-        height: 55,
+        width: 56,
+        height: 66,
       }}
     >
       {(!src || failed) && (

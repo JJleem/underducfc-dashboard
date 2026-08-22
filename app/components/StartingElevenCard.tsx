@@ -95,9 +95,9 @@ function PlayerCell({
             alt=""
             loading="eager"
             onError={() => setFailed(true)}
-            className="relative z-10 block h-full w-full scale-[0.94] object-cover object-top"
+            className="relative z-10 block h-full w-full scale-[1.0] object-cover object-[center_12%]"
             style={{
-              transformOrigin: "50% 100%",
+              transformOrigin: "50% 20%",
               filter:
                 "saturate(0.78) contrast(1.1) brightness(0.95) drop-shadow(0 2px 3px rgba(0,0,0,0.32))",
             }}
