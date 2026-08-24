@@ -24,9 +24,10 @@ import TitleHighlights from "../../components/TitleHighlights";
 import ProfileTabs from "../../components/ProfileTabs";
 import PrefPosEditor from "../../components/PrefPosEditor";
 import PlayerAvatar from "../../components/PlayerAvatar";
-import PlayerFace from "../../components/PlayerFace";
 import PlayerProfileBackButton from "../../components/PlayerProfileBackButton";
 import PlayerMatchGrid, { type GridMatch } from "../../components/PlayerMatchGrid";
+import ChemistryHub from "../../components/ChemistryHub";
+import { buildPlayerChemistry, buildTeamChemistry } from "../../lib/chemistry";
 
 export const dynamic = "force-dynamic";
 
@@ -265,6 +266,8 @@ export default async function PlayerPage({
 
   // 케미 · 관계 + 베스트 경기
   const relations = buildPlayerRelations(name, rawMatches, rawLineups);
+  const chemistry = buildPlayerChemistry(name, rawMatches, rawLineups);
+  const teamChemistry = canEdit ? buildTeamChemistry(rawMatches, rawLineups) : null;
 
   // 포지션 출전 분포 (쿼터별 라인업 등장 기준)
   const posDist = posCounts
@@ -278,11 +281,7 @@ export default async function PlayerPage({
 
   // 탭이 통째로 빈 경우를 구분해야 빈 화면 대신 안내를 띄울 수 있다.
   const hasStatsTab = !!relations.bestGame || posDist.length > 0 || attendRate !== null;
-  const hasChemTab =
-    !!relations.bestDuo ||
-    !!relations.mostPlayedWith ||
-    !!relations.assistRecipients ||
-    !!relations.assistGivers;
+  const hasChemTab = chemistry.partners.length > 0;
 
   return (
     <main className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-white">
@@ -510,84 +509,7 @@ export default async function PlayerPage({
           }
           chemistry={
             hasChemTab ? (
-              <section className="px-4">
-                {/* 예전엔 에메랄드·핑크·스카이로 테두리와 그라데이션이 제각각인 카드가 따로 놀았다.
-                    골격이 같은 줄로 묶고 구분은 헤어라인 하나로 끝낸다. */}
-                <div className="divide-y divide-gray-100 border-y border-gray-100 dark:divide-white/[0.06] dark:border-white/[0.06]">
-                  {relations.bestDuo && (
-                    <ListRow
-                      left={
-                        <div className="flex items-center -space-x-2">
-                          {relations.bestDuo.names.map((nm) => (
-                            <Link
-                              key={nm}
-                              href={`/players/${encodeURIComponent(nm)}`}
-                              className="active:opacity-60"
-                            >
-                              <PlayerFace name={nm} size={28} />
-                            </Link>
-                          ))}
-                        </div>
-                      }
-                      label="최고의 듀오"
-                      value={
-                        <span className="truncate">
-                          {relations.bestDuo.names.map((nm, i) => (
-                            <span key={nm}>
-                              {i > 0 && <span className="text-gray-400"> · </span>}
-                              <Link
-                                href={`/players/${encodeURIComponent(nm)}`}
-                                className="underline-offset-2 hover:underline"
-                              >
-                                {nm}
-                              </Link>
-                            </span>
-                          ))}
-                        </span>
-                      }
-                      amount={relations.bestDuo.count}
-                      unit="골 합작"
-                    />
-                  )}
-
-                  {[
-                    { label: "가장 많이 함께 뛴 동료", rel: relations.mostPlayedWith, unit: "경기" },
-                    { label: "내 도움을 가장 많이 받은 선수", rel: relations.assistRecipients, unit: "골" },
-                    { label: "나를 가장 많이 살린 도우미", rel: relations.assistGivers, unit: "도움" },
-                  ].map((item) =>
-                    item.rel ? (
-                      <ListRow
-                        key={item.label}
-                        left={
-                          <div className="flex items-center -space-x-2">
-                            {item.rel.names.slice(0, 2).map((nm) => (
-                              <PlayerFace key={nm} name={nm} size={28} />
-                            ))}
-                          </div>
-                        }
-                        label={item.label}
-                        value={
-                          <span className="truncate">
-                            {item.rel.names.map((nm, i) => (
-                              <span key={nm}>
-                                {i > 0 && <span className="text-gray-400"> · </span>}
-                                <Link
-                                  href={`/players/${encodeURIComponent(nm)}`}
-                                  className="underline-offset-2 hover:underline"
-                                >
-                                  {nm}
-                                </Link>
-                              </span>
-                            ))}
-                          </span>
-                        }
-                        amount={item.rel.count}
-                        unit={item.unit}
-                      />
-                    ) : null
-                  )}
-                </div>
-              </section>
+              <ChemistryHub playerName={name} personal={chemistry} team={teamChemistry} />
             ) : (
               <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-gray-600">
                 아직 함께 뛴 기록이 부족해요.
