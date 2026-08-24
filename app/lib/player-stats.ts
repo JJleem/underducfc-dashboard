@@ -1,4 +1,4 @@
-import { positionsFor, rolesFor, type Point, type Role } from "./positions";
+import { groupOfRole, positionsFor, rolesFor, type Point, type PosGroup, type Role } from "./positions";
 
 export interface PlayerRoleStat {
   role: Role;
@@ -31,6 +31,14 @@ export interface PlayerStatsReport {
   maxGoals: number;
   maxPoints: number;
   maxPointStreak: number;
+  record: { wins: number; draws: number; losses: number; winRate: number };
+  pointMatches: number;
+  recentPoints: number;
+  roleVariety: number;
+  sideBalance: { left: number; center: number; right: number };
+  groupBalance: Array<{ group: PosGroup; percent: number }>;
+  latestRoles: Role[];
+  topOpponent: { name: string; points: number } | null;
 }
 
 const clean = (value: unknown) => String(value ?? "").trim();
@@ -60,6 +68,7 @@ export function buildPlayerStatsReport(
   const formations = new Map<string, number>();
   const matchIds = new Set<number>();
   const seenQuarters = new Set<string>();
+  const roleSequence: Role[] = [];
 
   rawLineups.slice(1).forEach((row, rowIndex) => {
     const matchId = Number(row[0]);
@@ -74,6 +83,7 @@ export function buildPlayerStatsReport(
     formations.set(formation, (formations.get(formation) ?? 0) + 1);
     const role = rolesFor(formation, row[24])[slot];
     const point = positionsFor(formation, row[24])[slot];
+    roleSequence.push(role);
     const stat = roleMap.get(role) ?? { quarters: 0, x: 0, y: 0 };
     stat.quarters += 1;
     stat.x += point.x;
@@ -119,6 +129,22 @@ export function buildPlayerStatsReport(
 
   const primaryFormation = Array.from(formations.entries())
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? null;
+  const wins = form.filter((match) => match.result === "승").length;
+  const draws = form.filter((match) => match.result === "무").length;
+  const losses = form.filter((match) => match.result === "패").length;
+  const decided = wins + draws + losses;
+  const sideCounts = roles.reduce((acc, role) => {
+    const side = role.point.x < 38 ? "left" : role.point.x > 62 ? "right" : "center";
+    acc[side] += role.quarters;
+    return acc;
+  }, { left: 0, center: 0, right: 0 });
+  const asPercent = (value: number) => totalQuarters ? Math.round((value / totalQuarters) * 100) : 0;
+  const groupCounts = new Map<PosGroup, number>();
+  roles.forEach((role) => groupCounts.set(groupOfRole(role.role), (groupCounts.get(groupOfRole(role.role)) ?? 0) + role.quarters));
+  const opponentPoints = new Map<string, number>();
+  form.forEach((match) => opponentPoints.set(match.opponent, (opponentPoints.get(match.opponent) ?? 0) + match.goals + match.assists));
+  const topOpponentEntry = Array.from(opponentPoints.entries()).filter(([, points]) => points > 0)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ko"))[0];
   return {
     totalQuarters,
     lineupMatches: matchIds.size,
@@ -134,5 +160,15 @@ export function buildPlayerStatsReport(
     maxGoals: Math.max(0, ...form.map((m) => m.goals)),
     maxPoints: Math.max(0, ...form.map((m) => m.goals + m.assists)),
     maxPointStreak,
+    record: { wins, draws, losses, winRate: decided ? Math.round((wins / decided) * 100) : 0 },
+    pointMatches: form.filter((match) => match.goals + match.assists > 0).length,
+    recentPoints: form.slice(-5).reduce((sum, match) => sum + match.goals + match.assists, 0),
+    roleVariety: roles.length,
+    sideBalance: { left: asPercent(sideCounts.left), center: asPercent(sideCounts.center), right: asPercent(sideCounts.right) },
+    groupBalance: (["GK", "DF", "MF", "FW"] as PosGroup[])
+      .map((group) => ({ group, percent: asPercent(groupCounts.get(group) ?? 0) }))
+      .filter((item) => item.percent > 0),
+    latestRoles: roleSequence.slice(-6).reverse(),
+    topOpponent: topOpponentEntry ? { name: topOpponentEntry[0], points: topOpponentEntry[1] } : null,
   };
 }
