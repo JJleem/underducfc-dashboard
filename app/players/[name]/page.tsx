@@ -1,12 +1,9 @@
 // app/players/[name]/page.tsx
 // 선수 전용 페이지 (페이스온). 칭호 + 스탯 + 출석률 + 최근 활약.
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Crown, Flame, Spline, Volleyball } from "lucide-react";
 import { auth } from "@/auth";
 import { getMatchesRows } from "../../lib/matches-backend";
 import { isCasualMatch, isMomOf, isOuting, matchLogo } from "../../components/home/match-result";
-import { getOpponentLogo } from "../../lib/opponent-logos";
 import {
   getStatsRows,
   getRosterRows,
@@ -14,7 +11,6 @@ import {
   getFeaturedRows,
 } from "../../lib/backend";
 import {
-  buildPlayerRelations,
   managerTitle,
   MANAGER_NAME,
   type EarnedTitle,
@@ -28,94 +24,10 @@ import PlayerProfileBackButton from "../../components/PlayerProfileBackButton";
 import PlayerMatchGrid, { type GridMatch } from "../../components/PlayerMatchGrid";
 import ChemistryHub from "../../components/ChemistryHub";
 import { buildPlayerChemistry, buildTeamChemistry } from "../../lib/chemistry";
+import PlayerStatsReport from "../../components/PlayerStatsReport";
+import { buildPlayerStatsReport } from "../../lib/player-stats";
 
 export const dynamic = "force-dynamic";
-
-/**
- * 골·도움 표시. 베스트 경기와 최근 활약 두 곳에서 같은 모양이어야 해서 한 군데로 모았다.
- * (예전엔 ⚽ / 🅰️ 이모지라 기기·OS마다 다르게 그려졌고 나머지 lucide 아이콘과 톤이 어긋났다)
- */
-function ScorePips({ goals, assists, size = 12 }: { goals: number; assists: number; size?: number }) {
-  return (
-    <>
-      {goals > 0 && (
-        <span className="inline-flex items-center gap-0.5 font-black text-gray-800 dark:text-gray-100">
-          <Volleyball width={size} height={size} strokeWidth={2.4} />
-          {goals > 1 && <span className="tabular-nums">×{goals}</span>}
-        </span>
-      )}
-      {assists > 0 && (
-        <span className="inline-flex items-center gap-0.5 font-black text-gray-400 dark:text-white/45">
-          <Spline width={size} height={size} strokeWidth={2.4} />
-          {assists > 1 && <span className="tabular-nums">×{assists}</span>}
-        </span>
-      )}
-    </>
-  );
-}
-
-/**
- * 하이라이트·케미 공통 줄.
- * 예전엔 줄마다 색 테두리 + 그라데이션 + 아이콘 배지가 따로 붙어서 여섯 개 섹션이
- * 저마다 다른 색으로 소리쳤다. 골격을 하나로 통일하고 색은 데이터(얼굴·숫자)에만 남긴다.
- */
-function ListRow({
-  left,
-  label,
-  value,
-  amount,
-  unit,
-  href,
-}: {
-  left: React.ReactNode;
-  label: string;
-  value: React.ReactNode;
-  amount: React.ReactNode;
-  unit: string;
-  href?: string;
-}) {
-  const inner = (
-    <>
-      <div className="shrink-0">{left}</div>
-      <div className="min-w-0 flex-1">
-        <div className="text-[9px] font-black tracking-wide text-gray-400 dark:text-white/40">{label}</div>
-        <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12.5px] font-black text-gray-900 dark:text-white">
-          {value}
-        </div>
-      </div>
-      <div className="shrink-0 text-right leading-none">
-        <div className="text-[15px] font-black tabular-nums text-gray-900 dark:text-white">{amount}</div>
-        <div className="mt-1 text-[9px] font-bold text-gray-400">{unit}</div>
-      </div>
-    </>
-  );
-
-  // 줄 안에 선수 링크가 들어가는 경우가 있어 href 가 있는 줄만 Link 로 감싼다(중첩 방지).
-  return href ? (
-    <Link href={href} className="flex items-center gap-3 py-3 active:opacity-60">
-      {inner}
-    </Link>
-  ) : (
-    <div className="flex items-center gap-3 py-3">{inner}</div>
-  );
-}
-
-/** 리스트 줄 왼쪽에 들어가는 상대팀 마크. 로고가 없으면 팀명 첫 글자. */
-function OpponentMark({ name }: { name: string }) {
-  const logo = getOpponentLogo(name);
-  return logo ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={logo}
-      alt=""
-      className="h-7 w-7 rounded-full bg-white object-cover ring-1 ring-gray-200 dark:ring-white/10"
-    />
-  ) : (
-    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-[11px] font-black text-gray-400 dark:bg-white/10 dark:text-gray-500">
-      {name.trim().charAt(0) || "?"}
-    </span>
-  );
-}
 
 const posColor = (pos: string): string => {
   const p = pos?.toUpperCase();
@@ -264,8 +176,7 @@ export default async function PlayerPage({
     else break;
   }
 
-  // 케미 · 관계 + 베스트 경기
-  const relations = buildPlayerRelations(name, rawMatches, rawLineups);
+  // 케미 · 관계
   // 로스터에 한 번이라도 등록된 선수만 케미 대상으로 본다. 상태가 비활동이어도
   // 로스터 행은 남아 있으므로 포함되고, 일회성 게스트 이름은 자연스럽게 빠진다.
   const rosterNames = new Set(
@@ -274,18 +185,11 @@ export default async function PlayerPage({
   const chemistry = buildPlayerChemistry(name, rawMatches, rawLineups, rosterNames);
   const teamChemistry = canEdit ? buildTeamChemistry(rawMatches, rawLineups, rosterNames) : null;
 
-  // 포지션 출전 분포 (쿼터별 라인업 등장 기준)
-  const posDist = posCounts
-    ? (["GK", "DF", "MF", "FW"] as const)
-        .map((p) => ({ pos: p, count: posCounts[p] }))
-        .filter((d) => d.count > 0)
-    : [];
-  const posMax = posDist.reduce((mx, d) => Math.max(mx, d.count), 0);
-
   const accent = posColor(displayPositions[0] || registeredPos);
+  const statsReport = buildPlayerStatsReport(name, rawMatches, rawLineups, { apps, goals, assists, mom });
 
   // 탭이 통째로 빈 경우를 구분해야 빈 화면 대신 안내를 띄울 수 있다.
-  const hasStatsTab = !!relations.bestGame || posDist.length > 0 || attendRate !== null;
+  const hasStatsTab = statsReport.totalQuarters > 0 || statsReport.recent.length > 0 || attendRate !== null;
   const hasChemTab = chemistry.partners.length > 0;
 
   return (
@@ -419,93 +323,16 @@ export default async function PlayerPage({
           }
           stats={
             hasStatsTab ? (
-              <div className="space-y-6">
-                {relations.bestGame && (
-                  <section className="px-4">
-                    <p className="mb-2 text-[10px] font-black tracking-widest text-gray-500 dark:text-gray-400">
-                      시즌 베스트 경기
-                    </p>
-                    <div className="border-y border-gray-100 dark:border-white/[0.06]">
-                      <ListRow
-                        left={<OpponentMark name={relations.bestGame.opponent} />}
-                        label={relations.bestGame.date}
-                        value={
-                          <>
-                            <span className="truncate">vs {relations.bestGame.opponent}</span>
-                            <span className="flex shrink-0 items-center gap-1.5 text-[11px]">
-                              <ScorePips
-                                goals={relations.bestGame.goals}
-                                assists={relations.bestGame.assists}
-                                size={12}
-                              />
-                            </span>
-                            {relations.bestGame.isMom && (
-                              <Crown width={12} height={12} strokeWidth={2.6} className="shrink-0 text-amber-400" />
-                            )}
-                          </>
-                        }
-                        amount={relations.bestGame.points}
-                        unit="공격P"
-                        href={`/matches/${relations.bestGame.matchId}`}
-                      />
-                    </div>
-                  </section>
-                )}
-
-                {/* 포지션 출전 분포 — 막대 색은 포지션 고유색이라 그대로 둔다(데이터 색) */}
-                {posDist.length > 0 && (
-                  <section className="px-4">
-                    <p className="mb-2 text-[10px] font-black tracking-widest text-gray-500 dark:text-gray-400">
-                      포지션 출전
-                    </p>
-                    <div className="space-y-2">
-                      {posDist.map((d) => {
-                        const color = posColor(d.pos);
-                        return (
-                          <div key={d.pos} className="flex items-center gap-2">
-                            <span className="w-8 shrink-0 text-[10px] font-black" style={{ color }}>
-                              {d.pos}
-                            </span>
-                            <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-white/5">
-                              <div
-                                className="h-full rounded-full"
-                                style={{ width: `${posMax > 0 ? (d.count / posMax) * 100 : 0}%`, background: color }}
-                              />
-                            </div>
-                            <span className="w-10 text-right text-[11px] font-black tabular-nums text-gray-500 dark:text-gray-400">
-                              {d.count}쿼터
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </section>
-                )}
-
-                {/* 출석률 — 핑크 고정이던 걸 선수 포지션 색으로 맞춰 히어로(링·등번호)와 한 색으로 묶는다 */}
-                {attendRate !== null && (
-                  <section className="px-4">
-                    <div className="mb-1.5 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <p className="text-[10px] font-black tracking-widest text-gray-500 dark:text-gray-400">
-                          출석률 <span className="font-medium text-gray-400">({attendCount}/{withAttendees.length})</span>
-                        </p>
-                        {currentStreak >= 2 && (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] font-black text-orange-500">
-                            <Flame width={11} height={11} strokeWidth={2.6} /> {currentStreak}연속
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[13px] font-black tabular-nums" style={{ color: accent }}>
-                        {attendRate}%
-                      </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-white/5">
-                      <div className="h-full rounded-full" style={{ width: `${attendRate}%`, background: accent }} />
-                    </div>
-                  </section>
-                )}
-              </div>
+              <PlayerStatsReport
+                report={statsReport}
+                attendance={{
+                  rate: attendRate,
+                  count: attendCount,
+                  total: withAttendees.length,
+                  streak: currentStreak,
+                  accent,
+                }}
+              />
             ) : (
               <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-gray-600">
                 아직 쌓인 기록이 없어요.
