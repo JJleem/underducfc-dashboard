@@ -43,6 +43,12 @@ function TeamMap({ report, playerName }: { report: TeamChemistry; playerName: st
   const [metric, setMetric] = useState<"affinity" | "combinedGoals" | "winRate">("affinity");
   const [selected, setSelected] = useState<TeamChemistryPair | null>(null);
   const pairs = useMemo(() => new Map(report.pairs.map((pair) => [pairId(...pair.names), pair])), [report.pairs]);
+  // 큰 표에서 본인을 찾으려고 양축을 훑지 않도록 첫 행·첫 열에 고정한다.
+  // 나머지 선수의 가나다순은 유지해 위치 예측 가능성을 해치지 않는다.
+  const orderedPlayers = useMemo(() => [
+    ...report.players.filter((name) => name === playerName),
+    ...report.players.filter((name) => name !== playerName),
+  ], [report.players, playerName]);
   const values = report.pairs.map((pair) => metric === "winRate" ? pair.record.winRate : pair[metric]);
   const max = Math.max(...values, 1);
   const valueOf = (pair: TeamChemistryPair) => metric === "winRate" ? pair.record.winRate : pair[metric];
@@ -64,20 +70,21 @@ function TeamMap({ report, playerName }: { report: TeamChemistry; playerName: st
 
       <div className="mt-4 overflow-x-auto border-y border-gray-200/70 dark:border-white/[0.07]">
         <div className="w-max min-w-full bg-gray-50 dark:bg-[#09090b]">
-          <div className="grid" style={{ gridTemplateColumns: `64px repeat(${report.players.length}, 42px)` }}>
+          <div className="grid" style={{ gridTemplateColumns: `64px repeat(${orderedPlayers.length}, 42px)` }}>
             <div className="sticky left-0 z-20 bg-gray-50 dark:bg-[#09090b]" />
-            {report.players.map((name) => (
-              <div key={name} className={`flex h-16 items-end justify-center pb-1 text-[9px] font-black [writing-mode:vertical-rl] ${name === playerName ? "text-[#F56F88] dark:text-[#FFB6C1]" : "text-gray-400 dark:text-white/30"}`}>{name}</div>
+            {orderedPlayers.map((name) => (
+              <div key={name} className={`flex h-16 items-end justify-center pb-1 text-[9px] font-black [writing-mode:vertical-rl] ${name === playerName ? "bg-[#FF8FA3]/10 text-[#F56F88] dark:bg-[#FFB6C1]/[0.08] dark:text-[#FFB6C1]" : "text-gray-400 dark:text-white/30"}`}>{name}</div>
             ))}
-            {report.players.map((rowName) => (
+            {orderedPlayers.map((rowName) => (
               <div key={`row-${rowName}`} className="contents">
-                <div className={`sticky left-0 z-10 flex h-10 items-center truncate border-t border-gray-100 bg-gray-50 px-2 text-[9px] font-black dark:border-white/[0.04] dark:bg-[#09090b] ${rowName === playerName ? "text-[#F56F88] dark:text-[#FFB6C1]" : "text-gray-500 dark:text-white/35"}`}>{rowName}</div>
-                {report.players.map((colName) => {
+                <div className={`sticky left-0 z-10 flex h-10 items-center truncate border-t px-2 text-[9px] font-black ${rowName === playerName ? "border-[#FF8FA3]/20 bg-[#FF8FA3]/10 text-[#F56F88] dark:border-[#FFB6C1]/15 dark:bg-[#FFB6C1]/[0.08] dark:text-[#FFB6C1]" : "border-gray-100 bg-gray-50 text-gray-500 dark:border-white/[0.04] dark:bg-[#09090b] dark:text-white/35"}`}>{rowName}</div>
+                {orderedPlayers.map((colName) => {
                   const pair = rowName === colName ? null : pairs.get(pairId(rowName, colName));
                   const value = pair ? valueOf(pair) : 0;
                   const alpha = pair ? 0.08 + (value / max) * 0.62 : 0;
+                  const isMine = rowName === playerName || colName === playerName;
                   return rowName === colName ? (
-                    <div key={colName} className="m-1 rounded-md bg-gray-200/60 dark:bg-white/[0.05]" />
+                    <div key={colName} className={`m-1 rounded-md ${isMine ? "bg-[#FF8FA3]/20 ring-1 ring-inset ring-[#FF8FA3]/25 dark:bg-[#FFB6C1]/15" : "bg-gray-200/60 dark:bg-white/[0.05]"}`} />
                   ) : (
                     <button
                       key={colName}
@@ -85,8 +92,8 @@ function TeamMap({ report, playerName }: { report: TeamChemistry; playerName: st
                       disabled={!pair}
                       aria-label={pair ? `${rowName}, ${colName}: ${value}${suffix}` : `${rowName}, ${colName}: 기록 없음`}
                       onClick={() => pair && setSelected(pair)}
-                      className="m-1 flex h-8 items-center justify-center rounded-md text-[8px] font-black tabular-nums text-gray-800 disabled:opacity-20 dark:text-white"
-                      style={pair ? { backgroundColor: `rgba(255,143,163,${alpha})` } : undefined}
+                      className={`m-1 flex h-8 items-center justify-center rounded-md text-[8px] font-black tabular-nums text-gray-800 disabled:opacity-20 dark:text-white ${isMine ? "ring-1 ring-inset ring-[#FF8FA3]/35 dark:ring-[#FFB6C1]/30" : ""}`}
+                      style={pair ? { backgroundColor: `rgba(255,143,163,${isMine ? Math.max(alpha, 0.18) : alpha})` } : isMine ? { backgroundColor: "rgba(255,143,163,0.08)" } : undefined}
                     >
                       {pair && value > 0 ? `${value}${suffix}` : ""}
                     </button>
