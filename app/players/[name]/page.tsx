@@ -266,8 +266,13 @@ export default async function PlayerPage({
 
   // 케미 · 관계 + 베스트 경기
   const relations = buildPlayerRelations(name, rawMatches, rawLineups);
-  const chemistry = buildPlayerChemistry(name, rawMatches, rawLineups);
-  const teamChemistry = canEdit ? buildTeamChemistry(rawMatches, rawLineups) : null;
+  // 로스터에 한 번이라도 등록된 선수만 케미 대상으로 본다. 상태가 비활동이어도
+  // 로스터 행은 남아 있으므로 포함되고, 일회성 게스트 이름은 자연스럽게 빠진다.
+  const rosterNames = new Set(
+    rawRoster.slice(1).map((row) => (row[1] || "").trim()).filter(Boolean),
+  );
+  const chemistry = buildPlayerChemistry(name, rawMatches, rawLineups, rosterNames);
+  const teamChemistry = canEdit ? buildTeamChemistry(rawMatches, rawLineups, rosterNames) : null;
 
   // 포지션 출전 분포 (쿼터별 라인업 등장 기준)
   const posDist = posCounts

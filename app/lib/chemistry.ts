@@ -41,6 +41,7 @@ export interface TeamChemistryTrio {
   sharedQuarters: number;
   sharedMatches: number;
   combinedGoals: number;
+  cohesion: number;
   record: ChemistryRecord;
 }
 
@@ -77,6 +78,7 @@ export function buildPlayerChemistry(
   playerName: string,
   rawMatches: string[][],
   rawLineups: string[][],
+  allowedPlayerNames?: ReadonlySet<string>,
 ): PlayerChemistry {
   const target = clean(playerName);
   const quarterPlayers = new Map<string, Set<string>>();
@@ -89,7 +91,9 @@ export function buildPlayerChemistry(
     const quarter = clean(row[1]) || `row-${rowIndex}`;
     const key = `${matchId}:${quarter}`;
     const names = new Set(
-      row.slice(3, 14).map(clean).filter((name) => name && name !== "미정"),
+      row.slice(3, 14).map(clean).filter((name) =>
+        name && name !== "미정" && (!allowedPlayerNames || allowedPlayerNames.has(name)),
+      ),
     );
     if (!names.size) return;
     quarterPlayers.set(key, names);
@@ -155,8 +159,10 @@ export function buildPlayerChemistry(
         recent: results.slice(-5).reverse(),
       },
     };
-    // 직접 합작을 충분히 보상하되, 한 번의 합작만으로 오랜 동반 출전을 압도하지 않게 한다.
-    const rankScore = keys.size * 3 + (given + got) * 10 + affinity * 0.18 + wins * 1.5;
+    // 절대 출전량은 작은 신뢰도 보정으로만 쓴다. 매 쿼터 뛰는 GK가 단순히 오래
+    // 겹쳤다는 이유만으로 늘 대표 파트너가 되는 대신, 서로의 출전이 얼마나 같이
+    // 움직였는지(affinity)와 직접 합작이 순위를 주도한다.
+    const rankScore = affinity * 0.72 + (given + got) * 14 + Math.min(keys.size, 12) * 1.2;
     return {
       ...base,
       label: relationshipLabel(base),
@@ -194,7 +200,11 @@ function recordFor(matchIds: Set<number>, rawMatches: string[][]): ChemistryReco
 }
 
 /** 팀 맵과 3인 조합용 집계. 실제 같은 쿼터의 선발 조합만 사용한다. */
-export function buildTeamChemistry(rawMatches: string[][], rawLineups: string[][]): TeamChemistry {
+export function buildTeamChemistry(
+  rawMatches: string[][],
+  rawLineups: string[][],
+  allowedPlayerNames?: ReadonlySet<string>,
+): TeamChemistry {
   const playerQuarterCount = new Map<string, number>();
   const pairQuarters = new Map<string, number>();
   const pairMatches = new Map<string, Set<number>>();
@@ -217,7 +227,9 @@ export function buildTeamChemistry(rawMatches: string[][], rawLineups: string[][
     const matchId = Number(row[0]);
     if (!Number.isFinite(matchId)) return;
     const names = Array.from(new Set(
-      row.slice(3, 14).map(clean).filter((name) => name && name !== "미정"),
+      row.slice(3, 14).map(clean).filter((name) =>
+        name && name !== "미정" && (!allowedPlayerNames || allowedPlayerNames.has(name)),
+      ),
     )).sort((a, b) => a.localeCompare(b, "ko"));
     names.forEach((name) => playerQuarterCount.set(name, (playerQuarterCount.get(name) ?? 0) + 1));
     for (let i = 0; i < names.length; i++) {
@@ -261,11 +273,22 @@ export function buildTeamChemistry(rawMatches: string[][], rawLineups: string[][
       (linkGoals.get(pairKey(names[0], names[1])) ?? 0) +
       (linkGoals.get(pairKey(names[0], names[2])) ?? 0) +
       (linkGoals.get(pairKey(names[1], names[2])) ?? 0);
-    return { names, sharedQuarters, sharedMatches: matches.size, combinedGoals, record: recordFor(matches, rawMatches) };
+    const totalProduct = names.reduce((product, name) => product * (playerQuarterCount.get(name) ?? 1), 1);
+    const cohesion = Math.round((sharedQuarters / Math.cbrt(totalProduct)) * 100);
+    return {
+      names,
+      sharedQuarters,
+      sharedMatches: matches.size,
+      combinedGoals,
+      cohesion,
+      record: recordFor(matches, rawMatches),
+    };
   });
   // 우연히 한두 번 겹친 조합은 랭킹에서 제외하고, 동반 시간이 긴 순으로 제한한다.
+  const trioRank = (trio: TeamChemistryTrio) =>
+    trio.cohesion * 0.7 + Math.min(trio.sharedQuarters, 10) * 3 + trio.combinedGoals * 8;
   trios.sort((a, b) =>
-    b.sharedQuarters - a.sharedQuarters || b.combinedGoals - a.combinedGoals || b.record.winRate - a.record.winRate,
+    trioRank(b) - trioRank(a) || b.sharedQuarters - a.sharedQuarters || b.combinedGoals - a.combinedGoals,
   );
 
   return { players, pairs, trios: trios.filter((trio) => trio.sharedQuarters >= 2).slice(0, 12) };

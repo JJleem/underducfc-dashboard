@@ -57,3 +57,36 @@ test("팀 맵의 2인·3인 조합도 동일 쿼터 기준으로 집계한다", 
   assert.equal(trio?.sharedQuarters, 2);
   assert.equal(trio?.sharedMatches, 1);
 });
+
+test("로스터에 없는 게스트는 개인 및 팀 케미에서 제외한다", () => {
+  const lineups = [
+    ["matchId", "quarter", "formation"],
+    row(0, "1Q", ["민수", "철수", "게스트"]),
+    row(0, "2Q", ["민수", "철수", "게스트"]),
+  ];
+  const roster = new Set(["민수", "철수"]);
+  const personal = buildPlayerChemistry("민수", matches, lineups, roster);
+  const team = buildTeamChemistry(matches, lineups, roster);
+
+  assert.deepEqual(personal.partners.map((p) => p.name), ["철수"]);
+  assert.deepEqual(team.players, ["민수", "철수"]);
+  assert.equal(team.trios.length, 0);
+});
+
+test("상시 출전 선수보다 출전 흐름이 가까운 파트너를 우선한다", () => {
+  const lineups = [
+    ["matchId", "quarter", "formation"],
+    row(0, "1Q", ["민수", "골키퍼", "파트너"]),
+    row(0, "2Q", ["민수", "골키퍼", "파트너"]),
+    row(0, "3Q", ["민수", "골키퍼", "파트너"]),
+    row(0, "4Q", ["민수", "골키퍼"]),
+    row(1, "1Q", ["골키퍼"]),
+    row(1, "2Q", ["골키퍼"]),
+    row(1, "3Q", ["골키퍼"]),
+    row(1, "4Q", ["골키퍼"]),
+  ];
+  const report = buildPlayerChemistry("민수", matches, lineups, new Set(["민수", "골키퍼", "파트너"]));
+
+  assert.equal(report.featured?.name, "파트너");
+  assert.ok(report.partners[0].affinity > report.partners[1].affinity);
+});

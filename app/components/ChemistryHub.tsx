@@ -126,9 +126,9 @@ function TrioList({ report }: { report: TeamChemistry }) {
             </summary>
             <div className="mx-4 mb-4 ml-9 grid grid-cols-3 divide-x divide-gray-200 border-l border-gray-200 pl-3 text-center dark:divide-white/[0.08] dark:border-white/[0.08]">
               {[
+                ["동반 밀도", `${trio.cohesion}%`],
                 ["내부 합작", `${trio.combinedGoals}`],
                 ["동반 승률", trio.record.played ? `${trio.record.winRate}%` : "—"],
-                ["동반 전적", trio.record.played ? `${trio.record.wins}승 ${trio.record.draws}무 ${trio.record.losses}패` : "집계 전"],
               ].map(([label, value]) => <div key={label}><p className="text-[9px] text-gray-400">{label}</p><p className="mt-1 text-[11px] font-black text-gray-800 dark:text-white/80">{value}</p></div>)}
             </div>
           </details>
