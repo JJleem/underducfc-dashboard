@@ -27,7 +27,7 @@ export interface MatchdayArt {
  * public/matchday/ 에 실제로 들어 있는 배경들.
  * 여기 적힌 것만 쓰인다 — 파일 없는 이름을 넣으면 카드마다 404 가 나간다.
  */
-const ART: MatchdayArt[] = [
+export const MATCHDAY_ART: readonly MatchdayArt[] = [
   // 2026 FINAL NIGHT gallery selection
   { src: "/matchday/gallery-final-night-1.webp", soft: true },
   { src: "/matchday/gallery-final-night-2.webp", soft: true },
@@ -191,7 +191,7 @@ function mix32(n: number): number {
  *    한 번 정해진 그림이 바뀌면 안 되므로 여기서만 바꿨다.
  */
 function shuffledOrder(seed: number): number[] {
-  const order = ART.map((_, i) => i);
+  const order = MATCHDAY_ART.map((_, i) => i);
   let s = mix32(seed);
   for (let i = order.length - 1; i > 0; i--) {
     s = mix32(s);
@@ -202,10 +202,10 @@ function shuffledOrder(seed: number): number[] {
 }
 
 export function matchdayArt(matchId: number, dDay: number): MatchdayArt | null {
-  if (ART.length === 0) return null;
+  if (MATCHDAY_ART.length === 0) return null;
   const order = shuffledOrder(Math.imul(matchId + DDAY_SALT * 7919, 0x9e3779b1));
   // 결과 입력이 늦어 D 가 음수인 카드도 들어온다(MatchFeed 의 awaitingResult).
-  return ART[order[((dDay % ART.length) + ART.length) % ART.length]];
+  return MATCHDAY_ART[order[((dDay % MATCHDAY_ART.length) + MATCHDAY_ART.length) % MATCHDAY_ART.length]];
 }
 
 /**
@@ -215,7 +215,7 @@ export function matchdayArt(matchId: number, dDay: number): MatchdayArt | null {
  * 크레스트가 있으니 둘이 겹친다. 그래서 워터마크를 걷고 그림 쪽에 맡겼다.
  * 밝은 그림(수채화)은 뺀다 — 흰 글씨를 얹는 자리라 바탕이 밝으면 안 읽힌다.
  */
-const RESULT_ART = ART.filter((a) => a.src.includes("/flag-") && !a.light);
+const RESULT_ART = MATCHDAY_ART.filter((a) => a.src.includes("/flag-") && !a.light);
 
 /**
  * 이미 끝난 경기(사진 없는)의 배경. 날짜를 섞지 않는다 — 여기가 예정 경기와 다르다.
@@ -236,7 +236,7 @@ export function matchResultArt(matchId: number): MatchdayArt | null {
  * 갈라 하는 훈련이라 같은 그림을 깔면 결과 카드와 구분이 안 된다 — 카드 내용을
  * 아무리 바꿔도 첫인상이 같으면 스크롤에서는 같은 카드로 읽힌다.
  */
-const CASUAL_ART = ART.filter(
+const CASUAL_ART = MATCHDAY_ART.filter(
   (a) => (a.src.includes("/team-") || a.src.includes("/fun-")) && !a.light,
 );
 
