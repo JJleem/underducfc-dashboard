@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Download, Grid3X3, Heart, MessageCircle, Send } from "lucide-react";
+import { ArrowLeft, ChevronsLeftRight, Download, Grid3X3, Heart, MessageCircle, Send } from "lucide-react";
 import { MATCHDAY_GALLERY } from "@/app/lib/matchday-gallery";
 import type { GalleryComment, GalleryState } from "@/app/lib/gallery";
 import { Drawer, DrawerContent } from "@/app/components/ui/drawer";
@@ -12,17 +12,20 @@ export default function GalleryClient() {
   const [viewer, setViewer] = useState(false), [index, setIndex] = useState(0);
   const [loaded, setLoaded] = useState<Record<string, boolean>>({}), [states, setStates] = useState<Record<string, GalleryState>>({});
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
   const art = MATCHDAY_GALLERY[index], social = states[art.id] ?? { artworkId: art.id, liked: false, likeCount: 0, commentCount: 0 };
   useEffect(() => { fetch("/api/gallery/state").then(r => r.ok ? r.json() : []).then((rows: GalleryState[]) => setStates(Object.fromEntries(rows.map(x => [x.artworkId, x])))); }, []);
   useEffect(() => { localStorage.setItem("ud-gallery-seen-v1", "1"); }, []);
   useEffect(() => { if (!viewer) return; for (let d=-2; d<=2; d++) { const x=MATCHDAY_GALLERY[index+d]; if(x) new Image().src=x.src; } }, [viewer,index]);
+  useEffect(() => { if (!viewer || localStorage.getItem("ud-gallery-swipe-seen-v1") === "1") return; const timer=window.setTimeout(()=>setShowSwipeHint(true),350); return ()=>window.clearTimeout(timer); }, [viewer]);
+  function dismissSwipeHint(){ localStorage.setItem("ud-gallery-swipe-seen-v1","1"); setShowSwipeHint(false); }
   function open(i:number){ setIndex(i); setViewer(true); requestAnimationFrame(()=>rail.current?.scrollTo({left:i*rail.current.clientWidth})); }
   function move(n:number){ const i=Math.max(0,Math.min(MATCHDAY_GALLERY.length-1,n)); rail.current?.scrollTo({left:i*rail.current.clientWidth,behavior:"smooth"}); }
   async function like(){ const before=social; setStates(s=>({...s,[art.id]:{...before,liked:!before.liked,likeCount:Math.max(0,before.likeCount+(before.liked?-1:1))}})); const r=await fetch(`/api/gallery/${art.id}/like`,{method:"POST"}); if(r.ok){const x=await r.json();setStates(s=>({...s,[art.id]:{...s[art.id],...x}}));}else setStates(s=>({...s,[art.id]:before})); }
 
   if(!viewer) return <main className="min-h-[100dvh] bg-gray-50 pb-8 dark:bg-[#09090b]">
     <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-gray-200/70 bg-white/85 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] backdrop-blur-xl dark:border-white/[.07] dark:bg-[#09090b]/85"><button onClick={()=>router.back()} className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10"><ArrowLeft className="h-5 w-5"/></button><div><p className="text-[9px] font-black tracking-[.25em] text-[#FF8FA3]">UNDERDUCK FC</p><h1 className="text-sm font-black dark:text-white">MATCHDAY ARCHIVE</h1></div><span className="ml-auto text-[10px] font-bold text-gray-400">{MATCHDAY_GALLERY.length} CUTS</span></header>
-    <div className="grid grid-cols-3 gap-0.5 bg-gray-200 p-0.5 dark:bg-black">{MATCHDAY_GALLERY.map((x,i)=><button key={x.id} onClick={()=>open(i)} className="aspect-square overflow-hidden bg-gray-300 dark:bg-white/5">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={x.thumb} alt={x.title} loading={i<12?"eager":"lazy"} decoding="async" className="h-full w-full object-cover transition active:scale-95"/></button>)}</div>
+    <div className="grid grid-cols-3 gap-0.5 bg-gray-200 p-0.5 dark:bg-black">{MATCHDAY_GALLERY.map((x,i)=>{const meta=states[x.id];return <button key={x.id} onClick={()=>open(i)} className="relative aspect-square overflow-hidden bg-gray-300 dark:bg-white/5">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={x.thumb} alt={x.title} loading={i<12?"eager":"lazy"} decoding="async" className="h-full w-full object-cover transition active:scale-95"/>{meta&&(meta.likeCount>0||meta.commentCount>0)&&<span className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/65 to-transparent px-2 pb-1.5 pt-5 text-[9px] font-black text-white">{meta.likeCount>0&&<span className="flex items-center gap-0.5"><Heart className="h-3 w-3 fill-white"/>{meta.likeCount}</span>}{meta.commentCount>0&&<span className="flex items-center gap-0.5"><MessageCircle className="h-3 w-3"/>{meta.commentCount}</span>}</span>}</button>})}</div>
   </main>;
 
   return <ModalPortal><main className="fixed inset-0 z-30 mx-auto flex h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-[#f4f4f5] text-gray-950 dark:bg-[#050507] dark:text-white [&_section]:!bg-[#f4f4f5] dark:[&_section]:!bg-[#050507]">
@@ -30,6 +33,7 @@ export default function GalleryClient() {
     <div ref={rail} onScroll={e=>setIndex(Math.round(e.currentTarget.scrollLeft/e.currentTarget.clientWidth))} className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto [scrollbar-width:none]">{MATCHDAY_GALLERY.map((x,i)=><section key={x.id} onClick={e=>{const b=e.currentTarget.getBoundingClientRect();move(i+(e.clientX-b.left<b.width/2?-1:1));}} className="flex min-w-full snap-center items-center justify-center bg-[#050507]">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={x.src} alt={x.title} loading={Math.abs(i-index)<=2?"eager":"lazy"} decoding="async" onLoad={()=>setLoaded(v=>({...v,[x.id]:true}))} className={`max-h-[100dvh] w-full select-none object-contain transition-opacity duration-300 ${loaded[x.id]?"opacity-100":"opacity-0"}`}/></section>)}</div>
     <aside className="absolute bottom-[max(24px,env(safe-area-inset-bottom))] right-4 z-20 flex flex-col gap-4"><Action label={String(social.likeCount)} onClick={like}><Heart className={social.liked?"fill-[#FF8FA3] text-[#FF8FA3]":""}/></Action><Action label={String(social.commentCount)} onClick={()=>setCommentsOpen(true)}><MessageCircle/></Action><a href={art.src} download className="flex flex-col items-center gap-1"><span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/60"><Download className="h-5 w-5"/></span><span className="text-[9px] font-bold">SAVE</span></a></aside>
     <Comments artworkId={art.id} open={commentsOpen} onOpenChange={setCommentsOpen} onCount={n=>setStates(s=>({...s,[art.id]:{...(s[art.id]??social),commentCount:n}}))}/>
+    {showSwipeHint&&<button onClick={dismissSwipeHint} className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2 rounded-2xl bg-black/70 px-5 py-4 text-white shadow-xl backdrop-blur-md"><ChevronsLeftRight className="h-7 w-7 animate-pulse text-[#FF9BAE]"/><span className="whitespace-nowrap text-xs font-black">좌우로 밀어서 다음 사진 보기</span><span className="text-[9px] font-bold text-white/55">한 번만 안내해드려요</span></button>}
   </main></ModalPortal>;
 }
 function Action({children,label,onClick}:{children:React.ReactNode;label:string;onClick:()=>void}){return <button onClick={onClick} className="flex flex-col items-center gap-1"><span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/80 shadow-sm dark:bg-black/60 dark:shadow-none [&>svg]:h-5 [&>svg]:w-5">{children}</span><span className="text-[10px] font-black">{label}</span></button>}
