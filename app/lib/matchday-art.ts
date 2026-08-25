@@ -28,6 +28,16 @@ export interface MatchdayArt {
  * 여기 적힌 것만 쓰인다 — 파일 없는 이름을 넣으면 카드마다 404 가 나간다.
  */
 const ART: MatchdayArt[] = [
+  // 2026 FINAL NIGHT gallery selection
+  { src: "/matchday/gallery-final-night-1.webp", soft: true },
+  { src: "/matchday/gallery-final-night-2.webp", soft: true },
+  { src: "/matchday/gallery-final-night-3.webp", soft: true },
+  { src: "/matchday/gallery-final-night-6.webp", soft: true },
+  { src: "/matchday/gallery-final-night-7.webp", soft: true },
+  { src: "/matchday/gallery-final-night-all.webp", soft: true },
+  { src: "/matchday/gallery-group-archive.webp", soft: true },
+  { src: "/matchday/gallery-coach.webp", soft: true },
+  { src: "/matchday/gallery-hyunjun.webp", soft: true },
   // 언더덕 크레스트 15장
   { src: "/matchday/flag-1.webp" },
   { src: "/matchday/flag-2.webp" },

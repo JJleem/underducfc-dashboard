@@ -53,7 +53,7 @@ export function useReportNavTab(key: NavKey | null): void {
 
 /** 에디터는 전체화면 작업 모드라 탭바를 띄우지 않는다. */
 function isFullscreenRoute(pathname: string): boolean {
-  return /^\/matches\/[^/]+\/edit\/?$/.test(pathname);
+  return pathname.startsWith("/matchday-gallery") || /^\/matches\/[^/]+\/edit\/?$/.test(pathname);
 }
 
 function activeFromPath(pathname: string, tab: string | null): NavKey | null {
