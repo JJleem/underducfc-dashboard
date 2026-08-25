@@ -6,7 +6,7 @@
 // 여기 따로 세웠다. 두 홈 중 하나가 정리되면 한쪽을 지우면 된다.
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { ChevronDown, Images, LogIn, LogOut, Moon, Sun, Trophy, User } from "lucide-react";
@@ -24,8 +24,16 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
   const { resolvedTheme, setTheme } = useTheme();
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showGalleryNew, setShowGalleryNew] = useState(false);
   const user = session?.user;
   const name = user?.name?.trim() || "";
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setShowGalleryNew(localStorage.getItem("ud-gallery-seen-v1") !== "1");
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white/70 px-5 safe-header-py-35 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/70">
@@ -38,12 +46,21 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
         {newMatchRoster && <NewMatchButton roster={newMatchRoster} variant="header" />}
 
         <Link
-          href="/titles"
+          href="/matchday-gallery"
           prefetch={false}
-          aria-label="칭호 도감"
-          className="press-icon touch-target flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3]/10 text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
+          aria-label="매치데이 아카이브"
+          onClick={() => {
+            localStorage.setItem("ud-gallery-seen-v1", "1");
+            setShowGalleryNew(false);
+          }}
+          className="press-icon touch-target relative flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3]/10 text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
         >
-          <Trophy className="h-4 w-4" />
+          <Images className="h-4 w-4" />
+          {showGalleryNew && (
+            <span className="absolute -right-2 -top-2 rounded-full bg-[#FF5F7E] px-1.5 py-0.5 text-[7px] font-black leading-none tracking-wide text-white shadow-sm">
+              NEW
+            </span>
+          )}
         </Link>
 
         {user ? (
@@ -86,9 +103,9 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-gray-100 dark:bg-white/[0.07]" />
               <DropdownMenuItem asChild className="rounded-xl px-2.5 py-2 text-xs font-bold text-gray-700 dark:text-gray-200">
-                <Link href="/matchday-gallery">
-                  <Images className="h-4 w-4 !text-[#FF8FA3]" />
-                  MATCHDAY ARCHIVE
+                <Link href="/titles">
+                  <Trophy className="h-4 w-4 !text-[#FF8FA3]" />
+                  칭호
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem
