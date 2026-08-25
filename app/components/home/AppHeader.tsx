@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { ChevronDown, Images, LogIn, LogOut, Moon, Sun, Trophy, User } from "lucide-react";
+import { ChevronDown, Images, LogIn, LogOut, Moon, Sun, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -102,12 +102,6 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
                 </p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-gray-100 dark:bg-white/[0.07]" />
-              <DropdownMenuItem asChild className="rounded-xl px-2.5 py-2 text-xs font-bold text-gray-700 dark:text-gray-200">
-                <Link href="/titles">
-                  <Trophy className="h-4 w-4 !text-[#FF8FA3]" />
-                  칭호
-                </Link>
-              </DropdownMenuItem>
               <DropdownMenuItem
                 asChild
                 className="rounded-xl px-2.5 py-2 text-xs font-bold text-gray-700 dark:text-gray-200"

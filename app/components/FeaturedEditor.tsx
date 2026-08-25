@@ -3,7 +3,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, Loader2, Pencil } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, CheckCircle2, ChevronRight, Loader2, Pencil } from "lucide-react";
 import { EarnedTitle } from "../lib/titles";
 import { TitleBadge, titleMetal } from "./TitleBadges";
 
@@ -89,10 +90,19 @@ export default function FeaturedEditor({
 
   return (
     <div className="mb-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-3">
-      <p className="text-[11px] font-black text-gray-700 dark:text-gray-200 mb-2.5">
-        라인업에 보일 대표 칭호 <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{sel.length}/3</span>
-        <span className="text-gray-400 font-bold ml-1">· 고른 순서대로 표시</span>
-      </p>
+      <div className="mb-2.5 flex items-center justify-between gap-3">
+        <p className="text-[11px] font-black text-gray-700 dark:text-gray-200">
+          라인업에 보일 대표 칭호 <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{sel.length}/3</span>
+          <span className="ml-1 font-bold text-gray-400">· 고른 순서대로 표시</span>
+        </p>
+        <Link
+          href="/titles"
+          className="flex shrink-0 items-center gap-0.5 rounded-lg bg-[#FF8FA3]/10 px-2 py-1.5 text-[9px] font-black text-[#E96882] active:opacity-60 dark:text-[#FFB6C1]"
+        >
+          칭호 상세보기
+          <ChevronRight className="h-3 w-3" />
+        </Link>
+      </div>
       <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
         {titles.map((t) => {
           const order = sel.indexOf(t.id);
