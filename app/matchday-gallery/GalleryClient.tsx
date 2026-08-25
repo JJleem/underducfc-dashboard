@@ -6,6 +6,7 @@ import { ArrowLeft, Download, Heart, MessageCircle, Send, Trash2 } from "lucide-
 import { MATCHDAY_GALLERY } from "@/app/lib/matchday-gallery";
 import type { GalleryComment, GalleryState } from "@/app/lib/gallery";
 import { Drawer, DrawerContent } from "@/app/components/ui/drawer";
+import ModalPortal from "@/app/components/ModalPortal";
 
 export default function GalleryClient() {
   const router = useRouter(); const rail = useRef<HTMLDivElement>(null);
@@ -16,7 +17,7 @@ export default function GalleryClient() {
   useEffect(() => { for (let d = -2; d <= 2; d++) { const x = MATCHDAY_GALLERY[index + d]; if (x) { const image = new Image(); image.src = x.src; } } }, [index]);
   function move(next: number) { const i = Math.max(0, Math.min(MATCHDAY_GALLERY.length - 1, next)); rail.current?.scrollTo({ left: i * rail.current.clientWidth, behavior: "smooth" }); }
   async function like() { const before = social; setStates(s => ({ ...s, [art.id]: { ...before, liked: !before.liked, likeCount: Math.max(0, before.likeCount + (before.liked ? -1 : 1)) } })); const r = await fetch(`/api/gallery/${art.id}/like`, { method: "POST" }); if (r.ok) { const x = await r.json(); setStates(s => ({ ...s, [art.id]: { ...s[art.id], ...x } })); } else setStates(s => ({ ...s, [art.id]: before })); }
-  return <main className="fixed inset-0 z-30 mx-auto flex max-w-md flex-col overflow-hidden bg-[#07080b] text-white">
+  return <ModalPortal><main className="fixed inset-0 z-30 mx-auto h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-[#07080b] text-white flex">
     <header className="absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-gradient-to-b from-black/70 to-transparent px-4 pb-8 pt-[max(16px,env(safe-area-inset-top))]">
       <button onClick={() => router.back()} aria-label="뒤로" className="flex h-10 w-10 items-center justify-center rounded-full bg-black/25 backdrop-blur"><ArrowLeft /></button>
       <div className="text-center"><p className="text-[9px] font-black tracking-[.28em] text-[#FF9BAE]">MATCHDAY ARCHIVE</p><p className="mt-1 text-xs font-bold tracking-wider">{art.title}</p></div>
@@ -36,7 +37,7 @@ export default function GalleryClient() {
     </aside>
     <div className="absolute bottom-[max(20px,env(safe-area-inset-bottom))] left-4 z-10 flex max-w-[250px] gap-1.5 overflow-hidden">{MATCHDAY_GALLERY.map((_, i) => <button key={i} onClick={() => move(i)} className={`h-1 rounded-full transition-all ${i === index ? "w-7 bg-[#FF8FA3]" : "w-2 bg-white/35"}`} />)}</div>
     <CommentsDrawer artworkId={art.id} open={commentsOpen} onOpenChange={setCommentsOpen} onCount={count => setStates(s => ({ ...s, [art.id]: { ...(s[art.id] ?? social), commentCount: count } }))} />
-  </main>;
+  </main></ModalPortal>;
 }
 
 function Action({ children, label, onClick }: { children: React.ReactNode; label: string; onClick: () => void }) { return <button onClick={e => { e.stopPropagation(); onClick(); }} className="flex flex-col items-center gap-1"><span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/45 backdrop-blur [&>svg]:h-5 [&>svg]:w-5">{children}</span><span className="text-[10px] font-black">{label}</span></button>; }
