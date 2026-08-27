@@ -73,7 +73,7 @@ export function isUndecided(value: string | undefined | null): boolean {
 
 export interface HomeStateInput {
   /** 다가오는 경기(예정). 없으면 null */
-  nextMatch: { date: string; opponent: string } | null;
+  nextMatch: { date: string; opponent: string; type?: string; result?: string } | null;
   /** 가장 최근에 끝난 경기. 없으면 null */
   lastMatch: { date: string; mom: string; photos: string } | null;
   /** 로그인한 사용자가 다음 경기에 투표했는지 */
@@ -94,7 +94,14 @@ export function resolveHomeState(input: HomeStateInput): HomeState {
   if (nextDDay !== null && nextDDay >= 0 && nextDDay <= 1) return "dday";
 
   if (nextMatch && loggedIn && !hasMyVote) return "needVote";
-  if (nextMatch && isUndecided(nextMatch.opponent)) return "matching";
+  // 자체전·풋살은 상대가 없는 것이 정상이다. 상대 칸이 비어 있더라도
+  // 외부 상대를 구하는 경기로 분류하면 안 된다.
+  const nextType = (nextMatch?.type || "").replace(/\s+/g, "");
+  const hasNoExternalOpponent =
+    nextMatch?.result === "자체전" ||
+    nextType === "자체전" ||
+    nextType === "풋살";
+  if (nextMatch && !hasNoExternalOpponent && isUndecided(nextMatch.opponent)) return "matching";
   if (nextMatch) return "idle";
 
   if (lastMatch) {

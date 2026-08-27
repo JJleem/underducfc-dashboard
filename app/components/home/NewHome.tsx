@@ -194,7 +194,14 @@ export default async function NewHome({
   }
 
   const detected = resolveHomeState({
-    nextMatch: nextMatch ? { date: nextMatch.date, opponent: nextMatch.opponent } : null,
+    nextMatch: nextMatch
+      ? {
+          date: nextMatch.date,
+          opponent: nextMatch.opponent,
+          type: nextMatch.type,
+          result: nextMatch.result,
+        }
+      : null,
     lastMatch: lastMatch
       ? { date: lastMatch.date, mom: lastMatch.mom, photos: lastMatch.photos }
       : null,
