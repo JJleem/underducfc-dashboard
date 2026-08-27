@@ -9,7 +9,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { matchLogo } from "../components/home/match-result";
+import { casualKind, isCasualMatch, matchLogo } from "../components/home/match-result";
 
 export interface VoteTally {
   attending: string[];
@@ -81,6 +81,9 @@ export default function PastVoteRow({
 }) {
   const [open, setOpen] = useState(false);
   const logo = matchLogo({ opponent, result, type });
+  const opponentLabel = isCasualMatch(result, type, opponent)
+    ? casualKind(result, type).ko
+    : opponent;
   const total = tally.attending.length + tally.maybe.length + tally.absent.length;
   const pct = (n: number) => (total > 0 ? `${(n / total) * 100}%` : "0%");
 
@@ -105,7 +108,7 @@ export default function PastVoteRow({
               />
             )}
             <span className="truncate text-[14px] font-black tracking-[-0.02em] text-gray-900 dark:text-white">
-              {opponent}
+              {opponentLabel}
             </span>
             {closed && (
               <span className="shrink-0 text-[10px] font-black text-gray-300 dark:text-white/25">
