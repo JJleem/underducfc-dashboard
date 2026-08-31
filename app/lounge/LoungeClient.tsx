@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, MessageCircle, MessageSquareHeart, Plus, X } from "lucide-react";
+import { ArrowLeft, Loader2, MessageCircle, MessageSquareHeart, Plus, Smile, X } from "lucide-react";
 import type { LoungeCategory, LoungePost } from "../lib/lounge";
 import { ANON_NOTICE, CATEGORY_LABEL, STATUS_META, relativeTime } from "./meta";
 import ModalPortal from "../components/ModalPortal";
 import AppToast from "../components/AppToast";
 import useAppOverlay from "../components/useAppOverlay";
+import Emoticon from "./Emoticon";
+import EmoticonPicker from "./EmoticonPicker";
 
 type Filter = "all" | LoungeCategory;
 const FILTERS: { key: Filter; label: string }[] = [
@@ -32,6 +34,8 @@ export default function LoungeClient({
 
   const [composing, setComposing] = useState(false);
   const [category, setCategory] = useState<LoungeCategory>("suggestion");
+  const [icon, setIcon] = useState<string | null>(null);
+  const [iconOpen, setIconOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -63,7 +67,7 @@ export default function LoungeClient({
       const res = await fetch("/api/lounge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, title, body }),
+        body: JSON.stringify({ category, icon, title, body }),
       });
       const saved = (await res.json()) as { id?: number; error?: string };
       if (!res.ok) throw new Error(saved.error || "등록 실패");
@@ -71,6 +75,8 @@ export default function LoungeClient({
       setTitle("");
       setBody("");
       setCategory("suggestion");
+      setIcon(null);
+      setIconOpen(false);
       setToast("올렸어요. 이름은 공개되지 않아요");
       // 목록이 다시 그려지기를 기다리면 방금 쓴 글이 한참 안 보여 실패한 줄 안다.
       // 바로 내 글로 보낸다. 뒤로 가면 갱신된 목록이 있도록 refresh 도 같이.
@@ -151,6 +157,11 @@ export default function LoungeClient({
                   href={preview ? `/lounge/${post.id}?preview=1` : `/lounge/${post.id}`}
                   className="flex items-start gap-3 py-4 active:opacity-70"
                 >
+                  {post.icon && (
+                    <span className="mt-0.5 shrink-0">
+                      <Emoticon id={post.icon} size={34} />
+                    </span>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="rounded-md bg-gray-100 px-2 py-1 text-[10px] font-black text-gray-500 dark:bg-white/10 dark:text-white/45">
@@ -245,6 +256,42 @@ export default function LoungeClient({
                   ? "운영진이 확인하고 답변을 답니다."
                   : "그냥 하고 싶은 얘기. 답변은 붙지 않아요."}
               </p>
+
+              {/* 노션의 페이지 아이콘처럼 제목 바로 위에 둔다. 선택 사항이다. */}
+              <div className="!mt-3">
+                <button
+                  type="button"
+                  onClick={() => setIconOpen((open) => !open)}
+                  aria-expanded={iconOpen}
+                  className={`flex h-12 items-center gap-2 rounded-xl px-2.5 text-[11px] font-black transition-colors ${
+                    icon
+                      ? "text-gray-400 dark:text-white/30"
+                      : "border border-dashed border-gray-300 text-gray-400 dark:border-white/15 dark:text-white/30"
+                  }`}
+                >
+                  {icon ? (
+                    <Emoticon id={icon} size={38} />
+                  ) : (
+                    <>
+                      <Smile width={17} height={17} strokeWidth={2.1} />
+                      아이콘 추가
+                    </>
+                  )}
+                </button>
+              </div>
+              {iconOpen && (
+                <EmoticonPicker
+                  selected={icon}
+                  onPick={(id) => {
+                    setIcon(id === icon ? null : id);
+                    setIconOpen(false);
+                  }}
+                  onClear={() => {
+                    setIcon(null);
+                    setIconOpen(false);
+                  }}
+                />
+              )}
 
               <input
                 value={title}

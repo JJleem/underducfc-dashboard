@@ -10,6 +10,7 @@ export const PREVIEW_POSTS: LoungePostDetail[] = [
   {
     id: 3,
     category: "suggestion",
+    icon: "thinking",
     title: "회비 납부일 좀 앞당기면 안 될까요",
     body: "월말에 몰려서 다들 잊어버리는 것 같아요.\n월 초로 옮기면 구장비 정산도 편할 것 같습니다.",
     status: "received",
@@ -29,6 +30,7 @@ export const PREVIEW_POSTS: LoungePostDetail[] = [
   {
     id: 2,
     category: "suggestion",
+    icon: "cry",
     title: "구장 주차가 너무 빡세요",
     body: "8시 경기인데 7시 반에 가도 자리가 없습니다. 근처에 댈 데도 마땅치 않아요.",
     status: "resolved",
@@ -50,6 +52,7 @@ export const PREVIEW_POSTS: LoungePostDetail[] = [
   {
     id: 1,
     category: "chat",
+    icon: null,
     title: "다들 축구화 뭐 신으세요?",
     body: "인조잔디에서 자꾸 미끄러져서 바꾸려고요. 추천 좀 부탁드립니다.",
     status: "received",

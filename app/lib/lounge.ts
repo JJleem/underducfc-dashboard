@@ -30,6 +30,8 @@ export interface LoungeComment {
 export interface LoungePost {
   id: number;
   category: LoungeCategory;
+  /** 제목 앞에 붙는 아이콘(노션의 페이지 아이콘). 이모티콘 id 와 같은 체계. */
+  icon: string | null;
   title: string;
   /** 목록 응답에는 없다(상세에서만 채워진다). */
   body: string;
@@ -61,6 +63,7 @@ interface CommentRow {
 interface PostRow {
   id: number;
   category?: string | null;
+  icon?: string | null;
   title?: string | null;
   body?: string | null;
   status?: string | null;
@@ -99,6 +102,7 @@ function toPost(r: PostRow): LoungePost {
   return {
     id: r.id,
     category: toCategory(r.category),
+    icon: r.icon ?? null,
     title: r.title || "",
     body: r.body || "",
     status: toStatus(r.status),
@@ -152,6 +156,7 @@ export async function getLoungePost(id: number): Promise<LoungePostDetail | null
  */
 export async function createLoungePost(input: {
   category: LoungeCategory;
+  icon?: string;
   title: string;
   body: string;
 }): Promise<LoungePost> {

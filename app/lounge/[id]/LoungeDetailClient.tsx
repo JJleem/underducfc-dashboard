@@ -9,7 +9,7 @@ import { CATEGORY_LABEL, STATUS_META, STATUS_ORDER, relativeTime } from "../meta
 import AppToast from "../../components/AppToast";
 import AppConfirmDialog from "../../components/AppConfirmDialog";
 import Emoticon from "../Emoticon";
-import { EMOTICONS } from "../emoticons";
+import EmoticonPicker from "../EmoticonPicker";
 
 export default function LoungeDetailClient({
   post,
@@ -215,6 +215,12 @@ export default function LoungeDetailClient({
           )}
         </div>
 
+        {/* 노션의 페이지 아이콘 — 제목 위에 크게. */}
+        {post.icon && (
+          <div className="mt-3">
+            <Emoticon id={post.icon} size={56} />
+          </div>
+        )}
         <h1 className="mt-3 text-[19px] font-black leading-[1.4] tracking-[-0.01em]">
           {post.title}
         </h1>
@@ -348,23 +354,14 @@ export default function LoungeDetailClient({
         )}
 
         {pickerOpen && (
-          <div className="animate-fade mt-5 grid grid-cols-4 gap-1 rounded-2xl bg-gray-50 p-2 dark:bg-white/[0.04]">
-            {EMOTICONS.map((e) => (
-              <button
-                key={e.id}
-                onClick={() => {
-                  setEmoticon(e.id);
-                  setPickerOpen(false);
-                }}
-                aria-label={e.label}
-                className="flex flex-col items-center gap-1 rounded-xl py-2.5 active:bg-gray-200/70 dark:active:bg-white/10"
-              >
-                <Emoticon id={e.id} size={32} />
-                <span className="text-[9px] font-black text-gray-400 dark:text-white/30">
-                  {e.label}
-                </span>
-              </button>
-            ))}
+          <div className="mt-5">
+            <EmoticonPicker
+              selected={emoticon}
+              onPick={(id) => {
+                setEmoticon(id === emoticon ? null : id);
+                setPickerOpen(false);
+              }}
+            />
           </div>
         )}
 

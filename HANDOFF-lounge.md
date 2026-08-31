@@ -92,6 +92,7 @@ CREATE TABLE lounge_posts (
   kakao_id    TEXT NOT NULL,              -- pid (HMAC 가명 ID)
   author      TEXT NOT NULL,              -- 실명. 운영진에게만 내려준다
   category    TEXT NOT NULL,              -- 'suggestion' | 'chat'
+  icon        VARCHAR(50),                -- 제목 앞 아이콘 (노션식). 이모티콘 id 와 같은 체계
   title       TEXT NOT NULL,
   body        TEXT NOT NULL,
   status      TEXT NOT NULL DEFAULT 'received',
@@ -121,7 +122,7 @@ CREATE INDEX ON lounge_comments (post_id, id);
 | 메서드 | 경로 | 권한 | 비고 |
 | --- | --- | --- | --- |
 | GET | `/api/underduck/lounge` | 회원 | 목록. 고정 정렬: 최신순 |
-| POST | `/api/underduck/lounge` | 회원 | `{category, title, body}` |
+| POST | `/api/underduck/lounge` | 회원 | `{category, title, body, icon?}` |
 | GET | `/api/underduck/lounge/{id}` | 회원 | 상세 + 댓글 |
 | DELETE | `/api/underduck/lounge/{id}` | 본인 or 운영진 | |
 | PATCH | `/api/underduck/lounge/{id}` | **운영진만** | `{status?, admin_reply?}` |
@@ -287,7 +288,14 @@ app/api/lounge/[id]/comments/[cid]/route.ts    DELETE 댓글
 
 ## 7. 이모티콘
 
-댓글에 이모티콘을 하나 붙일 수 있다. 글에는 붙지 않는다.
+이모티콘은 두 군데에 붙는다.
+
+- **댓글** — 하나씩 붙일 수 있다. 이모티콘만 달아도 댓글이 된다.
+- **글 아이콘** — 노션의 페이지 아이콘처럼 제목 앞에 하나. 목록에서는 제목 왼쪽에
+  34px, 상세에서는 제목 위에 56px. 선택 사항이라 없으면 그 자리가 아예 안 생긴다.
+
+둘은 **같은 id 체계와 같은 피커**(`app/lounge/EmoticonPicker.tsx`)를 쓴다.
+두 곳에서 모양이 달라지면 같은 기능으로 안 읽힌다.
 
 **그림이 없어도 지금 동작한다.** 각 이모티콘은 emoji 를 하나씩 들고 있어서,
 `public/emoticons/<id>.png` 가 없으면 `onError` 로 emoji 를 대신 그린다
@@ -309,7 +317,16 @@ app/api/lounge/[id]/comments/[cid]/route.ts    DELETE 댓글
 ### 그림 넣는 법
 
 `public/emoticons/me-too.png` 처럼 **id 와 같은 이름**으로 넣으면 끝이다.
-정사각형 PNG(투명 배경) 권장 — 화면에서 34~60px 로 그리므로 128px 정도면 충분하다.
+
+**얼굴 클로즈업으로 자를 것.** 화면에서 32~64px 로 그려지는데 전신 그림을 넣으면
+얼굴이 전체의 1/5도 안 돼 표정이 사라진다(그래서 처음 받은 전신 스티커를 머리 위주로
+잘라 넣었다). 배경 장식(반짝이·공)도 그 크기에서는 노이즈가 된다.
+
+정사각형 투명 PNG **256px**, 30KB 안쪽. 1254px 원본을 그대로 넣으면 60px 아이콘에
+1MB 를 받게 된다.
+
+그리고 **표정을 확실히 다르게** 뽑아야 한다. 웃는 얼굴만 여러 장이면 "슬퍼요"를
+만들 수가 없고, 목록에서 서로 구분도 안 된다.
 
 ### 늘리는 법
 

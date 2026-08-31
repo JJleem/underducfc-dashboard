@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   const denied = await requireUser();
   if (denied) return denied;
   try {
-    const { category, title, body } = await request.json();
+    const { category, icon, title, body } = await request.json();
     if (category !== "suggestion" && category !== "chat") {
       return NextResponse.json({ error: "글 종류를 골라주세요." }, { status: 400 });
     }
@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
     // 작성자는 넘기지 않는다 — 백엔드가 신원 헤더에서 채운다.
     const post = await createLoungePost({
       category,
+      ...(icon ? { icon: String(icon) } : {}),
       title: title.trim(),
       body: body.trim(),
     });
