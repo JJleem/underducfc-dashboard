@@ -48,7 +48,7 @@
 | 대상 | 라벨 |
 | --- | --- |
 | **글의 작성자** (목록·상세 모두) | `익명` |
-| 댓글 | 그 글 안에서 **등장 순서대로** `덕민 1`, `덕민 2` … |
+| 댓글 | 이름 풀에서 하나씩 (`물갈퀴`, `코너킥장인` …) |
 | 글쓴이가 자기 글에 단 댓글 | `글쓴이` |
 | 운영진 답변 | `운영진` |
 
@@ -57,7 +57,33 @@
 작성자 자리는 어디서나 `익명` 이고, 화면도 그 값을 그대로 그린다(하드코딩 금지 —
 라벨 규칙이 두 군데로 갈리면 API 와 화면이 어긋난다).
 
-글쓴이는 번호를 받지 않는다. `덕민 N` 은 댓글을 단 다른 사람들에게만 붙는다.
+글쓴이는 이름을 받지 않는다 — 언제나 `글쓴이` 다.
+
+### 이름은 어떻게 고르나 — `ANON_NAMES` (40개)
+
+글 id 로 풀을 섞고(`_alias_pool`), 댓글에 **처음 등장한 순서대로** 하나씩 준다.
+
+- 같은 글에서는 언제 불러도 순서가 같다 → 이름이 안 흔들린다
+- 글이 바뀌면 순서도 바뀐다 → **같은 사람이 글마다 다른 이름**을 받는다
+  (순서대로 그냥 나눠 주면 첫 댓글자는 어느 글에서나 같은 이름이 된다)
+- 사람이 40명을 넘으면 한 바퀴 더 돌며 숫자를 붙인다(`물갈퀴 2`)
+
+섞는 데 `random.shuffle` 대신 해시 정렬을 쓴다 — 파이썬 버전이 바뀌어도 결과가 같다.
+
+이름을 고를 때의 규칙: **팀원 누구도 지칭하지 않고, 놀림으로 읽힐 여지가 없을 것.**
+실력·출전 시간처럼 사람마다 실제로 다른 것은 넣지 않았다(익명이라도 콕 집힌 기분이 든다).
+
+> ⚠️ 목록을 고치면 **이미 올라온 글의 이름도 같이 바뀐다** — 이름은 저장하지 않고
+> 그때그때 계산한다. 글 안에서 사람과 이름이 1:1 인 건 그대로라 표시만 달라진다.
+> 이게 곤란해지면 `lounge_comment` 에 별명을 저장하는 쪽으로 옮기면 된다.
+
+### 대댓글
+
+깊이는 **1단까지만**이다. 대댓글에 또 달면 부모로 접어 올린다(`parent_id`를 부모의
+부모로 바꾼다). 막아버리면 "답글의 답글"을 쓰려던 사람이 갈 데가 없다.
+
+부모를 지우면 딸린 답글도 함께 사라진다. 남겨두면 무슨 말에 대한 답인지 알 수 없는
+댓글만 떠돈다.
 
 같은 사람은 **한 글타래 안에서만** 같은 번호를 유지한다. 글이 달라지면 번호도 새로 매긴다
 (글을 여러 개 쓰면 번호가 고정되어 누군지 추정되는 걸 막는다).
@@ -116,6 +142,7 @@ CREATE TABLE lounge_comments (
   post_id    INTEGER NOT NULL REFERENCES lounge_posts(id) ON DELETE CASCADE,
   kakao_id   TEXT NOT NULL,
   author     TEXT NOT NULL,
+  parent_id  INTEGER,         -- 대댓글이면 부모 댓글 id (1단까지)
   message    TEXT,            -- 이모티콘만 단 댓글은 NULL
   emoticon   VARCHAR(50),     -- 이모티콘 id (그림 파일 이름). URL 이 아니다
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -132,7 +159,7 @@ CREATE INDEX ON lounge_comments (post_id, id);
 | GET | `/api/underduck/lounge/{id}` | 회원 | 상세 + 댓글 |
 | DELETE | `/api/underduck/lounge/{id}` | 본인 or 운영진 | |
 | PATCH | `/api/underduck/lounge/{id}` | **운영진만** | `{status?, admin_reply?}` |
-| POST | `/api/underduck/lounge/{id}/comments` | 회원 | `{message?, emoticon?}` — 둘 중 하나는 필수 |
+| POST | `/api/underduck/lounge/{id}/comments` | 회원 | `{message?, emoticon?, parent_id?}` — 앞의 둘 중 하나는 필수 |
 | DELETE | `/api/underduck/lounge/{id}/comments/{cid}` | 본인 or 운영진 | |
 
 `kakao_id` / `author` 는 요청 본문으로 받지 말고 **헤더의 신원으로 서버가 채운다.**

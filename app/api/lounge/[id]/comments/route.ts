@@ -10,7 +10,7 @@ export async function POST(
   if (denied) return denied;
   try {
     const { id } = await params;
-    const { message, emoticon } = await request.json();
+    const { message, emoticon, parentId } = await request.json();
     const text = typeof message === "string" ? message.trim() : "";
     // 이모티콘만 달아도 댓글이다. 둘 다 없을 때만 막는다.
     if (!text && !emoticon) {
@@ -20,6 +20,7 @@ export async function POST(
     const comment = await createLoungeComment(Number(id), {
       ...(text ? { message: text } : {}),
       ...(emoticon ? { emoticon: String(emoticon) } : {}),
+      ...(parentId ? { parent_id: Number(parentId) } : {}),
     });
     return NextResponse.json(comment, { status: 201 });
   } catch (err) {

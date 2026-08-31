@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Send, ShieldCheck, Smile, Trash2, X } from "lucide-react";
+import { ArrowLeft, CornerDownRight, Loader2, Send, ShieldCheck, Smile, Trash2, X } from "lucide-react";
 import type { LoungeComment, LoungePostDetail, LoungeStatus } from "../../lib/lounge";
 import { CATEGORY_LABEL, STATUS_META, STATUS_ORDER, relativeTime } from "../meta";
 import AppToast from "../../components/AppToast";
@@ -37,6 +37,8 @@ export default function LoungeDetailClient({
   const [text, setText] = useState("");
   const [emoticon, setEmoticon] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [replyTo, setReplyTo] = useState<LoungeComment | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [reply, setReply] = useState(post.adminReply ?? "");
 
   // 진행 표시는 누른 것에만 건다. 하나로 묶으면 화면 전체가 얼어붙는다.
@@ -48,6 +50,15 @@ export default function LoungeDetailClient({
   >(null);
 
   const meta = STATUS_META[status];
+
+  /** 원댓글 아래에 그 답글들을 붙인다. 깊이는 1단까지라 재귀가 필요 없다. */
+  const threads = useMemo(() => {
+    const roots = comments.filter((c) => c.parentId === null);
+    return roots.map((root) => ({
+      root,
+      replies: comments.filter((c) => c.parentId === root.id),
+    }));
+  }, [comments]);
 
   useEffect(() => {
     if (!toast) return;
@@ -82,8 +93,10 @@ export default function LoungeDetailClient({
 
     // 낙관적 반영 — 누르는 즉시 목록에 올리고 입력창을 비운다.
     // 라벨은 서버가 글 단위로 매기므로, 응답이 오면 그걸로 갈아끼운다.
+    const parent = replyTo;
     const optimistic: LoungeComment = {
       id: -Date.now(),
+      parentId: parent ? parent.parentId ?? parent.id : null,
       authorLabel: post.mine ? "글쓴이" : "나",
       author: null,
       mine: true,
@@ -96,11 +109,12 @@ export default function LoungeDetailClient({
     setText("");
     setEmoticon(null);
     setPickerOpen(false);
+    setReplyTo(null);
     setSending(true);
     try {
       const saved = (await request(
         `/api/lounge/${post.id}/comments`,
-        json({ message, emoticon }),
+        json({ message, emoticon, parentId: optimistic.parentId }),
       )) as LoungeComment;
       setComments((prev) => prev.map((c) => (c === optimistic ? saved : c)));
       router.refresh(); // 목록 화면의 댓글 수까지 맞춘다(화면은 이미 갱신됐다)
@@ -109,6 +123,7 @@ export default function LoungeDetailClient({
       setComments((prev) => prev.filter((c) => c !== optimistic));
       setText(message);
       setEmoticon(optimistic.emoticon);
+      setReplyTo(parent);
       setToast(e instanceof Error ? e.message : "등록에 실패했어요");
     } finally {
       setPending(null);
@@ -119,7 +134,9 @@ export default function LoungeDetailClient({
   async function removeComment(item: LoungeComment) {
     if (blockedInPreview()) return;
     const before = comments;
-    setComments((prev) => prev.filter((c) => c !== item));
+    setComments((prev) =>
+      prev.filter((c) => c !== item && c.parentId !== item.id),
+    );
     try {
       await request(`/api/lounge/${post.id}/comments/${item.id}`, { method: "DELETE" });
       router.refresh();
@@ -309,45 +326,36 @@ export default function LoungeDetailClient({
           </p>
         ) : (
           <ul className="mt-3 space-y-5">
-            {comments.map((c) => (
-              <li
-                key={c.id}
-                className={`flex items-start gap-3 ${c === pending ? "opacity-50" : ""}`}
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {/* 라벨은 백엔드가 글 단위로 매긴다 — 글이 달라지면 번호도 새로 매겨진다. */}
-                    <span className="text-[12.5px] font-black text-gray-900 dark:text-white">
-                      {c.authorLabel}
-                    </span>
-                    <span className="text-[10px] font-bold text-gray-300 dark:text-white/25">
-                      {relativeTime(c.createdAt)}
-                    </span>
-                    {admin && c.author && (
-                      <span className="text-[10px] font-bold text-gray-300 dark:text-white/25">
-                        · {c.author}
-                      </span>
-                    )}
-                  </div>
-                  {c.emoticon && (
-                    <div className="mt-2">
-                      <Emoticon id={c.emoticon} size={64} />
-                    </div>
-                  )}
-                  {c.message && (
-                    <p className="mt-1.5 whitespace-pre-wrap break-words text-[13px] leading-[1.65] text-gray-700 [overflow-wrap:anywhere] dark:text-white/70">
-                      {c.message}
-                    </p>
-                  )}
-                </div>
-                {c !== pending && (c.mine || admin) && (
-                  <button
-                    onClick={() => setConfirm({ kind: "comment", item: c })}
-                    aria-label="댓글 삭제"
-                    className="shrink-0 p-1 text-gray-300 active:opacity-60 dark:text-white/25"
-                  >
-                    <Trash2 width={14} height={14} strokeWidth={2.2} />
-                  </button>
+            {threads.map(({ root, replies }) => (
+              <li key={root.id}>
+                <CommentRow
+                  comment={root}
+                  admin={admin}
+                  pending={root === pending}
+                  onReply={() => {
+                    setReplyTo(root);
+                    inputRef.current?.focus();
+                  }}
+                  onDelete={() => setConfirm({ kind: "comment", item: root })}
+                />
+                {replies.length > 0 && (
+                  /* 답글은 한 단만 들여쓴다. 왼쪽 선이 "어디에 딸린 말"인지 알려준다. */
+                  <ul className="mt-4 space-y-4 border-l border-gray-100 pl-3.5 dark:border-white/[0.08]">
+                    {replies.map((r) => (
+                      <li key={r.id}>
+                        <CommentRow
+                          comment={r}
+                          admin={admin}
+                          pending={r === pending}
+                          onReply={() => {
+                            setReplyTo(root);
+                            inputRef.current?.focus();
+                          }}
+                          onDelete={() => setConfirm({ kind: "comment", item: r })}
+                        />
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </li>
             ))}
@@ -383,6 +391,19 @@ export default function LoungeDetailClient({
           </div>
         )}
 
+        {replyTo && (
+          <div className="mt-4 flex items-center gap-1.5 text-[11px] font-bold text-gray-400 dark:text-white/30">
+            <CornerDownRight width={13} height={13} strokeWidth={2.2} className="shrink-0" />
+            <span className="min-w-0 flex-1 truncate">
+              <b className="font-black text-gray-600 dark:text-white/60">{replyTo.authorLabel}</b>
+              님에게 답글
+            </span>
+            <button onClick={() => setReplyTo(null)} aria-label="답글 취소" className="p-1 active:opacity-60">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* 입력줄 — 경기 댓글(FeedbackThread)과 같은 알약 하나. 칸을 세 개로 쪼개면
             좁은 화면에서 입력칸이 손톱만해진다. */}
         <div className="mt-4 flex items-center gap-2.5 rounded-full bg-gray-100 py-2.5 pl-4 pr-3.5 dark:bg-white/[0.07]">
@@ -399,12 +420,13 @@ export default function LoungeDetailClient({
             <Smile width={19} height={19} strokeWidth={2.1} />
           </button>
           <input
+            ref={inputRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) addComment();
             }}
-            placeholder="댓글도 익명으로 달려요"
+            placeholder={replyTo ? "답글 남기기…" : "댓글도 익명으로 달려요"}
             maxLength={300}
             className="min-w-0 flex-1 bg-transparent text-[14px] text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-white/25"
           />
@@ -434,6 +456,72 @@ export default function LoungeDetailClient({
         onConfirm={confirmDelete}
       />
       <AppToast message={toast} />
+    </div>
+  );
+}
+
+/**
+ * 댓글 한 줄. 원댓글과 답글이 같은 모양을 쓴다 — 답글은 감싸는 쪽에서 들여쓴다.
+ * 답글 버튼은 언제나 원댓글을 가리킨다(깊이 1단).
+ */
+function CommentRow({
+  comment: c,
+  admin,
+  pending,
+  onReply,
+  onDelete,
+}: {
+  comment: LoungeComment;
+  admin: boolean;
+  pending: boolean;
+  onReply: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className={`flex items-start gap-3 ${pending ? "opacity-50" : ""}`}>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {/* 이름은 백엔드가 글 단위로 매긴다 — 글이 달라지면 이름도 새로 매겨진다. */}
+          <span className="text-[12.5px] font-black text-gray-900 dark:text-white">
+            {c.authorLabel}
+          </span>
+          <span className="text-[10px] font-bold text-gray-300 dark:text-white/25">
+            {relativeTime(c.createdAt)}
+          </span>
+          {admin && c.author && (
+            <span className="text-[10px] font-bold text-gray-300 dark:text-white/25">
+              · {c.author}
+            </span>
+          )}
+        </div>
+        {c.emoticon && (
+          <div className="mt-2">
+            <Emoticon id={c.emoticon} size={64} />
+          </div>
+        )}
+        {c.message && (
+          <p className="mt-1.5 whitespace-pre-wrap break-words text-[13px] leading-[1.65] text-gray-700 [overflow-wrap:anywhere] dark:text-white/70">
+            {c.message}
+          </p>
+        )}
+        {!pending && (
+          <button
+            onClick={onReply}
+            className="mt-1.5 text-[10.5px] font-black text-gray-400 active:opacity-60 dark:text-white/30"
+          >
+            답글
+          </button>
+        )}
+      </div>
+      {!pending && (c.mine || admin) && (
+        <button
+          onClick={onDelete}
+          aria-label="댓글 삭제"
+          className="shrink-0 p-1 text-gray-300 active:opacity-60 dark:text-white/25"
+        >
+          <Trash2 width={14} height={14} strokeWidth={2.2} />
+        </button>
+      )}
     </div>
   );
 }

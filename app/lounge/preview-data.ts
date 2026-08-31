@@ -23,8 +23,8 @@ export const PREVIEW_POSTS: LoungePostDetail[] = [
     adminReplyAt: null,
     createdAt: hoursAgo(5),
     comments: [
-      { id: 31, authorLabel: "덕민 1", author: null, mine: false, message: "저도 매번 까먹어요 ㅋㅋ", emoticon: "me-too", createdAt: hoursAgo(4) },
-      { id: 32, authorLabel: "글쓴이", author: null, mine: true, message: "그쵸 저만 그런 게 아니었네요", emoticon: null, createdAt: hoursAgo(3) },
+      { id: 31, parentId: null, authorLabel: "물갈퀴", author: null, mine: false, message: "저도 매번 까먹어요 ㅋㅋ", emoticon: "me-too", createdAt: hoursAgo(4) },
+      { id: 32, parentId: 31, authorLabel: "글쓴이", author: null, mine: true, message: "그쵸 저만 그런 게 아니었네요", emoticon: null, createdAt: hoursAgo(3) },
     ],
   },
   {
@@ -43,10 +43,10 @@ export const PREVIEW_POSTS: LoungePostDetail[] = [
     adminReplyAt: hoursAgo(30),
     createdAt: hoursAgo(24 * 9),
     comments: [
-      { id: 21, authorLabel: "덕민 1", author: null, mine: false, message: "진짜 이거 해결됐으면", emoticon: null, createdAt: hoursAgo(24 * 8) },
-      { id: 22, authorLabel: "덕민 2", author: null, mine: false, message: "저는 그냥 대중교통 타요", emoticon: null, createdAt: hoursAgo(24 * 8) },
-      { id: 23, authorLabel: "글쓴이", author: null, mine: false, message: "오 빠르네요 감사합니다", emoticon: "sorry", createdAt: hoursAgo(29) },
-      { id: 24, authorLabel: "덕민 1", author: null, mine: false, message: "", emoticon: "fire", createdAt: hoursAgo(28) },
+      { id: 21, parentId: null, authorLabel: "물갈퀴", author: null, mine: false, message: "진짜 이거 해결됐으면", emoticon: null, createdAt: hoursAgo(24 * 8) },
+      { id: 22, parentId: null, authorLabel: "하프타임간식", author: null, mine: false, message: "저는 그냥 대중교통 타요", emoticon: null, createdAt: hoursAgo(24 * 8) },
+      { id: 23, parentId: 21, authorLabel: "글쓴이", author: null, mine: false, message: "오 빠르네요 감사합니다", emoticon: "sorry", createdAt: hoursAgo(29) },
+      { id: 24, parentId: null, authorLabel: "물갈퀴", author: null, mine: false, message: "", emoticon: "fire", createdAt: hoursAgo(28) },
     ],
   },
   {
@@ -65,8 +65,8 @@ export const PREVIEW_POSTS: LoungePostDetail[] = [
     adminReplyAt: null,
     createdAt: hoursAgo(24 * 11),
     comments: [
-      { id: 11, authorLabel: "덕민 1", author: null, mine: false, message: "TF 밑창으로 가세요", emoticon: null, createdAt: hoursAgo(24 * 11) },
-      { id: 12, authorLabel: "덕민 2", author: null, mine: false, message: "저는 그냥 HG 신는데 괜찮아요", emoticon: "laugh", createdAt: hoursAgo(24 * 10) },
+      { id: 11, parentId: null, authorLabel: "물갈퀴", author: null, mine: false, message: "TF 밑창으로 가세요", emoticon: null, createdAt: hoursAgo(24 * 11) },
+      { id: 12, parentId: null, authorLabel: "하프타임간식", author: null, mine: false, message: "저는 그냥 HG 신는데 괜찮아요", emoticon: "laugh", createdAt: hoursAgo(24 * 10) },
     ],
   },
 ];

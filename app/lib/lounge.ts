@@ -16,6 +16,8 @@ export const LOUNGE_STATUSES: LoungeStatus[] = ["received", "reviewing", "resolv
 
 export interface LoungeComment {
   id: number;
+  /** 대댓글이면 부모 댓글 id. 깊이는 1단까지만. */
+  parentId: number | null;
   /** 화면에 그대로 찍는 익명 라벨. "글쓴이" · "덕민 1" · "운영진" */
   authorLabel: string;
   /** 실명. 운영진에게만 내려온다. */
@@ -52,6 +54,7 @@ export interface LoungePostDetail extends LoungePost {
 
 interface CommentRow {
   id: number;
+  parent_id?: number | null;
   author_label?: string | null;
   author?: string | null;
   mine?: boolean | null;
@@ -89,6 +92,7 @@ function toStatus(raw?: string | null): LoungeStatus {
 function toComment(r: CommentRow): LoungeComment {
   return {
     id: r.id,
+    parentId: r.parent_id ?? null,
     authorLabel: r.author_label || "익명",
     author: r.author ?? null,
     mine: !!r.mine,
@@ -185,7 +189,7 @@ export async function deleteLoungePost(id: number): Promise<void> {
 
 export async function createLoungeComment(
   postId: number,
-  input: { message?: string; emoticon?: string },
+  input: { message?: string; emoticon?: string; parent_id?: number },
 ): Promise<LoungeComment> {
   return toComment(
     await udPost<CommentRow>(`/api/underduck/lounge/${postId}/comments`, input),
