@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { isAdmin } from "../lib/admin";
 import { getMatchesRows } from "../lib/matches-backend";
-import { getAttendanceVoteRows, getVoteCommentRows, getUsersRows } from "../lib/backend";
+import { getAttendanceVoteRows, getVoteCommentRows, getUsersRows, getRosterRows } from "../lib/backend";
 import { getMatchWeather, serializeWeather, parseWeather } from "../lib/weather";
 import { writeMatchWeather } from "../lib/sheets-write";
 import VoteClient from "./VoteClient";
@@ -21,12 +21,14 @@ export default async function VotePage() {
   // 4개가 서로 독립이라 병렬로 받는다(직렬이면 왕복이 그대로 누적됨).
   // matches는 기존처럼 실패 시 throw, 나머지 3개는 빈 배열로 폴백.
   const optional = (): string[][] => [];
-  const [rawMatches, rawAttendanceVotes, rawVoteComments, rawUsers]: string[][][] =
+  const [rawMatches, rawAttendanceVotes, rawVoteComments, rawUsers, rawRoster]: string[][][] =
     await Promise.all([
       getMatchesRows(),
       getAttendanceVoteRows().catch(optional),
       getVoteCommentRows().catch(optional),
       getUsersRows().catch(optional),
+      // 비활동 인원을 미투표 명단에서 빼기 위해 함께 읽는다.
+      getRosterRows().catch(optional),
     ]);
 
   const normalizeTime = (raw: string): string => {
@@ -72,13 +74,26 @@ export default async function VotePage() {
       emoticon: r[5] || null,
     }));
 
+  // 비활동 인원은 애초에 투표하지 않는다. 미투표 명단에 계속 남아 있으면
+  // "아직 안 한 사람"이 실제보다 많아 보여서 명단이 안 읽힌다.
+  // (부상은 뺀다 — 못 나온다는 표시를 하러 투표하는 사람들이다)
+  // 이름은 users.nickname 과 roster.name 을 그대로 맞춘다. 못 맞추면 남겨 둔다 —
+  // 잘못 빼서 사람을 감추는 것보다 한 명 더 보이는 쪽이 낫다.
+  const inactiveNames = new Set(
+    rawRoster
+      .slice(1)
+      .filter((r: string[]) => (r[3] || "").trim() === "비활동")
+      .map((r: string[]) => (r[1] || "").trim()),
+  );
+
   const users = rawUsers
     .slice(1)
     .filter((r: string[]) => r[0])
     .map((r: string[]) => ({
       kakaoId: r[0] || "",
       nickname: r[1] || "",
-    }));
+    }))
+    .filter((u) => !inactiveNames.has(u.nickname.trim()));
 
   // 예정 경기 (최신순)
   const upcomingMatches = matches
