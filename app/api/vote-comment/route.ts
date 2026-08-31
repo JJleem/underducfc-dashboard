@@ -17,6 +17,7 @@ export async function GET() {
       nickname: row[2] || "",
       message: row[3] || "",
       timestamp: row[4] || "",
+      emoticon: row[5] || null,
     }));
     return NextResponse.json(comments);
   } catch (err) {
@@ -36,14 +37,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "세션 정보 없음" }, { status: 401 });
     }
 
-    const { matchId, message } = await request.json();
-    if (matchId === undefined || !message?.trim()) {
+    const { matchId, message, emoticon } = await request.json();
+    // 이모티콘만 달아도 댓글이다. 둘 다 비면 막는다.
+    if (matchId === undefined || (!message?.trim() && !emoticon)) {
       return NextResponse.json({ error: "필수 필드 누락" }, { status: 400 });
     }
 
     // 저장된 행을 그대로 돌려준다. 화면이 임의로 만든 timestamp 를 들고 있으면
     // 그 댓글을 지울 때 서버에서 행을 못 찾는다(삭제가 조용히 실패).
-    const comment = await appendVoteComment({ matchId: Number(matchId), kakaoId, nickname, message });
+    const comment = await appendVoteComment({
+      matchId: Number(matchId),
+      kakaoId,
+      nickname,
+      message: message ?? "",
+      emoticon,
+    });
     revalidateAppData(UD_TAG.voteComment, UD_TAG.titles);
     return NextResponse.json({ ok: true, comment });
   } catch (err) {

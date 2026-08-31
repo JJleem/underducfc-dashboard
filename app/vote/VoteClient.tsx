@@ -21,9 +21,12 @@ import {
   LockOpen,
   MapPin,
   Send,
+  Smile,
   Trash2,
 } from "lucide-react";
 import AppConfirmDialog from "../components/AppConfirmDialog";
+import Emoticon from "../components/Emoticon";
+import EmoticonPicker from "../components/EmoticonPicker";
 import AppToast from "../components/AppToast";
 import { casualKind, isCasualMatch, matchLogo } from "../components/home/match-result";
 import { weatherEmoji } from "../lib/weather";
@@ -55,6 +58,8 @@ interface VoteComment {
   nickname: string;
   message: string;
   timestamp: string;
+  /** 더덕티콘 id. 사랑방·경기 댓글과 같은 목록을 쓴다([[app/lib/emoticons.ts]]). */
+  emoticon?: string | null;
 }
 
 interface UserInfo {
@@ -159,6 +164,8 @@ export default function VoteClient({
   );
   const [savedVote, setSavedVote] = useState<{ matchId: number; response: string } | null>(null);
   const [commentInput, setCommentInput] = useState<Record<number, string>>({});
+  const [commentEmoticon, setCommentEmoticon] = useState<Record<number, string | null>>({});
+  const [pickerFor, setPickerFor] = useState<number | null>(null);
   const [submittingComment, setSubmittingComment] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{
     matchId: number;
@@ -248,7 +255,9 @@ export default function VoteClient({
 
   const addComment = async (matchId: number) => {
     const msg = (commentInput[matchId] || "").trim();
-    if (!msg || !currentUser || submittingComment) return;
+    const emoticon = commentEmoticon[matchId] || null;
+    // 이모티콘만 보내는 것도 댓글이다.
+    if ((!msg && !emoticon) || !currentUser || submittingComment) return;
     setSubmittingComment(true);
 
     const before = comments;
@@ -257,16 +266,19 @@ export default function VoteClient({
       kakaoId: currentUser.kakaoId,
       nickname: currentUser.name,
       message: msg,
+      emoticon,
       timestamp: new Date().toISOString(),
     };
     setComments((prev) => [...prev, optimistic]);
     setCommentInput((prev) => ({ ...prev, [matchId]: "" }));
+    setCommentEmoticon((prev) => ({ ...prev, [matchId]: null }));
+    setPickerFor(null);
 
     try {
       const res = await fetch("/api/vote-comment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchId, message: msg }),
+        body: JSON.stringify({ matchId, message: msg, emoticon }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "댓글 실패");
       // 서버가 저장한 실제 행(timestamp)으로 갈아끼운다.
@@ -279,6 +291,7 @@ export default function VoteClient({
     } catch (e) {
       setComments(before);
       setCommentInput((prev) => ({ ...prev, [matchId]: msg }));
+      setCommentEmoticon((prev) => ({ ...prev, [matchId]: emoticon }));
       setToast({ message: e instanceof Error ? e.message : "댓글 등록에 실패했어요.", tone: "error" });
     } finally {
       setSubmittingComment(false);
@@ -549,9 +562,16 @@ export default function VoteClient({
                           {formatTime(c.timestamp)}
                         </span>
                       </p>
-                      <p className="mt-1 whitespace-pre-wrap break-words text-[13px] leading-[1.55] text-gray-700 [overflow-wrap:anywhere] dark:text-white/70">
-                        {c.message}
-                      </p>
+                      {c.emoticon && (
+                        <div className="mt-1.5">
+                          <Emoticon id={c.emoticon} size={64} />
+                        </div>
+                      )}
+                      {c.message && (
+                        <p className="mt-1 whitespace-pre-wrap break-words text-[13px] leading-[1.55] text-gray-700 [overflow-wrap:anywhere] dark:text-white/70">
+                          {c.message}
+                        </p>
+                      )}
                     </div>
                     {canDelete && (
                       <button
@@ -584,7 +604,49 @@ export default function VoteClient({
                   투명 배경에 밑줄도 없으면 "여기 쓸 수 있다"가 안 읽힌다.
                   글자 16px 은 iOS 에서 포커스 시 화면이 확대되는 걸 막기 위한 값이다. */}
               {currentUser ? (
+                <>
+                {pickerFor === match.id && (
+                  <EmoticonPicker
+                    selected={commentEmoticon[match.id] || null}
+                    onPick={(id) => {
+                      setCommentEmoticon((prev) => ({
+                        ...prev,
+                        [match.id]: prev[match.id] === id ? null : id,
+                      }));
+                      setPickerFor(null);
+                    }}
+                  />
+                )}
+                {commentEmoticon[match.id] && (
+                  <div className="flex items-center gap-2">
+                    <Emoticon id={commentEmoticon[match.id]} size={36} />
+                    <span className="flex-1 text-[10.5px] font-bold text-gray-400 dark:text-white/30">
+                      이 이모티콘과 함께 올라가요
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCommentEmoticon((prev) => ({ ...prev, [match.id]: null }))}
+                      aria-label="이모티콘 빼기"
+                      className="px-1 text-[10.5px] font-black text-gray-400 active:opacity-60"
+                    >
+                      빼기
+                    </button>
+                  </div>
+                )}
                 <div className="mt-1 flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 dark:bg-white/[0.07]">
+                  <button
+                    type="button"
+                    onClick={() => setPickerFor((cur) => (cur === match.id ? null : match.id))}
+                    aria-label="이모티콘"
+                    aria-expanded={pickerFor === match.id}
+                    className={`shrink-0 transition-colors ${
+                      pickerFor === match.id
+                        ? "text-[#FF8FA3] dark:text-[#FFB6C1]"
+                        : "text-gray-400 dark:text-white/30"
+                    }`}
+                  >
+                    <Smile width={17} height={17} strokeWidth={2.1} />
+                  </button>
                   <input
                     value={commentInput[match.id] || ""}
                     onChange={(e) =>
@@ -600,7 +662,10 @@ export default function VoteClient({
                   <button
                     type="button"
                     onClick={() => addComment(match.id)}
-                    disabled={!(commentInput[match.id] || "").trim() || submittingComment}
+                    disabled={
+                      (!(commentInput[match.id] || "").trim() && !commentEmoticon[match.id]) ||
+                      submittingComment
+                    }
                     aria-label="댓글 등록"
                     className="shrink-0 text-[#FF8FA3] disabled:opacity-30 dark:text-[#FFB6C1]"
                   >
@@ -611,6 +676,7 @@ export default function VoteClient({
                     )}
                   </button>
                 </div>
+                </>
               ) : (
                 <p className="text-[12px] font-bold text-gray-300 dark:text-white/25">
                   로그인하면 댓글을 달 수 있어요.
@@ -661,7 +727,12 @@ export default function VoteClient({
             {closedMatches.map((m) => {
               const cs: PastVoteComment[] = comments
                 .filter((c) => c.matchId === m.id)
-                .map((c) => ({ nickname: c.nickname, message: c.message, timestamp: c.timestamp }));
+                .map((c) => ({
+                  nickname: c.nickname,
+                  message: c.message,
+                  timestamp: c.timestamp,
+                  emoticon: c.emoticon,
+                }));
               return (
                 <div key={m.id}>
                   <PastVoteRow

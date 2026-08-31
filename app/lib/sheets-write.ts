@@ -41,7 +41,7 @@ export async function removePhotoFromMatch(matchId: number, url: string): Promis
 }
 
 // ── feedback ──
-interface FeedbackRow { id: number; match_id: number | null; timestamp: string | null; name: string | null; message: string | null; }
+interface FeedbackRow { id: number; match_id: number | null; timestamp: string | null; name: string | null; message: string | null; emoticon?: string | null; }
 
 export async function deleteFeedback(
   matchId: number,
@@ -62,17 +62,25 @@ export async function appendFeedback({
   matchId,
   name,
   message,
+  emoticon,
 }: {
   matchId: number;
   name: string;
   message: string;
-}): Promise<{ matchId: number; timestamp: string; name: string; message: string }> {
-  const row = await udPost<FeedbackRow>("/api/underduck/feedback", { match_id: matchId, name, message });
+  emoticon?: string | null;
+}): Promise<{ matchId: number; timestamp: string; name: string; message: string; emoticon: string | null }> {
+  const row = await udPost<FeedbackRow>("/api/underduck/feedback", {
+    match_id: matchId,
+    name,
+    message,
+    ...(emoticon ? { emoticon } : {}),
+  });
   return {
     matchId: Number(row?.match_id ?? matchId),
     timestamp: s(row?.timestamp),
     name: s(row?.name),
     message: s(row?.message),
+    emoticon: row?.emoticon ?? null,
   };
 }
 
@@ -365,6 +373,7 @@ interface VoteCommentRow {
   nickname?: string | null;
   message?: string | null;
   timestamp: string | null;
+  emoticon?: string | null;
 }
 
 /** 저장된 실제 행을 돌려준다(timestamp·nickname은 백엔드가 정하므로 화면도 이 값을 써야 한다). */
@@ -373,17 +382,20 @@ export async function appendVoteComment({
   kakaoId,
   nickname,
   message,
+  emoticon,
 }: {
   matchId: number;
   kakaoId: string;
   nickname: string;
   message: string;
-}): Promise<{ matchId: number; kakaoId: string; nickname: string; message: string; timestamp: string }> {
+  emoticon?: string | null;
+}): Promise<{ matchId: number; kakaoId: string; nickname: string; message: string; timestamp: string; emoticon: string | null }> {
   const row = await udPost<VoteCommentRow>("/api/underduck/vote-comment", {
     match_id: matchId,
     kakao_id: kakaoId,
     nickname: nickname.trim(),
     message: message.trim(),
+    ...(emoticon ? { emoticon } : {}),
   });
   return {
     matchId: Number(row?.match_id ?? matchId),
@@ -391,6 +403,7 @@ export async function appendVoteComment({
     nickname: s(row?.nickname),
     message: s(row?.message),
     timestamp: s(row?.timestamp),
+    emoticon: row?.emoticon ?? null,
   };
 }
 

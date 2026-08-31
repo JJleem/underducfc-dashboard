@@ -8,8 +8,8 @@ import type { LoungeComment, LoungePostDetail, LoungeStatus } from "../../lib/lo
 import { CATEGORY_LABEL, STATUS_META, STATUS_ORDER, relativeTime } from "../meta";
 import AppToast from "../../components/AppToast";
 import AppConfirmDialog from "../../components/AppConfirmDialog";
-import Emoticon, { preloadEmoticons } from "../Emoticon";
-import EmoticonPicker from "../EmoticonPicker";
+import Emoticon, { preloadEmoticons } from "../../components/Emoticon";
+import EmoticonPicker from "../../components/EmoticonPicker";
 
 export default function LoungeDetailClient({
   post,

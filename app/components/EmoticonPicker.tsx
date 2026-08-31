@@ -3,7 +3,7 @@
 // 두 곳에서 모양이 달라지면 같은 기능으로 안 읽힌다.
 
 import Emoticon from "./Emoticon";
-import { EMOTICONS } from "./emoticons";
+import { EMOTICONS } from "../lib/emoticons";
 
 export default function EmoticonPicker({
   selected,

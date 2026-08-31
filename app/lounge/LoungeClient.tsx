@@ -9,9 +9,9 @@ import { ANON_NOTICE, CATEGORY_LABEL, STATUS_META, relativeTime } from "./meta";
 import ModalPortal from "../components/ModalPortal";
 import AppToast from "../components/AppToast";
 import useAppOverlay from "../components/useAppOverlay";
-import Emoticon, { preloadEmoticons } from "./Emoticon";
-import EmoticonPicker from "./EmoticonPicker";
-import { DEFAULT_POST_ICON } from "./emoticons";
+import Emoticon, { preloadEmoticons } from "../components/Emoticon";
+import EmoticonPicker from "../components/EmoticonPicker";
+import { DEFAULT_POST_ICON } from "../lib/emoticons";
 
 type Filter = "all" | LoungeCategory;
 const FILTERS: { key: Filter; label: string }[] = [

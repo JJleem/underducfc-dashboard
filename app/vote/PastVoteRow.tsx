@@ -10,6 +10,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { casualKind, isCasualMatch, matchLogo } from "../components/home/match-result";
+import Emoticon from "../components/Emoticon";
 
 export interface VoteTally {
   attending: string[];
@@ -22,6 +23,8 @@ export interface PastVoteComment {
   nickname: string;
   message: string;
   timestamp: string;
+  /** 더덕티콘 id. 이모티콘만 단 댓글은 message 가 비어 있다. */
+  emoticon?: string | null;
 }
 
 /** 진행 중 투표(VoteClient)의 명단과 같은 모양. 한 페이지에서 두 가지로 보이면 안 된다. */
@@ -215,6 +218,11 @@ export default function PastVoteRow({
                       </Link>{" "}
                       {c.message}
                     </p>
+                    {c.emoticon && (
+                      <div className="mt-1">
+                        <Emoticon id={c.emoticon} size={56} />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

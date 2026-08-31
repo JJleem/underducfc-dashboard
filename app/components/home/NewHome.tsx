@@ -358,6 +358,7 @@ export default async function NewHome({
       timestamp: r[1] || "",
       name: (r[2] || "").trim() || "익명",
       message: r[3] || "",
+      emoticon: r[4] || null,
     });
   });
 

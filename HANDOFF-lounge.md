@@ -335,6 +335,30 @@ app/api/lounge/[id]/comments/[cid]/route.ts    DELETE 댓글
 
 ## 7. 이모티콘
 
+### 어디에 붙나
+
+이모티콘(더덕티콘)은 **사랑방 밖에서도 쓴다.** 목록·그림·id 체계가 한 벌이라
+그림을 여러 벌 관리하지 않는다.
+
+| 화면 | 붙는 곳 | 저장 위치 |
+| --- | --- | --- |
+| 사랑방 | 글 아이콘 · 댓글 | `lounge_post.icon` · `lounge_comment.emoticon` |
+| 경기 피드 댓글 | 댓글 | `feedback.emoticon` |
+| 투표 댓글 | 댓글 | `vote_comment.emoticon` |
+
+공용 자리는 이렇다 — 사랑방 안에 두면 다른 화면이 사랑방을 import 하게 된다.
+
+```
+app/lib/emoticons.ts          목록·라벨·기본 아이콘
+app/components/Emoticon.tsx        한 개 그리기 (art 없으면 emoji)
+app/components/EmoticonPicker.tsx  고르는 격자
+```
+
+세 곳 모두 **글 없이 이모티콘만 달아도 댓글이 된다.** 둘 다 비면 서버가 400 을 낸다.
+그래서 이모티콘만 단 댓글이 빈 줄로 보이지 않게, 목록·피드 미리보기에서도 같이 그린다.
+
+### 사랑방 안에서는
+
 이모티콘은 두 군데에 붙는다.
 
 - **댓글** — 하나씩 붙일 수 있다. 이모티콘만 달아도 댓글이 된다.

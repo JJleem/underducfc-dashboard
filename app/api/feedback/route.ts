@@ -15,6 +15,7 @@ export async function GET() {
       timestamp: row[1] || "",
       name: row[2] || "",
       message: row[3] || "",
+      emoticon: row[4] || null,
     }));
     return NextResponse.json(feedbacks);
   } catch (err) {
@@ -28,15 +29,21 @@ export async function POST(request: NextRequest) {
   if (denied) return denied;
   try {
     const body = await request.json();
-    const { matchId, name, message } = body;
+    const { matchId, name, message, emoticon } = body;
 
-    if (matchId === undefined || !name?.trim() || !message?.trim()) {
+    // 이모티콘만 달아도 댓글이다. 둘 다 비면 막는다.
+    if (matchId === undefined || !name?.trim() || (!message?.trim() && !emoticon)) {
       return NextResponse.json({ error: "필수 필드 누락" }, { status: 400 });
     }
 
     // 저장된 행을 그대로 돌려준다. 화면이 임의로 만든 timestamp 를 들고 있으면
     // 그 댓글을 지울 때 서버에서 행을 못 찾는다(삭제가 조용히 실패).
-    const feedback = await appendFeedback({ matchId: Number(matchId), name, message });
+    const feedback = await appendFeedback({
+      matchId: Number(matchId),
+      name,
+      message: message ?? "",
+      emoticon,
+    });
     revalidateAppData(UD_TAG.feedback, UD_TAG.titles);
     return NextResponse.json({ ok: true, feedback });
   } catch (err) {

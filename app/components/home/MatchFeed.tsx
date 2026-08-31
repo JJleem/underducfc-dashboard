@@ -52,6 +52,7 @@ import type { Storyline } from "../../lib/storylines";
 import Storylines from "./Storylines";
 import { shareStoryCard } from "../../lib/draw-story-card";
 import { feedbackTimestamp, type Feedback } from "./FeedbackThread";
+import Emoticon from "../Emoticon";
 import PhotoUploader from "./PhotoUploader";
 import DetailSheet from "./DetailSheet";
 import PlayerFace from "../PlayerFace";
@@ -1040,8 +1041,14 @@ export default function MatchFeed({
                             {feedbackTimestamp(feedback.timestamp)}
                           </span>
                         </span>
-                        <span className="mt-1 line-clamp-2 whitespace-pre-wrap break-words text-[13px] leading-[1.55] text-gray-700 [overflow-wrap:anywhere] dark:text-white/70">
-                          {feedback.message}
+                        {/* 이모티콘만 단 댓글은 message 가 비어 있다 — 그대로 두면 빈 줄이 된다. */}
+                        <span className="mt-1 flex items-center gap-1.5">
+                          {feedback.emoticon && <Emoticon id={feedback.emoticon} size={28} />}
+                          {feedback.message && (
+                            <span className="line-clamp-2 whitespace-pre-wrap break-words text-[13px] leading-[1.55] text-gray-700 [overflow-wrap:anywhere] dark:text-white/70">
+                              {feedback.message}
+                            </span>
+                          )}
                         </span>
                       </span>
                     </span>

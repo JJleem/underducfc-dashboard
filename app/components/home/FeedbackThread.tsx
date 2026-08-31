@@ -9,14 +9,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Loader2, Send, Trash2 } from "lucide-react";
+import { Loader2, Send, Smile, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import AppConfirmDialog from "../AppConfirmDialog";
+import Emoticon from "../Emoticon";
+import EmoticonPicker from "../EmoticonPicker";
 
 export interface Feedback {
   name: string;
   message: string;
   timestamp: string;
+  /** 더덕티콘 id. 사랑방과 같은 목록을 쓴다([[app/lib/emoticons.ts]]). */
+  emoticon?: string | null;
 }
 
 /**
@@ -57,6 +61,8 @@ export default function FeedbackThread({
   // (router.refresh() 만 기다리면 눌러도 한참 아무 일도 안 일어난 것처럼 보인다)
   const [items, setItems] = useState(initial);
   const [text, setText] = useState("");
+  const [emoticon, setEmoticon] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [sending, setSending] = useState(false);
   // 아직 서버에 닿지 않은 내 댓글. 이건 지울 수 없다(서버가 행을 못 찾는다).
   const [pending, setPending] = useState<Feedback | null>(null);
@@ -84,7 +90,8 @@ export default function FeedbackThread({
 
   const submit = async () => {
     const message = text.trim();
-    if (!message || !userName || sending) return;
+    // 이모티콘만 보내는 것도 댓글이다.
+    if ((!message && !emoticon) || !userName || sending) return;
     setSending(true);
     setError(null);
     // 낙관적 반영 — 누르는 즉시 목록에 올리고 입력창을 비운다.
@@ -92,17 +99,20 @@ export default function FeedbackThread({
     const optimistic: Feedback = {
       name: userName,
       message,
+      emoticon,
       timestamp: new Date().toISOString(),
     };
     setItems((prev) => [...prev, optimistic]);
     setPending(optimistic);
     setText("");
+    setEmoticon(null);
+    setPickerOpen(false);
     setExpanded(true);
     try {
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchId, name: userName, message }),
+        body: JSON.stringify({ matchId, name: userName, message, emoticon }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "등록 실패");
@@ -114,6 +124,7 @@ export default function FeedbackThread({
       // 그 사이 다른 댓글이 오갔을 수 있어 스냅샷 복원 대신 이 항목만 걷어낸다.
       setItems((prev) => prev.filter((x) => x !== optimistic));
       setText(message);
+      setEmoticon(optimistic.emoticon ?? null);
       setError(e instanceof Error ? e.message : "등록 실패");
     } finally {
       setPending(null);
@@ -172,9 +183,16 @@ export default function FeedbackThread({
                 {feedbackTimestamp(fb.timestamp)}
               </span>
             </div>
-            <p className="mt-1 whitespace-pre-wrap break-words text-[13px] leading-[1.55] text-gray-700 [overflow-wrap:anywhere] dark:text-white/70">
-              {fb.message}
-            </p>
+            {fb.emoticon && (
+              <div className="mt-1.5">
+                <Emoticon id={fb.emoticon} size={64} />
+              </div>
+            )}
+            {fb.message && (
+              <p className="mt-1 whitespace-pre-wrap break-words text-[13px] leading-[1.55] text-gray-700 [overflow-wrap:anywhere] dark:text-white/70">
+                {fb.message}
+              </p>
+            )}
           </div>
           {canDelete(fb) && (
             <button
@@ -202,6 +220,34 @@ export default function FeedbackThread({
   const composer = (
     <>
       {userName ? (
+        <>
+        {pickerOpen && (
+          <div className="mb-2" data-vaul-no-drag={sheetLayout ? "" : undefined}>
+            <EmoticonPicker
+              selected={emoticon}
+              onPick={(id) => {
+                setEmoticon(id === emoticon ? null : id);
+                setPickerOpen(false);
+              }}
+            />
+          </div>
+        )}
+        {emoticon && (
+          <div className="mb-2 flex items-center gap-2" data-vaul-no-drag={sheetLayout ? "" : undefined}>
+            <Emoticon id={emoticon} size={36} />
+            <span className="flex-1 text-[10.5px] font-bold text-gray-400 dark:text-white/30">
+              이 이모티콘과 함께 올라가요
+            </span>
+            <button
+              type="button"
+              onClick={() => setEmoticon(null)}
+              aria-label="이모티콘 빼기"
+              className="px-1 text-[10.5px] font-black text-gray-400 active:opacity-60"
+            >
+              빼기
+            </button>
+          </div>
+        )}
         <div
           className={`flex items-center gap-2 ${
             sheetLayout
@@ -210,6 +256,17 @@ export default function FeedbackThread({
           }`}
           data-vaul-no-drag={sheetLayout ? "" : undefined}
         >
+          <button
+            type="button"
+            onClick={() => setPickerOpen((open) => !open)}
+            aria-label="이모티콘"
+            aria-expanded={pickerOpen}
+            className={`shrink-0 transition-colors ${
+              pickerOpen ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : "text-gray-400 dark:text-white/30"
+            }`}
+          >
+            <Smile width={17} height={17} strokeWidth={2.1} />
+          </button>
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -231,7 +288,7 @@ export default function FeedbackThread({
           <button
             type="button"
             onClick={submit}
-            disabled={!text.trim() || sending}
+            disabled={(!text.trim() && !emoticon) || sending}
             aria-label="댓글 등록"
             className="shrink-0 text-[#FF8FA3] disabled:opacity-30 dark:text-[#FFB6C1]"
           >
@@ -242,6 +299,7 @@ export default function FeedbackThread({
             )}
           </button>
         </div>
+        </>
       ) : (
         <p className="mt-1 text-[12px] font-bold text-gray-300 dark:text-white/25">
           로그인하면 댓글을 달 수 있어요.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { EMOTICONS, findEmoticon } from "./emoticons";
+import { EMOTICONS, findEmoticon } from "../lib/emoticons";
 
 let preloaded = false;
 

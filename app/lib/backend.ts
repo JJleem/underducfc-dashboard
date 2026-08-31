@@ -130,11 +130,13 @@ export async function getAttendanceVoteRows(): Promise<string[][]> {
 interface VoteCommentOut {
   id: number; match_id: number | null; kakao_id: string | null;
   nickname: string | null; message: string | null; timestamp: string | null;
+  emoticon: string | null;
 }
 export async function getVoteCommentRows(): Promise<string[][]> {
   const rows = await udGet<VoteCommentOut[]>("/api/underduck/vote-comment", udReadOptsFor(UD_TAG.voteComment));
-  const HEADER = ["matchId", "kakaoId", "nickname", "message", "timestamp"];
-  return [HEADER, ...rows.map((r) => [s(r.match_id), s(r.kakao_id), s(r.nickname), s(r.message), s(r.timestamp)])];
+  // F열(이모티콘)은 뒤에 붙인다 — 앞 인덱스가 그대로라 기존 소비처가 안 깨진다.
+  const HEADER = ["matchId", "kakaoId", "nickname", "message", "timestamp", "emoticon"];
+  return [HEADER, ...rows.map((r) => [s(r.match_id), s(r.kakao_id), s(r.nickname), s(r.message), s(r.timestamp), s(r.emoticon)])];
 }
 
 // ── featured ── 시트: A=선수명 B=id1 C=id2 D=id3 (소비처는 헤더 미스킵 → 헤더 포함 유지)
@@ -150,11 +152,13 @@ export async function getFeaturedRows(): Promise<string[][]> {
 // ── feedback ── 시트: A=matchId B=timestamp C=name D=message
 interface FeedbackOut {
   id: number; match_id: number | null; timestamp: string | null; name: string | null; message: string | null;
+  emoticon: string | null;
 }
 export async function getFeedbackRows(): Promise<string[][]> {
   const rows = await udGet<FeedbackOut[]>("/api/underduck/feedback", udReadOptsFor(UD_TAG.feedback));
-  const HEADER = ["matchId", "timestamp", "name", "message"];
-  return [HEADER, ...rows.map((r) => [s(r.match_id), s(r.timestamp), s(r.name), s(r.message)])];
+  // E열(이모티콘)은 뒤에 붙인다 — 앞 인덱스가 그대로라 기존 소비처가 안 깨진다.
+  const HEADER = ["matchId", "timestamp", "name", "message", "emoticon"];
+  return [HEADER, ...rows.map((r) => [s(r.match_id), s(r.timestamp), s(r.name), s(r.message), s(r.emoticon)])];
 }
 
 // ── mom_vote ── 시트: A=matchId B=voterName C=votedFor D=voteType E=timestamp
