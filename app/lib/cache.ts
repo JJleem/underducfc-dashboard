@@ -29,6 +29,7 @@ export const UD_TAG = {
   board: "underduck-board",
   notice: "underduck-notice",
   users: "underduck-users",
+  lounge: "underduck-lounge",
 } as const;
 
 export type UdCacheTag = (typeof UD_TAG)[keyof typeof UD_TAG];

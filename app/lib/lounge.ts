@@ -7,6 +7,7 @@
 //  2. 그래서 읽기에도 신원이 필요하다 — udGet 에 withIdentity 를 켠다([[underduck.ts]]).
 //     사용자마다 응답이 달라지므로 캐시는 걸지 않는다.
 import { udGet, udPost, udPatch, udDelete } from "./underduck";
+import { UD_TAG, udReadOptsFor } from "./cache";
 
 export type LoungeCategory = "suggestion" | "chat";
 export type LoungeStatus = "received" | "reviewing" | "resolved" | "declined";
@@ -117,6 +118,23 @@ const readOpts = { cache: "no-store" as const, withIdentity: true };
 export async function listLoungePosts(): Promise<LoungePost[]> {
   const rows = await udGet<PostRow[]>("/api/underduck/lounge", readOpts);
   return rows.map(toPost);
+}
+
+/**
+ * 홈의 "새 글 있음" 점에 쓸 값만.
+ *
+ * 홈은 목록을 그리지 않는다 — 최신 글 id 와 개수만 있으면 된다. 그래서 위의
+ * `listLoungePosts` 를 쓰면 안 된다: 그건 신원을 붙인 `no-store` 읽기라
+ * **홈을 열 때마다 백엔드를 한 번 더 기다리게 만든다**(홈의 다른 읽기 10개는
+ * 전부 45초 캐시를 탄다). 여기서는 신원 없이 같은 캐시 규칙으로 읽는다.
+ * 글을 쓰거나 지우면 UD_TAG.lounge 무효화로 즉시 반영된다.
+ */
+export async function getLoungeStamp(): Promise<{ latestId: number; count: number }> {
+  const rows = await udGet<PostRow[]>(
+    "/api/underduck/lounge",
+    udReadOptsFor(UD_TAG.lounge),
+  );
+  return { latestId: rows[0]?.id ?? 0, count: rows.length };
 }
 
 export async function getLoungePost(id: number): Promise<LoungePostDetail | null> {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, requireUser } from "@/app/lib/admin";
+import { revalidateAppData, UD_TAG } from "@/app/lib/cache";
 import { deleteLoungePost, updateLoungePost, LOUNGE_STATUSES } from "@/app/lib/lounge";
 
 /** 운영진 전용 — 상태 변경·답변. */
@@ -43,6 +44,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     await deleteLoungePost(Number(id));
+    revalidateAppData(UD_TAG.lounge);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";

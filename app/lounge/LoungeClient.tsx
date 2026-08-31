@@ -51,6 +51,12 @@ export default function LoungeClient({
 
   async function submit() {
     if (!title.trim() || !body.trim() || submitting) return;
+    // 미리보기에는 백엔드가 없다 — 여기서 진짜 글이 써지면 안 된다(상세와 같은 규칙).
+    if (preview) {
+      setToast("미리보기에서는 저장되지 않아요");
+      setComposing(false);
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
@@ -59,13 +65,17 @@ export default function LoungeClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ category, title, body }),
       });
-      if (!res.ok) throw new Error(((await res.json()) as { error?: string }).error || "등록 실패");
+      const saved = (await res.json()) as { id?: number; error?: string };
+      if (!res.ok) throw new Error(saved.error || "등록 실패");
       setComposing(false);
       setTitle("");
       setBody("");
       setCategory("suggestion");
       setToast("올렸어요. 이름은 공개되지 않아요");
+      // 목록이 다시 그려지기를 기다리면 방금 쓴 글이 한참 안 보여 실패한 줄 안다.
+      // 바로 내 글로 보낸다. 뒤로 가면 갱신된 목록이 있도록 refresh 도 같이.
       router.refresh();
+      if (saved.id !== undefined) router.push(`/lounge/${saved.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "등록에 실패했습니다.");
     } finally {
@@ -116,7 +126,7 @@ export default function LoungeClient({
       </header>
 
       {/* 익명이라는 걸 모르면 아무도 안 쓴다. 목록 맨 위에 한 줄로 계속 붙여 둔다. */}
-      <p className="mx-4 mt-3 flex items-center gap-1.5 rounded-xl bg-[#FF8FA3]/[0.07] px-3 py-2 text-[10.5px] font-bold text-[#e9758b] dark:bg-[#FFB6C1]/[0.07] dark:text-[#FFB6C1]">
+      <p className="mx-5 mt-4 flex items-center gap-2 rounded-xl bg-[#FF8FA3]/[0.07] px-3.5 py-2.5 text-[11px] font-bold text-[#e9758b] dark:bg-[#FFB6C1]/[0.07] dark:text-[#FFB6C1]">
         <MessageSquareHeart className="h-3.5 w-3.5 shrink-0" />
         {ANON_NOTICE}
       </p>
@@ -132,37 +142,37 @@ export default function LoungeClient({
           </p>
         </div>
       ) : (
-        <ul className="mt-1 divide-y divide-gray-100 px-4 dark:divide-white/[0.06]">
+        <ul className="mt-1 divide-y divide-gray-100 px-5 dark:divide-white/[0.06]">
           {visible.map((post) => {
             const status = STATUS_META[post.status];
             return (
               <li key={post.id}>
                 <Link
                   href={preview ? `/lounge/${post.id}?preview=1` : `/lounge/${post.id}`}
-                  className="flex items-start gap-3 py-3.5 active:opacity-70"
+                  className="flex items-start gap-3 py-4 active:opacity-70"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[9.5px] font-black text-gray-500 dark:bg-white/10 dark:text-white/45">
+                      <span className="rounded-md bg-gray-100 px-2 py-1 text-[10px] font-black text-gray-500 dark:bg-white/10 dark:text-white/45">
                         {CATEGORY_LABEL[post.category]}
                       </span>
                       {/* 상태는 건의에만. 잡담엔 처리할 게 없다. */}
                       {post.category === "suggestion" && (
                         <span
-                          className={`flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9.5px] font-black ${status.chip}`}
+                          className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-black ${status.chip}`}
                         >
-                          <span className={`h-1 w-1 rounded-full ${status.dot}`} />
+                          <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
                           {status.label}
                         </span>
                       )}
                       {post.mine && (
-                        <span className="rounded-md bg-[#FF8FA3]/12 px-1.5 py-0.5 text-[9.5px] font-black text-[#e9758b] dark:bg-[#FFB6C1]/12 dark:text-[#FFB6C1]">
+                        <span className="rounded-md bg-[#FF8FA3]/12 px-2 py-1 text-[10px] font-black text-[#e9758b] dark:bg-[#FFB6C1]/12 dark:text-[#FFB6C1]">
                           내 글
                         </span>
                       )}
                     </div>
-                    <p className="mt-1.5 truncate text-[13px] font-black">{post.title}</p>
-                    <p className="mt-1 text-[10px] font-bold text-gray-400 dark:text-white/30">
+                    <p className="mt-2 truncate text-[14px] font-black leading-snug">{post.title}</p>
+                    <p className="mt-1.5 text-[10.5px] font-bold text-gray-400 dark:text-white/30">
                       익명 · {relativeTime(post.createdAt)}
                       {post.adminReply && (
                         <span className="ml-1.5 text-emerald-600 dark:text-emerald-400">
@@ -172,7 +182,7 @@ export default function LoungeClient({
                     </p>
                   </div>
                   {post.commentCount > 0 && (
-                    <span className="mt-0.5 flex shrink-0 items-center gap-1 text-[10px] font-black text-gray-400 dark:text-white/30">
+                    <span className="mt-1 flex shrink-0 items-center gap-1 text-[10.5px] font-black text-gray-400 dark:text-white/30">
                       <MessageCircle className="h-3.5 w-3.5" />
                       {post.commentCount}
                     </span>
@@ -240,14 +250,14 @@ export default function LoungeClient({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="한 줄로 요약하면?"
-                className="app-field-surface app-control-md w-full rounded-xl border border-gray-200 px-3 py-2.5 dark:border-white/10"
+                className="app-field-surface app-control-md w-full rounded-xl border border-gray-200 px-3.5 py-3 dark:border-white/10"
               />
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="편하게 적어 주세요."
-                rows={6}
-                className="app-field-surface app-control-md w-full resize-none rounded-xl border border-gray-200 px-3 py-2.5 dark:border-white/10"
+                rows={7}
+                className="app-field-surface app-control-md w-full resize-none rounded-xl border border-gray-200 px-3.5 py-3 leading-relaxed dark:border-white/10"
               />
 
               {/* 숨기면 안 쓰고, 완전 익명인 줄 알면 막 쓴다. 그대로 보여준다. */}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/app/lib/admin";
+import { revalidateAppData, UD_TAG } from "@/app/lib/cache";
 import { createLoungePost } from "@/app/lib/lounge";
 
 export async function POST(request: NextRequest) {
@@ -23,6 +24,8 @@ export async function POST(request: NextRequest) {
       title: title.trim(),
       body: body.trim(),
     });
+    // 홈의 "새 글" 점은 캐시된 읽기를 쓴다 — 여기서 비워야 바로 뜬다.
+    revalidateAppData(UD_TAG.lounge);
     return NextResponse.json(post, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
