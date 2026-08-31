@@ -23,11 +23,14 @@ export interface Emoticon {
 export const EMOTICONS: Emoticon[] = [
   { id: "me-too", label: "저도요", emoji: "🙋", art: true },
   { id: "agree", label: "동의", emoji: "👍", art: true },
-  { id: "laugh", label: "빵터짐", emoji: "😂" },
-  { id: "cry", label: "슬퍼요", emoji: "😭" },
+  { id: "laugh", label: "빵터짐", emoji: "😂", art: true },
+  { id: "goal", label: "골!", emoji: "⚽", art: true },
+  { id: "fire", label: "불타오르네", emoji: "🔥", art: true },
+  { id: "cry", label: "슬퍼요", emoji: "😭", art: true },
+  { id: "tired", label: "힘들어요", emoji: "😓", art: true },
+  // 아직 그림이 없는 것들. emoji 로 그린다.
   { id: "sorry", label: "죄송", emoji: "🙏" },
   { id: "thinking", label: "음…", emoji: "🤔" },
-  { id: "fire", label: "불타오르네", emoji: "🔥" },
   { id: "duck", label: "꽥", emoji: "🐥" },
 ];
 

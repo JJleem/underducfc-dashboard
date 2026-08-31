@@ -163,7 +163,7 @@ export default function LoungeClient({
                 >
                   {post.icon && (
                     <span className="mt-0.5 shrink-0">
-                      <Emoticon id={post.icon} size={34} />
+                      <Emoticon id={post.icon} size={38} />
                     </span>
                   )}
                   <div className="min-w-0 flex-1">

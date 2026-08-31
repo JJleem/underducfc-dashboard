@@ -26,13 +26,13 @@ export default function EmoticonPicker({
             onClick={() => onPick(e.id)}
             aria-label={e.label}
             aria-pressed={selected === e.id}
-            className={`flex flex-col items-center gap-1 rounded-xl py-2.5 transition-colors ${
+            className={`flex flex-col items-center gap-1 rounded-xl py-2 transition-colors ${
               selected === e.id
                 ? "bg-[#FF8FA3]/12 dark:bg-[#FFB6C1]/12"
                 : "active:bg-gray-200/70 dark:active:bg-white/10"
             }`}
           >
-            <Emoticon id={e.id} size={32} />
+            <Emoticon id={e.id} size={40} />
             <span className="text-[9px] font-black text-gray-400 dark:text-white/30">
               {e.label}
             </span>
