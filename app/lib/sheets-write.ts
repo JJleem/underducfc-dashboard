@@ -173,13 +173,16 @@ export async function appendRoster(player: {
 
 export async function updateRoster(
   id: number | string,
-  player: { no: string; name: string; pos: string; status: string }
+  player: { no: string; name: string; pos: string; status: string; memo?: string }
 ): Promise<void> {
   await udPut(`/api/underduck/roster/${id}`, {
     no: player.no,
     name: player.name,
     pos: player.pos,
     status: player.status,
+    // 주장 역할. 백엔드는 **안 보내면 기존 값을 유지**하므로, 해제하려면
+    // 빈 문자열을 보내야 한다(undefined 는 "그대로 두기"다).
+    ...(player.memo === undefined ? {} : { memo: player.memo }),
   });
 }
 

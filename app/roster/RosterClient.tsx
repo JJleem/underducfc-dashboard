@@ -68,7 +68,8 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
   const [modalOpen, setModalOpen] = React.useState(false);
   const [mode, setMode] = React.useState<"add" | "edit">("add");
   const [editId, setEditId] = React.useState<string | null>(null);
-  const [form, setForm] = React.useState({ no: "", name: "", pos: "MF", status: "활동" });
+  // memo = 주장 역할("c" 주장 / "vc" 부주장 / "" 없음). 완장·명단 표시가 이 값을 본다.
+  const [form, setForm] = React.useState({ no: "", name: "", pos: "MF", status: "활동", memo: "" });
   const [saving, setSaving] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
 
@@ -81,7 +82,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
   const openAdd = () => {
     setMode("add");
     setEditId(null);
-    setForm({ no: "", name: "", pos: "MF", status: "활동" });
+    setForm({ no: "", name: "", pos: "MF", status: "활동", memo: "" });
     setModalOpen(true);
   };
 
@@ -93,6 +94,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
       name: player[1] || "",
       pos: (player[2] || "MF").toUpperCase(),
       status: player[3] || "활동",
+      memo: (player[5] || "").trim().toLowerCase(),
     });
     setModalOpen(true);
   };
@@ -111,7 +113,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
         router.refresh();
         const data = await res.json().catch(() => ({}));
         const newId = data?.id != null ? String(data.id) : "";
-        setPlayerList((prev) => [...prev, [form.no || "-", form.name, form.pos, form.status, "", "", newId]]);
+        setPlayerList((prev) => [...prev, [form.no || "-", form.name, form.pos, form.status, "", form.memo, newId]]);
       } else {
         if (!editId) throw new Error("수정할 선수를 찾을 수 없습니다.");
         const res = await fetch(`/api/roster/${editId}`, {
@@ -124,7 +126,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
         setPlayerList((prev) =>
           prev.map((p) =>
             p[6] === editId
-              ? [form.no || "-", form.name, form.pos, form.status, p[4] || "", p[5] || "", p[6]]
+              ? [form.no || "-", form.name, form.pos, form.status, p[4] || "", form.memo, p[6]]
               : p
           )
         );
@@ -462,6 +464,36 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* 주장 역할 — 완장(FormationField)과 명단 표시가 이 값을 본다. */}
+            <div>
+              <p className="mb-2 text-[10px] font-black tracking-[0.14em] text-gray-400 dark:text-white/35">주장</p>
+              <div className="flex gap-2">
+                {[
+                  { value: "", label: "없음" },
+                  { value: "c", label: "주장" },
+                  { value: "vc", label: "부주장" },
+                ].map((r) => (
+                  <button
+                    key={r.value || "none"}
+                    type="button"
+                    onClick={() => setForm((p) => ({ ...p, memo: r.value }))}
+                    className={`flex-1 rounded-xl py-2.5 text-[12px] font-black transition-colors ${
+                      form.memo === r.value
+                        ? r.value
+                          ? "bg-[#FF8FA3] text-white"
+                          : "bg-gray-500 text-white dark:bg-white/35 dark:text-black"
+                        : "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300"
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-[10px] font-bold text-gray-400 dark:text-white/30">
+                주장은 한 명만 두세요. 부주장은 여럿이어도 됩니다.
+              </p>
             </div>
           </div>
 

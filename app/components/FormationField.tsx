@@ -122,6 +122,13 @@ function FaceOnMarker({
   );
 }
 
+/**
+ * 부주장이 여럿 출전했을 때 완장을 먼저 차는 사람.
+ * 주장 역할 자체는 로스터(비고 c/vc)에서 바꾸지만, 부주장끼리의 순위는 데이터에
+ * 없어서 여기 둔다. 부주장이 바뀌면 이 값도 같이 확인할 것.
+ */
+const VC_PRIORITY = "김준수";
+
 export function FormationField({
   lineup,
   rosterMap,
@@ -154,12 +161,12 @@ export function FormationField({
     return () => clearTimeout(t);
   }, []);
 
-  // 출전 명단 기준 주장 완장: C → (C 결장 시) VC, VC 둘 다 출전이면 문승환 우선
+  // 출전 명단 기준 주장 완장: C → (C 결장 시) VC, VC 가 여럿 출전이면 VC_PRIORITY 우선
   const fieldNames = lineup.players.map((p) => p.trim());
   let actingCaptain = fieldNames.find((n) => captainRoles[n] === "C");
   if (!actingCaptain) {
     const vcs = fieldNames.filter((n) => captainRoles[n] === "VC");
-    actingCaptain = vcs.find((n) => n === "문승환") || vcs[0];
+    actingCaptain = vcs.find((n) => n === VC_PRIORITY) || vcs[0];
   }
 
   // MOM은 "이름1,이름2" 또는 공격/수비 구분 시 "이름1 / 이름2" 형식으로 저장됨

@@ -12,7 +12,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { no, name, pos, status } = body;
+    const { no, name, pos, status, memo } = body;
     if (!name) {
       return NextResponse.json({ error: "이름은 필수입니다." }, { status: 400 });
     }
@@ -21,6 +21,8 @@ export async function PUT(
       name,
       pos: pos || "MF",
       status: status || "활동",
+      // 주장 역할은 보냈을 때만 넘긴다(안 보내면 백엔드가 기존 값을 유지).
+      ...(memo === undefined ? {} : { memo: String(memo) }),
     });
     revalidateAppData();
     return NextResponse.json({ ok: true });
