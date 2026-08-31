@@ -184,7 +184,7 @@ export default function LoungeClient({
                     </div>
                     <p className="mt-2 truncate text-[14px] font-black leading-snug">{post.title}</p>
                     <p className="mt-1.5 text-[10.5px] font-bold text-gray-400 dark:text-white/30">
-                      익명 · {relativeTime(post.createdAt)}
+                      {post.authorLabel} · {relativeTime(post.createdAt)}
                       {post.adminReply && (
                         <span className="ml-1.5 text-emerald-600 dark:text-emerald-400">
                           · 운영진 답변

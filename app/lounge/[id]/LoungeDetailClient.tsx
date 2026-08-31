@@ -225,7 +225,8 @@ export default function LoungeDetailClient({
           {post.title}
         </h1>
         <p className="mt-2 text-[11px] font-bold text-gray-400 dark:text-white/30">
-          익명 · {relativeTime(post.createdAt)}
+          {/* 라벨은 백엔드가 준 걸 쓴다. 여기 "익명"을 박아두면 규칙이 두 군데로 갈린다. */}
+          {post.authorLabel} · {relativeTime(post.createdAt)}
         </p>
 
         <p className="mt-5 whitespace-pre-wrap break-words text-[14px] leading-[1.85] text-gray-700 [overflow-wrap:anywhere] dark:text-white/70">
