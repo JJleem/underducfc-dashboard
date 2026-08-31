@@ -27,6 +27,12 @@ export const EMOTICONS: Emoticon[] = [
   { id: "duck", label: "꽥", emoji: "🐥" },
 ];
 
+/**
+ * 글을 새로 쓸 때 미리 골라져 있는 아이콘. 아무것도 없는 칸부터 시작하면 대부분
+ * 그냥 지나쳐서 목록이 밋밋해진다. 물론 바꾸거나 뺄 수 있다.
+ */
+export const DEFAULT_POST_ICON = "me-too";
+
 /** 모르는 id 는 무시한다 — 예전 이모티콘을 지워도 옛 댓글이 깨지지 않는다. */
 export function findEmoticon(id: string | null | undefined): Emoticon | null {
   return EMOTICONS.find((e) => e.id === id) ?? null;

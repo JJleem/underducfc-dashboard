@@ -8,7 +8,7 @@ import type { LoungeComment, LoungePostDetail, LoungeStatus } from "../../lib/lo
 import { CATEGORY_LABEL, STATUS_META, STATUS_ORDER, relativeTime } from "../meta";
 import AppToast from "../../components/AppToast";
 import AppConfirmDialog from "../../components/AppConfirmDialog";
-import Emoticon from "../Emoticon";
+import Emoticon, { preloadEmoticons } from "../Emoticon";
 import EmoticonPicker from "../EmoticonPicker";
 
 export default function LoungeDetailClient({
@@ -59,6 +59,9 @@ export default function LoungeDetailClient({
       replies: comments.filter((c) => c.parentId === root.id),
     }));
   }, [comments]);
+
+  // 피커를 여는 순간이 아니라 화면이 뜰 때 받아 둔다 — 열 때 받으면 깜빡인다.
+  useEffect(() => preloadEmoticons(), []);
 
   useEffect(() => {
     if (!toast) return;

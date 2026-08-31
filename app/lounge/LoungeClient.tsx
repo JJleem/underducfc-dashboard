@@ -9,8 +9,9 @@ import { ANON_NOTICE, CATEGORY_LABEL, STATUS_META, relativeTime } from "./meta";
 import ModalPortal from "../components/ModalPortal";
 import AppToast from "../components/AppToast";
 import useAppOverlay from "../components/useAppOverlay";
-import Emoticon from "./Emoticon";
+import Emoticon, { preloadEmoticons } from "./Emoticon";
 import EmoticonPicker from "./EmoticonPicker";
+import { DEFAULT_POST_ICON } from "./emoticons";
 
 type Filter = "all" | LoungeCategory;
 const FILTERS: { key: Filter; label: string }[] = [
@@ -34,13 +35,16 @@ export default function LoungeClient({
 
   const [composing, setComposing] = useState(false);
   const [category, setCategory] = useState<LoungeCategory>("suggestion");
-  const [icon, setIcon] = useState<string | null>(null);
+  const [icon, setIcon] = useState<string | null>(DEFAULT_POST_ICON);
   const [iconOpen, setIconOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const dismissComposer = useAppOverlay(composing, () => setComposing(false));
+
+  // 피커를 여는 순간이 아니라 화면이 뜰 때 받아 둔다 — 열 때 받으면 깜빡인다.
+  useEffect(() => preloadEmoticons(), []);
 
   useEffect(() => {
     if (!toast) return;
@@ -75,7 +79,7 @@ export default function LoungeClient({
       setTitle("");
       setBody("");
       setCategory("suggestion");
-      setIcon(null);
+      setIcon(DEFAULT_POST_ICON);
       setIconOpen(false);
       setToast("올렸어요. 이름은 공개되지 않아요");
       // 목록이 다시 그려지기를 기다리면 방금 쓴 글이 한참 안 보여 실패한 줄 안다.
@@ -263,14 +267,18 @@ export default function LoungeClient({
                   type="button"
                   onClick={() => setIconOpen((open) => !open)}
                   aria-expanded={iconOpen}
-                  className={`flex h-12 items-center gap-2 rounded-xl px-2.5 text-[11px] font-black transition-colors ${
+                  className={`flex h-12 items-center gap-2 rounded-xl pl-1.5 pr-3 text-[11px] font-black text-gray-400 transition-colors dark:text-white/30 ${
                     icon
-                      ? "text-gray-400 dark:text-white/30"
-                      : "border border-dashed border-gray-300 text-gray-400 dark:border-white/15 dark:text-white/30"
+                      ? "bg-gray-100 dark:bg-white/[0.07]"
+                      : "border border-dashed border-gray-300 pl-3 dark:border-white/15"
                   }`}
                 >
                   {icon ? (
-                    <Emoticon id={icon} size={38} />
+                    <>
+                      <Emoticon id={icon} size={38} />
+                      {/* 기본값이 미리 박혀 있어서, 바꿀 수 있다는 걸 말해줘야 한다. */}
+                      바꾸기
+                    </>
                   ) : (
                     <>
                       <Smile width={17} height={17} strokeWidth={2.1} />
