@@ -42,6 +42,9 @@ export interface LoungePost {
   author: string | null;
   mine: boolean;
   commentCount: number;
+  likeCount: number;
+  /** 누가 눌렀는지는 어디서도 알 수 없다 — 내 상태와 숫자뿐이다. */
+  likedByMe: boolean;
   adminReply: string | null;
   adminReplyAuthor: string | null;
   adminReplyAt: string | null;
@@ -74,6 +77,8 @@ interface PostRow {
   author?: string | null;
   mine?: boolean | null;
   comment_count?: number | null;
+  like_count?: number | null;
+  liked_by_me?: boolean | null;
   admin_reply?: string | null;
   admin_reply_author?: string | null;
   admin_reply_at?: string | null;
@@ -114,6 +119,8 @@ function toPost(r: PostRow): LoungePost {
     author: r.author ?? null,
     mine: !!r.mine,
     commentCount: r.comment_count ?? 0,
+    likeCount: r.like_count ?? 0,
+    likedByMe: !!r.liked_by_me,
     adminReply: r.admin_reply ?? null,
     adminReplyAuthor: r.admin_reply_author ?? null,
     adminReplyAt: r.admin_reply_at ?? null,
@@ -185,6 +192,16 @@ export async function updateLoungePost(
  */
 export async function deleteLoungePost(id: number): Promise<void> {
   await udDelete(`/api/underduck/lounge/${id}`);
+}
+
+/** 좋아요 토글. 돌려받는 것도 숫자와 내 상태뿐이다. */
+export async function toggleLoungeLike(
+  postId: number,
+): Promise<{ liked: boolean; likeCount: number }> {
+  const r = await udPost<{ liked: boolean; like_count: number }>(
+    `/api/underduck/lounge/${postId}/like`,
+  );
+  return { liked: r.liked, likeCount: r.like_count };
 }
 
 export async function createLoungeComment(

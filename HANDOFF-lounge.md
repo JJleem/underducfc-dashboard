@@ -148,7 +148,20 @@ CREATE TABLE lounge_comments (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX ON lounge_comments (post_id, id);
+
+CREATE TABLE lounge_like (
+  id         SERIAL PRIMARY KEY,
+  post_id    INTEGER NOT NULL,
+  kakao_id   TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (post_id, kakao_id)
+);
 ```
+
+`lounge_like.kakao_id` 는 **중복을 막기 위한 것이지 누가 눌렀는지 보여주려는 게 아니다.**
+전술게시판에는 `/like-givers`·`/my-likes` 가 있지만 사랑방에는 **일부러 만들지 않았다** —
+익명 게시판에서 공감한 사람 명단은 그 자체로 익명성을 깎는다. 나가는 건 숫자와
+"내가 눌렀는지"뿐이다.
 
 ### 엔드포인트
 
@@ -158,6 +171,7 @@ CREATE INDEX ON lounge_comments (post_id, id);
 | POST | `/api/underduck/lounge` | 회원 | `{category, title, body, icon?}` |
 | GET | `/api/underduck/lounge/{id}` | 회원 | 상세 + 댓글 |
 | DELETE | `/api/underduck/lounge/{id}` | 본인 or 운영진 | |
+| POST | `/api/underduck/lounge/{id}/like` | 회원 | 토글. `{liked, like_count}` 만 반환 |
 | PATCH | `/api/underduck/lounge/{id}` | **운영진만** | `{status?, admin_reply?}` |
 | POST | `/api/underduck/lounge/{id}/comments` | 회원 | `{message?, emoticon?, parent_id?}` — 앞의 둘 중 하나는 필수 |
 | DELETE | `/api/underduck/lounge/{id}/comments/{cid}` | 본인 or 운영진 | |
@@ -386,7 +400,8 @@ emoji 인 것들은 받을 게 없다.
 ## 8. 이번에 만들지 않는 것
 
 - 푸시 알림 (`app/api/push/*` 가 있지만 사랑방엔 붙이지 않는다 — 익명 게시판에 알림이 오면 부담이 커진다)
-- 좋아요 / 조회수
+- 조회수
+- **누가 좋아요를 눌렀는지 보여주는 화면** (위 참고 — 일부러 안 만든다)
 - 이미지 첨부
 - 글 수정 (지우고 다시 쓰기)
 - 운영진 답변 알림

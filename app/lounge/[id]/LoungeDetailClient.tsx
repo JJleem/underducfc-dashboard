@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CornerDownRight, Loader2, Send, ShieldCheck, Smile, Trash2, X } from "lucide-react";
+import { ArrowLeft, CornerDownRight, Heart, Loader2, Send, ShieldCheck, Smile, Trash2, X } from "lucide-react";
 import type { LoungeComment, LoungePostDetail, LoungeStatus } from "../../lib/lounge";
 import { CATEGORY_LABEL, STATUS_META, STATUS_ORDER, relativeTime } from "../meta";
 import AppToast from "../../components/AppToast";
@@ -38,6 +38,8 @@ export default function LoungeDetailClient({
   const [emoticon, setEmoticon] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [replyTo, setReplyTo] = useState<LoungeComment | null>(null);
+  const [likeCount, setLikeCount] = useState(post.likeCount);
+  const [liked, setLiked] = useState(post.likedByMe);
   const inputRef = useRef<HTMLInputElement>(null);
   const [reply, setReply] = useState(post.adminReply ?? "");
 
@@ -131,6 +133,25 @@ export default function LoungeDetailClient({
     } finally {
       setPending(null);
       setSending(false);
+    }
+  }
+
+  async function toggleLike() {
+    if (blockedInPreview()) return;
+    // 하트는 누르는 즉시 반응해야 한다. 서버를 기다리면 두 번 누르게 된다.
+    const before = { liked, likeCount };
+    setLiked(!liked);
+    setLikeCount(likeCount + (liked ? -1 : 1));
+    try {
+      const r = (await request(`/api/lounge/${post.id}/like`, { method: "POST" })) as {
+        liked: boolean;
+        likeCount: number;
+      };
+      setLiked(r.liked);
+      setLikeCount(r.likeCount);
+    } catch {
+      setLiked(before.liked);
+      setLikeCount(before.likeCount);
     }
   }
 
@@ -252,6 +273,26 @@ export default function LoungeDetailClient({
         <p className="mt-5 whitespace-pre-wrap break-words text-[14px] leading-[1.85] text-gray-700 [overflow-wrap:anywhere] dark:text-white/70">
           {post.body}
         </p>
+
+        {/* 좋아요 — 숫자만 보인다. 누가 눌렀는지는 어디서도 알 수 없다. */}
+        <button
+          onClick={toggleLike}
+          aria-pressed={liked}
+          aria-label={liked ? "좋아요 취소" : "좋아요"}
+          className={`mt-5 flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-[12px] font-black transition-colors ${
+            liked
+              ? "border-[#FF8FA3]/40 bg-[#FF8FA3]/10 text-[#e9758b] dark:border-[#FFB6C1]/30 dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
+              : "border-gray-200 text-gray-400 dark:border-white/10 dark:text-white/35"
+          }`}
+        >
+          <Heart
+            width={15}
+            height={15}
+            strokeWidth={2.3}
+            className={liked ? "fill-current" : ""}
+          />
+          {likeCount > 0 ? likeCount : "좋아요"}
+        </button>
 
         {/* 운영진에게만 보이는 작성자. 백엔드가 운영진 요청일 때만 내려준다. */}
         {admin && post.author && (

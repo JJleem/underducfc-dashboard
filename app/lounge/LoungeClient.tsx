@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, MessageCircle, MessageSquareHeart, Plus, Smile, X } from "lucide-react";
+import { ArrowLeft, Heart, Loader2, MessageCircle, MessageSquareHeart, Plus, Smile, X } from "lucide-react";
 import type { LoungeCategory, LoungePost } from "../lib/lounge";
 import { ANON_NOTICE, CATEGORY_LABEL, STATUS_META, relativeTime } from "./meta";
 import ModalPortal from "../components/ModalPortal";
@@ -196,10 +196,26 @@ export default function LoungeClient({
                       )}
                     </p>
                   </div>
-                  {post.commentCount > 0 && (
-                    <span className="mt-1 flex shrink-0 items-center gap-1 text-[10.5px] font-black text-gray-400 dark:text-white/30">
-                      <MessageCircle className="h-3.5 w-3.5" />
-                      {post.commentCount}
+                  {(post.likeCount > 0 || post.commentCount > 0) && (
+                    <span className="mt-1 flex shrink-0 items-center gap-2 text-[10.5px] font-black text-gray-400 dark:text-white/30">
+                      {post.likeCount > 0 && (
+                        <span
+                          className={`flex items-center gap-1 ${
+                            post.likedByMe ? "text-[#e9758b] dark:text-[#FFB6C1]" : ""
+                          }`}
+                        >
+                          <Heart
+                            className={`h-3.5 w-3.5 ${post.likedByMe ? "fill-current" : ""}`}
+                          />
+                          {post.likeCount}
+                        </span>
+                      )}
+                      {post.commentCount > 0 && (
+                        <span className="flex items-center gap-1">
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          {post.commentCount}
+                        </span>
+                      )}
                     </span>
                   )}
                 </Link>
