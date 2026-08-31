@@ -33,6 +33,32 @@ const POS_META: Record<string, { label: string; en: string; color: string }> = {
 const POS_ORDER = ["GK", "DF", "MF", "FW", "ETC"];
 
 // 스쿼드 카드 페이스온: 파일이 있으면 사진, 없거나 실패하면 실루엣.
+/**
+ * 주장 완장 뱃지.
+ *
+ * 글자만 찍으면 이름 옆의 다른 글자와 섞여 "표시"로 안 읽힌다. 완장처럼 보이게
+ * 띠 모양을 주되, 주장과 부주장은 **같은 모양에 무게만 다르게** 한다 —
+ * 모양까지 다르면 둘이 같은 계통이라는 게 안 보인다.
+ *
+ * 사진 위에 얹히므로 그림자와 링으로 배경에서 띄운다.
+ */
+function CaptainBadge({ role }: { role: "c" | "vc" }) {
+  const captain = role === "c";
+  return (
+    <span
+      aria-label={captain ? "주장" : "부주장"}
+      title={captain ? "주장" : "부주장"}
+      className={`shrink-0 rounded-[3px] px-1 text-[8.5px] font-black leading-[15px] tracking-[0.03em] shadow-[0_1px_3px_rgba(0,0,0,0.45)] ${
+        captain
+          ? "bg-gradient-to-b from-[#FFE9A8] via-[#FFC94D] to-[#E8991F] text-[#4A2E00] ring-1 ring-inset ring-white/45"
+          : "bg-white/20 text-white ring-1 ring-inset ring-white/55 backdrop-blur-[2px]"
+      }`}
+    >
+      {captain ? "C" : "VC"}
+    </span>
+  );
+}
+
 function SquadPhoto({ name, accent }: { name: string; accent: string }) {
   const src = playerFaceOnSrc(name);
   const [failed, setFailed] = React.useState(false);
@@ -337,8 +363,8 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                           <div className="absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-black/90 via-black/45 to-transparent px-2 pb-2 pt-9">
                             <div className="flex items-center gap-1">
                               <span className="truncate text-[12px] font-black leading-tight text-white">{name}</span>
-                              {isC && <span className="shrink-0 text-[8px] font-black text-emerald-300">C</span>}
-                              {isVC && <span className="shrink-0 text-[8px] font-black text-amber-300">VC</span>}
+                              {isC && <CaptainBadge role="c" />}
+                              {isVC && <CaptainBadge role="vc" />}
                             </div>
                             <div className="mt-1 flex items-center gap-1.5 text-[9px] font-black">
                               <span className="tabular-nums text-white/65">
