@@ -1,24 +1,28 @@
 // 사랑방 이모티콘 목록.
 //
-// 그림은 `public/emoticons/<id>.png` 에서 찾는다. **파일이 없으면 emoji 로 떨어진다**
-// ([[Emoticon.tsx]]) — 그래서 그림을 그리기 전에도 기능이 돌아가고, 나중에 PNG 를
-// 그 이름으로 넣기만 하면 코드를 안 고쳐도 그림으로 바뀐다.
+// **기본은 emoji 다.** 그림(`public/emoticons/<id>.png`)이 있는 건 `art: true` 로
+// 표시한 것뿐이고, 나머지는 emoji 를 바로 그린다 — 요청을 아예 보내지 않는다.
 //
-// 이모티콘을 늘리려면 여기 한 줄 + PNG 한 장. 백엔드는 id 문자열만 저장하므로
-// (`lounge_comment.emoticon`) 건드릴 필요가 없다.
+// 예전에는 일단 PNG 를 요청해 보고 404 가 나면 emoji 로 떨어뜨렸다. 그림을 넣기만
+// 하면 코드를 안 고쳐도 됐지만, 그림 없는 것들이 화면을 열 때마다 404 를 내고
+// 그 왕복만큼 늦게 떴다. 그림이 몇 개 없는 게 기본 상태라면 손해가 더 크다.
+//
+// 그림을 새로 넣으면 파일을 두고 여기 `art: true` 한 줄을 켜면 된다.
 
 export interface Emoticon {
   /** 저장되는 값이자 파일 이름. 소문자·숫자·하이픈만. */
   id: string;
-  /** 접근성 라벨 겸 툴팁. */
+  /** 접근성 라벨 겸 이름표. */
   label: string;
-  /** 그림이 없을 때 대신 그릴 것. */
+  /** 그림이 없을 때 그리는 것. 대부분 이걸 쓴다. */
   emoji: string;
+  /** `public/emoticons/<id>.png` 가 **실제로 있을 때만** 켠다. */
+  art?: boolean;
 }
 
 export const EMOTICONS: Emoticon[] = [
-  { id: "me-too", label: "저도요", emoji: "🙋" },
-  { id: "agree", label: "동의", emoji: "👍" },
+  { id: "me-too", label: "저도요", emoji: "🙋", art: true },
+  { id: "agree", label: "동의", emoji: "👍", art: true },
   { id: "laugh", label: "빵터짐", emoji: "😂" },
   { id: "cry", label: "슬퍼요", emoji: "😭" },
   { id: "sorry", label: "죄송", emoji: "🙏" },

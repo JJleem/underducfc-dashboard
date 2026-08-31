@@ -333,16 +333,19 @@ app/api/lounge/[id]/comments/[cid]/route.ts    DELETE 댓글
 둘은 **같은 id 체계와 같은 피커**(`app/lounge/EmoticonPicker.tsx`)를 쓴다.
 두 곳에서 모양이 달라지면 같은 기능으로 안 읽힌다.
 
-**그림이 없어도 지금 동작한다.** 각 이모티콘은 emoji 를 하나씩 들고 있어서,
-`public/emoticons/<id>.png` 가 없으면 `onError` 로 emoji 를 대신 그린다
-(`app/lounge/Emoticon.tsx`). PNG 를 그 이름으로 넣는 순간 코드를 안 고쳐도 그림으로 바뀐다.
+**기본은 emoji 다.** 그림이 있는 건 레지스트리에 `art: true` 로 표시한 것뿐이고,
+나머지는 emoji 를 바로 그린다 — 요청을 아예 보내지 않는다.
+
+처음에는 일단 PNG 를 요청해 보고 404 가 나면 emoji 로 떨어뜨렸다. 파일만 넣으면
+코드를 안 고쳐도 되는 게 장점이었지만, 그림 없는 것들이 화면을 열 때마다 404 를 내고
+그 왕복만큼 늦게 떴다. **그림이 몇 개 없는 게 기본 상태**라면 손해가 더 크다.
 
 ### 지금 등록된 것 — `app/lounge/emoticons.ts`
 
-| id | 라벨 | 폴백 |
+| id | 라벨 | 지금 그리는 것 |
 | --- | --- | --- |
-| `me-too` | 저도요 | 🙋 |
-| `agree` | 동의 | 👍 |
+| `me-too` | 저도요 | 🖼 그림 (`art: true`) |
+| `agree` | 동의 | 🖼 그림 (`art: true`) |
 | `laugh` | 빵터짐 | 😂 |
 | `cry` | 슬퍼요 | 😭 |
 | `sorry` | 죄송 | 🙏 |
@@ -352,7 +355,8 @@ app/api/lounge/[id]/comments/[cid]/route.ts    DELETE 댓글
 
 ### 그림 넣는 법
 
-`public/emoticons/me-too.png` 처럼 **id 와 같은 이름**으로 넣으면 끝이다.
+`public/emoticons/me-too.png` 처럼 **id 와 같은 이름**으로 넣고, `emoticons.ts` 의
+그 줄에 **`art: true` 를 켠다**. 파일만 넣으면 안 쓰인다(안 켜져 있으면 emoji 를 그린다).
 
 **얼굴 클로즈업으로 자를 것.** 화면에서 32~64px 로 그려지는데 전신 그림을 넣으면
 얼굴이 전체의 1/5도 안 돼 표정이 사라진다(그래서 처음 받은 전신 스티커를 머리 위주로
@@ -367,15 +371,13 @@ app/api/lounge/[id]/comments/[cid]/route.ts    DELETE 댓글
 ### 미리 받아두기
 
 `preloadEmoticons()` 를 화면이 뜰 때 부른다(`LoungeClient` · `LoungeDetailClient`).
-피커를 **여는 순간** 받으면 그림 있는 건 네트워크를 기다리고, 없는 건 404 가
-돌아온 뒤에야 emoji 로 바뀌어 눈에 띄게 깜빡인다.
-
-없는 id 는 모듈 스코프 `Set` 에 기억해 두고 `useSyncExternalStore` 로 나눠 쓴다 —
-컴포넌트 안에 두면 댓글마다·열 때마다 같은 404 를 다시 받아 온다.
+`art` 가 켜진 것만 받는다 — 피커를 여는 순간에 받으면 빈 칸이 잠깐 보인다.
+emoji 인 것들은 받을 게 없다.
 
 ### 늘리는 법
 
-`app/lounge/emoticons.ts` 에 한 줄 + PNG 한 장. **백엔드는 안 건드려도 된다** —
+`app/lounge/emoticons.ts` 에 한 줄(그림이 있으면 `art: true` 까지).
+**백엔드는 안 건드려도 된다** —
 `lounge_comment.emoticon` 은 id 문자열만 저장하고(`^[a-z0-9-]+$`, 50자), 프론트는
 모르는 id 를 조용히 무시한다. 그래서 이모티콘을 지워도 옛 댓글이 깨지지 않는다.
 
