@@ -40,6 +40,7 @@ export default function LoungeDetailClient({
   const [replyTo, setReplyTo] = useState<LoungeComment | null>(null);
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [liked, setLiked] = useState(post.likedByMe);
+  const [likeBusy, setLikeBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [reply, setReply] = useState(post.adminReply ?? "");
 
@@ -137,11 +138,14 @@ export default function LoungeDetailClient({
   }
 
   async function toggleLike() {
-    if (blockedInPreview()) return;
-    // 하트는 누르는 즉시 반응해야 한다. 서버를 기다리면 두 번 누르게 된다.
+    // 서버가 "토글"이라 요청이 두 번 나가면 켜졌다 꺼진다. 연타를 막는다.
+    if (likeBusy || blockedInPreview()) return;
+    setLikeBusy(true);
+    // 하트는 누르는 즉시 반응해야 한다. 서버를 기다리면 안 먹은 줄 알고 또 누른다.
+    // 갱신은 함수형으로 — 같은 틱에 두 번 불리면 클로저 값이 어긋난다.
     const before = { liked, likeCount };
-    setLiked(!liked);
-    setLikeCount(likeCount + (liked ? -1 : 1));
+    setLiked((v) => !v);
+    setLikeCount((n) => n + (before.liked ? -1 : 1));
     try {
       const r = (await request(`/api/lounge/${post.id}/like`, { method: "POST" })) as {
         liked: boolean;
@@ -152,6 +156,8 @@ export default function LoungeDetailClient({
     } catch {
       setLiked(before.liked);
       setLikeCount(before.likeCount);
+    } finally {
+      setLikeBusy(false);
     }
   }
 
