@@ -36,11 +36,12 @@ const POS_ORDER = ["GK", "DF", "MF", "FW", "ETC"];
 /**
  * 주장 완장 뱃지.
  *
- * 글자만 찍으면 이름 옆의 다른 글자와 섞여 "표시"로 안 읽힌다. 완장처럼 보이게
- * 띠 모양을 주되, 주장과 부주장은 **같은 모양에 무게만 다르게** 한다 —
- * 모양까지 다르면 둘이 같은 계통이라는 게 안 보인다.
+ * 글자만 찍으면 이름 옆의 다른 글자와 섞여 "표시"로 안 읽힌다. 완장처럼 띠 모양을 준다.
  *
- * 사진 위에 얹히므로 그림자와 링으로 배경에서 띄운다.
+ * 주장과 부주장은 **똑같이 그린다.** 부주장만 흐린 유리로 낮춰 봤더니 사진 위에서
+ * 칙칙하게 묻혔다. 어차피 글자가 C / VC 로 다르니 색까지 나눌 이유가 없다.
+ *
+ * 사진 위에 얹히므로 그림자와 안쪽 링으로 배경에서 띄운다.
  */
 function CaptainBadge({ role }: { role: "c" | "vc" }) {
   const captain = role === "c";
@@ -48,11 +49,7 @@ function CaptainBadge({ role }: { role: "c" | "vc" }) {
     <span
       aria-label={captain ? "주장" : "부주장"}
       title={captain ? "주장" : "부주장"}
-      className={`shrink-0 rounded-[3px] px-1 text-[8.5px] font-black leading-[15px] tracking-[0.03em] shadow-[0_1px_3px_rgba(0,0,0,0.45)] ${
-        captain
-          ? "bg-gradient-to-b from-[#FFE9A8] via-[#FFC94D] to-[#E8991F] text-[#4A2E00] ring-1 ring-inset ring-white/45"
-          : "bg-white/20 text-white ring-1 ring-inset ring-white/55 backdrop-blur-[2px]"
-      }`}
+      className="shrink-0 rounded-[3px] bg-gradient-to-b from-[#FFF4CC] via-[#FFC933] to-[#EF9E0B] px-1 text-[8.5px] font-black leading-[15px] tracking-[0.03em] text-[#4A2E00] shadow-[0_1px_3px_rgba(0,0,0,0.45)] ring-1 ring-inset ring-white/55"
     >
       {captain ? "C" : "VC"}
     </span>
