@@ -69,6 +69,7 @@ export default async function VotePage() {
       nickname: r[2] || "",
       message: r[3] || "",
       timestamp: r[4] || "",
+      emoticon: r[5] || null,
     }));
 
   const users = rawUsers
