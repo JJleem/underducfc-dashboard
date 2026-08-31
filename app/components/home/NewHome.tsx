@@ -10,6 +10,7 @@ import Link from "next/link";
 import { Bell, MapPin } from "lucide-react";
 import { auth } from "@/auth";
 import { isAdmin } from "../../lib/admin";
+import { listLoungePosts, type LoungePost } from "../../lib/lounge";
 import { getMatchesRows, getMyLikedMatchIds } from "../../lib/matches-backend";
 import {
   getAttendanceVoteRows,
@@ -43,6 +44,7 @@ import { type MomVote as MomVoteData } from "./MomVote";
 import { type Feedback } from "./FeedbackThread";
 import MatchFeed from "./MatchFeed";
 import AppHeader from "./AppHeader";
+import LoungeEntry from "./LoungeEntry";
 
 /** 백엔드가 "08:00:00" 으로 주는 경우가 있어 홈과 같은 규칙으로 정규화한다. */
 function normalizeTime(raw: string): string {
@@ -117,7 +119,7 @@ export default async function NewHome({
     }
   };
 
-  const [rawMatches, rawVotes, rawNotices, rawLineups, rawRoster, rawFeedback, rawStats, rawMomVotes, rawFeatured, myLikedMatchIds, teamTitleData] =
+  const [rawMatches, rawVotes, rawNotices, rawLineups, rawRoster, rawFeedback, rawStats, rawMomVotes, rawFeatured, myLikedMatchIds, teamTitleData, loungePosts] =
     await Promise.all([
       getMatchesRows(),
       optionalRows("출석", getAttendanceVoteRows()),
@@ -140,6 +142,8 @@ export default async function NewHome({
         failedSections.push("칭호 계산");
         return { allTitles: {}, posLineupCounts: {} };
       }),
+      // 사랑방은 "새 글 있음" 점을 찍는 데만 쓴다. 실패하면 점 없이 진입점만 그린다.
+      listLoungePosts().catch(() => [] as LoungePost[]),
     ]);
 
   const matches = rawMatches.slice(1).map(toMatch);
@@ -517,6 +521,14 @@ export default async function NewHome({
           )}
         </div>
       )}
+
+      {/* 사랑방 — 공지와 같은 결의 한 줄. 공지가 없어도 항상 보인다. */}
+      <LoungeEntry
+        withTopBorder={!notice}
+        /* 최신 글 id 만 쓰면 글이 지워졌을 때 표시가 안 뜬다. 개수를 같이 넣는다.
+           목록을 못 읽어왔으면 빈 문자열 — 점을 찍지 않는다. */
+        stamp={loungePosts.length ? `${loungePosts[0].id}:${loungePosts.length}` : ""}
+      />
 
       <section className={layout === "feed" ? "pb-6 pt-2" : "px-4 pb-6 pt-4"}>
         {/* 경기 목록 — 두 방향 중 하나를 통째로 갈아 끼운다 */}

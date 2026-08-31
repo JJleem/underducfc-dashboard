@@ -41,6 +41,12 @@ interface UnderduckRequest {
   anonymous?: boolean;
   /** 이미 세션을 읽은 API 라우트가 넘기는 신원. auth()를 다시 호출하지 않는다. */
   identity?: UnderduckIdentity;
+  /**
+   * GET 에도 신원 헤더를 붙인다. 응답이 "누가 보느냐"에 따라 달라져야 하는 읽기에만
+   * 쓴다(사랑방: 익명 라벨·내 글 여부·운영진에게만 주는 실명). 캐시 키가 사용자별로
+   * 쪼개지므로 반드시 cache: "no-store" 와 함께 쓴다.
+   */
+  withIdentity?: boolean;
 }
 
 /**
@@ -75,7 +81,7 @@ async function identityHeaders(): Promise<Record<string, string>> {
  */
 export async function underduckFetch<T = unknown>(
   path: string,
-  { method = "GET", body, cache = "no-store", next, anonymous, identity }: UnderduckRequest = {},
+  { method = "GET", body, cache = "no-store", next, anonymous, identity, withIdentity }: UnderduckRequest = {},
 ): Promise<T> {
   const base = process.env.UNDERDUCK_API_BASE;
   const secret = process.env.UNDERDUCK_API_SECRET;
@@ -93,7 +99,8 @@ export async function underduckFetch<T = unknown>(
   // 읽기(GET)는 udReadOpts의 next.revalidate로 캐싱되는데, 사용자마다 달라지는 헤더를
   // 얹으면 fetch 캐시 키가 사용자별로 쪼개지고 정적 렌더링이 동적으로 바뀐다.
   // 권한 검사가 필요한 건 쓰기·삭제이므로 읽기는 지금 그대로 둔다.
-  const needsIdentity = !anonymous && method !== "GET";
+  // withIdentity 를 켠 읽기만 예외 — 응답 자체가 사용자별로 달라야 하는 경우다.
+  const needsIdentity = !anonymous && (method !== "GET" || !!withIdentity);
 
   const headers: Record<string, string> = {
     "X-Underduck-Secret": secret,
@@ -189,7 +196,7 @@ export async function resolvePseudonym(rawKakaoId: string): Promise<string> {
 /** GET. 읽기는 server component에서 `next: { revalidate }`로 캐싱 제어 가능. */
 export function udGet<T = unknown>(
   path: string,
-  opts?: { cache?: RequestCache; next?: NextFetchOptions },
+  opts?: { cache?: RequestCache; next?: NextFetchOptions; withIdentity?: boolean },
 ): Promise<T> {
   return underduckFetch<T>(path, { method: "GET", ...opts });
 }
