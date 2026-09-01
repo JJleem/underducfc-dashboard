@@ -192,11 +192,12 @@ export default function VoteClient({
     new Set(allMatches.filter((m) => m.attendanceStatus === "마감").map((m) => m.id)),
   );
 
-  const activeMatches = upcomingMatches.filter((m) => !closedIds.has(m.id));
-  const closedMatches = [
-    ...pastMatches,
-    ...upcomingMatches.filter((m) => closedIds.has(m.id)),
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // 마감된 경기도 위에 남긴다(카드에서 투표 버튼만 닫는다). 아래로 내려보내면
+  // 정작 경기 당일 아침에 명단을 찾으러 "지난 투표"를 뒤져야 한다.
+  const activeMatches = upcomingMatches;
+  const closedMatches = [...pastMatches].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  );
 
   /**
    * 응답별 이름 묶음. 무응답은 등록 회원 중 응답 안 한 사람.
@@ -377,6 +378,8 @@ export default function VoteClient({
         : match.opponent;
     const matchComments = comments.filter((c) => c.matchId === match.id);
     const saved = savedVote?.matchId === match.id ? savedVote.response : null;
+    // 마감됐어도 카드는 위에 남는다 — 명단·시간·장소는 계속 봐야 하고, 투표만 닫는다.
+    const voteClosed = closedIds.has(match.id);
 
     return (
       <section key={match.id} className="relative overflow-hidden px-4 pb-6 pt-5">
@@ -436,7 +439,11 @@ export default function VoteClient({
           </div>
 
           {/* 투표 버튼 — 이 화면에서 제일 큰 것 */}
-          {currentUser ? (
+          {voteClosed ? (
+            <p className="mt-5 rounded-2xl bg-gray-100 py-3.5 text-center text-[12px] font-black text-gray-400 dark:bg-white/[0.06] dark:text-white/35">
+              투표가 마감됐어요 · 명단은 아래에서 확인하세요
+            </p>
+          ) : currentUser ? (
             <div className="mt-5 grid grid-cols-3 gap-2">
               {OPTIONS.map(({ key, tone }) => {
                 const selected = myVote === key;
@@ -480,7 +487,7 @@ export default function VoteClient({
           )}
 
           {/* 언제 닫히는지 안 보이면 갑자기 막힌 것처럼 느낀다. 버튼 바로 아래 한 줄. */}
-          {voteDeadlineLabel(match.date) && (
+          {!voteClosed && voteDeadlineLabel(match.date) && (
             <p className="mt-2 text-center text-[10.5px] font-bold text-gray-400 dark:text-white/30">
               경기 전날 23:00에 자동으로 닫혀요 · {voteDeadlineLabel(match.date)}
             </p>

@@ -3,7 +3,7 @@ import { isAdmin } from "../lib/admin";
 import { getMatchesRows } from "../lib/matches-backend";
 import { getAttendanceVoteRows, getVoteCommentRows, getUsersRows, getRosterRows } from "../lib/backend";
 import { getMatchWeather, serializeWeather, parseWeather } from "../lib/weather";
-import { isVoteClosed } from "../lib/vote-deadline";
+import { isVoteClosed, isMatchDayOver } from "../lib/vote-deadline";
 import { writeMatchWeather } from "../lib/sheets-write";
 import VoteClient from "./VoteClient";
 
@@ -98,15 +98,22 @@ export default async function VotePage() {
     }))
     .filter((u) => !inactiveNames.has(u.nickname.trim()));
 
-  // 예정 경기 (최신순)
+  // 예정 경기 (가까운 순)
+  // **투표가 마감돼도 경기 당일까지는 여기 남긴다** — 그날 아침에 명단과 시간·장소를
+  // 확인하는 게 이 화면의 주 용도다. 날짜가 지나야 아래로 내려간다.
   const upcomingMatches = matches
-    .filter((m) => m.result === "예정" && m.type !== "야유회" && m.attendanceStatus !== "마감")
+    .filter((m) => m.result === "예정" && m.type !== "야유회" && !isMatchDayOver(m.date))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  // 지난 투표
+  // 지난 투표 — 위에 남아 있는 경기는 빼서 두 곳에 겹쳐 나오지 않게 한다.
+  const upcomingIds = new Set(upcomingMatches.map((m) => m.id));
   const pastVoteMatchIds = new Set(attendanceVotes.map((v) => v.matchId));
   const pastMatches = matches
-    .filter((m) => m.attendanceStatus === "마감" || (m.result !== "예정" && pastVoteMatchIds.has(m.id)))
+    .filter(
+      (m) =>
+        !upcomingIds.has(m.id) &&
+        (m.attendanceStatus === "마감" || (m.result !== "예정" && pastVoteMatchIds.has(m.id))),
+    )
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // 날씨: 시트에 저장된 값 우선, 없으면 API 조회 후 시트에 저장

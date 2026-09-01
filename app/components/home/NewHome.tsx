@@ -23,7 +23,7 @@ import {
   getFeaturedRows,
 } from "../../lib/backend";
 import { parseSubstitutions } from "../../lib/lineup";
-import { isVoteClosed } from "../../lib/vote-deadline";
+import { isVoteClosed, isMatchDayOver } from "../../lib/vote-deadline";
 import { buildMatchStorylines, type Storyline } from "../../lib/storylines";
 import { pickBadges, type EarnedTitle } from "../../lib/titles";
 import { getTeamTitleData } from "../../lib/titles-cache";
@@ -156,12 +156,14 @@ export default async function NewHome({
     if (count > 0) likeCountByMatch[id] = count;
   });
 
-  // 홈과 같은 기준: 예정 + 야유회 아님 + 투표 안 마감, 그중 가장 이른 경기.
+  // 홈과 같은 기준: 예정 + 야유회 아님 + 경기 날짜가 안 지남, 그중 가장 이른 경기.
+  // 투표가 마감돼도 경기 당일까지는 "다음 경기"로 둔다 — 그날 아침에 홈에서
+  // 시간·장소를 확인한다.
   // (야유회는 결과가 안 채워져 result 가 비는데, 그걸 빼지 않으면 지난 야유회가
   //  영원히 "다음 경기"로 잡힌다.)
   const nextMatch =
     [...matches]
-      .filter((m) => m.result === "예정" && m.type !== "야유회" && m.attendanceStatus !== "마감")
+      .filter((m) => m.result === "예정" && m.type !== "야유회" && !isMatchDayOver(m.date))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0] ?? null;
 
   const played = matches.filter((m) => m.result !== "예정" && m.type !== "야유회");

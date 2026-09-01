@@ -44,3 +44,16 @@ export function voteDeadlineLabel(matchDate: string): string {
   const mm = String(kst.getUTCMinutes()).padStart(2, "0");
   return `${day} ${hh}:${mm} 마감`;
 }
+
+/**
+ * 경기 날짜가 지났나(한국시간 자정 기준). **경기 당일은 아직 안 지난 것으로 본다.**
+ *
+ * 투표가 닫혀도 경기 당일까지는 화면 위쪽에 남겨야 한다 — 그날 아침에 명단과
+ * 시간·장소를 확인하는 게 이 화면의 주 용도다.
+ * 날짜를 못 읽으면 false — 못 읽었다고 지난 경기로 내려보내지 않는다.
+ */
+export function isMatchDayOver(matchDate: string, now: Date = new Date()): boolean {
+  const midnight = Date.parse(`${matchDate}T00:00:00${KST_OFFSET}`);
+  if (isNaN(midnight)) return false;
+  return now.getTime() >= midnight + 24 * ONE_HOUR;
+}
