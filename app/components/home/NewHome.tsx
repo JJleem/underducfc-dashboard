@@ -23,6 +23,7 @@ import {
   getFeaturedRows,
 } from "../../lib/backend";
 import { parseSubstitutions } from "../../lib/lineup";
+import { isVoteClosed } from "../../lib/vote-deadline";
 import { buildMatchStorylines, type Storyline } from "../../lib/storylines";
 import { pickBadges, type EarnedTitle } from "../../lib/titles";
 import { getTeamTitleData } from "../../lib/titles-cache";
@@ -80,7 +81,7 @@ function toMatch(row: string[], id: number): MatchRecord {
     attendees: row[11] || "",
     photos: row[12] || "",
     weather: row[13] || "",
-    attendanceStatus: row[14] === "마감" ? "마감" : "진행중",
+    attendanceStatus: isVoteClosed(row[0] || "", row[14]) ? "마감" : "진행중",
   };
 }
 

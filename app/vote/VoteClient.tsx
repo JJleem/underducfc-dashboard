@@ -32,6 +32,7 @@ import { casualKind, isCasualMatch, matchLogo } from "../components/home/match-r
 import { weatherEmoji } from "../lib/weather";
 import PastVoteRow, { type PastVoteComment, type VoteTally } from "./PastVoteRow";
 import VoterChip, { asVoters } from "./VoterChip";
+import { voteDeadlineLabel } from "../lib/vote-deadline";
 
 interface MatchInfo {
   id: number;
@@ -476,6 +477,13 @@ export default function VoteClient({
             >
               카카오 로그인하고 투표하기
             </button>
+          )}
+
+          {/* 언제 닫히는지 안 보이면 갑자기 막힌 것처럼 느낀다. 버튼 바로 아래 한 줄. */}
+          {voteDeadlineLabel(match.date) && (
+            <p className="mt-2 text-center text-[10.5px] font-bold text-gray-400 dark:text-white/30">
+              경기 전날 23:00에 자동으로 닫혀요 · {voteDeadlineLabel(match.date)}
+            </p>
           )}
 
           {/* 집계 */}

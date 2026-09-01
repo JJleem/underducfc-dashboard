@@ -4,6 +4,7 @@ import { getMatchesRows } from "../../lib/matches-backend";
 import { getAttendanceVoteRows } from "../../lib/backend";
 import { upsertAttendanceVote } from "../../lib/sheets-write";
 import { requireUser } from "@/app/lib/admin";
+import { isVoteClosed, voteDeadlineLabel } from "@/app/lib/vote-deadline";
 import { auth } from "@/auth";
 
 export async function GET() {
@@ -52,8 +53,14 @@ export async function POST(request: NextRequest) {
     if ((matchRow[6] || "예정").trim() !== "예정") {
       return NextResponse.json({ error: "종료된 경기에는 투표할 수 없습니다." }, { status: 409 });
     }
-    if ((matchRow[14] || "").trim() === "마감") {
-      return NextResponse.json({ error: "이미 마감된 투표입니다." }, { status: 409 });
+    // 관리자가 닫았거나, 경기 전날 23:00(KST)이 지났으면 막는다.
+    // 화면은 열어둔 채로 자정을 넘길 수 있으니 마지막 판단은 여기서 한다.
+    if (isVoteClosed(matchRow[0] || "", matchRow[14])) {
+      const label = voteDeadlineLabel(matchRow[0] || "");
+      return NextResponse.json(
+        { error: label ? `투표가 마감됐어요 (${label}).` : "이미 마감된 투표입니다." },
+        { status: 409 },
+      );
     }
 
     await upsertAttendanceVote({

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isVoteClosed } from "@/app/lib/vote-deadline";
 import { getMatchesRows } from "@/app/lib/matches-backend";
 import { sendPushToAll } from "@/app/lib/send-push";
 
@@ -22,7 +23,8 @@ export async function GET(request: NextRequest) {
       const matchDate = new Date(date);
       if (Number.isNaN(matchDate.getTime())) return false;
       matchDate.setHours(0, 0, 0, 0);
-      return result === "예정" && status !== "마감" && matchDate >= today;
+      // 전날 23:00(KST)이 지난 경기도 마감으로 본다. (matchDate 는 Date 라 원문 date 를 넘긴다)
+      return result === "예정" && !isVoteClosed(date, status) && matchDate >= today;
     });
 
     if (!openMatch) {

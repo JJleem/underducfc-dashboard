@@ -3,6 +3,7 @@ import { isAdmin } from "../lib/admin";
 import { getMatchesRows } from "../lib/matches-backend";
 import { getAttendanceVoteRows, getVoteCommentRows, getUsersRows, getRosterRows } from "../lib/backend";
 import { getMatchWeather, serializeWeather, parseWeather } from "../lib/weather";
+import { isVoteClosed } from "../lib/vote-deadline";
 import { writeMatchWeather } from "../lib/sheets-write";
 import VoteClient from "./VoteClient";
 
@@ -48,7 +49,9 @@ export default async function VotePage() {
     type: row[7] || "일반 매칭",
     attendees: row[11] || "",
     weatherRaw: row[13] || "", // N열
-    attendanceStatus: row[14] === "마감" ? "마감" : "진행중",
+    // 저장된 "마감"에 더해, 경기 전날 23:00(KST)이 지나면 자동으로 마감으로 본다.
+    // 크론으로 값을 뒤집지 않고 여기서 계산한다([[app/lib/vote-deadline.ts]]).
+    attendanceStatus: isVoteClosed(row[0] || "", row[14]) ? "마감" : "진행중",
   }));
 
   const attendanceVotes = rawAttendanceVotes
