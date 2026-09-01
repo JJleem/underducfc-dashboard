@@ -194,7 +194,15 @@ export default function VoteClient({
 
   // 마감된 경기도 위에 남긴다(카드에서 투표 버튼만 닫는다). 아래로 내려보내면
   // 정작 경기 당일 아침에 명단을 찾으러 "지난 투표"를 뒤져야 한다.
-  const activeMatches = upcomingMatches;
+  //
+  // 다만 **열린 투표를 먼저** 세운다. 경기 당일 밤 9시에 다음 주 투표가 열리면
+  // 자정까지 카드가 둘인데, 날짜 순으로 두면 이미 끝난 오늘 경기가 위에 오고
+  // 정작 눌러야 할 새 투표가 그 아래 깔린다.
+  const activeMatches = [...upcomingMatches].sort((a, b) => {
+    const closedDiff = Number(closedIds.has(a.id)) - Number(closedIds.has(b.id));
+    if (closedDiff !== 0) return closedDiff;
+    return new Date(a.date).getTime() - new Date(b.date).getTime();
+  });
   const closedMatches = [...pastMatches].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
