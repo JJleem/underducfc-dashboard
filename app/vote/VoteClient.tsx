@@ -31,6 +31,7 @@ import AppToast from "../components/AppToast";
 import { casualKind, isCasualMatch, matchLogo } from "../components/home/match-result";
 import { weatherEmoji } from "../lib/weather";
 import PastVoteRow, { type PastVoteComment, type VoteTally } from "./PastVoteRow";
+import VoterChip, { asVoters } from "./VoterChip";
 
 interface MatchInfo {
   id: number;
@@ -196,11 +197,26 @@ export default function VoteClient({
     ...upcomingMatches.filter((m) => closedIds.has(m.id)),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  /** 응답별 이름 묶음. 무응답은 등록 회원 중 응답 안 한 사람. */
+  /**
+   * 응답별 이름 묶음. 무응답은 등록 회원 중 응답 안 한 사람.
+   *
+   * **그 응답을 한 시각 순**으로 세운다(먼저 누른 사람이 앞). 참석 순서가 곧
+   * 엔트리 순서라 "몇 번째로 손 들었나"가 보여야 한다. 백엔드는 행이 만들어진
+   * 순서(=처음 투표한 순서)로 주므로, 미정에서 참석으로 바꾼 사람이 원래 자리에
+   * 그대로 남아 버린다.
+   */
   const tallyOf = (matchId: number): VoteTally => {
     const mine = votes.filter((v) => v.matchId === matchId);
+    const at = (ts: string) => {
+      const t = new Date(ts).getTime();
+      // 시각을 못 읽으면 맨 뒤로 — 읽히는 사람들의 순서를 흐트러뜨리지 않는다.
+      return isNaN(t) ? Number.POSITIVE_INFINITY : t;
+    };
     const pick = (response: string) =>
-      mine.filter((v) => v.response === response).map((v) => v.nickname);
+      mine
+        .filter((v) => v.response === response)
+        .sort((a, b) => at(a.timestamp) - at(b.timestamp))
+        .map((v) => ({ name: v.nickname, at: v.timestamp }));
     const replied = new Set(mine.map((v) => v.kakaoId));
     return {
       attending: pick("참석"),
@@ -524,14 +540,8 @@ export default function VoteClient({
                       {label}
                     </span>
                     <div className="flex flex-wrap gap-1">
-                      {names.map((name) => (
-                        <Link
-                          key={name}
-                          href={`/players/${encodeURIComponent(name)}`}
-                          className={`rounded-full px-2.5 py-0.5 text-[12px] font-bold active:opacity-60 ${chipTone}`}
-                        >
-                          {name}
-                        </Link>
+                      {asVoters(names).map((v) => (
+                        <VoterChip key={v.name} voter={v} chipTone={chipTone} />
                       ))}
                     </div>
                   </div>

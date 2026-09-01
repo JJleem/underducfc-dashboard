@@ -10,12 +10,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { casualKind, isCasualMatch, matchLogo } from "../components/home/match-result";
+import VoterChip, { asVoters, type Voter } from "./VoterChip";
 import Emoticon from "../components/Emoticon";
 
 export interface VoteTally {
-  attending: string[];
-  maybe: string[];
-  absent: string[];
+  /** 투표한 사람은 시각을 함께 들고 다닌다 — 명단 정렬과 꾹 누르기 표시에 쓴다. */
+  attending: Voter[];
+  maybe: Voter[];
+  absent: Voter[];
+  /** 미투표는 응답이 없으니 시각도 없다. */
   noReply: string[];
 }
 
@@ -186,14 +189,8 @@ export default function PastVoteRow({
                     {label}
                   </span>
                   <div className="flex flex-wrap gap-1">
-                    {names.map((name) => (
-                      <Link
-                        key={name}
-                        href={`/players/${encodeURIComponent(name)}`}
-                        className={`rounded-full px-2.5 py-0.5 text-[12px] font-bold active:opacity-60 ${chipTone}`}
-                      >
-                        {name}
-                      </Link>
+                    {asVoters(names).map((v) => (
+                      <VoterChip key={v.name} voter={v} chipTone={chipTone} />
                     ))}
                   </div>
                 </div>
