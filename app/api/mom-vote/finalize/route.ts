@@ -1,80 +1,14 @@
 import { NextResponse } from "next/server";
 import { revalidateAppData } from "@/app/lib/cache";
-import { getMomVoteRows } from "../../../lib/backend";
-import { getMatchesRows } from "../../../lib/matches-backend";
-import { writeMatchMom } from "../../../lib/sheets-write";
 import { requireAdmin } from "@/app/lib/admin";
-import { getMomVoteDeadline } from "@/app/lib/mom-vote-window";
+import { finalizeMomVotes } from "@/app/lib/finalize-mom";
 
+// 관리자 수동 실행. 정기 확정은 크론이 한다(app/api/cron/finalize-mom).
 export async function POST() {
   const denied = await requireAdmin();
   if (denied) return denied;
   try {
-    // matches 읽기 (날짜 + 현재 MOM 확인용)
-    const rawMatches = await getMatchesRows();
-    const matches = rawMatches.slice(1).map((row: string[], index: number) => ({
-      id: index,
-      date: row[0] || "",
-      time: row[1] || "",
-      mom: row[10] || "",
-    }));
-
-    // mom_vote 읽기
-    const rawVotes = await getMomVoteRows();
-    const votesByMatch: Record<number, { votedFor: string; voteType: string }[]> = {};
-    rawVotes.slice(1).forEach((row: string[]) => {
-      if (!row[0]) return;
-      const mid = Number(row[0]);
-      if (!votesByMatch[mid]) votesByMatch[mid] = [];
-      votesByMatch[mid].push({
-        votedFor: row[2] || "",
-        voteType: row[3] || "공격",
-      });
-    });
-
-    const now = Date.now();
-
-    const finalized: { matchId: number; mom: string }[] = [];
-
-    for (const match of matches) {
-      // 이미 MOM 있으면 스킵
-      if (match.mom?.trim()) continue;
-
-      // 투표 창이 끝난 경기만 확정한다.
-      const deadline = getMomVoteDeadline(match.date, match.time);
-      if (!deadline || now < deadline.getTime()) continue;
-
-      const votes = votesByMatch[match.id] || [];
-      if (votes.length === 0) continue;
-
-      const tally = (type: string) => {
-        const t: Record<string, number> = {};
-        votes
-          .filter((v) => v.voteType === type && v.votedFor)
-          .forEach((v) => { t[v.votedFor] = (t[v.votedFor] || 0) + 1; });
-        const entries = Object.entries(t).sort((a, b) => b[1] - a[1]);
-        if (entries.length === 0) return [];
-        const maxVotes = entries[0][1];
-        return entries.filter(([, cnt]) => cnt === maxVotes).map(([name]) => name);
-      };
-
-      const topAtk = tally("공격");
-      const topDef = tally("수비");
-
-      const atkSet = new Set(topAtk);
-      const defOnly = topDef.filter((n) => !atkSet.has(n));
-
-      let momStr = "";
-      if (topAtk.length > 0 && defOnly.length > 0) momStr = `${topAtk.join(",")} / ${defOnly.join(",")}`;
-      else if (topAtk.length > 0) momStr = topAtk.join(",");
-      else if (topDef.length > 0) momStr = topDef.join(",");
-
-      if (!momStr) continue;
-
-      await writeMatchMom(match.id, momStr);
-      finalized.push({ matchId: match.id, mom: momStr });
-    }
-
+    const finalized = await finalizeMomVotes();
     revalidateAppData();
     return NextResponse.json({ ok: true, finalized });
   } catch (err) {
