@@ -175,17 +175,8 @@ function mix32(n: number): number {
 }
 
 /**
- * 이 경기·이 날짜에 쓸 배경. 그림이 하나도 없으면 null(카드는 기존 그라디언트).
- *
- * 위 `hash` 를 쓰지 않는다. 그 함수는 matchId·dDay 처럼 작고 인접한 입력에서
- * 뭉갠다 — 경기 36개 × D-0~21 로 792번 뽑아 봤더니 서로 다른 값이 64개뿐이었고,
- * 그림 59장 중 17장은 한 번도 안 걸렸다. 애써 만든 그림이 영영 안 보이는 것이다.
- * 뒤에 fmix32 를 덧대도 소용없다. 이미 사라진 정보는 되살아나지 않는다.
- *
- * 그래서 경기마다 그림 순서를 통째로 섞어 두고 D-day 로 그 순서를 훑는다. 매번
- * 새로 뽑으면 D-9 와 D-7 에 같은 그림이 걸리는 일이 생기는데(실제로 생겼다),
- * 카운트다운은 같은 사람이 며칠을 이어 보는 화면이라 그 중복이 제일 눈에 띈다.
- * 순열을 훑으면 59장을 다 쓸 때까지 절대 겹치지 않는다.
+ * 그림 순서를 통째로 섞는다. 뽑을 때마다 새로 뽑지 않고 이 순열을 훑는 이유는
+ * `matchdayArt` 주석에 있다.
  *
  * ⚠️ 끝난 경기(matchResultArt·matchCasualArt)는 `hash` 를 그대로 쓴다. 그쪽은
  *    한 번 정해진 그림이 바뀌면 안 되므로 여기서만 바꿨다.
@@ -201,11 +192,48 @@ function shuffledOrder(seed: number): number[] {
   return order;
 }
 
+/**
+ * 경기 하나가 카운트다운 동안 쓰는 칸 수. 크론이 다음 토요일 경기를 만들므로
+ * 실제로 뜨는 건 D-7~D-0 여덟 장이다(scripts 아님, app/api/cron/create-match).
+ */
+const SLOTS_PER_MATCH = 8;
+
+/**
+ * 이 경기·이 날짜에 쓸 배경. 그림이 하나도 없으면 null(카드는 기존 그라디언트).
+ *
+ * 위 `hash` 를 쓰지 않는다. 그 함수는 matchId·dDay 처럼 작고 인접한 입력에서
+ * 뭉갠다 — 경기 36개 × D-0~21 로 792번 뽑아 봤더니 서로 다른 값이 64개뿐이었고,
+ * 그림 59장 중 17장은 한 번도 안 걸렸다. 애써 만든 그림이 영영 안 보이는 것이다.
+ * 뒤에 fmix32 를 덧대도 소용없다. 이미 사라진 정보는 되살아나지 않는다.
+ *
+ * 그래서 순열을 훑는다. 매번 새로 뽑으면 D-9 와 D-7 에 같은 그림이 걸리는 일이
+ * 생기는데(실제로 생겼다), 카운트다운은 같은 사람이 며칠을 이어 보는 화면이라
+ * 그 중복이 제일 눈에 띈다.
+ *
+ * 단 순열을 **경기마다 새로** 섞으면 안 된다. 그러면 한 경기 안에서만 안 겹칠 뿐
+ * 경기와 경기 사이는 복원추출이 되어, 이전에 뭘 썼는지 기억하지 못한다. 그림
+ * 76장 기준으로 뽑기 40번(경기 5회) 시점에 45장이 한 번도 안 뜨고 8장이 두세 번
+ * 뜬다. 전부 한 번씩 보려면 평균 374번, 주 8번씩 뽑아도 47주가 걸린다.
+ *
+ * 그래서 순열은 **전역으로 하나만** 두고, 경기가 이어서 소비한다. `pos` 는 하루에
+ * 한 칸, 경기마다 여덟 칸 전진하는 전역 카운터다. 그림을 다 쓰면(열 경기 남짓)
+ * 다음 바퀴에서 다시 섞인다. 열 경기면 76장이 전부 한 번씩 나온다.
+ *
+ * ⚠️ 끝난 경기(matchResultArt·matchCasualArt)는 `hash` 를 그대로 쓴다. 그쪽은
+ *    한 번 정해진 그림이 바뀌면 안 되므로 여기서만 바꿨다.
+ */
 export function matchdayArt(matchId: number, dDay: number): MatchdayArt | null {
-  if (MATCHDAY_ART.length === 0) return null;
-  const order = shuffledOrder(Math.imul(matchId + DDAY_SALT * 7919, 0x9e3779b1));
-  // 결과 입력이 늦어 D 가 음수인 카드도 들어온다(MatchFeed 의 awaitingResult).
-  return MATCHDAY_ART[order[((dDay % MATCHDAY_ART.length) + MATCHDAY_ART.length) % MATCHDAY_ART.length]];
+  const n = MATCHDAY_ART.length;
+  if (n === 0) return null;
+  // 결과 입력이 늦어 D 가 음수인 카드도, 관리자가 미리 만들어 D 가 8 이상인 카드도
+  // 들어온다(MatchFeed 의 awaitingResult). 둘 다 앞뒤 칸으로 자연스럽게 밀린다.
+  const pos = matchId * SLOTS_PER_MATCH - dDay;
+  // 바퀴가 바뀌는 지점을 경기 단위로 끊는다. `pos` 로 바퀴를 세면 한 경기의 여드레가
+  // 경계를 걸칠 때 중간에 순열이 갈려 D-5 와 D-2 에 같은 그림이 걸린다(2000경기에
+  // 31번). 경기의 첫 칸(D-7)으로 세면 여드레가 한 순열 안에 있어 0번이 된다.
+  const cycle = Math.floor((matchId * SLOTS_PER_MATCH - (SLOTS_PER_MATCH - 1)) / n);
+  const order = shuffledOrder(Math.imul(cycle + DDAY_SALT * 7919, 0x9e3779b1));
+  return MATCHDAY_ART[order[((pos % n) + n) % n]];
 }
 
 /**
