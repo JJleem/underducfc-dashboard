@@ -75,6 +75,9 @@ async function identityHeaders(): Promise<Record<string, string>> {
   }
 }
 
+/** 백엔드 호출 하나에 허용하는 총 시간(재시도 포함). */
+const UD_TIMEOUT_MS = 8_000;
+
 /**
  * underduck 백엔드 호출 코어. `path`는 "/api/underduck/..." 형식을 기대한다.
  * 429/5xx 같은 일시적 오류는 짧게 재시도한다(google-sheets 읽기 패턴과 동일).
@@ -124,9 +127,30 @@ export async function underduckFetch<T = unknown>(
   if (next) init.next = next;
   else init.cache = cache;
 
+  // 재시도까지 포함한 **전체** 예산. 시그널을 루프 밖에서 한 번만 만들어 공유하므로
+  // 백엔드가 응답 없이 매달려도 이 호출은 8초 안에 반드시 끝난다.
+  //
+  // 예산이 없던 동안은 백엔드가 멈추면 서버 컴포넌트가 Vercel 함수 제한(기본 10초)까지
+  // 같이 멈춰 섰다. 읽기는 어차피 45초 캐시가 받쳐주므로 여기서 끊는 편이 낫다.
+  //
+  // ⚠️ next(ISR) 캐시와 함께 써도 안전하다 — patch-fetch 는 signal 을 캐시 옵트아웃
+  //    조건에 넣지 않고, 백그라운드 재검증 때만 떼어낸다.
+  const signal = AbortSignal.timeout(UD_TIMEOUT_MS);
+
   let response: Response | null = null;
   for (let attempt = 0; attempt < 3; attempt++) {
-    response = await fetch(url, init);
+    try {
+      response = await fetch(url, { ...init, signal });
+    } catch (err) {
+      // 타임아웃은 원인을 알 수 있게 바꿔서 올린다. 그 외 네트워크 오류는 그대로 둔다.
+      if (err instanceof Error && err.name === "TimeoutError") {
+        console.error(`[underduck] ${method} ${normalized} 타임아웃 (${UD_TIMEOUT_MS}ms)`);
+        throw new Error(
+          `백엔드가 ${UD_TIMEOUT_MS / 1000}초 안에 응답하지 않았습니다. (${method} ${normalized})`,
+        );
+      }
+      throw err;
+    }
     if (response.ok) break;
 
     const retryable = response.status === 429 || response.status >= 500;
