@@ -5,26 +5,54 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev      # Start dev server (localhost:3000)
-npm run build    # Production build
-npm run lint     # ESLint check
+npm run dev        # Start dev server (localhost:3000)
+npm run build      # Production build
+npm run lint       # ESLint
+npm run typecheck  # tsc --noEmit
+npm test           # node --test tests/*.test.mjs
+npm run check      # lint --quiet + typecheck + test  ← 커밋 전 이걸 돌리세요
 ```
 
-No test suite is configured.
+보조 스크립트(수동 실행, `.env.local` 필요):
+
+```bash
+npm run verify:positions   # 포지션 배치 규칙 검증 (npm test 에는 포함되지 않음)
+npm run gen:matchday       # 매치데이 아트 생성 (FAL_KEY)
+npm run backup:photos      # Cloudinary 사진 백업
+```
+
+테스트는 `tests/*.test.mjs` 3개 파일이 있고 `app/lib` 의 `chemistry` · `home-state` · `lineup`
+만 덮습니다. `titles.ts` · `positions.ts` · 매치데이 순열은 아직 테스트가 없습니다.
 
 ## Environment Variables
 
 Required in `.env.local`:
 
 ```
-GOOGLE_SHEET_ID=
-GOOGLE_SHEETS_API_KEY=          # Read-only (public API key)
-GOOGLE_SERVICE_ACCOUNT_EMAIL=   # Write operations (JWT auth)
-GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY=
+UNDERDUCK_API_BASE=             # FastAPI 백엔드 주소 — 실제 DB
+UNDERDUCK_API_SECRET=           # X-Underduck-Secret 헤더
+
+AUTH_SECRET=                    # Auth.js v5 (process.env 로 직접 읽지 않고 SDK 가 집어감)
+AUTH_KAKAO_ID=
+AUTH_KAKAO_SECRET=
+ADMIN_KAKAO_IDS=                # 쉼표 구분 — 운영진 판정
+ADMIN_PIN=                      # 운영진 PIN (/api/admin/verify)
+
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
+
+CRON_SECRET=                    # /api/cron/* 의 Bearer 토큰
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=   # 웹 푸시
+VAPID_PRIVATE_KEY=
+VAPID_EMAIL=
+OPENWEATHER_API_KEY=            # 경기 날씨
+FAL_KEY=                        # 매치데이 아트 생성 스크립트 전용
 ```
+
+`GOOGLE_SHEET_ID` · `GOOGLE_SHEETS_API_KEY` 는 이제 `app/lib/google-sheets.ts` 에서만
+읽히는데 그 파일을 import 하는 곳이 하나도 없습니다(아래 참고). 없어도 앱은 돕니다.
 
 ## Architecture
 
@@ -34,8 +62,12 @@ CLOUDINARY_API_SECRET=
 > 기존 파서를 그대로 쓰기 위해 응답을 아래 시트 레이아웃(`string[][]`)으로 환원해 돌려줍니다.
 > 즉 **아래 표는 이제 "저장 위치"가 아니라 "행/열 레이아웃 계약"으로만 유효합니다.**
 >
-> `app/lib/google-sheets.ts` / `app/lib/sheets-write.ts`는 마이그레이션 잔재로, 아직 일부
-> `app/api/*` 라우트가 참조합니다. 새 코드는 `udGet`을 쓰고, 이 두 파일은 건드리지 마세요.
+> 마이그레이션 잔재 두 개의 **현재 상태가 다릅니다**:
+> - `app/lib/sheets-write.ts` — **살아 있고 많이 쓰입니다.** 이름만 시트 시절 것이고 내부는
+>   전부 `udPost`/`udPut`/`udDelete` 위임입니다. 시그니처가 그대로라 호출부를 안 고쳤을 뿐입니다.
+> - `app/lib/google-sheets.ts` — **import 하는 곳이 0건인 죽은 파일**입니다.
+>
+> 새 코드는 `app/lib/underduck.ts` 의 `udGet`/`udPost` 를 직접 쓰세요.
 
 **(레거시) Google Sheets 레이아웃** — 위 주의사항 참고. 데이터 형태 참조용:
 
@@ -50,16 +82,23 @@ CLOUDINARY_API_SECRET=
 | `mom_vote` | A1:E500 | Man-of-the-match votes                                |
 | `attendance_vote` | A1:E500 | Attendance votes (matchId, kakaoId, nickname, response, timestamp) |
 
-**Two separate auth paths for Sheets:**
+**로그인 · 권한:**
 
-- `app/lib/google-sheets.ts` — reads via public API key (`GOOGLE_SHEETS_API_KEY`)
-- `app/lib/sheets-write.ts` — writes via Service Account JWT (manual RS256 signing using Node's `crypto` module — no googleapis SDK)
+- `auth.ts` — Auth.js v5 + 카카오. 세션은 JWT(1년, 하루 1회 갱신).
+- `app/lib/admin.ts` — 라우트 가드. `requireAdmin()` / `requireUser()` 는 거부 시
+  `NextResponse` 를 돌려주므로 `const denied = await requireAdmin(); if (denied) return denied;`
+  형태로 씁니다. 소유권까지 볼 땐 `currentKakaoId()` / `currentIsAdmin()`.
+- 운영진 판정은 `ADMIN_KAKAO_IDS`. **쓰기 라우트에는 예외 없이 가드를 답니다.**
 
 **Data flow:**
 
-1. `app/page.tsx` (Server Component) fetches all sheets in parallel and transforms `string[][]` rows into typed objects
-2. Typed props are passed to `DashboardClient` (Client Component) which owns all UI state
-3. Mutations go through API routes in `app/api/` which call `sheets-write.ts`
+1. `app/page.tsx` 는 `app/components/home/NewHome.tsx` 를 렌더하는 6줄짜리 껍데기입니다.
+2. 서버 컴포넌트가 `app/lib/backend.ts` · `matches-backend.ts` 로 백엔드를 읽고, 응답을
+   아래 시트 레이아웃(`string[][]`)으로 환원해 기존 파서에 넘깁니다.
+3. 쓰기는 `app/api/*` 라우트 → `sheets-write.ts` → 백엔드.
+4. **쓰기 직후 클라이언트에서 `router.refresh()` 를 부르세요.** `next.config.ts` 의
+   `staleTimes.dynamic = 30` 때문에 안 부르면 탭을 갔다 왔을 때 방금 쓴 게 사라져 보입니다.
+   (API 라우트는 Server Action 이 아니라서 서버의 `revalidatePath` 만으로는 부족합니다.)
 
 **matches sheet column mapping** (used throughout the codebase):
 
@@ -78,10 +117,20 @@ Row index in the sheet = `matchId + 2` (header offset). This arithmetic appears 
 
 The app is **mobile-first** (max-w-md container). Dark mode is supported via `next-themes`.
 
-- `app/components/DashboardClient.tsx` — main client component with tabs (대시보드 / 순위 / 로스터)
-- `app/components/FormationField.tsx` — renders soccer formation by position, supports 7 formation types
-- `app/matches/[id]/` — match detail page; `/edit` sub-route is the drag-and-drop lineup editor
-- `app/components/ui/` — Shadcn UI components (do not modify generated files)
+라우트는 17개입니다: `/` `/board` `/board/[id]` `/board/lineup` `/login` `/lounge`
+`/lounge/[id]` `/matches/[id]` `/matches/[id]/edit` `/matchday-gallery` `/matchday-preview`
+`/players/[name]` `/record` `/roster` `/stats` `/titles` `/vote`
+
+- `app/components/home/NewHome.tsx` — 홈. 인스타 피드형이고 `/matchday-preview` 와 한 파일을 공유합니다.
+- `app/components/FormationField.tsx` — 포지션별 포메이션 렌더링, 7종 지원
+- `app/matches/[id]/edit/LineupEditor.tsx` — 라인업 편집기. **드래그는 자체 구현입니다**
+  (`react-dnd` 가 package.json 에 있지만 import 하는 곳은 없습니다).
+- `app/components/ui/` — Shadcn 생성물 6개. 수정하지 마세요.
+
+**선수 사진:** `app/lib/player-faceons.ts` 가 이름 26개를 하드코딩한 Set 을 들고 있고
+`/players/<이름>.webp` 만 내보냅니다. `public/players/*.png` 는 화면에 안 쓰이고
+`scripts/gen-*.mts` 의 원본 참고 사진입니다. (`public/players/README.md` 의 "등번호·jpg 도
+된다"는 설명은 지금 코드와 맞지 않습니다.)
 
 Player ranking score = `goals + assists + mom + apps` (descending), ties broken by Korean name alphabetical order.
 
