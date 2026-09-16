@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ChevronsLeftRight, Download, Grid3X3, Heart, MessageCircle, Send } from "lucide-react";
-import { MATCHDAY_GALLERY } from "@/app/lib/matchday-gallery";
+import { MATCHDAY_GALLERY, MATCHDAY_GALLERY_SEEN_KEY } from "@/app/lib/matchday-gallery";
 import type { GalleryComment, GalleryState } from "@/app/lib/gallery";
 import { Drawer, DrawerContent } from "@/app/components/ui/drawer";
 import ModalPortal from "@/app/components/ModalPortal";
@@ -15,7 +15,7 @@ export default function GalleryClient() {
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const art = MATCHDAY_GALLERY[index], social = states[art.id] ?? { artworkId: art.id, liked: false, likeCount: 0, commentCount: 0 };
   useEffect(() => { fetch("/api/gallery/state").then(r => r.ok ? r.json() : []).then((rows: GalleryState[]) => setStates(Object.fromEntries(rows.map(x => [x.artworkId, x])))); }, []);
-  useEffect(() => { localStorage.setItem("ud-gallery-seen-v1", "1"); }, []);
+  useEffect(() => { localStorage.setItem(MATCHDAY_GALLERY_SEEN_KEY, "1"); }, []);
   useEffect(() => { if (!viewer) return; for (let d=-2; d<=2; d++) { const x=MATCHDAY_GALLERY[index+d]; if(x) new Image().src=x.src; } }, [viewer,index]);
   useEffect(() => { if (!viewer || localStorage.getItem("ud-gallery-swipe-seen-v1") === "1") return; const timer=window.setTimeout(()=>setShowSwipeHint(true),350); return ()=>window.clearTimeout(timer); }, [viewer]);
   function dismissSwipeHint(){ localStorage.setItem("ud-gallery-swipe-seen-v1","1"); setShowSwipeHint(false); }

@@ -30,7 +30,8 @@ export interface MatchdayArt {
  * 여기 적힌 것만 쓰인다 — 파일 없는 이름을 넣으면 카드마다 404 가 나간다.
  */
 export const MATCHDAY_ART: readonly MatchdayArt[] = [
-  // 사용자가 직접 선별한 언더덕 아카이브 45장
+  // 사용자가 직접 선별한 언더덕 아카이브
+  { src: "/matchday/아카이브-언더던져.webp", title: "언더던져", light: true },
   { src: "/matchday/아카이브-튈프-박사의-VAR-판독.webp", title: "튈프 박사의 VAR 판독", soft: true },
   { src: "/matchday/아카이브-PK-VS-화면.webp", title: "PK VS 화면", soft: true },
   { src: "/matchday/아카이브-하프타임-작전판.webp", title: "하프타임 작전판", soft: true },

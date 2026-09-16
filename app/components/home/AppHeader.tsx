@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import NewMatchButton from "./NewMatchButton";
+import { MATCHDAY_GALLERY_SEEN_KEY } from "../../lib/matchday-gallery";
 
 export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[] }) {
   const { resolvedTheme, setTheme } = useTheme();
@@ -30,7 +31,7 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setShowGalleryNew(localStorage.getItem("ud-gallery-seen-v1") !== "1");
+      setShowGalleryNew(localStorage.getItem(MATCHDAY_GALLERY_SEEN_KEY) !== "1");
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
@@ -50,7 +51,7 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
           prefetch={false}
           aria-label="매치데이 아카이브"
           onClick={() => {
-            localStorage.setItem("ud-gallery-seen-v1", "1");
+            localStorage.setItem(MATCHDAY_GALLERY_SEEN_KEY, "1");
             setShowGalleryNew(false);
           }}
           className="press-icon touch-target relative flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3]/10 text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
