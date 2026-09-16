@@ -26,10 +26,12 @@ test("한 경기의 카운트다운 여드레 안에서는 같은 그림이 두 
 });
 
 test("경기가 이어지면 그림을 전부 소비한다 — 경기마다 새로 섞으면 이 테스트가 깨진다", () => {
-  // 경기마다 순열을 새로 섞던 시절엔 복원추출이라, 뽑기 40번(경기 5회) 시점에
-  // 76장 중 45장이 한 번도 안 떴다. 전역 순열이면 11경기에 전부 한 번씩 나온다.
+  // 경기마다 순열을 새로 섞으면 여러 경기를 지나도 못 본 그림이 남는다.
+  // 전역 순열이면 작품 수만큼의 경기 안에는 모두 한 번씩 나온다.
   const seen = new Set();
-  for (let matchId = 0; matchId < 11; matchId++) {
+  // 경기 경계에서 다음 순열로 넘어가므로 단순히 작품 수/8로 자르지 않는다.
+  const matchesToCoverAll = MATCHDAY_ART.length;
+  for (let matchId = 0; matchId < matchesToCoverAll; matchId++) {
     for (const src of artsOfMatch(matchId)) seen.add(src);
   }
   assert.equal(seen.size, MATCHDAY_ART.length);

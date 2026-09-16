@@ -7,12 +7,12 @@ export interface GalleryArtwork {
   thumb: string;
 }
 
-export const MATCHDAY_GALLERY: readonly GalleryArtwork[] = MATCHDAY_ART.map(({ src }) => {
+export const MATCHDAY_GALLERY: readonly GalleryArtwork[] = MATCHDAY_ART.map(({ src, title }) => {
   const file = src.split("/").pop()!;
-  const id = file.replace(/\.webp$/, "");
+  const id = file.replace(/\.(?:webp|png|jpe?g)$/i, "");
   return {
     id,
-    title: id.replace(/^gallery-/, "").replace(/-/g, " ").toUpperCase(),
+    title: title ?? id.replace(/^gallery-/, "").replace(/-/g, " ").toUpperCase(),
     src,
     thumb: `/matchday/thumbs/${file}`,
   };

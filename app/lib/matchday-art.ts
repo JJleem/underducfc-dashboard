@@ -1,4 +1,4 @@
-// 예정 경기 카드의 배경 그림 고르기.
+﻿// 예정 경기 카드의 배경 그림 고르기.
 //
 // AI로 뽑는 건 "배경"뿐이다. D-day 숫자는 화면에서 얹는다 — 확산 모델은 글자를
 // 뭉개고, 예정 경기는 전부 피드에 올라오므로(NewHome) D 값에 상한이 없다.
@@ -13,6 +13,8 @@
 
 export interface MatchdayArt {
   src: string;
+  /** 매치데이 아카이브에서 사용자에게 보여 주는 작품 제목. */
+  title?: string;
   /** 배경이 밝은 그림. 흰 글씨가 묻히므로 카드가 어두운 글씨로 뒤집는다. */
   light?: boolean;
   /**
@@ -28,6 +30,52 @@ export interface MatchdayArt {
  * 여기 적힌 것만 쓰인다 — 파일 없는 이름을 넣으면 카드마다 404 가 나간다.
  */
 export const MATCHDAY_ART: readonly MatchdayArt[] = [
+  // 사용자가 직접 선별한 언더덕 아카이브 45장
+  { src: "/matchday/아카이브-튈프-박사의-VAR-판독.webp", title: "튈프 박사의 VAR 판독", soft: true },
+  { src: "/matchday/아카이브-PK-VS-화면.webp", title: "PK VS 화면", soft: true },
+  { src: "/matchday/아카이브-하프타임-작전판.webp", title: "하프타임 작전판", soft: true },
+  { src: "/matchday/아카이브-스티커-앨범.webp", title: "스티커 앨범", light: true },
+  { src: "/matchday/아카이브-순교자.webp", title: "순교자", soft: true },
+  { src: "/matchday/아카이브-누가-찰래.webp", title: "누가 찰래", light: true },
+  { src: "/matchday/아카이브-골대.webp", title: "골대", light: true },
+  { src: "/matchday/아카이브-판정-불복.webp", title: "판정 불복", soft: true },
+  { src: "/matchday/아카이브-물웅덩이.webp", title: "물웅덩이", light: true },
+  { src: "/matchday/아카이브-말리는-중.webp", title: "말리는 중", soft: true },
+  { src: "/matchday/아카이브-벽-뒤에-눕는-사람.webp", title: "벽 뒤에 눕는 사람", soft: true },
+  { src: "/matchday/아카이브-완장의-계승.webp", title: "완장의 계승", light: true },
+  { src: "/matchday/아카이브-공-어디-갔어.webp", title: "공 어디 갔어", light: true },
+  { src: "/matchday/아카이브-엇갈림.webp", title: "엇갈림", light: true },
+  { src: "/matchday/아카이브-스트레칭.webp", title: "스트레칭", soft: true },
+  { src: "/matchday/아카이브-죄목-오프사이드-상습범.webp", title: "죄목: 오프사이드 상습범", light: true },
+  { src: "/matchday/아카이브-프레싱-오-드-퍼퓸.webp", title: "PRESSING — 오 드 퍼퓸", soft: true },
+  { src: "/matchday/아카이브-마법의-축구화.webp", title: "마법의 축구화", soft: true },
+  { src: "/matchday/아카이브-누가-패스를-안-했나.webp", title: "누가 패스를 안 했나", soft: true },
+  { src: "/matchday/아카이브-자전거-레이싱팀.webp", title: "자전거 레이싱팀", soft: true },
+  { src: "/matchday/아카이브-속보-헛발질.webp", title: "속보: 헛발질", soft: true },
+  { src: "/matchday/아카이브-신부는-축구공.webp", title: "신부는 축구공", light: true },
+  { src: "/matchday/아카이브-이번-주-특가-미드필더.webp", title: "이번 주 특가: 미드필더", light: true },
+  { src: "/matchday/아카이브-코너킥-공포.webp", title: "코너킥 공포", soft: true },
+  { src: "/matchday/아카이브-셰프의-특제-전술.webp", title: "셰프의 특제 전술", light: true },
+  { src: "/matchday/아카이브-우주정거장-킥오프.webp", title: "우주정거장 킥오프", soft: true },
+  { src: "/matchday/아카이브-최후의-작전회의.webp", title: "최후의 작전회의", soft: true },
+  { src: "/matchday/아카이브-새벽-편의점-골키퍼.webp", title: "새벽 편의점 골키퍼", light: true },
+  { src: "/matchday/아카이브-홍콩-느와르.webp", title: "홍콩 느와르", soft: true },
+  { src: "/matchday/아카이브-야생의-미드필더.webp", title: "야생의 미드필더", soft: true },
+  { src: "/matchday/아카이브-조선시대-축국.webp", title: "조선시대 축국", light: true },
+  { src: "/matchday/아카이브-무단-도로-축구.webp", title: "무단 도로 축구", light: true },
+  { src: "/matchday/아카이브-벤치-대기.webp", title: "벤치 대기", light: true },
+  { src: "/matchday/아카이브-미드필드의-상속자들.webp", title: "미드필드의 상속자들", soft: true },
+  { src: "/matchday/아카이브-골대-지고-정상까지.webp", title: "골대 지고 정상까지", light: true },
+  { src: "/matchday/아카이브-핸드볼-파울-청문회.webp", title: "핸드볼 파울 청문회", light: true },
+  { src: "/matchday/아카이브-능력이-다-애매한-히어로.webp", title: "능력이 다 애매한 히어로", soft: true },
+  { src: "/matchday/아카이브-러닝머신-마라톤-우승.webp", title: "러닝머신 마라톤 우승", light: true },
+  { src: "/matchday/아카이브-잃어버린-축구공을-찾아서.webp", title: "잃어버린 축구공을 찾아서", soft: true },
+  { src: "/matchday/아카이브-축구공-모양-심장.webp", title: "축구공 모양 심장", light: true },
+  { src: "/matchday/아카이브-찜질방-VAR-판독실.webp", title: "찜질방 VAR 판독실", soft: true },
+  { src: "/matchday/아카이브-야간-스타디움-세이브.webp", title: "야간 스타디움 세이브", soft: true },
+  { src: "/matchday/아카이브-우승-트로피-세리머니.webp", title: "우승 트로피 세리머니", soft: true },
+  { src: "/matchday/아카이브-사이드라인-돌파.webp", title: "사이드라인 돌파", soft: true },
+  { src: "/matchday/아카이브-새벽-훈련-스프린트.webp", title: "새벽 훈련 스프린트", light: true },
   // 2026 FINAL NIGHT gallery selection
   { src: "/matchday/gallery-final-night-1.webp", soft: true },
   { src: "/matchday/gallery-final-night-2.webp", soft: true },
