@@ -53,7 +53,7 @@ export const MATCHDAY_ART: readonly MatchdayArt[] = [
   { src: "/matchday/아카이브-누가-패스를-안-했나.webp", title: "누가 패스를 안 했나", soft: true },
   { src: "/matchday/아카이브-자전거-레이싱팀.webp", title: "자전거 레이싱팀", soft: true },
   { src: "/matchday/아카이브-속보-헛발질.webp", title: "속보: 헛발질", soft: true },
-  { src: "/matchday/아카이브-신부는-축구공.webp", title: "신부는 축구공", light: true },
+  { src: "/matchday/아카이브-신부는-축구공-v2.webp", title: "신부는 축구공", light: true },
   { src: "/matchday/아카이브-이번-주-특가-미드필더.webp", title: "이번 주 특가: 미드필더", light: true },
   { src: "/matchday/아카이브-코너킥-공포.webp", title: "코너킥 공포", soft: true },
   { src: "/matchday/아카이브-셰프의-특제-전술.webp", title: "셰프의 특제 전술", light: true },
