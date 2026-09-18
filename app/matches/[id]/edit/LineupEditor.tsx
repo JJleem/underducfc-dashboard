@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Sun, Moon, RotateCcw, Save, Check, UserPlus, X, ArrowRightLeft, Plus, Trash2, Move, ClipboardList } from "lucide-react";
+import { ArrowLeft, Sun, Moon, RotateCcw, Save, Check, UserPlus, UserMinus, X, ArrowRightLeft, Plus, Trash2, Move, ClipboardList } from "lucide-react";
 import { useTheme } from "next-themes";
 import { MatchData, LineupData } from "../../../lib/match-types";
 import type { SubstitutionEvent } from "../../../lib/lineup";
@@ -84,6 +84,8 @@ export default function LineupEditor({
   const [activeSlot, setActiveSlot] = useState<ActiveSlot | null>(null);
   // "자리 바꾸기"를 누른 슬롯. 다음에 탭하는 슬롯과 선수를 맞바꾼다.
   const [swapFrom, setSwapFrom] = useState<ActiveSlot | null>(null);
+  // 슬롯보다 선수를 먼저 고른 경우. 다음에 탭하는 슬롯에 들어간다.
+  const [pickedPlayer, setPickedPlayer] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [guests, setGuests] = useState<string[]>([]);
@@ -155,6 +157,7 @@ export default function LineupEditor({
       setInstructions(Array.from({ length: 11 }, () => []));
     }
     setActiveSlot(null);
+    setPickedPlayer(null);
   }
 
   // 포메이션 변경 시 배치 초기화
@@ -164,6 +167,7 @@ export default function LineupEditor({
     setAssignments(Array(11).fill(null));
     setInstructions(Array.from({ length: 11 }, () => []));
     setActiveSlot(null);
+    setPickedPlayer(null);
   };
 
   const matchesPreset = (name: string) => {
@@ -286,6 +290,57 @@ export default function LineupEditor({
     }
   };
 
+  /**
+   * 선수를 슬롯에 넣는다. 원래 있던 자리(선발·대기)에서는 빠진다.
+   * advance = 슬롯을 먼저 고른 흐름에서만 true — 다음 빈 슬롯으로 자동 이동한다.
+   */
+  const placeInSlot = (slot: ActiveSlot, name: string, advance: boolean) => {
+    // 선수가 이미 배치된 위치 (assignments / subs 둘 다 확인)
+    const inAssignments = assignments.indexOf(name);
+    const inSubs = subs.indexOf(name);
+
+    if (slot.type === "player") {
+      const next = [...assignments];
+      if (inAssignments >= 0) {
+        next[inAssignments] = null;
+      } else if (inSubs >= 0) {
+        const nextS = [...subs];
+        nextS[inSubs] = null;
+        setSubs(nextS);
+      }
+      next[slot.index] = name;
+      setAssignments(next);
+      if (!advance) return;
+      const nextEmpty = next.findIndex((v, i) => i > slot.index && !v);
+      setActiveSlot(nextEmpty >= 0 ? { type: "player", index: nextEmpty } : null);
+    } else {
+      const next = [...subs];
+      if (inSubs >= 0) {
+        next[inSubs] = null;
+      } else if (inAssignments >= 0) {
+        const nextA = [...assignments];
+        nextA[inAssignments] = null;
+        setAssignments(nextA);
+      }
+      next[slot.index] = name;
+      setSubs(next);
+      if (!advance) return;
+      const nextEmpty = next.findIndex((v, i) => i > slot.index && !v);
+      setActiveSlot(nextEmpty >= 0 ? { type: "sub", index: nextEmpty } : null);
+    }
+  };
+
+  /** 슬롯 하나만 비운다 (선발이면 개인 전술도 같이 날린다) */
+  const clearSlot = (slot: ActiveSlot) => {
+    if (slot.type === "player") {
+      setAssignments((prev) => prev.map((v, i) => (i === slot.index ? null : v)));
+      setInstructions((prev) => prev.map((ids, i) => (i === slot.index ? [] : ids)));
+    } else {
+      setSubs((prev) => prev.map((v, i) => (i === slot.index ? null : v)));
+    }
+    setActiveSlot(null);
+  };
+
   const handleSlotClick = (type: "player" | "sub", index: number) => {
     // 자리 바꾸기 대기 중이면 → 이번 탭이 상대 슬롯
     if (swapFrom) {
@@ -293,6 +348,14 @@ export default function LineupEditor({
         swapSlots(swapFrom, { type, index });
       }
       setSwapFrom(null);
+      setActiveSlot(null);
+      return;
+    }
+
+    // 선수를 먼저 골라둔 상태면 이번 탭이 놓을 자리다
+    if (pickedPlayer) {
+      placeInSlot({ type, index }, pickedPlayer, false);
+      setPickedPlayer(null);
       setActiveSlot(null);
       return;
     }
@@ -306,39 +369,13 @@ export default function LineupEditor({
   };
 
   const handlePlayerClick = (name: string) => {
-    if (!activeSlot) return;
-
-    // 선수가 이미 배치된 위치 (assignments / subs 둘 다 확인)
-    const inAssignments = assignments.indexOf(name);
-    const inSubs = subs.indexOf(name);
-
-    if (activeSlot.type === "player") {
-      const next = [...assignments];
-      if (inAssignments >= 0) {
-        next[inAssignments] = null;
-      } else if (inSubs >= 0) {
-        const nextS = [...subs];
-        nextS[inSubs] = null;
-        setSubs(nextS);
-      }
-      next[activeSlot.index] = name;
-      setAssignments(next);
-      const nextEmpty = next.findIndex((v, i) => i > activeSlot.index && !v);
-      setActiveSlot(nextEmpty >= 0 ? { type: "player", index: nextEmpty } : null);
-    } else {
-      const next = [...subs];
-      if (inSubs >= 0) {
-        next[inSubs] = null;
-      } else if (inAssignments >= 0) {
-        const nextA = [...assignments];
-        nextA[inAssignments] = null;
-        setAssignments(nextA);
-      }
-      next[activeSlot.index] = name;
-      setSubs(next);
-      const nextEmpty = next.findIndex((v, i) => i > activeSlot.index && !v);
-      setActiveSlot(nextEmpty >= 0 ? { type: "sub", index: nextEmpty } : null);
+    // 슬롯을 먼저 잡아둔 상태면 바로 배치, 아니면 이 선수를 들고 슬롯을 기다린다
+    if (activeSlot) {
+      placeInSlot(activeSlot, name, true);
+      setPickedPlayer(null);
+      return;
     }
+    setPickedPlayer((prev) => (prev === name ? null : name));
   };
 
   const hasCurrentData = assignments.some(Boolean) || subs.some(Boolean);
@@ -766,6 +803,8 @@ export default function LineupEditor({
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
               {swapFrom
                 ? "바꿀 상대 슬롯을 탭하세요"
+                : pickedPlayer
+                ? `${pickedPlayer} 선택됨 → 놓을 자리를 탭하세요`
                 : activeSlot?.type === "player"
                 ? assignments[activeSlot.index]
                   ? `${assignments[activeSlot.index]} 선택됨 → 아래에서 개인 전술 설정`
@@ -792,7 +831,7 @@ export default function LineupEditor({
                 </button>
               )}
               <button
-                onClick={() => { setAssignments(Array(11).fill(null)); setSubs(Array(MAX_SUBS).fill(null)); setActiveSlot(null); }}
+                onClick={() => { setAssignments(Array(11).fill(null)); setSubs(Array(MAX_SUBS).fill(null)); setActiveSlot(null); setPickedPlayer(null); }}
                 className="flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >
                 <RotateCcw className="w-3 h-3" /> 초기화
@@ -813,6 +852,7 @@ export default function LineupEditor({
             onLiveShape={setLiveShape}
             onDragStart={() => setSwapFrom(null)}
             onSwapRequest={(i) => setSwapFrom({ type: "player", index: i })}
+            onClearSlot={(i) => clearSlot({ type: "player", index: i })}
             onCloseSlot={() => setActiveSlot(null)}
           />
         </div>
@@ -822,12 +862,20 @@ export default function LineupEditor({
           <div className="mb-2 flex items-center gap-2">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">대기 선수</p>
             {activeSlot?.type === "sub" && subs[activeSlot.index] && !swapFrom && (
-              <button
-                onClick={() => setSwapFrom({ type: "sub", index: activeSlot.index })}
-                className="flex items-center gap-1 rounded-lg bg-gray-900 px-2 py-1 text-[10px] font-black text-white dark:bg-white dark:text-black"
-              >
-                <ArrowRightLeft className="h-3 w-3" /> 자리 바꾸기
-              </button>
+              <>
+                <button
+                  onClick={() => setSwapFrom({ type: "sub", index: activeSlot.index })}
+                  className="flex items-center gap-1 rounded-lg bg-gray-900 px-2 py-1 text-[10px] font-black text-white dark:bg-white dark:text-black"
+                >
+                  <ArrowRightLeft className="h-3 w-3" /> 자리 바꾸기
+                </button>
+                <button
+                  onClick={() => clearSlot({ type: "sub", index: activeSlot.index })}
+                  className="flex items-center gap-1 rounded-lg border border-gray-300 px-2 py-1 text-[10px] font-black text-gray-500 dark:border-white/20 dark:text-gray-300"
+                >
+                  <UserMinus className="h-3 w-3" /> 빼기
+                </button>
+              </>
             )}
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -854,6 +902,111 @@ export default function LineupEditor({
               );
             })}
           </div>
+        </div>
+
+        {/* 선수 풀 */}
+        <div className="space-y-3">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            참석 선수 ({allPlayers.length}명)
+          </p>
+
+          {/* 게스트 추가 입력 */}
+          <div className="flex gap-2">
+            <div className="flex items-center gap-1.5 flex-1 px-3 py-2 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10">
+              <UserPlus className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              <input
+                type="text"
+                value={guestInput}
+                onChange={(e) => setGuestInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) addGuest();
+                }}
+                placeholder="게스트 이름 입력"
+                className="flex-1 bg-transparent text-[12px] font-bold text-gray-800 outline-none placeholder-gray-400 focus-visible:ring-2 focus-visible:ring-[#FF8FA3]/30 dark:text-gray-100"
+              />
+            </div>
+            <button
+              onClick={addGuest}
+              className="px-3 py-2 rounded-xl bg-gray-900 dark:bg-white/10 text-white dark:text-gray-200 text-[11px] font-black hover:opacity-80 transition-opacity"
+            >
+              추가
+            </button>
+          </div>
+
+          {/* 미정 고정 버튼 */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => handlePlayerClick("미정")}
+              className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all border border-dashed cursor-pointer ${
+                pickedPlayer === "미정"
+                  ? "border-[#FF8FA3] bg-[#FF8FA3] text-white ring-2 ring-[#FF8FA3]/40"
+                  : "border-gray-400 dark:border-white/30 bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10"
+              }`}
+            >
+              ? 미정
+            </button>
+          </div>
+
+          {allPlayers.length === 0 ? (
+            <p className="text-[12px] text-gray-400 dark:text-gray-600">
+              matches 시트 L열에 참석자를 입력하거나 게스트를 추가하세요
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {allPlayers.map((name) => {
+                const used = assignedPlayers.has(name);
+                const isGuest = guests.includes(name);
+                const isPicked = pickedPlayer === name;
+                const pref = prefPosMap[name] || [];
+                return (
+                  <div key={name} className="flex flex-col items-center gap-1">
+                  <div className="relative flex items-center">
+                    <button
+                      onClick={() => handlePlayerClick(name)}
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
+                        isPicked
+                          ? "bg-[#FF8FA3] text-white border border-[#FF8FA3] ring-2 ring-[#FF8FA3]/40"
+                          : isGuest
+                          ? used
+                            ? "bg-gray-200 dark:bg-white/10 text-gray-500 border border-gray-300 dark:border-white/10"
+                            : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 border border-dashed border-gray-400 dark:border-white/30 hover:bg-gray-200 dark:hover:bg-white/20"
+                          : used
+                          ? "bg-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] border border-[#FFB6C1]/30"
+                          : "bg-white dark:bg-white/10 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-white/20"
+                      }`}
+                    >
+                      {isGuest && <span className="mr-1 text-[8px] text-gray-400">G</span>}
+                      {used && !isGuest && <Check className="mr-1 w-2.5 h-2.5 inline-block align-middle" />}
+                      {name}
+                    </button>
+                    {isGuest && (
+                      <button
+                        onClick={() => removeGuest(name)}
+                        className="ml-1 w-4 h-4 flex items-center justify-center rounded-full bg-gray-200 dark:bg-white/10 text-gray-500 hover:bg-red-100 hover:text-red-500 transition-colors"
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    )}
+                  </div>
+                    {/* 선호 포지션 (라인업 참고용) */}
+                    {pref.length > 0 && (
+                      <div className="flex gap-0.5">
+                        {pref.map((p) => (
+                          <span
+                            key={p}
+                            className="rounded px-1 text-[8px] font-black leading-[1.5]"
+                            style={{ color: PREF_POS_COLOR[p] ?? "#94A3B8", backgroundColor: `${PREF_POS_COLOR[p] ?? "#94A3B8"}1f` }}
+                          >
+                            {p}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* 실제 교체 기록 */}
@@ -988,114 +1141,6 @@ export default function LineupEditor({
               {saved ? "저장됨" : saving ? "저장 중..." : `${quarter} 라인업과 교체 기록 저장`}
             </button>
           </div>
-        </div>
-
-        {/* 선수 풀 */}
-        <div className="space-y-3">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-            참석 선수 ({allPlayers.length}명)
-          </p>
-
-          {/* 게스트 추가 입력 */}
-          <div className="flex gap-2">
-            <div className="flex items-center gap-1.5 flex-1 px-3 py-2 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10">
-              <UserPlus className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-              <input
-                type="text"
-                value={guestInput}
-                onChange={(e) => setGuestInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.nativeEvent.isComposing) addGuest();
-                }}
-                placeholder="게스트 이름 입력"
-                className="flex-1 bg-transparent text-[12px] font-bold text-gray-800 outline-none placeholder-gray-400 focus-visible:ring-2 focus-visible:ring-[#FF8FA3]/30 dark:text-gray-100"
-              />
-            </div>
-            <button
-              onClick={addGuest}
-              className="px-3 py-2 rounded-xl bg-gray-900 dark:bg-white/10 text-white dark:text-gray-200 text-[11px] font-black hover:opacity-80 transition-opacity"
-            >
-              추가
-            </button>
-          </div>
-
-          {/* 미정 고정 버튼 */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => handlePlayerClick("미정")}
-              disabled={!activeSlot}
-              className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all border border-dashed ${
-                activeSlot
-                  ? "border-gray-400 dark:border-white/30 bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 cursor-pointer"
-                  : "border-gray-200 dark:border-white/10 bg-transparent text-gray-300 dark:text-gray-600 cursor-default"
-              }`}
-            >
-              ? 미정
-            </button>
-          </div>
-
-          {allPlayers.length === 0 ? (
-            <p className="text-[12px] text-gray-400 dark:text-gray-600">
-              matches 시트 L열에 참석자를 입력하거나 게스트를 추가하세요
-            </p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {allPlayers.map((name) => {
-                const used = assignedPlayers.has(name);
-                const isGuest = guests.includes(name);
-                const pref = prefPosMap[name] || [];
-                return (
-                  <div key={name} className="flex flex-col items-center gap-1">
-                  <div className="relative flex items-center">
-                    <button
-                      onClick={() => handlePlayerClick(name)}
-                      disabled={!activeSlot}
-                      className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all ${
-                        isGuest
-                          ? used
-                            ? "bg-gray-200 dark:bg-white/10 text-gray-500 border border-gray-300 dark:border-white/10"
-                            : activeSlot
-                            ? "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 border border-dashed border-gray-400 dark:border-white/30 hover:bg-gray-200 dark:hover:bg-white/20 cursor-pointer"
-                            : "bg-gray-100 dark:bg-white/5 text-gray-500 border border-dashed border-gray-300 dark:border-white/10 cursor-default"
-                          : used
-                          ? "bg-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] border border-[#FFB6C1]/30"
-                          : activeSlot
-                          ? "bg-white dark:bg-white/10 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-white/20 cursor-pointer"
-                          : "bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10 cursor-default"
-                      }`}
-                    >
-                      {isGuest && <span className="mr-1 text-[8px] text-gray-400">G</span>}
-                      {used && !isGuest && <Check className="mr-1 w-2.5 h-2.5 inline-block align-middle" />}
-                      {name}
-                    </button>
-                    {isGuest && (
-                      <button
-                        onClick={() => removeGuest(name)}
-                        className="ml-1 w-4 h-4 flex items-center justify-center rounded-full bg-gray-200 dark:bg-white/10 text-gray-500 hover:bg-red-100 hover:text-red-500 transition-colors"
-                      >
-                        <X className="w-2.5 h-2.5" />
-                      </button>
-                    )}
-                  </div>
-                    {/* 선호 포지션 (라인업 참고용) */}
-                    {pref.length > 0 && (
-                      <div className="flex gap-0.5">
-                        {pref.map((p) => (
-                          <span
-                            key={p}
-                            className="rounded px-1 text-[8px] font-black leading-[1.5]"
-                            style={{ color: PREF_POS_COLOR[p] ?? "#94A3B8", backgroundColor: `${PREF_POS_COLOR[p] ?? "#94A3B8"}1f` }}
-                          >
-                            {p}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       </main>
       <AppToast message={toastError} tone="error" />

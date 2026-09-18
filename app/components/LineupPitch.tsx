@@ -8,7 +8,7 @@
 import React, { useRef, useState } from "react";
 import Image from "next/image";
 import InstructionArrows from "./InstructionArrows";
-import { ArrowRightLeft, X } from "lucide-react";
+import { ArrowRightLeft, UserMinus, X } from "lucide-react";
 import {
   MAX_INSTRUCTIONS,
   POSITION_ZONES,
@@ -57,6 +57,8 @@ export interface LineupPitchProps {
   onDragStart?: () => void;
   /** 넘기면 개인 전술 패널에 "자리 바꾸기" 버튼이 생긴다 */
   onSwapRequest?: (index: number) => void;
+  /** 넘기면 개인 전술 패널에 "빼기" 버튼이 생긴다 */
+  onClearSlot?: (index: number) => void;
   onCloseSlot?: () => void;
 }
 
@@ -73,6 +75,7 @@ export default function LineupPitch({
   onLiveShape,
   onDragStart,
   onSwapRequest,
+  onClearSlot,
   onCloseSlot,
 }: LineupPitchProps) {
   const [dragging, setDragging] = useState<number | null>(null);
@@ -183,11 +186,15 @@ export default function LineupPitch({
     <>
       <div
         ref={fieldRef}
-        className="relative w-full rounded-2xl overflow-hidden shadow-soft ring-1 ring-black/10 dark:ring-white/10"
+        className="relative w-full select-none rounded-2xl overflow-hidden shadow-soft ring-1 ring-black/10 dark:ring-white/10"
         style={{
           paddingBottom: "138%",
           background: "linear-gradient(180deg,#1c6a36 0%,#185e2f 33%,#1c6a36 66%,#185e2f 100%)",
+          // iOS: 마커를 꾹 누를 때 뜨는 돋보기/복사 메뉴를 막는다 (select-none 과 한 쌍)
+          WebkitTouchCallout: "none",
         }}
+        // 안드로이드 Chrome: 길게 누를 때 뜨는 컨텍스트 메뉴를 막는다
+        onContextMenu={(e) => e.preventDefault()}
       >
         {swapSlot !== null && (
           <div className="pointer-events-none absolute left-1/2 top-2 z-40 -translate-x-1/2">
@@ -461,6 +468,15 @@ export default function LineupPitch({
                     {swapSlot === slot && (
                       <span className="text-[9px] font-black">상대 탭</span>
                     )}
+                  </button>
+                )}
+                {onClearSlot && (
+                  <button
+                    onClick={() => onClearSlot(slot)}
+                    aria-label="이 자리 비우기"
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white/70"
+                  >
+                    <UserMinus className="h-3 w-3" />
                   </button>
                 )}
                 {onCloseSlot && (
