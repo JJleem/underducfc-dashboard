@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import { currentIsAdmin } from "../../../lib/admin";
 import { parseSubstitutions } from "../../../lib/lineup";
 import { listBoardPosts } from "../../../lib/board";
+import { buildAvgQuartersMap } from "../../../lib/player-stats";
 
 export default async function LineupEditPage({
   params,
@@ -93,6 +94,9 @@ export default async function LineupEditPage({
     }))
     .filter((l: LineupData) => l.matchId === matchId);
 
+  // 프로필의 "경기당 Q" 와 같은 값 — 누가 덜 뛰었는지 보면서 라인업을 짜라고 넘긴다.
+  const avgQuartersMap = buildAvgQuartersMap(rawLineups);
+
   const attendees = (match.attendees || "")
     .split(",")
     .map((s) => s.trim())
@@ -105,6 +109,7 @@ export default async function LineupEditPage({
       attendees={attendees}
       rosterMap={rosterMap}
       prefPosMap={prefPosMap}
+      avgQuartersMap={avgQuartersMap}
       boardLineups={boardLineups}
     />
   );

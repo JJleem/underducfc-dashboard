@@ -172,3 +172,40 @@ export function buildPlayerStatsReport(
     topOpponent: topOpponentEntry ? { name: topOpponentEntry[0], points: topOpponentEntry[1] } : null,
   };
 }
+
+/**
+ * 선수별 "경기당 Q" 를 한 번에 전원분 계산한다.
+ * buildPlayerStatsReport 의 avgQuarters 와 같은 기준 — 선발 11칸(3~13열)만 세고,
+ * (총 출전 쿼터 ÷ 라인업이 있는 경기 수) 를 소수 한 자리로 낸다.
+ */
+export function buildAvgQuartersMap(rawLineups: string[][]): Record<string, string> {
+  // 중복 (경기,쿼터) 행은 선수마다 한 번씩만 센다 — buildPlayerStatsReport 와 같은 기준.
+  const perPlayer = new Map<string, {
+    seen: Set<string>;
+    quarters: number;
+    matches: Set<number>;
+  }>();
+
+  rawLineups.slice(1).forEach((row, rowIndex) => {
+    const matchId = Number(row[0]);
+    if (!Number.isFinite(matchId)) return;
+    const quarterKey = `${matchId}:${clean(row[1]) || rowIndex}`;
+    row.slice(3, 14).forEach((value) => {
+      const name = clean(value);
+      if (!name || name === "미정") return;
+      const entry = perPlayer.get(name)
+        ?? { seen: new Set<string>(), quarters: 0, matches: new Set<number>() };
+      if (entry.seen.has(quarterKey)) return;
+      entry.seen.add(quarterKey);
+      entry.quarters += 1;
+      entry.matches.add(matchId);
+      perPlayer.set(name, entry);
+    });
+  });
+
+  const out: Record<string, string> = {};
+  perPlayer.forEach((entry, name) => {
+    out[name] = (entry.quarters / entry.matches.size).toFixed(1);
+  });
+  return out;
+}

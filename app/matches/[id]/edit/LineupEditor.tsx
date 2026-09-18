@@ -37,6 +37,62 @@ interface ActiveSlot {
   index: number;
 }
 
+/** 쿼터 한 칸의 편집 내용 전부. 탭을 옮겨도 이걸 들고 있어서 작업이 안 날아간다. */
+interface QuarterState {
+  formation: string;
+  positions: Point[];
+  tactic: string;
+  instructions: string[][];
+  assignments: (string | null)[];
+  subs: (string | null)[];
+  substitutions: SubstitutionEvent[];
+}
+
+const emptyQuarterState = (formation: string): QuarterState => ({
+  formation,
+  positions: FORMATION_PRESETS[formation] ?? FORMATION_PRESETS[FORMATIONS[0]],
+  tactic: "",
+  instructions: Array.from({ length: 11 }, () => []),
+  assignments: Array(11).fill(null),
+  subs: Array(MAX_SUBS).fill(null),
+  substitutions: [],
+});
+
+const quarterStateOf = (existing: LineupData): QuarterState => {
+  const formation = existing.formation || FORMATIONS[0];
+  const assignments: (string | null)[] = Array(11).fill(null);
+  existing.players.forEach((p, i) => { assignments[i] = p || null; });
+  const subs: (string | null)[] = Array(MAX_SUBS).fill(null);
+  existing.subs.forEach((v, i) => { subs[i] = v || null; });
+  return {
+    formation,
+    positions:
+      parsePositions(existing.positions) ??
+      FORMATION_PRESETS[formation] ??
+      FORMATION_PRESETS[FORMATIONS[0]],
+    tactic: existing.tactic || "",
+    instructions: parseInstructions(existing.instructions),
+    assignments,
+    subs,
+    substitutions: existing.substitutions || [],
+  };
+};
+
+/**
+ * "저장된 것과 달라졌나"를 판정하는 지문.
+ * formation 은 저장할 때 좌표에서 다시 계산되므로 뺀다 — 넣으면 멀쩡한 쿼터가
+ * 저장 안 된 것처럼 보인다.
+ */
+const signatureOf = (s: QuarterState) =>
+  JSON.stringify({
+    p: s.positions.map((pt) => [pt.x, pt.y]),
+    t: s.tactic,
+    i: s.instructions,
+    a: s.assignments.map((v) => v ?? ""),
+    s: s.subs.map((v) => v ?? ""),
+    u: s.substitutions.map((e) => [e.out, e.in, e.time ?? ""]),
+  });
+
 /** 게시판에서 불러올 수 있는 후보 = 글쓴이의 쿼터 하나 ("임재준님의 2쿼터") */
 export interface BoardLineupOption {
   postId: number;
@@ -51,6 +107,8 @@ interface LineupEditorProps {
   attendees: string[];
   rosterMap: Record<string, string>;
   prefPosMap?: Record<string, string[]>;
+  /** 선수별 "경기당 Q" — 프로필에 나오는 값과 같다 */
+  avgQuartersMap?: Record<string, string>;
   boardLineups?: BoardLineupOption[];
 }
 
@@ -68,6 +126,7 @@ export default function LineupEditor({
   attendees,
   rosterMap,
   prefPosMap = {},
+  avgQuartersMap = {},
   boardLineups = [],
 }: LineupEditorProps) {
   const { resolvedTheme, setTheme } = useTheme();
@@ -86,6 +145,10 @@ export default function LineupEditor({
   const [swapFrom, setSwapFrom] = useState<ActiveSlot | null>(null);
   // 슬롯보다 선수를 먼저 고른 경우. 다음에 탭하는 슬롯에 들어간다.
   const [pickedPlayer, setPickedPlayer] = useState<string | null>(null);
+  // 지금 보고 있지 않은 쿼터들의 편집 내용. 탭을 옮겨도 여기 남아 있다.
+  const [drafts, setDrafts] = useState<Record<string, QuarterState>>({});
+  // 저장에 성공한 순간의 지문. lineups prop 이 갱신되기 전에도 "저장됨"을 안다.
+  const [savedSig, setSavedSig] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [guests, setGuests] = useState<string[]>([]);
@@ -99,6 +162,13 @@ export default function LineupEditor({
     const timer = window.setTimeout(() => setToastError(null), 2800);
     return () => window.clearTimeout(timer);
   }, [toastError]);
+  // Q 배지를 눌렀을 때 그게 무슨 숫자인지 알려주는 안내
+  const [toastHint, setToastHint] = useState<string | null>(null);
+  React.useEffect(() => {
+    if (!toastHint) return;
+    const timer = window.setTimeout(() => setToastHint(null), 2400);
+    return () => window.clearTimeout(timer);
+  }, [toastHint]);
   // 드래그 중 LineupPitch가 알려주는 실시간 포메이션 이름 (끝나면 null)
   const [liveShape, setLiveShape] = useState<string | null>(null);
   // 게시판 불러오기
@@ -126,36 +196,37 @@ export default function LineupEditor({
     }>()).values(),
   );
 
-  // 쿼터 변경 시 기존 라인업 로드.
+  /** 서버에 저장된 그 쿼터의 모습. 아직 한 번도 저장 안 했으면 빈 상태. */
+  const savedStateOf = (q: string): QuarterState => {
+    const existing = lineups.find((l) => l.quarter === q);
+    return existing ? quarterStateOf(existing) : emptyQuarterState(formation);
+  };
+
+  // 쿼터 변경 시 화면 맞추기.
   //
   // effect 로 하면 이미 그린 뒤에 값이 들어와서 이전 쿼터가 한 프레임 비친다.
   // "prop 이 바뀌면 state 를 맞춘다"는 렌더 중에 하는 게 맞는 일이라(React 공식 패턴)
   // 직전에 읽은 쿼터를 들고 있다가 달라졌을 때만 한 번 맞춘다.
+  //
+  // 떠나는 쿼터는 drafts 에 넣어두고, 들어가는 쿼터는 drafts 에 있으면 거기서,
+  // 없으면 서버 저장본에서 꺼낸다. 그래서 저장 전에 탭을 옮겨도 안 날아간다.
   const [loadedQuarter, setLoadedQuarter] = useState<string | null>(null);
   if (loadedQuarter !== quarter) {
-    setLoadedQuarter(quarter);
-    const existing = lineups.find((l) => l.quarter === quarter);
-    if (existing) {
-      const f = existing.formation || FORMATIONS[0];
-      setFormation(f);
-      setPositions(parsePositions(existing.positions) ?? FORMATION_PRESETS[f] ?? FORMATION_PRESETS[FORMATIONS[0]]);
-      setTactic(existing.tactic || "");
-      setInstructions(parseInstructions(existing.instructions));
-      const arr = Array(11).fill(null);
-      existing.players.forEach((p, i) => { arr[i] = p || null; });
-      setAssignments(arr);
-      const subsArr = Array(MAX_SUBS).fill(null);
-      existing.subs.forEach((s, i) => { subsArr[i] = s || null; });
-      setSubs(subsArr);
-      setSubstitutions(existing.substitutions || []);
-    } else {
-      setAssignments(Array(11).fill(null));
-      setSubs(Array(MAX_SUBS).fill(null));
-      setSubstitutions([]);
-      setPositions(FORMATION_PRESETS[formation] ?? FORMATION_PRESETS[FORMATIONS[0]]);
-      setTactic("");
-      setInstructions(Array.from({ length: 11 }, () => []));
+    if (loadedQuarter !== null) {
+      const leaving: QuarterState = {
+        formation, positions, tactic, instructions, assignments, subs, substitutions,
+      };
+      setDrafts((prev) => ({ ...prev, [loadedQuarter]: leaving }));
     }
+    setLoadedQuarter(quarter);
+    const next = drafts[quarter] ?? savedStateOf(quarter);
+    setFormation(next.formation);
+    setPositions(next.positions);
+    setTactic(next.tactic);
+    setInstructions(next.instructions);
+    setAssignments(next.assignments);
+    setSubs(next.subs);
+    setSubstitutions(next.substitutions);
     setActiveSlot(null);
     setPickedPlayer(null);
   }
@@ -380,27 +451,64 @@ export default function LineupEditor({
 
   const hasCurrentData = assignments.some(Boolean) || subs.some(Boolean);
 
+  /** 그 쿼터의 현재 편집 내용. 손댄 적 없으면 null. */
+  const stateOfQuarter = (q: string): QuarterState | null =>
+    q === quarter
+      ? { formation, positions, tactic, instructions, assignments, subs, substitutions }
+      : drafts[q] ?? null;
+
+  const isQuarterDirty = (q: string) => {
+    const current = stateOfQuarter(q);
+    if (!current) return false;
+    const baseline = savedSig[q] ?? signatureOf(savedStateOf(q));
+    return signatureOf(current) !== baseline;
+  };
+
+  const dirtyQuarters = QUARTERS.filter(isQuarterDirty);
+
+  /** 어느 쿼터에도 못 들어간 참석/게스트 선수를 빈 대기 슬롯에 채운다 */
+  const withLeftoversInSubs = (state: QuarterState): QuarterState => {
+    const placed = new Set(
+      [...state.assignments, ...state.subs].filter(Boolean) as string[],
+    );
+    const leftovers = allPlayers.filter((name) => !placed.has(name));
+    if (leftovers.length === 0) return state;
+    const finalSubs = [...state.subs];
+    let li = 0;
+    for (let i = 0; i < finalSubs.length && li < leftovers.length; i++) {
+      if (!finalSubs[i]) finalSubs[i] = leftovers[li++];
+    }
+    return li > 0 ? { ...state, subs: finalSubs } : state;
+  };
+
+  const postQuarter = async (q: string, state: QuarterState) => {
+    const res = await fetch("/api/lineup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        matchId: match.id,
+        quarter: q,
+        formation: formationOf(state.positions),
+        players: state.assignments.map((v) => v || ""),
+        subs: state.subs.map((v) => v || ""),
+        substitutions: state.substitutions,
+        positions: serializePositions(state.positions),
+        tactic: state.tactic,
+        instructions: serializeInstructions(state.instructions),
+      }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+  };
+
   const handleMoveQuarter = async (target: string) => {
     if (!target || target === quarter) return;
     setMoving(true);
     try {
       // 1. 현재 라인업을 타겟 쿼터에 저장
-      const res1 = await fetch("/api/lineup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          matchId: match.id,
-          quarter: target,
-          formation: shapeName,
-          players: assignments.map((p) => p || ""),
-          subs: subs.map((s) => s || ""),
-          substitutions,
-          positions: serializePositions(positions),
-          tactic,
-          instructions: serializeInstructions(instructions),
-        }),
-      });
-      if (!res1.ok) throw new Error(await res1.text());
+      const moved: QuarterState = {
+        formation, positions, tactic, instructions, assignments, subs, substitutions,
+      };
+      await postQuarter(target, moved);
 
       // 2. 원본 쿼터 비우기
       const res2 = await fetch("/api/lineup", {
@@ -417,6 +525,26 @@ export default function LineupEditor({
       });
       if (!res2.ok) throw new Error(await res2.text());
 
+      // 화면도 서버와 같은 모습으로 맞춘다 — 안 맞추면 방금 비운 쿼터가
+      // "저장 안 됨"으로 남는다. 원본 비우기는 좌표·전술 없이 보내므로
+      // 로컬도 4-3-3 기본 배치로 되돌린다.
+      const cleared = emptyQuarterState(FORMATIONS[0]);
+      setFormation(cleared.formation);
+      setPositions(cleared.positions);
+      setTactic(cleared.tactic);
+      setInstructions(cleared.instructions);
+      setAssignments(cleared.assignments);
+      setSubs(cleared.subs);
+      setSubstitutions(cleared.substitutions);
+      setActiveSlot(null);
+      setPickedPlayer(null);
+      setDrafts((prev) => ({ ...prev, [target]: moved }));
+      setSavedSig((prev) => ({
+        ...prev,
+        [target]: signatureOf(moved),
+        [quarter]: signatureOf(cleared),
+      }));
+
       // 서버 데이터 동기화 (lineups prop 갱신). 쓰기 라우트가 캐시를 무효화하므로
       // 하드 리로드 대신 소프트 리프레시로 깜빡임 없이 최신 데이터를 받는다.
       setMoveTarget(null);
@@ -428,40 +556,29 @@ export default function LineupEditor({
     }
   };
 
+  /**
+   * 저장 안 된 쿼터를 전부 저장한다. 바뀐 게 없으면 지금 쿼터만 저장한다.
+   * 저장해도 편집 화면에 남는다 — 4쿼터를 이어서 짜려면 나가면 안 된다.
+   */
   const handleSave = async () => {
-    // 배치되지 않은 참석/게스트 선수를 빈 대기 슬롯에 자동으로 채움
-    const leftovers = allPlayers.filter((name) => !assignedPlayers.has(name));
-    const finalSubs = [...subs];
-    let li = 0;
-    for (let i = 0; i < finalSubs.length && li < leftovers.length; i++) {
-      if (!finalSubs[i]) finalSubs[i] = leftovers[li++];
-    }
-    if (li > 0) setSubs(finalSubs);
-
+    const targets = dirtyQuarters.length > 0 ? dirtyQuarters : [quarter];
     setSaving(true);
     try {
-      const res = await fetch("/api/lineup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          matchId: match.id,
-          quarter,
-          formation: shapeName,
-          players: assignments.map((p) => p || ""),
-          subs: finalSubs.map((s) => s || ""),
-          substitutions,
-          positions: serializePositions(positions),
-          tactic,
-          instructions: serializeInstructions(instructions),
-        }),
-      });
-      if (!res.ok) throw new Error(await res.text());
+      const sigs: Record<string, string> = {};
+      for (const q of targets) {
+        const state = stateOfQuarter(q);
+        if (!state) continue;
+        // 배치되지 않은 참석/게스트 선수를 빈 대기 슬롯에 자동으로 채움
+        const final = withLeftoversInSubs(state);
+        await postQuarter(q, final);
+        sigs[q] = signatureOf(final);
+        if (q === quarter) setSubs(final.subs);
+        else setDrafts((prev) => ({ ...prev, [q]: final }));
+      }
+      setSavedSig((prev) => ({ ...prev, ...sigs }));
       router.refresh(); // 대시보드·경기상세의 캐시된 라인업에도 반영되게
       setSaved(true);
-      setTimeout(() => {
-        setSaved(false);
-        router.push(`/matches/${match.id}`);
-      }, 1200);
+      setTimeout(() => setSaved(false), 1600);
     } catch (e) {
       setToastError("저장 실패: " + (e instanceof Error ? e.message : e));
     } finally {
@@ -502,11 +619,18 @@ export default function LineupEditor({
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-black transition-all ${
               saved
                 ? "bg-green-500 text-white"
+                : dirtyQuarters.length === 0
+                ? "bg-gray-100 text-gray-400 dark:bg-white/10 dark:text-gray-500"
                 : "bg-[#FFB6C1] text-black hover:bg-[#FF8FA3]"
             }`}
           >
             {saved ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
             {saved ? "저장됨" : saving ? "저장 중..." : "저장"}
+            {!saved && !saving && dirtyQuarters.length > 0 && (
+              <span className="rounded-full bg-black/15 px-1.5 text-[10px] leading-[1.6]">
+                {dirtyQuarters.length}
+              </span>
+            )}
           </button>
         </div>
       </header>
@@ -523,7 +647,10 @@ export default function LineupEditor({
         {/* 쿼터 탭 */}
         <div className="flex gap-2 overflow-x-auto pb-1">
           {QUARTERS.map((q) => {
-            const hasData = lineups.some((l) => l.quarter === q);
+            const dirty = isQuarterDirty(q);
+            const hasData =
+              lineups.some((l) => l.quarter === q) ||
+              !!stateOfQuarter(q)?.assignments.some(Boolean);
             return (
               <button
                 key={q}
@@ -535,7 +662,11 @@ export default function LineupEditor({
                 }`}
               >
                 {q}
-                {hasData && <span className="ml-1 text-[8px] opacity-60">●</span>}
+                {dirty ? (
+                  <span className="ml-1 text-[8px] text-[#E11D48]" title="저장 안 됨">●</span>
+                ) : hasData ? (
+                  <span className="ml-1 text-[8px] opacity-60">●</span>
+                ) : null}
               </button>
             );
           })}
@@ -958,6 +1089,7 @@ export default function LineupEditor({
                 const isGuest = guests.includes(name);
                 const isPicked = pickedPlayer === name;
                 const pref = prefPosMap[name] || [];
+                const avgQ = avgQuartersMap[name];
                 return (
                   <div key={name} className="flex flex-col items-center gap-1">
                   <div className="relative flex items-center">
@@ -988,9 +1120,20 @@ export default function LineupEditor({
                       </button>
                     )}
                   </div>
-                    {/* 선호 포지션 (라인업 참고용) */}
-                    {pref.length > 0 && (
-                      <div className="flex gap-0.5">
+                    {/* 경기당 Q · 선호 포지션 (라인업 참고용) */}
+                    {(avgQ || pref.length > 0) && (
+                      <div className="flex items-center gap-0.5">
+                        {avgQ && (
+                          <button
+                            type="button"
+                            onClick={() => setToastHint(`${name} · 경기당 평균 ${avgQ}Q`)}
+                            aria-label={`${name} 경기당 평균 출전 쿼터 ${avgQ}`}
+                            title="경기당 평균 출전 쿼터 (프로필과 같은 값)"
+                            className="rounded bg-gray-100 px-1 text-[8px] font-black leading-[1.5] tabular-nums text-gray-500 dark:bg-white/10 dark:text-gray-400"
+                          >
+                            {avgQ}Q
+                          </button>
+                        )}
                         {pref.map((p) => (
                           <span
                             key={p}
@@ -1124,26 +1267,40 @@ export default function LineupEditor({
           )}
 
           <div className="mt-3 border-t border-gray-100 pt-3 dark:border-white/[0.06]">
-            <p className="mb-2 text-[10px] font-semibold leading-relaxed text-gray-400">
+            <p className="text-[10px] font-semibold leading-relaxed text-gray-400">
               교체 기록은 현재 쿼터의 포메이션·선발·대기 선수와 함께 저장됩니다.
             </p>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving || saved}
-              className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-black transition-all ${
-                saved
-                  ? "bg-emerald-500 text-white"
-                  : "bg-[#FFB6C1] text-black hover:bg-[#FF8FA3]"
-              } disabled:opacity-70`}
-            >
-              {saved ? <Check className="h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
-              {saved ? "저장됨" : saving ? "저장 중..." : `${quarter} 라인업과 교체 기록 저장`}
-            </button>
           </div>
+        </div>
+
+        {/* 본문 맨 아래 저장 버튼. 항상 닿는 쪽은 헤더의 저장 버튼이다
+            (본문은 overflow-hidden·transform 조상 안이라 sticky/fixed 가 안 먹는다). */}
+        <div className="border-t border-gray-200 pt-3 dark:border-white/10">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || saved}
+            className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-[12px] font-black transition-all ${
+              saved
+                ? "bg-emerald-500 text-white"
+                : dirtyQuarters.length === 0
+                ? "bg-gray-100 text-gray-400 dark:bg-white/5 dark:text-gray-500"
+                : "bg-[#FFB6C1] text-black hover:bg-[#FF8FA3]"
+            } disabled:opacity-70`}
+          >
+            {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+            {saved
+              ? "저장됨"
+              : saving
+              ? "저장 중..."
+              : dirtyQuarters.length === 0
+              ? "저장할 변경 없음"
+              : `저장 안 된 ${dirtyQuarters.length}개 쿼터 저장 (${dirtyQuarters.join(", ")})`}
+          </button>
         </div>
       </main>
       <AppToast message={toastError} tone="error" />
+      <AppToast message={toastHint} />
     </div>
   );
 }
