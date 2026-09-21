@@ -24,14 +24,14 @@ export default function Loading() {
         {/* 시즌 요약 — 히어로 */}
         <section className="relative overflow-hidden px-4 pt-5">
           <div
-            className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[#FF8FA3]"
+            className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[var(--ud-primary)]"
             style={{ opacity: 0.12, filter: "blur(46px)" }}
           />
           <div className="relative">
-            <div className="h-2.5 w-16 rounded bg-[#FF8FA3]/15 skeleton-shimmer" />
+            <div className="h-2.5 w-16 rounded bg-[var(--ud-primary)]/15 skeleton-shimmer" />
             <div className="mt-2.5 flex items-end justify-between gap-3">
               <div className={`h-6 w-52 rounded-md ${SHIMMER}`} />
-              <div className="h-8 w-16 shrink-0 rounded-md bg-[#FF8FA3]/15 skeleton-shimmer" />
+              <div className="h-8 w-16 shrink-0 rounded-md bg-[var(--ud-primary)]/15 skeleton-shimmer" />
             </div>
 
             {/* 승/무/패 비율 막대 */}

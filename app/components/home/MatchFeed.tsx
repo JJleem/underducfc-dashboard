@@ -296,7 +296,7 @@ export default function MatchFeed({
       <div className="relative z-10 flex h-full flex-col px-6 py-[clamp(18px,5vw,28px)]">
         <div>
           <p className="text-[10px] font-black tracking-[0.28em] text-white/35">{kind.en}</p>
-          <p className="mt-1.5 text-[12px] font-black tracking-[0.08em] text-[#FFB6C1]">
+          <p className="mt-1.5 text-[12px] font-black tracking-[0.08em] text-[var(--ud-primary)]">
             UNDERDUCK FC
           </p>
         </div>
@@ -370,7 +370,7 @@ export default function MatchFeed({
             </>
           )}
           <div className="pointer-events-none absolute -left-[15%] top-[4%] h-[72%] w-[38%] -rotate-[22deg] bg-gradient-to-r from-white/[0.055] to-transparent blur-xl" />
-          <div className="pointer-events-none absolute -right-[15%] top-[2%] h-[72%] w-[38%] rotate-[22deg] bg-gradient-to-l from-[#FFB6C1]/[0.08] to-transparent blur-xl" />
+          <div className="pointer-events-none absolute -right-[15%] top-[2%] h-[72%] w-[38%] rotate-[22deg] bg-gradient-to-l from-[var(--ud-primary)]/[0.08] to-transparent blur-xl" />
           {/* 배경 그림이 없을 때만 언더덕 마크를 워터마크로 얹는다.
               깃발 그림에는 크레스트가 이미 박혀 있어서 같이 띄우면 둘이 겹친다. */}
           {!resultArt && (
@@ -395,7 +395,7 @@ export default function MatchFeed({
               <p className="text-[10px] font-black tracking-[0.28em] text-white/35">
                 MATCH RESULT
               </p>
-              <p className="mt-1.5 text-[12px] font-black tracking-[0.08em] text-[#FFB6C1]">
+              <p className="mt-1.5 text-[12px] font-black tracking-[0.08em] text-[var(--ud-primary)]">
                 UNDERDUCK FC
               </p>
             </div>
@@ -408,7 +408,7 @@ export default function MatchFeed({
 
               {scored ? (
                 <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center text-[clamp(52px,17vw,72px)] font-black leading-none tracking-[-0.055em] tabular-nums">
-                  <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{match.ourScore}</span>
+                  <span className="text-[var(--ud-primary)]">{match.ourScore}</span>
                   <span className="px-3 text-[0.58em] text-white/20">:</span>
                   <span className="text-white/85">{match.theirScore}</span>
                 </div>
@@ -421,7 +421,7 @@ export default function MatchFeed({
               <span
                 className={`${goals.length > 0 ? "mt-3" : "mt-5"} inline-flex min-w-16 justify-center rounded-full border px-4 py-1.5 text-[11px] font-black ${
                   won
-                    ? "border-[#FF8FA3]/70 bg-[#FF8FA3] text-white shadow-[0_0_28px_rgba(255,143,163,.28)]"
+                    ? "border-[var(--ud-primary)]/70 bg-[var(--ud-primary)] text-white shadow-[0_0_28px_rgba(255,143,163,.28)]"
                     : "border-white/10 bg-white/[0.06] text-white/55"
                 }`}
               >
@@ -439,12 +439,12 @@ export default function MatchFeed({
                         key={`${scorer}-result-${i}`}
                         className="flex min-w-0 items-center justify-center gap-1.5"
                       >
-                        <SportsSoccerIcon className="h-3 w-3 shrink-0 text-[#FF8FA3]" />
+                        <SportsSoccerIcon className="h-3 w-3 shrink-0 text-[var(--ud-primary)]" />
                         <b className="truncate text-[10.5px] font-black text-white/85">
                           {scorer}
                         </b>
                         {assists[i] && (
-                          <span className="flex shrink-0 items-center gap-1 text-[9.5px] font-bold text-[#FFB6C1]">
+                          <span className="flex shrink-0 items-center gap-1 text-[9.5px] font-bold text-[var(--ud-primary)]">
                             <span className="text-white/20">·</span>
                             <b className="font-black">A</b>
                             {assists[i]}
@@ -472,7 +472,7 @@ export default function MatchFeed({
                 <span className="flex min-w-0 items-center justify-center gap-3">
                   {moms.slice(0, 2).map((name) => (
                     <span key={name} className="flex min-w-0 items-center gap-1.5">
-                      <span className="rounded-full ring-2 ring-[#FFB6C1]/30">
+                      <span className="rounded-full ring-2 ring-[var(--ud-primary)]/30">
                         <PlayerFace name={name} size={26} />
                       </span>
                       <b className="max-w-16 truncate text-[10.5px] font-black text-white/75">
@@ -534,7 +534,7 @@ export default function MatchFeed({
               href={`/matches/${match.id}/edit`}
               aria-label="라인업 설정"
               title="라인업 설정"
-              className="flex w-9 flex-col items-center gap-0.5 py-0.5 text-[#FF8FA3] active:opacity-60 dark:text-[#FFB6C1]"
+              className="flex w-9 flex-col items-center gap-0.5 py-0.5 text-[var(--ud-primary)] active:opacity-60 dark:text-[var(--ud-primary)]"
             >
               <ClipboardList width={17} height={17} strokeWidth={2.2} />
               <span className="text-[8px] font-black leading-none">라인업</span>
@@ -608,7 +608,7 @@ export default function MatchFeed({
         // 숫자와 로고는 그림에 굽지 않고 여기서 그린다 — 이유는 lib/matchday-art.ts.
         <div
           className="relative flex aspect-square w-full flex-col items-center justify-center overflow-hidden"
-          style={{ background: "linear-gradient(160deg,#FFD9E1 0%,#FF8FA3 100%)" }}
+          style={{ background: "linear-gradient(160deg,#FFD9E1 0%,var(--ud-primary) 100%)" }}
         >
           {art && (
             <>
@@ -691,7 +691,7 @@ export default function MatchFeed({
                 strokeWidth={2}
                 className={
                   liked
-                    ? "fill-[#FF8FA3] text-[#FF8FA3] dark:fill-[#FFB6C1] dark:text-[#FFB6C1]"
+                    ? "fill-[var(--ud-primary)] text-[var(--ud-primary)] dark:fill-[var(--ud-primary)] dark:text-[var(--ud-primary)]"
                     : ""
                 }
               />
@@ -816,7 +816,7 @@ export default function MatchFeed({
                 <span className="flex h-[18px] items-center gap-1">
                   <span className="relative">
                     <ClipboardList width={ICON.action} height={ICON.action} strokeWidth={2} />
-                    <span className="absolute -right-1 -top-0.5 h-1.5 w-1.5 rounded-full bg-[#FF8FA3] ring-2 ring-white dark:bg-[#FFB6C1] dark:ring-[#161618]" />
+                    <span className="absolute -right-1 -top-0.5 h-1.5 w-1.5 rounded-full bg-[var(--ud-primary)] ring-2 ring-white dark:bg-[var(--ud-primary)] dark:ring-[#161618]" />
                   </span>
                   <span className="text-[11px] font-black tabular-nums">{lineups.length}</span>
                 </span>
@@ -891,7 +891,7 @@ export default function MatchFeed({
             className={`${FEED_SUMMARY_ROW} text-[13px] font-bold text-gray-700 dark:text-white/70`}
           >
             <span className="flex min-w-0 flex-1 items-center">
-              <span className="font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+              <span className="font-black text-[var(--ud-primary)]">
                 참석 {votes.attending}
               </span>
               <span className="mx-2 text-gray-300 dark:text-white/20">·</span>
@@ -914,7 +914,7 @@ export default function MatchFeed({
               <FeedSummaryLabel>경기 결과</FeedSummaryLabel>
               {scored ? (
                 <span className="min-w-0 flex-1 text-[15px] font-black tabular-nums text-gray-900 dark:text-white">
-                  <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">
+                  <span className="text-[var(--ud-primary)]">
                     {match.ourScore}
                   </span>
                   <span className="mx-1.5 text-gray-300 dark:text-white/25">:</span>
@@ -941,7 +941,7 @@ export default function MatchFeed({
                       className="flex min-w-0 items-center justify-between gap-3"
                     >
                       <span className="flex min-w-0 items-center gap-1.5">
-                        <SportsSoccerIcon className="h-3.5 w-3.5 shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+                        <SportsSoccerIcon className="h-3.5 w-3.5 shrink-0 text-[var(--ud-primary)]" />
                         <span className="truncate text-[13px] font-black text-gray-900 dark:text-white">
                           {scorer}
                         </span>
@@ -964,7 +964,7 @@ export default function MatchFeed({
             묶어 두 정보가 같은 레벨임을 보여준다. */}
         {showFollowUp && (
           <div
-            className={`-mx-4 bg-gradient-to-r from-[#FF8FA3]/[0.07] via-[#FF8FA3]/[0.025] to-transparent px-4 dark:from-[#FFB6C1]/[0.14] dark:via-[#FFB6C1]/[0.05] ${
+            className={`-mx-4 bg-gradient-to-r from-[var(--ud-primary)]/[0.07] via-[var(--ud-primary)]/[0.025] to-transparent px-4 dark:from-[var(--ud-primary)]/[0.14] dark:via-[var(--ud-primary)]/[0.05] ${
               upcoming ? "mt-2" : ""
             }`}
           >
@@ -984,7 +984,7 @@ export default function MatchFeed({
             )}
 
             {storylines.length > 0 && (
-              <div className={showMom ? "border-t border-[#FF8FA3]/15 dark:border-[#FFB6C1]/10" : ""}>
+              <div className={showMom ? "border-t border-[var(--ud-primary)]/15" : ""}>
                 <DetailSheet
                   title="주목 포인트"
                   subtitle={`${match.opponent} · ${shortDate(match.date)}`}

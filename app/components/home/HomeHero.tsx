@@ -21,7 +21,7 @@ import AttendanceHeroVote from "./AttendanceHeroVote";
 import HeroStateTransition from "./HeroStateTransition";
 import HeroLocationActions from "./HeroLocationActions";
 
-const PINK = "text-[#FF8FA3] dark:text-[#FFB6C1]";
+const PINK = "text-[var(--ud-primary)]";
 
 // ── 디자인 스케일 ───────────────────────────────────────────
 // MatchRow·Disclosure 와 같은 값을 쓴다. 화면마다 아이콘 크기가 다르면
@@ -77,6 +77,21 @@ export interface HomeHeroProps {
   momCountdownPreview?: boolean;
   attendancePreview?: boolean;
   attendancePreviewNextHref?: string;
+  /**
+   * "25-26 시즌 12번째 경기" — 다가오는 경기가 그 시즌 몇 번째인지.
+   * 시즌제가 생기고 나서 홈에서도 "지금 어느 시즌 어디쯤인가" 가 보여야 한다.
+   */
+  seasonOrdinal?: { label: string; n: number } | null;
+}
+
+/** 히어로 라벨 옆에 붙는 "25-26 시즌 N번째" 꼬리표. */
+function SeasonOrdinal({ info }: { info?: { label: string; n: number } | null }) {
+  if (!info) return null;
+  return (
+    <span className="truncate text-[9px] font-bold tabular-nums text-gray-400 dark:text-white/30">
+      {info.label} 시즌 {info.n}번째 경기
+    </span>
+  );
 }
 
 /** 히어로용 한 줄. 팀 서사를 먼저 찾고, 없으면 우선순위 최상위 하나. */
@@ -120,7 +135,7 @@ function HeroWeather({ weather }: { weather: ReturnType<typeof parseWeather> }) 
 function Headline({ lead }: { lead: Storyline }) {
   return (
     <p className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-white/50">
-      <Flame width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.bold} className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+      <Flame width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.bold} className="shrink-0 text-[var(--ud-primary)]" />
       <span className="truncate">{lead.text}</span>
     </p>
   );
@@ -131,7 +146,7 @@ function HeroBackdrop() {
   return (
     <>
       <div
-        className="pointer-events-none absolute -top-12 -right-8 h-40 w-40 rounded-full bg-[#FF8FA3]"
+        className="pointer-events-none absolute -top-12 -right-8 h-40 w-40 rounded-full bg-[var(--ud-primary)]"
         style={{ opacity: 0.17, filter: "blur(46px)" }}
       />
       {/* 로고를 그대로 깔면 알파 없는 네이비 사각형이 깔린다. 밝기를 알파로 바꾼
@@ -171,7 +186,7 @@ function AttendanceBar({
   return (
     <>
       <div className="flex h-[7px] overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
-        {votes.attending > 0 && <div className="bg-[#FF8FA3]" style={{ width: pct(votes.attending) }} />}
+        {votes.attending > 0 && <div className="bg-[var(--ud-primary)]" style={{ width: pct(votes.attending) }} />}
         {votes.maybe > 0 && <div className="bg-amber-400" style={{ width: pct(votes.maybe) }} />}
         {votes.absent > 0 && <div className="bg-gray-400 dark:bg-white/25" style={{ width: pct(votes.absent) }} />}
       </div>
@@ -232,6 +247,7 @@ export default function HomeHero({
   momCountdownPreview = false,
   attendancePreview = false,
   attendancePreviewNextHref,
+  seasonOrdinal,
 }: HomeHeroProps) {
   const lead = headline(storylines);
   const stateMatchId = state === "afterMatch" ? lastMatch?.id : nextMatch?.id;
@@ -241,6 +257,7 @@ export default function HomeHero({
       <HeroStateTransition stateKey={`${state}:${stateMatchId ?? "none"}`}>
         {state === "needVote" && nextMatch && (
           <NeedVote
+            seasonOrdinal={seasonOrdinal}
             match={nextMatch}
             votes={votes}
             userName={userName}
@@ -251,6 +268,7 @@ export default function HomeHero({
         )}
         {state === "dday" && nextMatch && (
           <DDay
+            seasonOrdinal={seasonOrdinal}
             match={nextMatch}
             userName={userName}
             myVote={myVote}
@@ -268,10 +286,10 @@ export default function HomeHero({
           />
         )}
         {state === "matching" && nextMatch && (
-          <Matching match={nextMatch} votes={votes} myVote={myVote} lead={lead} />
+          <Matching match={nextMatch} votes={votes} myVote={myVote} lead={lead} seasonOrdinal={seasonOrdinal} />
         )}
         {state === "idle" && nextMatch && (
-          <Upcoming match={nextMatch} votes={votes} myVote={myVote} lead={lead} />
+          <Upcoming match={nextMatch} votes={votes} myVote={myVote} lead={lead} seasonOrdinal={seasonOrdinal} />
         )}
         {/* 라인업 — 올라온 순간부터 상태와 관계없이 바로 보여 준다.
             쿼터 선택과 상세 보기는 LineupViewer 안에 이미 있으므로 바깥에 별도의
@@ -305,6 +323,7 @@ export default function HomeHero({
 
 /** 투표 필요 — 홈에서 제일 큰 자리를 질문 하나가 가져간다. */
 function NeedVote({
+  seasonOrdinal,
   match,
   votes,
   userName,
@@ -312,6 +331,7 @@ function NeedVote({
   preview,
   previewNextHref,
 }: {
+  seasonOrdinal?: { label: string; n: number } | null;
   match: HeroMatch;
   votes: HomeHeroProps["votes"];
   userName?: string;
@@ -325,14 +345,17 @@ function NeedVote({
   return (
     <div className="relative pb-3">
       <div className="flex items-center justify-between gap-3">
-        <p className={`shrink-0 text-[10px] font-black tracking-[0.18em] tabular-nums ${PINK}`}>
-          {/* 날짜를 못 읽으면 null 이라 그냥 두면 "D-null" 이 찍힌다. 그때는 D 표기를 뺀다. */}
-          {dDay !== null && (
-            <>
-              {dDay === 0 ? "D-DAY" : dDay < 0 ? `D+${Math.abs(dDay)}` : `D-${dDay}`} ·{" "}
-            </>
-          )}
-          {full} <WeekdayLabel weekday={weekday} />
+        <p className="flex min-w-0 shrink items-baseline gap-2">
+          <span className={`shrink-0 text-[10px] font-black tracking-[0.18em] tabular-nums ${PINK}`}>
+            {/* 날짜를 못 읽으면 null 이라 그냥 두면 "D-null" 이 찍힌다. 그때는 D 표기를 뺀다. */}
+            {dDay !== null && (
+              <>
+                {dDay === 0 ? "D-DAY" : dDay < 0 ? `D+${Math.abs(dDay)}` : `D-${dDay}`} ·{" "}
+              </>
+            )}
+            {full} <WeekdayLabel weekday={weekday} />
+          </span>
+          <SeasonOrdinal info={seasonOrdinal} />
         </p>
         <HeroWeather weather={weather} />
       </div>
@@ -384,12 +407,14 @@ function NeedVote({
  * 경기 당일 아침에 제일 자주 하는 확인이라 홈에서 끝나야 뎁스가 안 늘어난다.
  */
 function DDay({
+  seasonOrdinal,
   match,
   userName,
   myVote,
   preview,
   previewNextHref,
 }: {
+  seasonOrdinal?: { label: string; n: number } | null;
   match: HeroMatch;
   userName?: string;
   myVote?: string;
@@ -404,8 +429,11 @@ function DDay({
   return (
     <div className="relative pb-3">
       <div className="flex items-center justify-between gap-3">
-        <p className={`shrink-0 text-[10px] font-black tracking-[0.2em] ${PINK}`}>
-          {dDay === 1 ? "내일 경기 · D-1" : "오늘 경기 · D-DAY"}
+        <p className="flex min-w-0 shrink items-baseline gap-2">
+          <span className={`shrink-0 text-[10px] font-black tracking-[0.2em] ${PINK}`}>
+            {dDay === 1 ? "내일 경기 · D-1" : "오늘 경기 · D-DAY"}
+          </span>
+          <SeasonOrdinal info={seasonOrdinal} />
         </p>
         <HeroWeather weather={weather} />
       </div>
@@ -433,7 +461,7 @@ function DDay({
           <h2 className="mt-0.5 text-[29px] font-black leading-none tracking-[-0.045em] text-gray-900 tabular-nums dark:text-white">
             {isUndecided(match.time) ? "시간 미정" : match.time}
             {!isUndecided(match.time) && (
-              <span className="ml-1.5 text-[10px] tracking-[0.12em] text-[#FF8FA3] dark:text-[#FFB6C1]">
+              <span className="ml-1.5 text-[10px] tracking-[0.12em] text-[var(--ud-primary)]">
                 KICKOFF
               </span>
             )}
@@ -542,11 +570,13 @@ function AfterMatch({
 
 /** 매칭 대기 — "vs 미정"이라고 쓰는 대신 지금 벌어지는 일을 그대로 쓴다. */
 function Matching({
+  seasonOrdinal,
   match,
   votes,
   myVote,
   lead,
 }: {
+  seasonOrdinal?: { label: string; n: number } | null;
   match: HeroMatch;
   votes: HomeHeroProps["votes"];
   myVote?: string;
@@ -558,8 +588,11 @@ function Matching({
   return (
     <div className="pb-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="shrink-0 text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-white/40">
-          NEXT MATCH
+        <p className="flex min-w-0 shrink items-baseline gap-2">
+          <span className="shrink-0 text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-white/40">
+            NEXT MATCH
+          </span>
+          <SeasonOrdinal info={seasonOrdinal} />
         </p>
         <HeroWeather weather={weather} />
       </div>
@@ -616,11 +649,13 @@ function Matching({
 
 /** 평시 — 상대도 정해졌고 내 투표도 끝났다. B안 기본형. */
 function Upcoming({
+  seasonOrdinal,
   match,
   votes,
   myVote,
   lead,
 }: {
+  seasonOrdinal?: { label: string; n: number } | null;
   match: HeroMatch;
   votes: HomeHeroProps["votes"];
   myVote?: string;
@@ -633,8 +668,11 @@ function Upcoming({
   return (
     <div className="pb-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="shrink-0 text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-white/40">
-          NEXT MATCH
+        <p className="flex min-w-0 shrink items-baseline gap-2">
+          <span className="shrink-0 text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-white/40">
+            NEXT MATCH
+          </span>
+          <SeasonOrdinal info={seasonOrdinal} />
         </p>
         <HeroWeather weather={weather} />
       </div>

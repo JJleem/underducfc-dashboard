@@ -28,7 +28,7 @@ export default function EmoticonPicker({
             aria-pressed={selected === e.id}
             className={`flex flex-col items-center gap-1 rounded-xl py-2 transition-colors ${
               selected === e.id
-                ? "bg-[#FF8FA3]/12 dark:bg-[#FFB6C1]/12"
+                ? "bg-[var(--ud-primary)]/12"
                 : "active:bg-gray-200/70 dark:active:bg-white/10"
             }`}
           >

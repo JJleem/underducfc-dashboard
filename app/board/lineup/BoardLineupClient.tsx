@@ -241,7 +241,7 @@ export default function BoardLineupClient({
           onClick={submit}
           disabled={submitting || done}
           className={`-my-2 flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-[12px] font-black transition-all ${
-            done ? "bg-green-500 text-white" : "bg-[#FFB6C1] text-black hover:bg-[#FF8FA3]"
+            done ? "bg-green-500 text-white" : "bg-[var(--ud-primary)] text-black hover:bg-[var(--ud-primary)]"
           } disabled:opacity-70`}
         >
           {done ? <Check className="h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
@@ -251,7 +251,7 @@ export default function BoardLineupClient({
 
       <main className="space-y-4 p-4 pb-16">
         {existing && (
-          <p className="rounded-xl bg-[#FF8FA3]/10 px-3 py-2 text-[11px] font-bold text-[#e75f7c] dark:text-[#FFB6C1]">
+          <p className="rounded-xl bg-[var(--ud-primary)]/10 px-3 py-2 text-[11px] font-bold text-[#e75f7c] dark:text-[var(--ud-primary)]">
             이미 올린 전술이 있어 수정 모드예요. 저장하면 기존 글이 갱신되고 목록 맨 위로 올라갑니다.
           </p>
         )}
@@ -288,7 +288,7 @@ export default function BoardLineupClient({
                 }}
                 className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl px-3 text-[11px] font-black transition-all ${
                   active === i
-                    ? "bg-[#FF8FA3] text-white"
+                    ? "bg-[var(--ud-primary)] text-white"
                     : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
                 }`}
               >
@@ -335,7 +335,7 @@ export default function BoardLineupClient({
             <span className="rounded-lg bg-gray-900 px-2 py-1 text-[13px] font-black leading-none text-white dark:bg-white dark:text-black">
               {shapeName}
             </span>
-            {isCustom && <span className="text-[10px] font-black text-[#FF8FA3]">커스텀 배치</span>}
+            {isCustom && <span className="text-[10px] font-black text-[var(--ud-primary)]">커스텀 배치</span>}
           </div>
           <div className="flex gap-1.5 overflow-x-auto pb-1">
             {FORMATIONS.map((f) => (
@@ -365,7 +365,7 @@ export default function BoardLineupClient({
                 title={t.desc}
                 className={`min-h-9 flex-shrink-0 rounded-lg px-2.5 text-[10px] font-black transition-all ${
                   tactic === t.id
-                    ? "bg-[#FF8FA3] text-white"
+                    ? "bg-[var(--ud-primary)] text-white"
                     : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
                 }`}
               >
@@ -390,7 +390,7 @@ export default function BoardLineupClient({
               {isCustom && (
                 <button
                   onClick={() => patch({ positions: FORMATION_PRESETS[formation] ?? FORMATION_PRESETS[FORMATIONS[0]] })}
-                  className="-my-2 flex min-h-9 items-center gap-1 px-1 text-[10px] font-bold text-[#FF8FA3] hover:opacity-75"
+                  className="-my-2 flex min-h-9 items-center gap-1 px-1 text-[10px] font-bold text-[var(--ud-primary)] hover:opacity-75"
                 >
                   <Move className="h-3 w-3" /> 배치 복귀
                 </button>
@@ -452,7 +452,7 @@ export default function BoardLineupClient({
                       disabled={selected === null}
                       className={`min-h-9 rounded-xl px-3 text-[11px] font-black transition-all ${
                         used
-                          ? "border border-[#FFB6C1]/30 bg-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1]"
+                          ? "border border-[var(--ud-primary)]/30 bg-[var(--ud-primary)]/20 text-[var(--ud-primary)]"
                           : selected !== null
                           ? "border border-gray-300 bg-white text-gray-800 hover:bg-gray-100 dark:border-white/20 dark:bg-white/10 dark:text-gray-100"
                           : "cursor-default border border-gray-200 bg-white text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400"

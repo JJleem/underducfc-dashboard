@@ -18,10 +18,20 @@ export default function TitleHighlights({
   titles,
   featuredIds,
   canEdit,
+  featurePool,
 }: {
+  /** 줄에 그려서 보여 줄 칭호. */
   titles: EarnedTitle[];
   featuredIds: string[];
   canEdit: boolean;
+  /**
+   * 대표 칭호로 **고를 수 있는** 모집단. 생략하면 titles 와 같다.
+   *
+   * 보여 주는 목록과 고르는 목록이 다를 수 있다 — 프로필이 시즌/통산 두 섹션으로
+   * 갈리면 이 줄은 통산만 그리지만, 대표는 리더(시즌 1위)까지 포함해 고른다.
+   * 그러지 않으면 득점왕을 대표로 세울 수 없다.
+   */
+  featurePool?: EarnedTitle[];
 }) {
   const [editing, setEditing] = useState(false);
 
@@ -30,6 +40,8 @@ export default function TitleHighlights({
       <PlayerTitleCards
         titles={titles}
         featuredIds={featuredIds}
+        // 대표 줄은 시즌이 섞인다 — "25-26 득점왕" 처럼 시즌을 앞에 붙인다.
+        showSeason
         leading={
           canEdit ? (
             <button
@@ -50,7 +62,7 @@ export default function TitleHighlights({
       />
       {canEdit && (
         <FeaturedEditor
-          titles={titles}
+          titles={featurePool ?? titles}
           current={featuredIds}
           open={editing}
           onOpenChange={setEditing}

@@ -85,9 +85,9 @@ export default function Storylines({
         kind: "player" as const,
         label: "선수 기록",
         items: shown.filter((story) => story.kind === "player"),
-        labelTone: "text-[#F45F7A] dark:text-[#FFB6C1]",
-        dividerTone: "border-[#FF8FA3]/25 dark:border-[#FFB6C1]/15",
-        iconTone: "text-[#F45F7A] dark:text-[#FFB6C1]",
+        labelTone: "text-[#F45F7A] dark:text-[var(--ud-primary)]",
+        dividerTone: "border-[var(--ud-primary)]/25",
+        iconTone: "text-[#F45F7A] dark:text-[var(--ud-primary)]",
       },
     ].filter((group) => group.items.length > 0);
 

@@ -56,23 +56,23 @@ function VoteBar({
     <div className="flex items-center gap-2">
       <span
         className={`flex w-16 shrink-0 items-center gap-0.5 text-[11px] font-bold ${
-          leader ? "text-[#FF718B] dark:text-[#FFB6C1]" : "text-gray-800 dark:text-white/65"
+          leader ? "text-[#FF718B] dark:text-[var(--ud-primary)]" : "text-gray-800 dark:text-white/65"
         }`}
       >
         {leader && <Star width={10} height={10} className="shrink-0 fill-current" />}
         <span className="truncate">{name}</span>
       </span>
-      <div className="h-1 flex-1 overflow-hidden rounded-full bg-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10">
+      <div className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--ud-primary)]/10">
         <div
           className={`h-full rounded-full transition-all duration-500 ${
-            leader ? "bg-[#FF8FA3] dark:bg-[#FFB6C1]" : "bg-[#FF8FA3]/35 dark:bg-[#FFB6C1]/30"
+            leader ? "bg-[var(--ud-primary)]" : "bg-[var(--ud-primary)]/35"
           }`}
           style={{ width: count > 0 ? `${Math.round((count / max) * 100)}%` : "0%" }}
         />
       </div>
       <span className="w-4 shrink-0 text-right text-[11px] font-bold tabular-nums text-gray-500 dark:text-white/45">{count}</span>
       {mine === name ? (
-        <Check width={12} height={12} className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+        <Check width={12} height={12} className="shrink-0 text-[var(--ud-primary)]" />
       ) : (
         <span className="w-3 shrink-0" />
       )}
@@ -99,10 +99,10 @@ function CandidateBallot({
 }) {
   const roleTone =
     tone === "attack"
-      ? "text-[#FF718B] dark:text-[#FFB6C1]"
+      ? "text-[#FF718B] dark:text-[var(--ud-primary)]"
       : "text-blue-500 dark:text-blue-400";
   return (
-    <section className="border-t border-[#FF8FA3]/20 pt-4 dark:border-[#FFB6C1]/15">
+    <section className="border-t border-[var(--ud-primary)]/20 pt-4 dark:border-[var(--ud-primary)]/15">
       <div className="mb-3 flex items-center justify-between">
         <p className={`flex items-center gap-1.5 text-[13px] font-black ${roleTone}`}>
           <span>{icon}</span>
@@ -110,14 +110,14 @@ function CandidateBallot({
         </p>
         <span
           className={`text-[10.5px] font-bold ${
-            selected ? "text-[#FF718B] dark:text-[#FFB6C1]" : "text-gray-400 dark:text-white/35"
+            selected ? "text-[#FF718B] dark:text-[var(--ud-primary)]" : "text-gray-400 dark:text-white/35"
           }`}
         >
           {selected ? `${selected} 선택` : "한 명 선택"}
         </span>
       </div>
 
-      <div className="grid grid-cols-2 border-t border-[#FF8FA3]/15 dark:border-[#FFB6C1]/10">
+      <div className="grid grid-cols-2 border-t border-[var(--ud-primary)]/15">
         {names.map((name, index) => {
           const active = selected === name;
           const loneLastCell = names.length % 2 === 1 && index === names.length - 1;
@@ -127,14 +127,14 @@ function CandidateBallot({
               type="button"
               aria-pressed={active}
               onClick={() => onSelect(active ? "" : name)}
-              className={`flex min-h-[58px] min-w-0 items-center gap-2 border-b border-[#FF8FA3]/15 px-2 py-2.5 text-left transition-colors dark:border-[#FFB6C1]/10 ${
-                index % 2 === 1 ? "border-l border-l-[#FF8FA3]/15 pl-3 dark:border-l-[#FFB6C1]/10" : "pr-3"
+              className={`flex min-h-[58px] min-w-0 items-center gap-2 border-b border-[var(--ud-primary)]/15 px-2 py-2.5 text-left transition-colors dark:border-[var(--ud-primary)]/10 ${
+                index % 2 === 1 ? "border-l border-l-[var(--ud-primary)]/15 pl-3 dark:border-l-[var(--ud-primary)]/10" : "pr-3"
               } ${
-                loneLastCell ? "border-r border-r-[#FF8FA3]/15 dark:border-r-[#FFB6C1]/10" : ""
+                loneLastCell ? "border-r border-r-[var(--ud-primary)]/15" : ""
               } ${
                 active
-                  ? "bg-[#FF8FA3]/[0.07] dark:bg-[#FFB6C1]/[0.07]"
-                  : "active:bg-[#FF8FA3]/[0.035] dark:active:bg-[#FFB6C1]/[0.04]"
+                  ? "bg-[var(--ud-primary)]/[0.07] dark:bg-[var(--ud-primary)]/[0.07]"
+                  : "active:bg-[var(--ud-primary)]/[0.035] dark:active:bg-[var(--ud-primary)]/[0.04]"
               }`}
             >
               <PlayerFace name={name} size={32} />
@@ -142,7 +142,7 @@ function CandidateBallot({
                 <span
                   className={`block truncate text-[12.5px] font-black ${
                     active
-                      ? "text-[#F45F7A] dark:text-[#FFB6C1]"
+                      ? "text-[#F45F7A] dark:text-[var(--ud-primary)]"
                       : "text-gray-800 dark:text-white/75"
                   }`}
                 >
@@ -155,8 +155,8 @@ function CandidateBallot({
               <span
                 className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
                   active
-                    ? "border-[#FF8FA3] bg-[#FF8FA3] text-white dark:border-[#FFB6C1] dark:bg-[#FFB6C1]"
-                    : "border-[#FF8FA3]/30 text-transparent dark:border-[#FFB6C1]/25"
+                    ? "border-[var(--ud-primary)] bg-[var(--ud-primary)] text-white dark:border-[var(--ud-primary)] dark:bg-[var(--ud-primary)]"
+                    : "border-[var(--ud-primary)]/30 text-transparent dark:border-[var(--ud-primary)]/25"
                 }`}
               >
                 <Check width={10} height={10} strokeWidth={3} />
@@ -338,7 +338,7 @@ export default function MomVote({
             width={17}
             height={17}
             strokeWidth={2}
-            className={voted ? "fill-current text-[#FF8FA3] dark:text-[#FFB6C1]" : ""}
+            className={voted ? "fill-current text-[var(--ud-primary)]" : ""}
           />
           {total > 0 && <span className="text-[12px] font-black tabular-nums">{total}</span>}
         </button>
@@ -390,7 +390,7 @@ export default function MomVote({
               <>
                 {confirmedAttack.length > 0 && (
                   <>
-                    <span className="text-[#FF718B] dark:text-[#FFB6C1]">공격</span>{" "}
+                    <span className="text-[#FF718B] dark:text-[var(--ud-primary)]">공격</span>{" "}
                     {confirmedAttack.join(" · ")}
                   </>
                 )}
@@ -415,7 +415,7 @@ export default function MomVote({
               <>
                 {atkLeader && (
                   <>
-                    <span className="text-[#FF718B] dark:text-[#FFB6C1]">공격</span> {atkLeader}
+                    <span className="text-[#FF718B] dark:text-[var(--ud-primary)]">공격</span> {atkLeader}
                   </>
                 )}
                 {atkLeader && defLeader && (
@@ -467,7 +467,7 @@ export default function MomVote({
           </DrawerHeader>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
-              <div className="flex items-center justify-between border-y border-[#FF8FA3]/20 py-2.5 text-[10.5px] font-bold dark:border-[#FFB6C1]/15">
+              <div className="flex items-center justify-between border-y border-[var(--ud-primary)]/20 py-2.5 text-[10.5px] font-bold dark:border-[var(--ud-primary)]/15">
                 <span className="text-gray-500 dark:text-white/50">
                   <b className="font-black text-gray-800 dark:text-white/80">{userName}</b> 님으로 투표
                   <span className="ml-1 text-gray-300 dark:text-white/25">· 본인 제외</span>
@@ -484,13 +484,13 @@ export default function MomVote({
                 <section className="mt-5">
                   <div className="mb-3 flex items-center justify-between">
                     <p className="text-[13px] font-black text-gray-900 dark:text-white">현재 득표</p>
-                    <span className="text-[10.5px] font-bold tabular-nums text-[#FF718B] dark:text-[#FFB6C1]">
+                    <span className="text-[10.5px] font-bold tabular-nums text-[#FF718B] dark:text-[var(--ud-primary)]">
                       {total}표
                     </span>
                   </div>
                   {Object.keys(atkTally).length > 0 && (
                     <div>
-                      <p className="mb-2 flex items-center gap-1 text-[11px] font-black text-[#FF718B] dark:text-[#FFB6C1]">
+                      <p className="mb-2 flex items-center gap-1 text-[11px] font-black text-[#FF718B] dark:text-[var(--ud-primary)]">
                         <Target width={12} height={12} strokeWidth={2.4} /> 공격
                       </p>
                       <div className="flex flex-col gap-1.5">
@@ -503,7 +503,7 @@ export default function MomVote({
                     </div>
                   )}
                   {Object.keys(defTally).length > 0 && (
-                    <div className={Object.keys(atkTally).length > 0 ? "mt-4 border-t border-[#FF8FA3]/15 pt-4 dark:border-[#FFB6C1]/10" : ""}>
+                    <div className={Object.keys(atkTally).length > 0 ? "mt-4 border-t border-[var(--ud-primary)]/15 pt-4 dark:border-[var(--ud-primary)]/10" : ""}>
                       <p className="mb-2 flex items-center gap-1 text-[11px] font-black text-blue-500 dark:text-blue-400">
                         <Shield width={12} height={12} strokeWidth={2.4} /> 수비
                       </p>
@@ -547,7 +547,7 @@ export default function MomVote({
               )}
           </div>
 
-          <div className="shrink-0 border-t border-[#FF8FA3]/20 bg-white/95 px-5 pt-3 backdrop-blur-xl dark:border-[#FFB6C1]/15 dark:bg-[#161618]/95"
+          <div className="shrink-0 border-t border-[var(--ud-primary)]/20 bg-white/95 px-5 pt-3 backdrop-blur-xl dark:border-[var(--ud-primary)]/15 dark:bg-[#161618]/95"
             style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
           >
               {error && <p className="mb-2 text-[11px] font-bold text-red-500">{error}</p>}
@@ -564,7 +564,7 @@ export default function MomVote({
                   type="button"
                   onClick={submit}
                   disabled={(!atk && !def) || saving}
-                  className="app-action-primary flex flex-1 items-center justify-center gap-1.5 rounded-xl py-3 text-[12px] font-black shadow-[0_6px_18px_rgba(255,143,163,0.24)] disabled:bg-[#FF8FA3]/20 disabled:text-white disabled:shadow-none dark:disabled:bg-[#FFB6C1]/15 dark:disabled:text-white/30"
+                  className="app-action-primary flex flex-1 items-center justify-center gap-1.5 rounded-xl py-3 text-[12px] font-black shadow-[0_6px_18px_rgba(255,143,163,0.24)] disabled:bg-[var(--ud-primary)]/20 disabled:text-white disabled:shadow-none dark:disabled:bg-[var(--ud-primary)]/15 dark:disabled:text-white/30"
                 >
                   {saving && <Loader2 width={14} height={14} className="animate-spin" />}
                   {selectedCount > 0 ? `${selectedCount}명 선택 · 투표하기` : "선수를 선택해 주세요"}

@@ -63,11 +63,11 @@ const UnderduckSpinner = ({}: SpinnerProps) => {
             x2="100%"
             y2="0%"
           >
-            <stop offset="0%" stopColor="#FF8FA3" />
+            <stop offset="0%" stopColor="var(--ud-primary)" />
             <stop offset="100%" stopColor="#FFD7DE" />
           </linearGradient>
           <linearGradient id="underduck-dark" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#FFB6C1" />
+            <stop offset="0%" stopColor="var(--ud-primary)" />
             <stop offset="100%" stopColor="#FFE4E9" />
           </linearGradient>
         </defs>

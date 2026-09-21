@@ -6,6 +6,7 @@
 // 여기 따로 세웠다. 두 홈 중 하나가 정리되면 한쪽을 지우면 된다.
 
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { signIn, signOut, useSession } from "next-auth/react";
@@ -20,6 +21,35 @@ import {
 } from "../ui/dropdown-menu";
 import NewMatchButton from "./NewMatchButton";
 import { MATCHDAY_GALLERY_SEEN_KEY } from "../../lib/matchday-gallery";
+import { currentSeasonId, seasonAccent, seasonLabel } from "../../lib/seasons";
+
+/**
+ * 로고 옆 시즌 표기. "25-26" 에서 **뒷자리만** 그 시즌 대표색으로 칠한다
+ * (26-27 이면 27 이 로즈). 시즌이 바뀐 걸 색으로 먼저 알아챈다.
+ *
+ * 테마별 색은 CSS 변수로 넘긴다 — useTheme 로 고르면 서버 렌더에서 값이 없어
+ * 하이드레이션이 어긋난다. [[globals.css]] 의 .season-scope 참고.
+ */
+function SeasonMark() {
+  const id = currentSeasonId();
+  const accent = seasonAccent(id);
+  // "25-26" → 앞 "25", 뒤 "26". 형식이 달라지면 통째로 한 색으로 칠한다.
+  const [head, tail] = seasonLabel(id).split("-");
+  return (
+    <span
+      className="season-scope ml-0.5 text-[10px] font-black tabular-nums tracking-tight text-gray-400 dark:text-white/35"
+      style={{ "--season-light": accent.light, "--season-dark": accent.dark } as CSSProperties}
+    >
+      {tail ? (
+        <>
+          {head}-<span className="season-accent">{tail}</span>
+        </>
+      ) : (
+        <span className="season-accent">{head}</span>
+      )}
+    </span>
+  );
+}
 
 export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[] }) {
   const { resolvedTheme, setTheme } = useTheme();
@@ -39,8 +69,9 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white/70 px-5 safe-header-py-35 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/70">
       <span className="flex items-center gap-2 text-[15px] font-extrabold uppercase tracking-tight text-gray-900 dark:text-white">
-        <span className="h-1.5 w-1.5 rounded-full bg-[#FF8FA3]" />
+        <span className="h-1.5 w-1.5 rounded-full bg-[var(--ud-primary)]" />
         UNDERDUCK
+        <SeasonMark />
       </span>
 
       <div className="flex items-center gap-2">
@@ -54,7 +85,7 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
             localStorage.setItem(MATCHDAY_GALLERY_SEEN_KEY, "1");
             setShowGalleryNew(false);
           }}
-          className="press-icon touch-target relative flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3]/10 text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
+          className="press-icon touch-target relative flex h-8 w-8 items-center justify-center rounded-full bg-[var(--ud-primary)]/10 text-[var(--ud-primary)] dark:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)]"
         >
           <Images className="h-4 w-4" />
           {showGalleryNew && (
@@ -71,7 +102,7 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
                 type="button"
                 className={`flex h-8 items-center gap-1.5 rounded-full pl-1 pr-2 outline-none transition-all ${
                   menuOpen
-                    ? "bg-gray-200 ring-2 ring-[#FF8FA3]/20 dark:bg-white/15"
+                    ? "bg-gray-200 ring-2 ring-[var(--ud-primary)]/20 dark:bg-white/15"
                     : "bg-gray-100 dark:bg-white/10"
                 }`}
               >
@@ -79,7 +110,7 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={user.image} alt="" className="h-6 w-6 rounded-full object-cover" />
                 ) : (
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FF8FA3] text-[10px] font-bold text-white">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--ud-primary)] text-[10px] font-bold text-white">
                     {name.slice(0, 1) || "U"}
                   </span>
                 )}
@@ -108,7 +139,7 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
                 className="rounded-xl px-2.5 py-2 text-xs font-bold text-gray-700 dark:text-gray-200"
               >
                 <Link href={`/players/${encodeURIComponent(name)}`}>
-                  <User className="h-4 w-4 !text-[#FF8FA3]" />
+                  <User className="h-4 w-4 !text-[var(--ud-primary)]" />
                   마이페이지
                 </Link>
               </DropdownMenuItem>
@@ -140,7 +171,7 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
           className="press-icon touch-target flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10"
         >
           <Moon className="block h-4 w-4 text-gray-700 dark:hidden" />
-          <Sun className="hidden h-4 w-4 text-[#FFB6C1] dark:block" />
+          <Sun className="hidden h-4 w-4 text-[var(--ud-primary)] dark:block" />
         </button>
       </div>
     </header>

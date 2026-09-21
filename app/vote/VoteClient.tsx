@@ -93,8 +93,8 @@ const ROSTER_GROUPS = [
   {
     key: "attending",
     label: "참석",
-    labelTone: "text-[#FF8FA3] dark:text-[#FFB6C1]",
-    chipTone: "bg-[#FF8FA3]/10 text-[#FF8FA3] dark:bg-[#FFB6C1]/15 dark:text-[#FFB6C1]",
+    labelTone: "text-[var(--ud-primary)]",
+    chipTone: "bg-[var(--ud-primary)]/10 text-[var(--ud-primary)] dark:bg-[var(--ud-primary)]/15 dark:text-[var(--ud-primary)]",
   },
   {
     key: "maybe",
@@ -393,7 +393,7 @@ export default function VoteClient({
       <section key={match.id} className="relative overflow-hidden px-4 pb-6 pt-5">
         {/* 히어로 장식 — 홈·프로필과 같은 문법 */}
         <div
-          className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[#FF8FA3]"
+          className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[var(--ud-primary)]"
           style={{ opacity: 0.17, filter: "blur(46px)" }}
         />
 
@@ -428,7 +428,7 @@ export default function VoteClient({
 
             <div className="shrink-0 text-right">
               {dDay !== null && (
-                <p className="text-[40px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums text-[#FF8FA3] dark:text-[#FFB6C1]">
+                <p className="text-[40px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums text-[var(--ud-primary)]">
                   {dDay === 0 ? "D-DAY" : dDay > 0 ? `D-${dDay}` : `D+${Math.abs(dDay)}`}
                 </p>
               )}
@@ -507,7 +507,7 @@ export default function VoteClient({
               <>
                 <div className="flex h-[7px] overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
                   {tally.attending.length > 0 && (
-                    <div className="bg-[#FF8FA3]" style={{ width: pct(tally.attending.length) }} />
+                    <div className="bg-[var(--ud-primary)]" style={{ width: pct(tally.attending.length) }} />
                   )}
                   {tally.maybe.length > 0 && (
                     <div className="bg-amber-400" style={{ width: pct(tally.maybe.length) }} />
@@ -520,7 +520,7 @@ export default function VoteClient({
                   )}
                 </div>
                 <p className="mt-2 flex gap-3 text-[11px] font-black">
-                  <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">
+                  <span className="text-[var(--ud-primary)]">
                     참석 <span className="tabular-nums">{tally.attending.length}</span>
                   </span>
                   <span className="text-amber-500 dark:text-amber-400">
@@ -674,7 +674,7 @@ export default function VoteClient({
                     aria-expanded={pickerFor === match.id}
                     className={`shrink-0 transition-colors ${
                       pickerFor === match.id
-                        ? "text-[#FF8FA3] dark:text-[#FFB6C1]"
+                        ? "text-[var(--ud-primary)]"
                         : "text-gray-400 dark:text-white/30"
                     }`}
                   >
@@ -700,7 +700,7 @@ export default function VoteClient({
                       submittingComment
                     }
                     aria-label="댓글 등록"
-                    className="shrink-0 text-[#FF8FA3] disabled:opacity-30 dark:text-[#FFB6C1]"
+                    className="shrink-0 text-[var(--ud-primary)] disabled:opacity-30 dark:text-[var(--ud-primary)]"
                   >
                     {submittingComment ? (
                       <Loader2 width={16} height={16} className="animate-spin" />

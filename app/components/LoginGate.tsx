@@ -29,7 +29,7 @@ export default function LoginGate() {
       {/* 언더덕 마크를 종이의 워터마크처럼 아주 옅게 깐다. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-[18%] top-[7%] h-[58vw] max-h-[280px] w-[58vw] max-w-[280px] rotate-[-9deg] bg-[#FF8FA3]/[0.055] dark:bg-[#FFB6C1]/[0.055]"
+        className="pointer-events-none absolute -right-[18%] top-[7%] h-[58vw] max-h-[280px] w-[58vw] max-w-[280px] rotate-[-9deg] bg-[var(--ud-primary)]/[0.055] dark:bg-[var(--ud-primary)]/[0.055]"
         style={{
           WebkitMaskImage: "url(/underduck-mark.png)",
           maskImage: "url(/underduck-mark.png)",
@@ -52,7 +52,7 @@ export default function LoginGate() {
       </div>
 
       <section className="relative my-auto py-12">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF8FA3] dark:text-[#FFB6C1]">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--ud-primary)]">
           MEMBERS ONLY
         </p>
         <h1 className="mt-4 text-[34px] font-black leading-[1.13] tracking-[-0.05em]">
@@ -61,12 +61,12 @@ export default function LoginGate() {
         <p className="mt-6 max-w-[310px] text-[14px] font-semibold leading-[1.8] text-gray-500 dark:text-white/50">
           언더덕 FC는 <span className="text-gray-800 dark:text-white/80">&apos;때문에&apos;</span>란 말보다
           <br />
-          <span className="font-black text-[#FF8FA3] dark:text-[#FFB6C1]">&apos;덕분에&apos;</span>란 말을 추구하며,
+          <span className="font-black text-[var(--ud-primary)]">&apos;덕분에&apos;</span>란 말을 추구하며,
           <br />
           서로를 존중합니다.
         </p>
 
-        <div className="mt-8 h-px w-10 bg-[#FF8FA3] dark:bg-[#FFB6C1]" />
+        <div className="mt-8 h-px w-10 bg-[var(--ud-primary)]" />
         <p className="mt-4 text-[11px] font-bold tracking-[0.08em] text-gray-300 dark:text-white/20">
           NOT BECAUSE OF, BUT THANKS TO
         </p>
@@ -97,7 +97,7 @@ export default function LoginGate() {
             aria-controls="pwa-install-guide"
             className="flex min-h-12 w-full items-center gap-3 px-4 text-left active:bg-white dark:active:bg-white/5"
           >
-            <Smartphone className="h-[17px] w-[17px] shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+            <Smartphone className="h-[17px] w-[17px] shrink-0 text-[var(--ud-primary)]" />
             <span className="min-w-0 flex-1">
               <b className="block text-[11.5px] font-black">언더덕 선수라면 앱으로 보기</b>
               <span className="mt-0.5 block text-[10px] font-bold text-gray-400 dark:text-white/30">
@@ -138,7 +138,7 @@ export default function LoginGate() {
                   </ol>
                 </div>
               </div>
-              <p className="mt-3 border-t border-gray-100 pt-3 text-center text-[10px] font-bold text-[#e9758b] dark:border-white/[0.06] dark:text-[#FFB6C1]">
+              <p className="mt-3 border-t border-gray-100 pt-3 text-center text-[10px] font-bold text-[#e9758b] dark:border-white/[0.06] dark:text-[var(--ud-primary)]">
                 이제 홈 화면의 언더덕 로고로 바로 들어오면 돼요.
               </p>
             </div>
@@ -160,7 +160,7 @@ export default function LoginGate() {
           className="mt-4 flex min-h-12 items-center justify-between rounded-2xl border border-gray-200 px-4 active:bg-white dark:border-white/10 dark:active:bg-white/5"
         >
           <span className="flex min-w-0 items-center gap-3">
-            <Instagram className="h-[18px] w-[18px] shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+            <Instagram className="h-[18px] w-[18px] shrink-0 text-[var(--ud-primary)]" />
             <span className="min-w-0">
               <b className="block text-[12px] font-black">@underduck_fc</b>
               <span className="mt-0.5 block truncate text-[10.5px] font-bold text-gray-400 dark:text-white/30">

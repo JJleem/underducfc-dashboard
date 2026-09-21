@@ -56,9 +56,9 @@ function Calendar({
         day_button:
           "h-9 w-full rounded-xl text-[12px] font-bold text-gray-800 transition-colors hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-white/10",
         selected:
-          "[&>button]:!bg-[#FF8FA3] [&>button]:!text-white [&>button]:font-black dark:[&>button]:!bg-[#FFB6C1] dark:[&>button]:!text-black",
+          "[&>button]:!bg-[var(--ud-primary)] [&>button]:!text-white [&>button]:font-black dark:[&>button]:!bg-[var(--ud-primary)] dark:[&>button]:!text-black",
         today:
-          "[&>button]:border-2 [&>button]:border-[#FF8FA3] [&>button]:font-black [&>button]:text-[#FF8FA3] dark:[&>button]:border-[#FFB6C1] dark:[&>button]:text-[#FFB6C1]",
+          "[&>button]:border-2 [&>button]:border-[var(--ud-primary)] [&>button]:font-black [&>button]:text-[var(--ud-primary)] dark:[&>button]:border-[var(--ud-primary)] dark:[&>button]:text-[var(--ud-primary)]",
         outside:
           "[&>button]:text-gray-300 [&>button]:opacity-50 dark:[&>button]:text-gray-700",
         disabled: "[&>button]:text-gray-200 dark:[&>button]:text-gray-800",

@@ -156,14 +156,14 @@ export function resultWord(result: string): string {
 
 /** 결과 글자색. 승만 팀 색, 자체전은 보라(기존 홈과 같은 배색), 나머지는 무채색. */
 export function resultTextTone(result: string): string {
-  if (result === "승") return "text-[#FF8FA3] dark:text-[#FFB6C1]";
+  if (result === "승") return "text-[var(--ud-primary)]";
   if (result === "자체전") return "text-violet-500 dark:text-violet-400";
   return "text-gray-400 dark:text-white/35";
 }
 
 /** 최근 폼 뱃지 배경. */
 export function resultBadgeTone(result: string): string {
-  if (result === "승") return "bg-[#FF8FA3]";
+  if (result === "승") return "bg-[var(--ud-primary)]";
   if (result === "무") return "bg-gray-400";
   if (result === "자체전") return "bg-violet-400";
   return "bg-gray-500 dark:bg-white/25";
@@ -171,7 +171,7 @@ export function resultBadgeTone(result: string): string {
 
 /** 사진 없는 경기의 배경. 승=핑크, 자체전=보라, 나머지=차콜. */
 export function resultPanelGradient(result: string): string {
-  if (result === "승") return "linear-gradient(160deg,#FFD9E1 0%,#FF8FA3 100%)";
+  if (result === "승") return "linear-gradient(160deg,#FFD9E1 0%,var(--ud-primary) 100%)";
   if (result === "자체전") return "linear-gradient(160deg,#DDD3FA 0%,#8B7BD8 100%)";
   return "linear-gradient(160deg,#2A2A31 0%,#141416 100%)";
 }

@@ -23,6 +23,13 @@ interface Metal {
    * 히든 전용 — 다른 등급과 재질부터 다르게 두려고 쓴다.
    */
   foil?: string;
+  /**
+   * 브러시드(무광 헤어라인) 마감. 시즌 칭호 전용.
+   *
+   * 통산이 광택 주조 코인이라면 시즌은 결이 살아 있는 압연판이다. 색(=등급)은
+   * 그대로 두고 **재질만** 바꾸는 축이라, 등급을 읽는 눈을 방해하지 않는다.
+   */
+  brushed?: boolean;
 }
 
 // 0 루키(브론즈) → 3 프로(핑크·퍼플) → 4 GOAT(옵시디언)
@@ -68,9 +75,16 @@ const MANAGER_METAL: Metal = {
 export function titleMetal(t: EarnedTitle): Metal {
   if (t.variant === "manager") return MANAGER_METAL;
   if (t.variant === "leader") return LEADER_METAL;
-  if (t.hidden) return HIDDEN_METAL;
-  if (isEliteAchievement(t.id)) return ELITE_METAL;
-  return t.tier === null ? FLAT_METAL : TIER_METAL[t.tier];
+  const base = t.hidden
+    ? HIDDEN_METAL
+    : isEliteAchievement(t.id)
+      ? ELITE_METAL
+      : t.tier === null
+        ? FLAT_METAL
+        : TIER_METAL[t.tier];
+  // 시즌 칭호는 같은 금속을 브러시드로 마감한다. 등급 색은 건드리지 않는다 —
+  // 색까지 바꾸면 "시즌 준프로"와 "통산 프로"가 같은 톤으로 보여 등급을 못 읽는다.
+  return t.scope === "season" ? { ...base, brushed: true } : base;
 }
 
 /**
@@ -121,7 +135,14 @@ function rosettePath(n = 16, outer = 49, inner = 43.5): string {
 }
 const ROSETTE = rosettePath();
 
-/** 코인 한 장. circle 일반 / shield 감독 / rosette 리더 */
+/**
+ * 육각(뾰족머리) — 시즌 칭호.
+ * 원형(통산)·방패(감독)·톱니(리더)와 12px 에서도 실루엣만으로 갈린다.
+ * 외접원 반지름 49로 원형 코인과 같은 시각 크기를 맞춘다.
+ */
+const HEX = "M50 1 L92.43 25.5 L92.43 74.5 L50 99 L7.57 74.5 L7.57 25.5 Z";
+
+/** 코인 한 장. circle 통산 / hex 시즌 / shield 감독 / rosette 리더 */
 function Coin({
   title,
   size,
@@ -131,7 +152,7 @@ function Coin({
   title: EarnedTitle;
   size: number;
   metal: Metal;
-  shape?: "circle" | "shield" | "rosette";
+  shape?: "circle" | "hex" | "shield" | "rosette";
 }) {
   const [xhi, hi, base, shadow, dark] = metal.ramp;
   // 14px 미만에선 스페큘러·이너베벨을 끈다. 작을 때 디테일은 노이즈가 된다.
@@ -159,7 +180,9 @@ function Coin({
       ? "M50 3 L93 17 V50 C93 74 73 90 50 97 C27 90 7 74 7 50 V17 Z"
       : shape === "rosette"
         ? ROSETTE
-        : "M50 1 A49 49 0 1 1 49.9 1 Z";
+        : shape === "hex"
+          ? HEX
+          : "M50 1 A49 49 0 1 1 49.9 1 Z";
   // 칠보는 테두리 금속을 넉넉히 남겨야 메달처럼 보인다
   const faceR = detail ? 36 : 37;
 
@@ -206,12 +229,23 @@ function Coin({
           {metal.foil && <stop offset="0.82" stopColor={rgba(metal.foil, 0.16)} />}
           <stop offset="1" stopColor={ENAMEL_DEEP} />
         </radialGradient>
+        {/* 브러시드(헤어라인) 결. 시즌 칭호의 재질 표식이다.
+            아주 얇은 세로선을 촘촘히 깔아 압연판처럼 보이게 한다 — 색은 안 건드린다. */}
+        {metal.brushed && (
+          <pattern id={`${uid}-b`} width="3" height="100" patternUnits="userSpaceOnUse">
+            <rect width="3" height="100" fill="none" />
+            <rect width="1" height="100" fill="#FFFFFF" opacity="0.16" />
+            <rect x="1.6" width="0.6" height="100" fill="#000000" opacity="0.18" />
+          </pattern>
+        )}
         <clipPath id={`${uid}-k`}>
           <path d={outer} />
         </clipPath>
       </defs>
 
       <path d={outer} fill={`url(#${uid}-r)`} />
+      {/* 헤어라인은 테두리 금속 위에만 얹는다. 면(에나멜)까지 덮으면 아이콘이 지저분해진다. */}
+      {metal.brushed && detail && <path d={outer} fill={`url(#${uid}-b)`} />}
       {shape === "circle" ? (
         <circle cx="50" cy="50" r={faceR} fill={`url(#${uid}-f)`} />
       ) : (
@@ -230,7 +264,8 @@ function Coin({
       )}
       {detail && (
         <g clipPath={`url(#${uid}-k)`}>
-          <path d="M-8 -8 L58 -8 L4 58 L-8 34 Z" fill="#fff" opacity="0.14" />
+          {/* 무광 마감은 광택이 거의 안 뜬다. 통산(주조 코인)과 재질이 갈리는 지점. */}
+          <path d="M-8 -8 L58 -8 L4 58 L-8 34 Z" fill="#fff" opacity={metal.brushed ? 0.05 : 0.14} />
         </g>
       )}
       {/* 포일 전용: 테두리 바깥 모서리의 광택선.
@@ -273,9 +308,16 @@ export function TitleBadge({ title, size = 26 }: { title: EarnedTitle; size?: nu
     );
   }
 
+  // 시즌 칭호는 육각 + 브러시드. 통산은 원형 + 광택.
+  // 등급 금속색과 아이콘은 같으니 "같은 시리즈의 다른 판" 으로 읽힌다.
   return (
     <span title={label} aria-label={label} style={{ display: "inline-flex", flex: "0 0 auto" }}>
-      <Coin title={title} size={size} metal={titleMetal(title)} />
+      <Coin
+        title={title}
+        size={size}
+        metal={titleMetal(title)}
+        shape={title.scope === "season" ? "hex" : "circle"}
+      />
     </span>
   );
 }

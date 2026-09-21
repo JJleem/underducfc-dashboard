@@ -31,7 +31,7 @@ export default function LoungeEntry({
         width={14}
         height={14}
         strokeWidth={2.2}
-        className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1]"
+        className="shrink-0 text-[var(--ud-primary)]"
       />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">

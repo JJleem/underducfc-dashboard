@@ -27,6 +27,17 @@ import { isVoteClosed, isMatchDayOver } from "../../lib/vote-deadline";
 import { buildMatchStorylines, type Storyline } from "../../lib/storylines";
 import { pickBadges, type EarnedTitle } from "../../lib/titles";
 import { getTeamTitleData } from "../../lib/titles-cache";
+import {
+  ALL_SEASONS,
+  SEASONS,
+  currentSeasonId,
+  resolveSeasonFilter,
+  seasonLabel,
+  seasonOf,
+  seasonLabel as labelOfSeason,
+  seasonsWithMatches,
+} from "../../lib/seasons";
+import SeasonSelector from "../SeasonSelector";
 import type { LineupData, MatchData } from "../../lib/match-types";
 import {
   HOME_STATES,
@@ -39,6 +50,7 @@ import {
 import HomeHero, { type HeroMatch } from "./HomeHero";
 import Disclosure from "./Disclosure";
 import MatchRow from "./MatchRow";
+import { Fragment } from "react";
 import FeedList from "./FeedList";
 import NoticeEditor from "./NoticeEditor";
 import { type MomVote as MomVoteData } from "./MomVote";
@@ -90,6 +102,7 @@ export default async function NewHome({
   list,
   preview = false,
   previewVote,
+  season,
 }: {
   /** 미리보기에서 상태를 강제로 그려볼 때만 쓴다. */
   forcedState?: string;
@@ -98,6 +111,13 @@ export default async function NewHome({
   preview?: boolean;
   /** 미리보기에서 출석 투표 뒤 평시 상태를 재현할 때만 쓴다. */
   previewVote?: string;
+  /**
+   * 피드를 한 시즌으로 좁힌다. 생략·"all" 이면 전체(기본).
+   *
+   * ⚠️ 기본이 전체인 이유: 기본을 현재 시즌으로 두면 개막일 아침에 홈이 통째로 빈다.
+   *    홈은 팀이 매일 들어오는 곳이다. 좁혀 보는 건 선택이어야 한다.
+   */
+  season?: string;
 }) {
   const forced = forcedState;
   // 경기 목록을 두 방향으로 만들어 두고 여기서 고른다.
@@ -128,7 +148,9 @@ export default async function NewHome({
       optionalRows("라인업", getLineupRows()),
       optionalRows("선수 명단", getRosterRows()),
       optionalRows("피드백", getFeedbackRows()),
-      optionalRows("스탯", getStatsRows()),
+      // 홈이 말하는 "시즌"은 진행 중인 시즌이다. 스토리라인의 득점왕·도움왕도
+      // /stats 순위(기본값 = 현재 시즌)와 같은 모집단이어야 어긋나지 않는다.
+      optionalRows("스탯", getStatsRows(currentSeasonId())),
       optionalRows("MOM 투표", getMomVoteRows()),
       optionalRows("칭호", getFeaturedRows()),
       // 로그인했으면 내가 누른 좋아요를 같이 받아 온다. 실패해도 피드는 그대로 뜬다.
@@ -139,7 +161,7 @@ export default async function NewHome({
           })
         : Promise.resolve(new Set<number>()),
       // 전체 칭호 계산도 나머지 읽기와 동시에 시작해 홈의 두 번째 데이터 폭포를 없앤다.
-      getTeamTitleData().catch(() => {
+      getTeamTitleData(currentSeasonId()).catch(() => {
         failedSections.push("칭호 계산");
         return { allTitles: {}, posLineupCounts: {} };
       }),
@@ -244,10 +266,29 @@ export default async function NewHome({
     .filter((m) => m.result === "예정" && m.type !== "야유회")
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   // 피드는 전체를 다 흘린다. 화면에 붙이는 건 FeedList 가 스크롤에 맞춰 나눠서 한다.
-  const recent = [
+  const allRecent = [
     ...upcoming,
     ...[...played].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
   ];
+  // 피드만 좁힌다. 히어로(다음 경기·지난 경기)는 항상 전체 기준이다 —
+  // 지난 시즌을 보고 있다고 "다음 경기"가 사라지면 안 된다.
+  const feedSeason = resolveSeasonFilter(season);
+  const recent = feedSeason ? allRecent.filter((m) => seasonOf(m.date) === feedSeason) : allRecent;
+  const feedSeasons = [...seasonsWithMatches(rawMatches)];
+
+  // 히어로 꼬리표: 다가오는(또는 직전) 경기가 그 시즌 몇 번째인가.
+  // 야유회는 경기가 아니라 행사라 세지 않는다(백엔드 stats 와 같은 기준).
+  const ordinalTarget = nextMatch ?? lastMatch;
+  const seasonOrdinal = (() => {
+    if (!ordinalTarget) return null;
+    const sid = seasonOf(ordinalTarget.date);
+    if (!sid) return null;
+    const sameSeason = matches
+      .filter((m) => m.type !== "야유회" && seasonOf(m.date) === sid)
+      .sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
+    const n = sameSeason.findIndex((m) => m.id === ordinalTarget.id) + 1;
+    return n > 0 ? { label: labelOfSeason(sid), n } : null;
+  })();
   // ── 경기 카드용 파생 데이터 (실제 홈과 같은 가공) ──────────
   const rosterMap: Record<string, string> = {};
   const captainRoles: Record<string, string> = {};
@@ -403,7 +444,7 @@ export default async function NewHome({
               href={`/home-preview?state=${state}&list=${l}`}
               className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black transition-colors ${
                 layout === l
-                  ? "bg-[#FF8FA3] text-white"
+                  ? "bg-[var(--ud-primary)] text-white"
                   : "border border-gray-200 text-gray-400 dark:border-white/10 dark:text-gray-500"
               }`}
             >
@@ -434,6 +475,7 @@ export default async function NewHome({
       )}
 
       <HomeHero
+        seasonOrdinal={seasonOrdinal}
         state={state}
         nextMatch={heroNext}
         lastMatch={heroLast}
@@ -495,7 +537,7 @@ export default async function NewHome({
                   referrerPolicy="no-referrer-when-downgrade"
                 />
                 <div className="flex items-center gap-2 bg-white px-3 py-2.5 dark:bg-[#141416]">
-                  <MapPin width={14} height={14} strokeWidth={2.2} className="shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+                  <MapPin width={14} height={14} strokeWidth={2.2} className="shrink-0 text-[var(--ud-primary)]" />
                   <span className="flex-1 truncate text-[11.5px] font-bold text-gray-700 dark:text-gray-300">
                     {notice[4]}
                   </span>
@@ -535,6 +577,23 @@ export default async function NewHome({
       />
 
       <section className={layout === "feed" ? "pb-6 pt-2" : "px-4 pb-6 pt-4"}>
+        {/* 시즌이 둘 이상 정의돼 있으면 항상 낸다.
+            "경기가 쌓인 시즌이 2개 이상일 때만" 으로 뒀더니, 개막 전에는 셀렉터가
+            아예 안 보여서 UI 로 필터를 켤 방법이 없었다(URL 로만 가능). /stats 는
+            늘 드롭다운이 있는데 홈만 없는 것도 앞뒤가 안 맞는다. */}
+        {SEASONS.length > 1 && (
+          <div className="mb-1 flex items-center justify-between px-4 pb-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-400 dark:text-white/35">
+              경기
+            </p>
+            <SeasonSelector current={feedSeason ?? ALL_SEASONS} withMatches={feedSeasons} allowAll />
+          </div>
+        )}
+        {recent.length === 0 && (
+          <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-gray-600">
+            {feedSeason ? `${seasonLabel(feedSeason)} 시즌에 치른 경기가 없어요.` : "아직 치른 경기가 없어요."}
+          </p>
+        )}
         {/* 경기 목록 — 두 방향 중 하나를 통째로 갈아 끼운다 */}
         <div className="divide-y divide-gray-100 dark:divide-white/[0.06]">
           <FeedList>
@@ -557,16 +616,38 @@ export default async function NewHome({
               playerStats,
               playerTitles,
             };
-            return layout === "feed" ? (
-              <MatchFeed
-                key={m.id}
-                {...common}
-                firstInFeed={idx === 0}
-                likeCount={likeCountByMatch[m.id] || 0}
-                likedByMe={myLikedMatchIds.has(m.id)}
-              />
-            ) : (
-              <MatchRow key={m.id} {...common} />
+            const card =
+              layout === "feed" ? (
+                <MatchFeed
+                  key={m.id}
+                  {...common}
+                  firstInFeed={idx === 0}
+                  likeCount={likeCountByMatch[m.id] || 0}
+                  likedByMe={myLikedMatchIds.has(m.id)}
+                />
+              ) : (
+                <MatchRow key={m.id} {...common} />
+              );
+
+            // 전체를 보고 있을 때만 시즌이 갈리는 자리에 이정표를 세운다.
+            // 한 시즌으로 좁혔으면 경계가 없으니 필요 없다.
+            // (구분선은 카드와 한 묶음으로 낸다 — FeedList 가 children 개수로 쪽을
+            //  나누므로 따로 끼우면 구분선이 한 칸을 잡아먹는다)
+            const prev = recent[idx - 1];
+            const showDivider =
+              !feedSeason && seasonOf(m.date) && (!prev || seasonOf(prev.date) !== seasonOf(m.date));
+            if (!showDivider) return card;
+            return (
+              <Fragment key={m.id}>
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <span className="h-px flex-1 bg-gray-200 dark:bg-white/10" />
+                  <span className="shrink-0 text-[10px] font-black tracking-[0.14em] text-gray-400 dark:text-white/35">
+                    {seasonLabel(seasonOf(m.date)!)} 시즌
+                  </span>
+                  <span className="h-px flex-1 bg-gray-200 dark:bg-white/10" />
+                </div>
+                {card}
+              </Fragment>
             );
           })}
           </FeedList>

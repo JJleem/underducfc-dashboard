@@ -99,7 +99,7 @@ function BenchFaceOn({ name, no }: { name: string; no?: string }) {
   return (
     <span className="relative flex h-12 w-10 shrink-0 items-center justify-center overflow-hidden">
       <span
-        className={`flex h-9 w-9 items-center justify-center rounded-full bg-[#FF8FA3]/20 text-[10px] font-black text-[#FF8FA3] transition-opacity duration-150 dark:text-[#FFB6C1] ${
+        className={`flex h-9 w-9 items-center justify-center rounded-full bg-[var(--ud-primary)]/20 text-[10px] font-black text-[var(--ud-primary)] transition-opacity duration-150 dark:text-[var(--ud-primary)] ${
           loaded ? "opacity-0" : "opacity-100"
         }`}
       >
@@ -347,7 +347,7 @@ export default function LineupViewer({
                   onClick={() => setActiveQuarter(quarter)}
                   className={`shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-black transition-colors ${
                     activeQuarter === quarter
-                      ? "bg-[#FF8FA3] text-white dark:bg-[#FFB6C1] dark:text-black"
+                      ? "bg-[var(--ud-primary)] text-white dark:bg-[var(--ud-primary)] dark:text-black"
                       : "bg-black/5 text-gray-500 dark:bg-white/[0.06] dark:text-white/45"
                   }`}
                 >
@@ -360,7 +360,7 @@ export default function LineupViewer({
             type="button"
             onClick={saveLineupCard}
             disabled={savingCard}
-            className="ml-auto flex h-7 shrink-0 items-center gap-1 rounded-lg border border-[#FF8FA3]/35 bg-[#FF8FA3]/10 px-2 text-[9px] font-black text-[#e75f7c] transition-opacity disabled:opacity-60 dark:text-[#FFB6C1]"
+            className="ml-auto flex h-7 shrink-0 items-center gap-1 rounded-lg border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/10 px-2 text-[9px] font-black text-[#e75f7c] transition-opacity disabled:opacity-60 dark:text-[var(--ud-primary)]"
           >
             <Download className={`h-3 w-3 ${savingCard ? "animate-bounce" : ""}`} />
             {savingCard ? "만드는 중" : "저장"}
@@ -392,7 +392,7 @@ export default function LineupViewer({
         <DialogTrigger asChild>
           <button
             type="button"
-            className="group flex w-full items-center justify-between rounded-2xl border border-gray-200 bg-gray-50/70 px-3.5 py-3 text-left transition-colors hover:border-[#FF8FA3]/40 hover:bg-[#FF8FA3]/5 dark:border-white/[0.07] dark:bg-white/[0.03] dark:hover:border-[#FFB6C1]/25"
+            className="group flex w-full items-center justify-between rounded-2xl border border-gray-200 bg-gray-50/70 px-3.5 py-3 text-left transition-colors hover:border-[var(--ud-primary)]/40 hover:bg-[var(--ud-primary)]/5 dark:border-white/[0.07] dark:bg-white/[0.03] dark:hover:border-[var(--ud-primary)]/25"
           >
             <div>
               <p className="text-[11px] font-black text-gray-800 dark:text-gray-100">
@@ -402,7 +402,7 @@ export default function LineupViewer({
                 선발 {lineup.players.filter(Boolean).length}명 · 대기 {lineup.subs.length}명
               </p>
             </div>
-            <span className="flex items-center gap-1.5 text-[10px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+            <span className="flex items-center gap-1.5 text-[10px] font-black text-[var(--ud-primary)]">
               라인업 보기
               <Maximize2 className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
             </span>
@@ -423,7 +423,7 @@ export default function LineupViewer({
           className="min-h-full bg-gray-50 text-gray-900 dark:bg-[#070b18] dark:text-white"
         >
         <div className="border-b border-gray-200 bg-gray-50/90 px-4 pb-3 pt-4 dark:border-white/10 dark:bg-[#070b18]/90">
-          <p className="pr-12 text-[9px] font-black tracking-[0.18em] text-[#FF8FA3] dark:text-[#FFB6C1]">
+          <p className="pr-12 text-[9px] font-black tracking-[0.18em] text-[var(--ud-primary)]">
             MATCH LINEUP
           </p>
           <div className="mt-1 flex items-end justify-between gap-3 pr-10">
@@ -446,7 +446,7 @@ export default function LineupViewer({
               {editHref && (
                 <Link
                   href={editHref}
-                  className="flex h-8 items-center gap-1 rounded-xl bg-[#FF8FA3] px-2.5 text-[9px] font-black text-white"
+                  className="flex h-8 items-center gap-1 rounded-xl bg-[var(--ud-primary)] px-2.5 text-[9px] font-black text-white"
                 >
                   <Pencil className="h-3 w-3" /> 편집
                 </Link>
@@ -463,7 +463,7 @@ export default function LineupViewer({
                   onClick={() => setActiveQuarter(quarter)}
                   className={`shrink-0 rounded-xl px-3 py-1.5 text-[10px] font-black transition-colors ${
                     activeQuarter === quarter
-                      ? "bg-[#FF8FA3] text-white dark:bg-[#FFB6C1] dark:text-black"
+                      ? "bg-[var(--ud-primary)] text-white dark:bg-[var(--ud-primary)] dark:text-black"
                       : "bg-black/5 text-gray-500 dark:bg-white/[0.06] dark:text-white/45"
                   }`}
                 >

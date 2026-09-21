@@ -8,6 +8,7 @@ import {
   TITLES,
   TIER_NAMES,
   managerTitle,
+  seasonRuleOf,
   type EarnedTitle,
   type TitleCategory,
   type TitleDef,
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
 
 const CATEGORY_COLORS: Partial<Record<TitleCategory, string>> = {
   "포지션 커리어": "#38BDF8",
-  "통산 스탯": "#FF8FA3",
+  "통산 스탯": "var(--ud-primary)",
   "한 경기 폭발": "#FB923C",
   "포지션 특성": "#34D399",
   "근성 · 출석": "#A78BFA",
@@ -97,7 +98,41 @@ function TitleCard({ title }: { title: TitleDef }) {
           <span className="text-[8px] font-bold text-gray-400">조건 달성 시 획득</span>
         </div>
       )}
+
+      {/* 시즌판 — 같은 칭호를 한 시즌 기록만으로도 딸 수 있다. 컷이 통산의 약 1/4 이고
+          뱃지는 육각 + 브러시드로 나온다. 통산 전용 칭호는 그렇다고 명시한다. */}
+      <SeasonRule title={title} />
     </article>
+  );
+}
+
+/** 카드 하단의 "시즌" 줄. 통산 조건 밑에 한 줄로 붙는다. */
+function SeasonRule({ title }: { title: TitleDef }) {
+  const rule = seasonRuleOf(title.id);
+
+  const body = rule.excluded ? (
+    <span className="text-[7px] font-bold text-gray-400 dark:text-white/30">
+      통산 전용 — 시즌 칭호 없음
+    </span>
+  ) : rule.tiers?.length ? (
+    <span className="text-[7px] font-bold tabular-nums text-gray-500 dark:text-gray-400">
+      {rule.tiers
+        .map((n, i) => `${rule.tierLabels?.[i] ?? TIER_NAMES[i as TierIndex]} ${n}${title.unit ?? ""}`)
+        .join(" · ")}
+    </span>
+  ) : (
+    <span className="text-[7px] font-bold text-gray-500 dark:text-gray-400">
+      {rule.desc ?? title.desc ?? "조건 달성 시 획득"}
+    </span>
+  );
+
+  return (
+    <div className="mt-2 flex items-start gap-1.5 border-t border-gray-100 pt-2 dark:border-white/[0.06]">
+      <span className="shrink-0 rounded px-1 py-0.5 text-[6.5px] font-black uppercase tracking-[0.1em] text-[var(--ud-primary)] ring-1 ring-[var(--ud-primary)]/30 dark:text-[var(--ud-primary)] dark:ring-[var(--ud-primary)]/25">
+        시즌
+      </span>
+      {body}
+    </div>
   );
 }
 
@@ -117,7 +152,7 @@ export default function TitlesPage() {
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div>
-          <p className="text-[8px] font-black tracking-[0.18em] text-[#FF8FA3] dark:text-[#FFB6C1]">
+          <p className="text-[8px] font-black tracking-[0.18em] text-[var(--ud-primary)]">
             UNDERDUCK ARCHIVE
           </p>
           <h1 className="text-[15px] font-black leading-none">칭호 도감</h1>
@@ -129,13 +164,30 @@ export default function TitlesPage() {
 
       <div className="space-y-6 px-4 pb-10 pt-4">
         <section className="relative overflow-hidden rounded-[22px] bg-white p-4 text-gray-900 shadow-[0_16px_40px_rgba(15,23,42,0.06)] border border-gray-200/80 dark:border-white/[0.08] dark:bg-[#10182f] dark:text-white dark:shadow-[0_16px_40px_rgba(15,23,42,0.18)]">
-          <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-[#FF8FA3]/15 blur-2xl dark:bg-[#FF8FA3]/20" />
-          <p className="text-[9px] font-black tracking-[0.16em] text-[#FF8FA3] dark:text-[#FFB6C1]">TITLE COLLECTION</p>
+          <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-[var(--ud-primary)]/15 blur-2xl dark:bg-[var(--ud-primary)]/20" />
+          <p className="text-[9px] font-black tracking-[0.16em] text-[var(--ud-primary)]">TITLE COLLECTION</p>
           <h2 className="mt-1 text-[21px] font-black tracking-[-0.04em]">기록이 쌓이면, 칭호가 된다.</h2>
           <p className="mt-2 max-w-[310px] text-[10px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
             경기 기록과 활동에 따라 자동으로 획득하는 언더덕 FC의 칭호와 달성 조건입니다.
             조건이 공개되지 않는 <span className="text-cyan-500 dark:text-cyan-300 font-black">히든 칭호</span>도 존재합니다.
           </p>
+          {/* 칭호가 두 벌이 됐다. 도감에서 그 관계를 먼저 설명하지 않으면
+              같은 칭호가 왜 두 번 나오는지(원형/육각) 알 수 없다. */}
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-2.5 dark:border-white/10 dark:bg-white/[0.06]">
+              <p className="text-[9px] font-black text-gray-700 dark:text-white">통산 · 원형</p>
+              <p className="mt-1 text-[8.5px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
+                입단 이후 전 기간 누적. 한 번 딴 등급은 사라지지 않습니다.
+              </p>
+            </div>
+            <div className="rounded-xl border border-[var(--ud-primary)]/30 bg-[var(--ud-primary)]/[0.07] p-2.5 dark:border-[var(--ud-primary)]/25">
+              <p className="text-[9px] font-black text-[var(--ud-primary)]">시즌 · 육각</p>
+              <p className="mt-1 text-[8.5px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
+                그 시즌 기록만으로 다시 도전. 컷이 통산보다 낮습니다.
+              </p>
+            </div>
+          </div>
+
           <div className="mt-3 flex items-start gap-2 rounded-xl border border-gray-200 bg-gray-50 p-2.5 dark:border-white/10 dark:bg-white/[0.06]">
             <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500 dark:text-amber-300" />
             <p className="text-[9px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
@@ -204,7 +256,7 @@ export default function TitlesPage() {
               <div className="mb-2.5 flex items-center gap-2">
                 <span
                   className="h-4 w-1 rounded-full"
-                  style={{ background: CATEGORY_COLORS[category] ?? "#FF8FA3" }}
+                  style={{ background: CATEGORY_COLORS[category] ?? "var(--ud-primary)" }}
                 />
                 <h2 className="text-[13px] font-black">{category}</h2>
                 <span className="text-[8px] font-bold text-gray-400">{titles.length}</span>

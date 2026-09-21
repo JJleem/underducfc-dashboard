@@ -14,7 +14,7 @@ export default function NotFound() {
       />
 
       <div className="space-y-2">
-        <p className="text-6xl font-black tracking-tight text-[#FF8FA3] dark:text-[#FFB6C1]">404</p>
+        <p className="text-6xl font-black tracking-tight text-[var(--ud-primary)]">404</p>
         <h1 className="text-lg font-black text-gray-900 dark:text-white">페이지를 찾을 수 없어요</h1>
         <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
           주소가 바뀌었거나 삭제된 페이지일 수 있어요.

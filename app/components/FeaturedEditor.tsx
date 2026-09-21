@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AlertCircle, CheckCircle2, ChevronRight, Loader2, Pencil } from "lucide-react";
-import { EarnedTitle } from "../lib/titles";
+import { EarnedTitle, featureKey, normalizeFeatureKey } from "../lib/titles";
 import { TitleBadge, titleMetal } from "./TitleBadges";
 
 export default function FeaturedEditor({
@@ -28,8 +28,13 @@ export default function FeaturedEditor({
     if (controlled) onOpenChange?.(next);
     else setOpenState(next);
   };
-  const earnedIds = new Set(titles.map((t) => t.id));
-  const validCurrent = current.filter((id) => earnedIds.has(id)).slice(0, 3);
+  // 같은 칭호 id 가 시즌판·통산판으로 둘 다 있을 수 있어 id 가 아니라 키로 다룬다.
+  // (career:scorer / season:2627:scorer — [[titles]] featureKey 참고)
+  const earnedKeys = new Set(titles.map(featureKey));
+  const validCurrent = current
+    .map(normalizeFeatureKey)
+    .filter((k) => earnedKeys.has(k))
+    .slice(0, 3);
   const [sel, setSel] = useState<string[]>(validCurrent);
   const [saved, setSaved] = useState<string[]>(validCurrent);
   const [saving, setSaving] = useState(false);
@@ -37,6 +42,23 @@ export default function FeaturedEditor({
   const [err, setErr] = useState<string | null>(null);
 
   if (!titles.length) return null;
+
+  // 묶음: 현재 시즌 → 통산 → 지난 시즌(최신순). 같은 "득점왕" 이 여러 줄에 나와도
+  // 묶음 제목이 어느 시즌 건지 말해 준다.
+  const groups: { key: string; label: string; items: EarnedTitle[] }[] = [];
+  const career = titles.filter((t) => t.scope !== "season");
+  const bySeason = new Map<string, EarnedTitle[]>();
+  for (const t of titles) {
+    if (t.scope !== "season" || !t.seasonId) continue;
+    if (!bySeason.has(t.seasonId)) bySeason.set(t.seasonId, []);
+    bySeason.get(t.seasonId)!.push(t);
+  }
+  const seasonIds = [...bySeason.keys()].sort().reverse();
+  for (const id of seasonIds) {
+    const items = bySeason.get(id)!;
+    groups.push({ key: id, label: `${items[0]?.seasonLabel ?? id} 시즌`, items });
+  }
+  if (career.length) groups.push({ key: "career", label: "통산", items: career });
 
   const toggle = (id: string) => {
     if (saving) return;
@@ -92,27 +114,34 @@ export default function FeaturedEditor({
     <div className="mb-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-3">
       <div className="mb-2.5 flex items-center justify-between gap-3">
         <p className="text-[11px] font-black text-gray-700 dark:text-gray-200">
-          라인업에 보일 대표 칭호 <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{sel.length}/3</span>
+          라인업에 보일 대표 칭호 <span className="text-[var(--ud-primary)]">{sel.length}/3</span>
           <span className="ml-1 font-bold text-gray-400">· 고른 순서대로 표시</span>
         </p>
         <Link
           href="/titles"
-          className="flex shrink-0 items-center gap-0.5 rounded-lg bg-[#FF8FA3]/10 px-2 py-1.5 text-[9px] font-black text-[#E96882] active:opacity-60 dark:text-[#FFB6C1]"
+          className="flex shrink-0 items-center gap-0.5 rounded-lg bg-[var(--ud-primary)]/10 px-2 py-1.5 text-[9px] font-black text-[#E96882] active:opacity-60 dark:text-[var(--ud-primary)]"
         >
           칭호 상세보기
           <ChevronRight className="h-3 w-3" />
         </Link>
       </div>
-      <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
-        {titles.map((t) => {
-          const order = sel.indexOf(t.id);
+      <div className="max-h-72 space-y-3 overflow-y-auto">
+        {groups.map((g) => (
+        <div key={g.key}>
+        <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-gray-400 dark:text-white/35">
+          {g.label}
+        </p>
+        <div className="flex flex-wrap gap-2">
+        {g.items.map((t) => {
+          const key = featureKey(t);
+          const order = sel.indexOf(key);
           const on = order >= 0;
           const [, highlight, base] = titleMetal(t).ramp;
           return (
             <button
-              key={t.id}
+              key={key}
               type="button"
-              onClick={() => toggle(t.id)}
+              onClick={() => toggle(key)}
               disabled={saving}
               aria-pressed={on}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-bold border transition-all disabled:cursor-wait disabled:opacity-60 ${
@@ -140,6 +169,9 @@ export default function FeaturedEditor({
             </button>
           );
         })}
+        </div>
+        </div>
+        ))}
       </div>
       <div aria-live="polite" className="min-h-6">
         {saving && (

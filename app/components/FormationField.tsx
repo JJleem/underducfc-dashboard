@@ -654,7 +654,7 @@ export function FormationField({
                 }}
                 title={tactic.desc}
               >
-                <span className="text-[#FFB6C1]">전술</span> {tactic.label}
+                <span className="text-[var(--ud-primary)]">전술</span> {tactic.label}
               </span>
             )}
             {shapeIsCustom && (
@@ -692,7 +692,7 @@ export function FormationField({
                   width: 30, height: 30, fontSize: 12,
                   background: "rgba(255,143,163,0.18)",
                   border: "1.5px solid rgba(255,182,193,0.5)",
-                  color: "#FFB6C1",
+                  color: "var(--ud-primary)",
                 }}
               >
                 {rosterMap[selectedName] || "G"}
@@ -732,7 +732,7 @@ export function FormationField({
                     const a = countNames(matchInfo?.assists, selectedName);
                     if (!g && !a) return null;
                     return (
-                      <span className="text-[#FFB6C1]">
+                      <span className="text-[var(--ud-primary)]">
                         {" "}· 이번 경기 {g > 0 ? `⚽${g}` : ""}{g > 0 && a > 0 ? " " : ""}{a > 0 ? `A${a}` : ""}
                       </span>
                     );
@@ -748,7 +748,7 @@ export function FormationField({
               </button>
               <Link
                 href={`/players/${encodeURIComponent(selectedName)}`}
-                className="shrink-0 flex h-7 items-center gap-1 rounded-lg bg-[#FF8FA3] px-2 text-[9px] font-black text-white transition-opacity hover:opacity-85"
+                className="shrink-0 flex h-7 items-center gap-1 rounded-lg bg-[var(--ud-primary)] px-2 text-[9px] font-black text-white transition-opacity hover:opacity-85"
               >
                 프로필 보기
                 <ExternalLink className="h-3 w-3" />

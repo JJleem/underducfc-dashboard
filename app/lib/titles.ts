@@ -18,6 +18,7 @@ import {
   parsePositions,
   rolesFor,
 } from "./positions";
+import { isInSeason, rowsOfMatchIds, scaleSeasonTiers, seasonMatchIds } from "./seasons";
 
 // ───────────────────────── 타입 ─────────────────────────
 
@@ -36,13 +37,22 @@ export interface PlayerContext {
   mom: number;
   points: number; // goals + assists
 
+  /**
+   * 포지션 그룹별 출전 **쿼터** 수.
+   *
+   * 예전엔 경기 단위였는데, 한 경기에서 두 자리를 보면 양쪽 모두 +1 이었다.
+   * 그래서 1쿼터만 공격을 서도 "공격수 1경기" 가 쌓였고, 합계가 출전 경기 수를
+   * 넘어서 멀티 포지션 선수가 모든 포지션 칭호를 동시에 올렸다
+   * (임재준: 17경기인데 DF15 + MF3 + FW10 = 28).
+   * 쿼터로 세면 한 쿼터에 자리는 하나뿐이라 그 왜곡이 사라진다.
+   */
   posCounts: Record<PosGroup, number>;
-  posLineupCounts: Record<PosGroup, number>; // 쿼터별 라인업 등장 횟수
-  posSlotTotal: number; // GK+DF+MF+FW 출전 슬롯 합 (비율 계산용)
+  posLineupCounts: Record<PosGroup, number>; // 쿼터별 라인업 등장 횟수(프로필 주 포지션용)
+  posSlotTotal: number; // GK+DF+MF+FW 출전 쿼터 합 (비율 계산용)
   posGroupsPlayed: number; // DF/MF/FW 중 실제로 뛴 그룹 수
   allFourPositions: boolean;
-  fullbackGames: number; // 4백의 좌·우 풀백(p2/p5) 출전 경기 수
-  centerbackGames: number; // 3·4·5백의 중앙 수비 출전 경기 수
+  fullbackGames: number; // 4백의 좌·우 풀백 출전 쿼터 수
+  centerbackGames: number; // 3·4·5백의 중앙 수비 출전 쿼터 수
 
   hatTricks: number; // 한 경기 3골+ 횟수
   multiGoalGames: number; // 한 경기 2골+ 경기 수
@@ -146,6 +156,18 @@ export interface EarnedTitle {
   };
   /** 특수 뱃지 스타일: leader=팀 1위 왕관, manager=감독 전용 */
   variant?: "leader" | "manager";
+  /**
+   * 통산 칭호인가 시즌 칭호인가. 생략 = 통산(기존 동작).
+   *
+   * 뱃지 모양·재질이 갈린다 — 통산은 광택 원형 코인, 시즌은 브러시드 육각.
+   * 등급 금속색과 아이콘은 같게 둬서 "같은 시리즈의 다른 판" 으로 읽히게 한다.
+   * (variant 가 있는 감독·리더는 자기 모양이 우선이다)
+   */
+  scope?: "season" | "career";
+  /** scope="season" 일 때 그 시즌 id("2526"). 대표 칭호 키를 만들 때 쓴다. */
+  seasonId?: string;
+  /** scope="season" 일 때 라벨("25-26"). 시즌이 섞여 보이는 줄에서 앞에 붙인다. */
+  seasonLabel?: string;
 }
 
 // ───────────────────────── 유틸 ─────────────────────────
@@ -271,12 +293,47 @@ interface MatchInfo {
   isCasual: boolean; // 자체전·풋살·야유회 (연속 계산에서 제외)
 }
 
-export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
+/** buildContexts 옵션. */
+export interface BuildContextsOptions {
+  /**
+   * 주면 그 시즌 경기만으로 집계한다. 생략하면 지금까지와 같은 통산 집계다.
+   *
+   * ⚠️ rawStats 도 같은 시즌으로 받아 와야 한다(backend.getStatsRows(seasonId)).
+   *    여기서 거르는 건 경기·라인업·투표·댓글이고, apps/goals/assists/mom 은
+   *    백엔드가 집계해 주는 값을 그대로 쓰기 때문이다. 한쪽만 시즌이면
+   *    "출전 3경기인데 풀백 12경기" 같은 모순이 생긴다.
+   */
+  seasonId?: string;
+}
+
+export function buildContexts(
+  sheets: RawSheets,
+  { seasonId }: BuildContextsOptions = {},
+): Map<string, PlayerContext> {
   const { rawStats, rawMatches, rawLineups, rawRoster } = sheets;
-  const rawVotes = sheets.rawAttendanceVotes ?? [];
-  const rawComments = sheets.rawVoteComments ?? [];
-  const rawFeedbacks = sheets.rawFeedbacks ?? [];
-  const rawBoardComments = sheets.rawBoardComments ?? [];
+
+  // 시즌 모드에서 셀 경기 id 집합. null 이면 통산(전부 센다).
+  //
+  // 경기 "행"을 지우지 않고 id 로 거른다 — rawMatches 의 배열 index 가 곧 matchId 이고
+  // 라인업·출석투표·댓글이 전부 그 id 를 참조한다. 행을 지우면 id 가 밀려서
+  // 라인업이 엉뚱한 경기에 붙는다. 빈 행으로 대체해도 안 된다 — 아무도 안 나온
+  // 경기가 되어 전원의 연속 출석이 거기서 끊긴다.
+  const seasonIds = seasonId ? seasonMatchIds(rawMatches, seasonId) : null;
+  const inSeason = (id: number) => !seasonIds || seasonIds.has(id);
+  const scope = (rows: string[][]) => (seasonIds ? rowsOfMatchIds(rows, seasonIds) : rows);
+
+  const rawVotes = scope(sheets.rawAttendanceVotes ?? []);
+  const rawComments = scope(sheets.rawVoteComments ?? []);
+  const rawFeedbacks = scope(sheets.rawFeedbacks ?? []);
+  // 전술게시판 댓글은 경기에 안 묶여 있어 작성일로 자른다. created_at 은 UTC ISO 라
+  // 시즌 경계 전후 9시간은 옆 시즌으로 샐 수 있다 — 수다왕 집계라 그 정도는 감수한다.
+  const rawBoardComments = seasonId
+    ? [(sheets.rawBoardComments ?? [])[0] ?? [], ...(sheets.rawBoardComments ?? []).slice(1)
+        .filter((r) => isInSeason(r?.[1], seasonId))]
+    : (sheets.rawBoardComments ?? []);
+  // 게시판 글 좋아요 / 누른 좋아요에는 날짜가 아예 없다(백엔드가 author+count 만 준다).
+  // 시즌으로 쪼갤 근거가 없으므로 이걸 쓰는 히든 칭호 둘은 SEASON_OVERRIDES 에서
+  // hide 처리했다. 여기선 그냥 통과시킨다.
   const rawBoardPosts = sheets.rawBoardPosts ?? [];
   const rawBoardLikeGivers = sheets.rawBoardLikeGivers ?? [];
 
@@ -307,12 +364,14 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     // 자체전·풋살·야유회. 출석의 "흐름"(연속출석·연속결장·복귀)에서만 뺀다 —
     // 통산 출전(playedReal)은 백엔드 apps 와 같은 모집단이어야 해서 건드리지 않는다.
     isCasual: isCasualMatch(r[6] || "", r[7] || "", r[3] || ""),
-  }));
+  })).filter((m) => inSeason(m.id)); // id 를 매긴 뒤에 거른다 — 번호는 통산 기준 그대로
   const matchById = new Map(matches.map((m) => [m.id, m]));
 
   // 라인업: matchId별 (선수→포지션그룹) + 쿼터 수
   // 한 경기 내 같은 선수가 여러 쿼터에 나오면 posCounts는 "경기당 1회"로 집계 (출전수 = apps 기준 느낌)
-  const lineupRows = rawLineups.slice(1).filter((r) => r[0] !== undefined && r[0] !== "");
+  const lineupRows = rawLineups
+    .slice(1)
+    .filter((r) => r[0] !== undefined && r[0] !== "" && inSeason(Number(r[0])));
   // matchId -> Map<name, Set<PosGroup>>
   const matchPlayerPos = new Map<number, Map<string, Set<PosGroup>>>();
   // matchId -> Set<quarterKey> (전체 쿼터)
@@ -443,16 +502,15 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     const mom = Number(row[6]) || 0;
 
     // 포지션 집계 (경기별로 그 선수가 뛴 포지션 그룹을 합산)
+    // 포지션은 **쿼터 단위**로 센다. 한 쿼터에 자리는 하나뿐이라 중복이 없고,
+    // 합계가 곧 총 출전 쿼터가 된다(비율 계산도 여기서 나온다).
     const posCounts: Record<PosGroup, number> = { GK: 0, DF: 0, MF: 0, FW: 0 };
     const posLineupCounts: Record<PosGroup, number> = { GK: 0, DF: 0, MF: 0, FW: 0 };
-    matchPlayerPos.forEach((posMap) => {
-      const set = posMap.get(name);
-      if (set) set.forEach((p) => (posCounts[p] += 1));
-    });
     lineupRows.forEach((r) => {
       const groups = groupsOfRow(r);
       for (let slot = 0; slot < 11; slot++) {
         if ((r[3 + slot] || "").trim() === name) {
+          posCounts[groups[slot]] += 1;
           posLineupCounts[groups[slot]] += 1;
         }
       }
@@ -461,26 +519,20 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
     const outfieldGroups = (["DF", "MF", "FW"] as PosGroup[]).filter((g) => posCounts[g] > 0);
     const allFourPositions =
       posCounts.GK > 0 && posCounts.DF > 0 && posCounts.MF > 0 && posCounts.FW > 0;
-    const fullbackMatchIds = new Set<number>();
+    // 풀백·센터백도 posCounts 와 같은 단위(쿼터)로 맞춘다.
+    // 한쪽만 경기 단위로 두면 "센터백 10경기 & MF 25쿼터" 같은 조건이 섞여 읽기 어렵다.
+    let fullbackGames = 0;
+    let centerbackGames = 0;
     lineupRows.forEach((r) => {
-      const matchId = Number(r[0]);
-      if (isNaN(matchId)) return;
+      if (isNaN(Number(r[0]))) return;
       const isFullback = defenderSlots(r, "fullback");
-      if (isFullback.some((yes, slot) => yes && (r[3 + slot] || "").trim() === name)) {
-        fullbackMatchIds.add(matchId);
-      }
-    });
-    const fullbackGames = fullbackMatchIds.size;
-    const centerbackMatchIds = new Set<number>();
-    lineupRows.forEach((r) => {
-      const matchId = Number(r[0]);
-      if (isNaN(matchId)) return;
       const isCenterback = defenderSlots(r, "centerback");
-      if (isCenterback.some((yes, slot) => yes && (r[3 + slot] || "").trim() === name)) {
-        centerbackMatchIds.add(matchId);
+      for (let slot = 0; slot < 11; slot++) {
+        if ((r[3 + slot] || "").trim() !== name) continue;
+        if (isFullback[slot]) fullbackGames += 1;
+        if (isCenterback[slot]) centerbackGames += 1;
       }
     });
-    const centerbackGames = centerbackMatchIds.size;
 
     // 매치 순회 집계
     let hatTricks = 0;
@@ -715,11 +767,13 @@ export function buildContexts(sheets: RawSheets): Map<string, PlayerContext> {
 const ratio = (part: number, total: number) => (total > 0 ? part / total : 0);
 
 export const TITLES: TitleDef[] = [
-  // ── 포지션 커리어 (출전수 등급)
-  { id: "career_gk", name: "골키퍼", icon: "hand", category: "포지션 커리어", state: "live", flagship: true, desc: "GK 출전 누적", tiers: [10, 20, 30, 40, 60], unit: "경기", value: (c) => c.posCounts.GK },
-  { id: "career_df", name: "수비수", icon: "shield-check", category: "포지션 커리어", state: "live", desc: "DF 출전 누적", tiers: [10, 20, 30, 40, 60], unit: "경기", value: (c) => c.posCounts.DF },
-  { id: "career_mf", name: "미드필더", icon: "footprints", category: "포지션 커리어", state: "live", desc: "MF 출전 누적", tiers: [10, 20, 30, 40, 60], unit: "경기", value: (c) => c.posCounts.MF },
-  { id: "career_fw", name: "공격수", icon: "goal", category: "포지션 커리어", state: "live", desc: "FW 출전 누적", tiers: [10, 20, 30, 40, 60], unit: "경기", value: (c) => c.posCounts.FW },
+  // ── 포지션 커리어 (출전 쿼터 등급)
+  // 단위가 경기가 아니라 **쿼터**다 — 한 경기에서 두 자리를 봐도 중복으로 세지 않는다.
+  // 통산 GOAT 160쿼터 ≈ 4시즌치. 한 시즌 주전이 한 포지션에서 35~40쿼터쯤 뛴다.
+  { id: "career_gk", name: "골키퍼", icon: "hand", category: "포지션 커리어", state: "live", flagship: true, desc: "GK 출전 누적", tiers: [10, 30, 60, 100, 160], unit: "쿼터", value: (c) => c.posCounts.GK },
+  { id: "career_df", name: "수비수", icon: "shield-check", category: "포지션 커리어", state: "live", desc: "DF 출전 누적", tiers: [10, 30, 60, 100, 160], unit: "쿼터", value: (c) => c.posCounts.DF },
+  { id: "career_mf", name: "미드필더", icon: "footprints", category: "포지션 커리어", state: "live", desc: "MF 출전 누적", tiers: [10, 30, 60, 100, 160], unit: "쿼터", value: (c) => c.posCounts.MF },
+  { id: "career_fw", name: "공격수", icon: "goal", category: "포지션 커리어", state: "live", desc: "FW 출전 누적", tiers: [10, 30, 60, 100, 160], unit: "쿼터", value: (c) => c.posCounts.FW },
 
   // ── 통산 스탯
   { id: "scorer", name: "골게터", icon: "volleyball", category: "통산 스탯", state: "live", flagship: true, desc: "통산 득점", tiers: [5, 15, 30, 50, 100], unit: "골", value: (c) => c.goals },
@@ -737,13 +791,13 @@ export const TITLES: TitleDef[] = [
   // ── 포지션 특성
   { id: "multiplayer", name: "멀티플레이어", icon: "shuffle", category: "포지션 특성", state: "live", flagship: true, flat: true, desc: "2개 포지션+ & 10경기+", check: (c) => c.posGroupsPlayed >= 2 && c.apps >= 10 },
   { id: "utility", name: "만능 유틸리티", icon: "boxes", category: "포지션 특성", state: "live", flagship: true, flat: true, desc: "전 포지션 경험", check: (c) => c.allFourPositions },
-  { id: "concrete", name: "콘크리트", icon: "brick-wall", category: "포지션 특성", state: "live", flat: true, desc: "DF 15경기+ & 출전 비율 80%+", check: (c) => c.posCounts.DF >= 15 && ratio(c.posCounts.DF, c.posSlotTotal) >= 0.8 },
-  { id: "fox", name: "폭스 인 더 박스", icon: "target", category: "포지션 특성", state: "live", flat: true, desc: "FW 10경기+ & 득점 5+", check: (c) => c.posCounts.FW >= 10 && c.goals >= 5 },
-  { id: "box2box", name: "박스 투 박스", icon: "footprints", category: "포지션 특성", state: "live", flat: true, desc: "MF 15경기+ & 3골·3도움+", check: (c) => c.posCounts.MF >= 15 && c.goals >= 3 && c.assists >= 3 },
+  { id: "concrete", name: "콘크리트", icon: "brick-wall", category: "포지션 특성", state: "live", flat: true, desc: "DF 24쿼터+ & 출전 비율 80%+", check: (c) => c.posCounts.DF >= 24 && ratio(c.posCounts.DF, c.posSlotTotal) >= 0.8 },
+  { id: "fox", name: "폭스 인 더 박스", icon: "target", category: "포지션 특성", state: "live", flat: true, desc: "FW 16쿼터+ & 득점 5+", check: (c) => c.posCounts.FW >= 16 && c.goals >= 5 },
+  { id: "box2box", name: "박스 투 박스", icon: "footprints", category: "포지션 특성", state: "live", flat: true, desc: "MF 24쿼터+ & 3골·3도움+", check: (c) => c.posCounts.MF >= 24 && c.goals >= 3 && c.assists >= 3 },
   { id: "lastman", name: "라스트맨", icon: "hand", category: "포지션 특성", state: "live", flat: true, desc: "GK 1경기+", check: (c) => c.playedGK },
   { id: "sweeperkeeper", name: "스위퍼 키퍼", icon: "hand-metal", category: "포지션 특성", state: "live", flat: true, desc: "GK 경험 & 도움 보유", check: (c) => c.playedGK && c.assists >= 1 },
-  { id: "attacking_fullback", name: "공격적인 윙백", icon: "trending-up", category: "포지션 특성", state: "live", flat: true, desc: "좌·우 풀백 10경기+ & 공격P 10+", check: (c) => c.fullbackGames >= 10 && c.points >= 10 },
-  { id: "attacking_centerback", name: "공격적인 센터백", icon: "shield-check", category: "포지션 특성", state: "live", flat: true, desc: "센터백 10경기+ & 공격P 8+", check: (c) => c.centerbackGames >= 10 && c.points >= 8 },
+  { id: "attacking_fullback", name: "공격적인 윙백", icon: "trending-up", category: "포지션 특성", state: "live", flat: true, desc: "좌·우 풀백 16쿼터+ & 공격P 10+", check: (c) => c.fullbackGames >= 16 && c.points >= 10 },
+  { id: "attacking_centerback", name: "공격적인 센터백", icon: "shield-check", category: "포지션 특성", state: "live", flat: true, desc: "센터백 16쿼터+ & 공격P 8+", check: (c) => c.centerbackGames >= 16 && c.points >= 8 },
 
   // ── 근성 · 출석
   { id: "streak", name: "연속출석", icon: "flame", category: "근성 · 출석", state: "live", flagship: true, desc: "최대 연속 참석", tiers: [3, 5, 10, 20, 40], unit: "연속", value: (c) => c.maxAttendStreak },
@@ -784,14 +838,14 @@ export const TITLES: TitleDef[] = [
   // 한 번이라도 5경기 이상 시점에서 경기당 1골을 찍었으면 계속 유지된다(peakGoalPerGame).
   { id: "laser", name: "레이저", icon: "crosshair", category: "히든", state: "live", hidden: true, flat: true, desc: "경기당 1골 이상 (최소 5경기)", check: (c) => (c.apps >= 5 && c.goalPerGame >= 1) || c.peakGoalPerGame >= 1 },
   { id: "duo", name: "찰떡궁합", icon: "heart-handshake", category: "히든", state: "live", hidden: true, flat: true, desc: "같은 선수에게 3회+ 어시스트", check: (c) => c.bestDuoAssists >= 3 },
-  { id: "overlap_machine", name: "오버래핑 머신", icon: "rocket", category: "히든", state: "live", hidden: true, flat: true, desc: "풀백 20경기+ & 도움 7+", check: (c) => c.fullbackGames >= 20 && c.assists >= 7 },
-  { id: "setpiece_nightmare", name: "세트피스의 악몽", icon: "crosshair", category: "히든", state: "live", hidden: true, flat: true, desc: "센터백 20경기+ & 득점 5+", check: (c) => c.centerbackGames >= 20 && c.goals >= 5 },
-  { id: "false_nine", name: "가짜 9번", icon: "shuffle", category: "히든", state: "live", hidden: true, flat: true, desc: "FW·MF 각 20경기+ & 도움 5+", check: (c) => c.posCounts.FW >= 20 && c.posCounts.MF >= 20 && c.assists >= 5 },
-  { id: "libero", name: "리베로", icon: "spline", category: "히든", state: "live", hidden: true, flat: true, desc: "센터백·MF 각 15경기+ & 공격P 8+", check: (c) => c.centerbackGames >= 15 && c.posCounts.MF >= 15 && c.points >= 8 },
-  { id: "shapeshifter", name: "포지션 파괴자", icon: "boxes", category: "히든", state: "live", hidden: true, flat: true, desc: "GK·DF·MF·FW 각 3경기+", check: (c) => c.posGroupsWithMin3 >= 4 },
-  { id: "underduck_cafu", name: "언더덕의 카푸", icon: "zap", category: "히든", state: "live", hidden: true, flat: true, desc: "풀백 20경기+ & 공격P 15+", check: (c) => c.fullbackGames >= 20 && c.points >= 15 },
-  { id: "scoring_wall", name: "벽이 골도 넣네", icon: "brick-wall", category: "히든", state: "live", hidden: true, flat: true, desc: "센터백 15경기+ & 공격P 10+", check: (c) => c.centerbackGames >= 15 && c.points >= 10 },
-  { id: "football_master", name: "축구 도사", icon: "sparkles", category: "히든", state: "live", hidden: true, flat: true, desc: "3개 포지션 각 10경기+ & 공격P 20+", check: (c) => Object.values(c.posCounts).filter((count) => count >= 10).length >= 3 && c.points >= 20 },
+  { id: "overlap_machine", name: "오버래핑 머신", icon: "rocket", category: "히든", state: "live", hidden: true, flat: true, desc: "풀백 32쿼터+ & 도움 7+", check: (c) => c.fullbackGames >= 32 && c.assists >= 7 },
+  { id: "setpiece_nightmare", name: "세트피스의 악몽", icon: "crosshair", category: "히든", state: "live", hidden: true, flat: true, desc: "센터백 32쿼터+ & 득점 5+", check: (c) => c.centerbackGames >= 32 && c.goals >= 5 },
+  { id: "false_nine", name: "가짜 9번", icon: "shuffle", category: "히든", state: "live", hidden: true, flat: true, desc: "FW·MF 각 32쿼터+ & 도움 5+", check: (c) => c.posCounts.FW >= 32 && c.posCounts.MF >= 32 && c.assists >= 5 },
+  { id: "libero", name: "리베로", icon: "spline", category: "히든", state: "live", hidden: true, flat: true, desc: "센터백·MF 각 24쿼터+ & 공격P 8+", check: (c) => c.centerbackGames >= 24 && c.posCounts.MF >= 24 && c.points >= 8 },
+  { id: "shapeshifter", name: "포지션 파괴자", icon: "boxes", category: "히든", state: "live", hidden: true, flat: true, desc: "GK·DF·MF·FW 각 3쿼터+", check: (c) => c.posGroupsWithMin3 >= 4 },
+  { id: "underduck_cafu", name: "언더덕의 카푸", icon: "zap", category: "히든", state: "live", hidden: true, flat: true, desc: "풀백 32쿼터+ & 공격P 15+", check: (c) => c.fullbackGames >= 32 && c.points >= 15 },
+  { id: "scoring_wall", name: "벽이 골도 넣네", icon: "brick-wall", category: "히든", state: "live", hidden: true, flat: true, desc: "센터백 24쿼터+ & 공격P 10+", check: (c) => c.centerbackGames >= 24 && c.points >= 10 },
+  { id: "football_master", name: "축구 도사", icon: "sparkles", category: "히든", state: "live", hidden: true, flat: true, desc: "3개 포지션 각 16쿼터+ & 공격P 20+", check: (c) => Object.values(c.posCounts).filter((count) => count >= 16).length >= 3 && c.points >= 20 },
   { id: "tactics_influencer", name: "전술 인플루언서", icon: "flame", category: "히든", state: "live", hidden: true, flat: true, desc: "전술게시판 글 좋아요 10개+", check: (c) => c.likesReceived >= 10 },
   { id: "like_fairy", name: "좋아요 요정", icon: "party-popper", category: "히든", state: "live", hidden: true, flat: true, desc: "전술게시판 좋아요 15번+ 누르기", check: (c) => c.likesGiven >= 15 },
   // 아래 3개는 전부 단조증가 조건 — 한 번 달성하면 다시 잃지 않는다.
@@ -799,6 +853,165 @@ export const TITLES: TitleDef[] = [
   { id: "total_onemanshow", name: "완전한 원맨쇼", icon: "wand-sparkles", category: "히든", state: "live", hidden: true, flat: true, desc: "한 경기 골+도움 5 이상", check: (c) => c.bestSingleGamePoints >= 5 },
   { id: "rain_master", name: "우중전 스페셜리스트", icon: "droplets", category: "히든", state: "live", hidden: true, flat: true, desc: "비 오는 날 2골+", check: (c) => c.goalsInRain >= 2 },
 ];
+
+// ───────────────────────── 시즌판 규칙 ─────────────────────────
+//
+// 위 TITLES 의 숫자는 전부 **통산 스케일**이다(골게터 GOAT 100골, 철인 200경기,
+// 포지션 커리어 60경기). 한 시즌은 20~25경기라 같은 표를 시즌 기록에 그대로 대면
+// 거의 모두가 "루키" 한두 개에서 멈춘다 — 시즌마다 다시 등반할 거리가 없어진다.
+//
+// 그래서 통산 표는 **한 글자도 건드리지 않고**(아무도 가진 칭호를 잃지 않는다)
+// 시즌 전용 컷만 여기 따로 둔다. 기준은 한 시즌 ≈ 24경기.
+//
+// 여기 없는 칭호는 자동으로 처리된다:
+//   · 등급형 → tiers 를 SEASON_FACTOR 로 축소 (scaleSeasonTiers)
+//   · 달성형 → check 를 그대로 사용 (한 경기 단발·경험형은 시즌에도 그대로 말이 된다)
+// 새 칭호를 추가할 때 시즌 컷을 안 정해도 일단 돌아가고, 어색하면 여기 한 줄 넣는다.
+
+interface SeasonOverride {
+  /** 시즌 등급 컷 (등급형). */
+  tiers?: number[];
+  /** 시즌 등급 라벨 (해트트릭처럼 라벨에 숫자가 박힌 칭호). */
+  tierLabels?: string[];
+  /** 시즌 달성 조건 (달성형). */
+  check?: (c: PlayerContext) => boolean;
+  /** 시즌 달성 조건 설명 — 칭호 도감에 그대로 나간다. check 를 바꿨으면 반드시 같이 쓴다. */
+  desc?: string;
+  /** 시즌 칭호에서 통째로 뺀다. 이유를 반드시 주석으로 남길 것. */
+  hide?: true;
+}
+
+const SEASON_OVERRIDES: Record<string, SeasonOverride> = {
+  // ── 컷을 정한 근거 ──────────────────────────────────────────────
+  // 2026-09 시점 25-26 시즌 실측(30경기, 2026-02-21 ~ 09-19, 선수 35명).
+  // 상위 10명 분포:
+  //   출전   29 28 27 26 26 24 23 22 19 17     골     13 11 7 6 6 4 4 3 2 2
+  //   도움    7  6  4  4  4  2  2  2  1  1     MOM     4  3 3 3 3 3 3 3 2 2
+  //   공격P  15 15 13 11 10  8  5  4  4  4     연속출석 29 20 20 18 15 12 11 10 9 8
+  //   승수    6  6  6  6  5  5  5  5  5  4     (팀 6승 1무 18패 — 승리 계열 천장이 낮다)
+  //   멀티골  3  3  2  1  1  1  1              멀티도움 2 1 1 1 1
+  //   해트트릭 1                                한 경기 최고 4P
+  //   포지션 쿼터: GK 57 | DF 39 33 32 29 22 | MF 36 33 33 31 29 | FW 32 14 8 8 7
+  //   풀백 쿼터 31 28 22 9 9 | 센터백 쿼터 39 29 14 9 8
+  //   ⚠️ 포지션 계열은 전부 **쿼터** 단위다(경기 아님). PlayerContext.posCounts 참고.
+  //
+  // 목표 인원: GOAT 0~1명 · 프로 2~3명 · 준프로 ~5명 · 아마추어 ~8명 · 루키 기록 있으면.
+  // GOAT 는 "그 시즌 1위가 겨우 닿거나 아직 못 닿은" 자리다 — 꾸준히 나오기만 해서
+  // 받게 두면 안 된다(그래서 출전·투표·연속출석 계열을 특히 높게 잡았다).
+  //
+  // ⚠️ 시즌 경기 수가 크게 달라지면(예: 40경기) 참가형 컷을 다시 봐야 한다.
+  //    절대값이라 경기가 늘면 저절로 쉬워진다.
+  // ───────────────────────────────────────────────────────────────
+
+  // ── 포지션 커리어 — 한 포지션에서 몇 **쿼터**나 뛰었나.
+  // 실측 시즌 쿼터: GK 57 | DF 39 33 32 29 22 | MF 36 33 33 31 29 | FW 32 14 8 8 7
+  // → 이 컷이면 GOAT 는 포지션마다 1명(GK 박영휘 · DF 공도하 · MF 김준수 · FW 0명).
+  career_gk: { tiers: [4, 10, 18, 26, 36] },
+  career_df: { tiers: [4, 10, 18, 26, 36] },
+  career_mf: { tiers: [4, 10, 18, 26, 36] },
+  career_fw: { tiers: [4, 10, 18, 26, 36] },
+
+  // ── 시즌 스탯
+  scorer: { tiers: [1, 3, 6, 10, 14] },      // 실측 최고 13 → GOAT 는 기록 경신
+  playmaker: { tiers: [1, 2, 4, 6, 8] },     // 실측 최고 7
+  mvp: { tiers: [1, 2, 3, 4, 6] },           // 실측 최고 4
+  ironman_apps: { tiers: [5, 12, 19, 25, 29] }, // 30경기 중 29 = 1명뿐
+  points: { tiers: [2, 5, 9, 13, 18] },      // 실측 최고 15
+
+  // ── 한 경기 폭발 — 라벨에 횟수가 박혀 있어 라벨도 같이 바꾼다.
+  hattrick: { tiers: [1, 2, 3, 4, 5], tierLabels: ["첫 해트트릭", "2회", "3회", "4회", "5회"] },
+  multigoal: { tiers: [1, 2, 3, 5, 7] },     // 실측 최고 3
+  multiassist: { tiers: [1, 2, 3, 4, 6] },   // 실측 최고 2
+
+  // ── 포지션 특성
+  multiplayer: { check: (c) => c.posGroupsPlayed >= 2 && c.apps >= 6, desc: "2개 포지션+ & 6경기+" },
+  concrete: { check: (c) => c.posCounts.DF >= 18 && ratio(c.posCounts.DF, c.posSlotTotal) >= 0.8, desc: "DF 18쿼터+ & 출전 비율 80%+" },
+  fox: { check: (c) => c.posCounts.FW >= 8 && c.goals >= 4, desc: "FW 8쿼터+ & 득점 4+" },
+  box2box: { check: (c) => c.posCounts.MF >= 18 && c.goals >= 2 && c.assists >= 2, desc: "MF 18쿼터+ & 2골·2도움+" },
+  attacking_fullback: { check: (c) => c.fullbackGames >= 12 && c.points >= 5, desc: "좌·우 풀백 12쿼터+ & 공격P 5+" },
+  attacking_centerback: { check: (c) => c.centerbackGames >= 12 && c.points >= 4, desc: "센터백 12쿼터+ & 공격P 4+" },
+
+  // ── 근성 · 출석 — 여기가 가장 쉬웠던 곳이다. 실측 연속출석 29/20/20/18/15…
+  streak: { tiers: [3, 7, 12, 18, 25] },
+  captain: { tiers: [3, 8, 14, 20, 27] },
+  // "새내기"는 데뷔 시점을 가리키는 통산 개념이다. 시즌마다 새내기가 되면 뜻이 없다.
+  rookie: { hide: true },
+
+  // ── 맞대결 · 승부 — 팀이 6승뿐이라 승리 계열 천장이 낮다.
+  cleansheet: { tiers: [1, 2, 3, 4, 6] },
+  winfairy: { tiers: [1, 2, 4, 6, 9] },      // 실측 최고 6
+  invincible: { check: (c) => c.apps >= 8 && c.winRate >= 0.7, desc: "8경기+ & 승률 70%+" },
+
+  // ── 대시보드 활동 — 투표는 경기당 1회라 "빠짐없이 눌렀나" 가 곧 상한이다.
+  voter: { tiers: [3, 8, 15, 22, 28] },
+  chatter: { tiers: [3, 10, 20, 35, 60] },
+  activeking: { tiers: [10, 25, 50, 85, 140] },
+
+  // ── 언성히어로 · 반전
+  unsung: { check: (c) => c.apps >= 10 && c.points === 0, desc: "출전 10+ 인데 공격P 0" },
+  loyalty: { check: (c) => c.points === 0 && c.apps >= 18, desc: "공격P 0 & 출전 18+" },
+  devotion: { check: (c) => c.assists > c.goals && c.assists >= 4, desc: "도움>골 & 도움 4+" },
+
+  // ── 히든
+  // 데뷔전 득점은 커리어에 한 번뿐이다. 시즌마다 다시 데뷔할 수는 없다.
+  firstblood: { hide: true },
+  duo: { check: (c) => c.bestDuoAssists >= 2, desc: "같은 선수에게 2회+ 어시스트" },
+  overlap_machine: { check: (c) => c.fullbackGames >= 22 && c.assists >= 4, desc: "풀백 22쿼터+ & 도움 4+" },
+  setpiece_nightmare: { check: (c) => c.centerbackGames >= 22 && c.goals >= 3, desc: "센터백 22쿼터+ & 득점 3+" },
+  false_nine: { check: (c) => c.posCounts.FW >= 14 && c.posCounts.MF >= 14 && c.assists >= 3, desc: "FW·MF 각 14쿼터+ & 도움 3+" },
+  libero: { check: (c) => c.centerbackGames >= 18 && c.posCounts.MF >= 18 && c.points >= 4, desc: "센터백·MF 각 18쿼터+ & 공격P 4+" },
+  shapeshifter: { check: (c) => c.posGroupsWithMin3 >= 4 },
+  underduck_cafu: { check: (c) => c.fullbackGames >= 22 && c.points >= 8, desc: "풀백 22쿼터+ & 공격P 8+" },
+  scoring_wall: { check: (c) => c.centerbackGames >= 18 && c.points >= 5, desc: "센터백 18쿼터+ & 공격P 5+" },
+  football_master: {
+    check: (c) => Object.values(c.posCounts).filter((count) => count >= 10).length >= 3 && c.points >= 10,
+    desc: "3개 포지션 각 10쿼터+ & 공격P 10+",
+  },
+  // 히든은 특별해야 한다. 연속 10회는 실측 8명이라 히든 자격이 없었다.
+  perfect_attendance: { check: (c) => c.maxAttendStreak >= 20, desc: "연속 출석 20회+" },
+  // 전술게시판 글/좋아요에는 날짜가 없다(backend.getBoardPostRows 는 author+count 만 준다).
+  // 시즌으로 쪼갤 근거가 없으므로 통산 칭호로만 둔다.
+  tactics_influencer: { hide: true },
+  like_fairy: { hide: true },
+};
+
+/** 칭호 하나의 시즌 규칙 — 칭호 도감이 통산 옆에 나란히 보여 준다. */
+export interface SeasonRule {
+  /** 시즌 칭호에서 빠지는가(통산 전용 개념이거나 날짜가 없어 시즌으로 못 쪼갬). */
+  excluded: boolean;
+  /** 등급형 시즌 컷. */
+  tiers?: number[];
+  tierLabels?: string[];
+  /** 달성형 시즌 조건. 통산과 같으면 undefined. */
+  desc?: string;
+}
+
+/** 칭호 id → 시즌 규칙. */
+export function seasonRuleOf(id: string): SeasonRule {
+  const def = TITLES.find((d) => d.id === id);
+  const o = SEASON_OVERRIDES[id];
+  if (!def || o?.hide) return { excluded: true };
+  return {
+    excluded: false,
+    tiers: def.tiers ? (o?.tiers ?? scaleSeasonTiers(def.tiers)) : undefined,
+    tierLabels: o?.tierLabels ?? def.tierLabels,
+    desc: o?.desc,
+  };
+}
+
+/**
+ * 시즌 기록으로 평가할 칭호 목록. evaluatePlayer(ctx, SEASON_TITLES) 로 쓴다.
+ * 통산은 그대로 TITLES 를 쓴다 — 두 집합은 서로 간섭하지 않는다.
+ */
+export const SEASON_TITLES: TitleDef[] = TITLES.filter((d) => !SEASON_OVERRIDES[d.id]?.hide).map((d) => {
+  const o = SEASON_OVERRIDES[d.id];
+  return {
+    ...d,
+    ...(d.tiers ? { tiers: o?.tiers ?? scaleSeasonTiers(d.tiers) } : {}),
+    ...(o?.tierLabels ? { tierLabels: o.tierLabels } : {}),
+    ...(o?.check ? { check: o.check } : {}),
+  };
+});
 
 // ───────────────────────── 평가 ─────────────────────────
 
@@ -915,12 +1128,15 @@ export interface LeaderDef {
   min: number; // 이 값 미만이면 아무에게도 안 줌 (예: 0골 1위는 무의미)
 }
 
+// 리더는 **시즌 기록**으로 뽑는다([[titles-cache]] 가 시즌 컨텍스트로 evaluateLeaders 를 부른다).
+// "팀 내 1위" 는 지금 달리고 있는 순위를 가리키는 말이고, 그게 곧 /stats 순위표와 같아야 한다.
+// 통산 1위를 따로 주지는 않는다 — 왕관이 두 종류가 되면 어느 쪽이 진짜인지 흐려진다.
 export const LEADER_TITLES: LeaderDef[] = [
-  { id: "lead_apps", name: "최다 출전", icon: "medal", desc: "팀 내 최다 출전", value: (c) => c.apps, min: 1 },
-  { id: "lead_goals", name: "득점왕", icon: "crown", desc: "팀 내 최다 득점", value: (c) => c.goals, min: 1 },
-  { id: "lead_assists", name: "도움왕", icon: "award", desc: "팀 내 최다 도움", value: (c) => c.assists, min: 1 },
-  { id: "lead_points", name: "공격포인트왕", icon: "trophy", desc: "팀 내 최다 공격포인트", value: (c) => c.points, min: 1 },
-  { id: "lead_cleansheet", name: "클린시트왕", icon: "shield-check", desc: "팀 내 최다 클린시트", value: (c) => c.cleanSheetsAsGK, min: 1 },
+  { id: "lead_apps", name: "최다 출전", icon: "medal", desc: "시즌 팀 내 최다 출전", value: (c) => c.apps, min: 1 },
+  { id: "lead_goals", name: "득점왕", icon: "crown", desc: "시즌 팀 내 최다 득점", value: (c) => c.goals, min: 1 },
+  { id: "lead_assists", name: "도움왕", icon: "award", desc: "시즌 팀 내 최다 도움", value: (c) => c.assists, min: 1 },
+  { id: "lead_points", name: "공격포인트왕", icon: "trophy", desc: "시즌 팀 내 최다 공격포인트", value: (c) => c.points, min: 1 },
+  { id: "lead_cleansheet", name: "클린시트왕", icon: "shield-check", desc: "시즌 팀 내 최다 클린시트", value: (c) => c.cleanSheetsAsGK, min: 1 },
 ];
 
 /** 전체 선수를 비교해 각 부문 1위(동률 공동)에게 리더 칭호 수여 → 선수명별 목록 */
@@ -1137,22 +1353,48 @@ export function topTitles(earned: EarnedTitle[], n = 3): EarnedTitle[] {
  * 라인업 표시용 N개: 본인이 고른 대표(featuredIds)를 순서대로 먼저,
  * 빈 칸은 이미 고른 걸 제외하고 희귀도 상위 칭호로 자동 채움. 대표가 없으면 전부 자동.
  */
+// ───────────────────────── 대표 칭호 키 ─────────────────────────
+//
+// featured 테이블은 문자열 3개(title_id1..3)만 들고 있어서 "어느 시즌 칭호냐"를
+// 구분할 수가 없었다. 시즌 칭호는 휘발성이라(26-27 득점왕이어도 27-28엔 사라진다)
+// 시즌을 같이 적어야 "그때 내가 득점왕이었다"가 프로필에 남는다.
+//
+//   career:scorer            통산 골게터
+//   season:2627:lead_goals   26-27 득점왕 — 시즌이 지나도 그 시즌 기록은 안 변하므로 영구
+//
+// 접두사가 없는 옛 값("scorer")은 통산으로 읽는다 → 마이그레이션이 필요 없다.
+
+/** 칭호 → 대표 저장 키. */
+export function featureKey(t: EarnedTitle): string {
+  return t.scope === "season" && t.seasonId
+    ? `season:${t.seasonId}:${t.id}`
+    : `career:${t.id}`;
+}
+
+/** 저장된 값 → 정규화된 키. 접두사 없는 옛 값은 통산으로 본다. */
+export function normalizeFeatureKey(raw: string): string {
+  const v = (raw || "").trim();
+  if (!v) return "";
+  return v.startsWith("season:") || v.startsWith("career:") ? v : `career:${v}`;
+}
+
 export function pickBadges(
   earned: EarnedTitle[],
   featuredIds: string[] | undefined,
   n = 3
 ): EarnedTitle[] {
-  const byId = new Map(earned.map((t) => [t.id, t]));
+  // 같은 칭호 id 가 시즌판·통산판으로 둘 다 있을 수 있어 id 가 아니라 키로 찾는다.
+  const byKey = new Map(earned.map((t) => [featureKey(t), t]));
   const picked = (featuredIds ?? [])
-    .map((id) => byId.get(id))
+    .map((id) => byKey.get(normalizeFeatureKey(id)))
     .filter((t): t is EarnedTitle => !!t)
     .slice(0, n);
 
   if (picked.length >= n) return picked;
 
-  const pickedIds = new Set(picked.map((t) => t.id));
+  const pickedKeys = new Set(picked.map(featureKey));
   const fill = topTitles(
-    earned.filter((t) => !pickedIds.has(t.id)),
+    earned.filter((t) => !pickedKeys.has(featureKey(t))),
     n - picked.length
   );
   return [...picked, ...fill];

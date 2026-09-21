@@ -51,14 +51,14 @@ export default function ProfileTabs({
               onClick={() => setTab(key)}
               className={`relative flex min-h-14 flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black transition-colors ${
                 on
-                  ? "text-[#FF8FA3] dark:text-[#FFB6C1]"
+                  ? "text-[var(--ud-primary)]"
                   : "text-gray-300 dark:text-white/25"
               }`}
             >
               <Icon width={19} height={19} strokeWidth={on ? 2.4 : 2} />
               <span>{label}</span>
               {on && (
-                <span className="absolute inset-x-0 bottom-0 mx-auto h-0.5 w-8 rounded-full bg-[#FF8FA3] dark:bg-[#FFB6C1]" />
+                <span className="absolute inset-x-0 bottom-0 mx-auto h-0.5 w-8 rounded-full bg-[var(--ud-primary)]" />
               )}
             </button>
           );

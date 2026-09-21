@@ -192,7 +192,7 @@ export default function MatchRow({
             </span>
             <span
               className={`shrink-0 text-[11px] font-black ${
-                upcoming ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : resultTextTone(match.result)
+                upcoming ? "text-[var(--ud-primary)]" : resultTextTone(match.result)
               }`}
             >
               {upcoming && dDay !== null
@@ -240,7 +240,7 @@ export default function MatchRow({
                 {unseenFeedback && (
                   <span
                     aria-label="새 댓글"
-                    className="h-1.5 w-1.5 rounded-full bg-[#FF8FA3] dark:bg-[#FFB6C1]"
+                    className="h-1.5 w-1.5 rounded-full bg-[var(--ud-primary)]"
                   />
                 )}
               </Meta>

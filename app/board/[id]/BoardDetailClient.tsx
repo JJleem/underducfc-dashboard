@@ -249,7 +249,7 @@ export default function BoardDetailClient({
         <h1 className="app-header-label truncate">BOARD</h1>
         <div className="ml-auto flex items-center">
           {admin && (
-            <button onClick={togglePin} disabled={pinBusy} className={`-my-2.5 flex h-11 w-11 items-center justify-center rounded-full active:opacity-60 ${pinned ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : "text-gray-400"}`} aria-label={pinned ? "고정 해제" : "글 고정"}>
+            <button onClick={togglePin} disabled={pinBusy} className={`-my-2.5 flex h-11 w-11 items-center justify-center rounded-full active:opacity-60 ${pinned ? "text-[var(--ud-primary)]" : "text-gray-400"}`} aria-label={pinned ? "고정 해제" : "글 고정"}>
               <Pin className={`h-4 w-4 ${pinned ? "fill-current" : ""}`} />
             </button>
           )}
@@ -274,7 +274,7 @@ export default function BoardDetailClient({
                     onClick={() => setQuarterIdx(i)}
                     className={`min-h-9 shrink-0 rounded-xl px-3 text-[11px] font-black transition-colors ${
                       quarterIdx === i
-                        ? "bg-[#FF8FA3] text-white dark:bg-[#FFB6C1] dark:text-black"
+                        ? "bg-[var(--ud-primary)] text-white dark:bg-[var(--ud-primary)] dark:text-black"
                         : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
                     }`}
                   >
@@ -350,7 +350,7 @@ export default function BoardDetailClient({
 
         {/* 제목/작성자/본문 */}
         {pinned && (
-          <div className="mt-3 flex items-center gap-1 text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+          <div className="mt-3 flex items-center gap-1 text-[11px] font-black text-[var(--ud-primary)]">
             <Pin className="h-3 w-3 fill-current" />
             고정된 게시글
           </div>
@@ -359,7 +359,7 @@ export default function BoardDetailClient({
         <p className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-gray-500 dark:text-gray-400">
           <span>{post.author} · {fmt(post.createdAt)}</span>
           {post.updatedAt && (
-            <span className="font-bold text-[#FF8FA3] dark:text-[#FFB6C1]">
+            <span className="font-bold text-[var(--ud-primary)]">
               · {fmt(post.updatedAt)} 수정됨
             </span>
           )}
@@ -379,7 +379,7 @@ export default function BoardDetailClient({
             onClick={toggleLike}
             className={`flex min-h-11 items-center gap-1.5 rounded-full px-3 text-[13px] font-black transition-colors ${
               liked
-                ? "bg-[#FF8FA3]/10 text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
+                ? "bg-[var(--ud-primary)]/10 text-[var(--ud-primary)] dark:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)]"
                 : "bg-gray-100 text-gray-500 active:opacity-70 dark:bg-white/5 dark:text-gray-400"
             }`}
           >

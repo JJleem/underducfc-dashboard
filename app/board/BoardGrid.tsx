@@ -118,14 +118,14 @@ function Cell({ post }: { post: BoardPost }) {
 
       {/* 고정 핀 — 오른쪽 위 */}
       {post.pinned && (
-        <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#FF8FA3] text-white">
+        <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--ud-primary)] text-white">
           <Pin width={10} height={10} strokeWidth={2.6} className="fill-current" />
         </span>
       )}
 
       {/* NEW · 수정 — 고정 핀이 있으면 아래로 밀어준다 */}
       {fresh ? (
-        <span className={`absolute right-1.5 ${post.pinned ? "top-8" : "top-1.5"} rounded bg-[#FF8FA3] px-1.5 py-0.5 text-[9px] font-black tracking-wide text-white`}>
+        <span className={`absolute right-1.5 ${post.pinned ? "top-8" : "top-1.5"} rounded bg-[var(--ud-primary)] px-1.5 py-0.5 text-[9px] font-black tracking-wide text-white`}>
           NEW
         </span>
       ) : edited ? (
@@ -156,7 +156,7 @@ function Cell({ post }: { post: BoardPost }) {
                 width={9}
                 height={9}
                 strokeWidth={2.6}
-                className={post.likedByMe ? "fill-current text-[#FFB6C1]" : ""}
+                className={post.likedByMe ? "fill-current text-[var(--ud-primary)]" : ""}
               />
               <span className="tabular-nums">{post.likeCount}</span>
             </span>

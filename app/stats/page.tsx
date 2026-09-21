@@ -3,14 +3,23 @@
 // 홈의 탭 안에 있던 걸 페이지로 뺐다. 탭이 홈 안에 있으면 주소가 안 생겨서
 // 공유도 뒤로가기도 안 되고, 하단 탭바의 "스탯"과 상단 탭이 이중으로 겹쳤다.
 
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, Swords } from "lucide-react";
 import { getMatchesRows } from "../lib/matches-backend";
 import { getRosterRows, getStatsRows } from "../lib/backend";
 import { bestDuos, seasonSummary, type StatMatch } from "../lib/team-stats";
+import {
+  isInSeason,
+  resolveSeasonId,
+  seasonAccent,
+  seasonsWithMatches,
+} from "../lib/seasons";
 import PageHeader from "../components/home/PageHeader";
 import PlayerFace from "../components/PlayerFace";
+import SeasonEmpty from "../components/SeasonEmpty";
+import SeasonSelector from "../components/SeasonSelector";
 import StatsTable, { type PlayerStat } from "./StatsTable";
 
 export const dynamic = "force-dynamic";
@@ -20,26 +29,42 @@ export const metadata: Metadata = {
   description: "언더덕 FC 시즌 기록과 선수별 기록",
 };
 
-export default async function StatsPage() {
+export default async function StatsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ season?: string }>;
+}) {
+  // 모르는 ?season= 값은 조용히 현재 시즌으로 떨어진다.
+  const season = resolveSeasonId((await searchParams).season);
+
   const [rawMatches, rawStats, rawRoster] = await Promise.all([
     getMatchesRows(),
-    getStatsRows().catch((): string[][] => []),
+    // 선수 순위는 백엔드가 그 시즌 경기만 집계해서 준다.
+    getStatsRows(season).catch((): string[][] => []),
     getRosterRows().catch((): string[][] => []),
   ]);
 
-  const matches: StatMatch[] = rawMatches.slice(1).map((r) => ({
-    result: r[6] || "예정",
-    type: r[7] || "일반 매칭",
-    opponent: r[3] || "",
-    location: r[2] || "",
-    ourScore: r[4] || "-",
-    theirScore: r[5] || "-",
-    goals: r[8] || "",
-    assists: r[9] || "",
-  }));
+  const accent = seasonAccent(season);
+  const seasonsPlayed = [...seasonsWithMatches(rawMatches)];
+
+  const matches: StatMatch[] = rawMatches
+    .slice(1)
+    .filter((r) => isInSeason(r[0], season))
+    .map((r) => ({
+      result: r[6] || "예정",
+      type: r[7] || "일반 매칭",
+      opponent: r[3] || "",
+      location: r[2] || "",
+      ourScore: r[4] || "-",
+      theirScore: r[5] || "-",
+      goals: r[8] || "",
+      assists: r[9] || "",
+    }));
 
   const summary = seasonSummary(matches);
   const duos = bestDuos(matches);
+  // 치른 경기도 기록도 없는 시즌 — 0경기 0% 를 띄우는 대신 왜 비었는지 말해 준다.
+  const isEmpty = summary.played === 0;
 
   // 로스터에 있는 선수만 (기존 홈과 같은 기준)
   const roster = new Map<string, { no: string; pos: string; status: string }>();
@@ -74,14 +99,33 @@ export default async function StatsPage() {
   const total = Math.max(summary.played, 1);
 
   return (
-    <main className="relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100">
-      <PageHeader label="STATS" />
+    <main
+      className="season-scope relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100"
+      // 라이트/다크 두 값을 같이 내려주고 globals.css 가 테마에 맞는 쪽을 고른다
+      // (서버 컴포넌트라 여기서는 테마를 알 수 없다).
+      style={{ "--season-light": accent.light, "--season-dark": accent.dark } as CSSProperties}
+    >
+      <PageHeader
+        label="STATS"
+        right={<SeasonSelector current={season} withMatches={seasonsPlayed} />}
+      />
 
+      {/* 기록이 한 건도 없는 시즌이면 0경기 0% 대신 왜 비었는지를 보여 준다. */}
+      {isEmpty ? (
+        <SeasonEmpty
+          seasonId={season}
+          accent="var(--season)"
+          basePath="/stats"
+          withMatches={seasonsPlayed}
+        />
+      ) : (
+        <>
       {/* 시즌 요약 — 카드로 감싸지 않는다. 프로필 히어로와 같은 문법. */}
       <section className="relative overflow-hidden px-4 pt-5">
+        {/* 글로우는 시즌 대표색. 지금 어느 시즌을 보는지 라벨을 안 읽어도 알게 된다. */}
         <div
-          className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[#FF8FA3]"
-          style={{ opacity: 0.15, filter: "blur(46px)" }}
+          className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full"
+          style={{ background: "var(--season)", opacity: 0.15, filter: "blur(46px)" }}
         />
         <div className="relative">
           <p className="text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-white/35">
@@ -90,21 +134,21 @@ export default async function StatsPage() {
           <div className="mt-2 flex items-end justify-between gap-3">
             <p className="text-[21px] font-black leading-none tracking-[-0.035em] text-gray-900 dark:text-white">
               <span className="tabular-nums">{summary.played}</span>경기{" "}
-              <span className="tabular-nums text-[#FF8FA3] dark:text-[#FFB6C1]">{summary.wins}</span>
+              <span className="season-accent tabular-nums">{summary.wins}</span>
               <span className="text-gray-400 dark:text-white/35">승 </span>
               <span className="tabular-nums">{summary.draws}</span>
               <span className="text-gray-400 dark:text-white/35">무 </span>
               <span className="tabular-nums">{summary.losses}</span>
               <span className="text-gray-400 dark:text-white/35">패</span>
             </p>
-            <p className="shrink-0 text-[34px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums text-[#FF8FA3] dark:text-[#FFB6C1]">
+            <p className="season-accent shrink-0 text-[34px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums">
               {summary.winRate}%
             </p>
           </div>
 
           <div className="mt-3.5 flex h-[7px] overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
             {summary.wins > 0 && (
-              <div className="bg-[#FF8FA3]" style={{ width: `${(summary.wins / total) * 100}%` }} />
+              <div style={{ background: "var(--season)", width: `${(summary.wins / total) * 100}%` }} />
             )}
             {summary.draws > 0 && (
               <div className="bg-amber-400" style={{ width: `${(summary.draws / total) * 100}%` }} />
@@ -138,11 +182,15 @@ export default async function StatsPage() {
       </section>
 
       {/* 전적 페이지로 */}
+      {/* 전적으로 넘어갈 때 보던 시즌을 그대로 들고 간다 */}
       <Link
-        href="/record"
+        href={`/record?season=${season}`}
         className="mx-4 mt-5 flex items-center gap-3 border-y border-gray-200 py-3.5 active:opacity-60 dark:border-white/[0.08]"
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FF8FA3]/10 text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]">
+        <span
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+          style={{ background: "color-mix(in srgb, var(--season) 10%, transparent)", color: "var(--season)" }}
+        >
           <Swords width={16} height={16} strokeWidth={2.4} />
         </span>
         <span className="min-w-0 flex-1">
@@ -191,6 +239,8 @@ export default async function StatsPage() {
       )}
 
       <StatsTable players={players} />
+        </>
+      )}
     </main>
   );
 }

@@ -15,15 +15,15 @@ export default function Loading() {
       <main className="pb-28">
         <section className="relative overflow-hidden px-4 pb-5 pt-5">
           <div
-            className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[#FF8FA3]"
+            className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[var(--ud-primary)]"
             style={{ opacity: 0.1, filter: "blur(46px)" }}
           />
           <div className="relative">
-            <div className="h-2.5 w-24 rounded bg-[#FF8FA3]/15 skeleton-shimmer" />
+            <div className="h-2.5 w-24 rounded bg-[var(--ud-primary)]/15 skeleton-shimmer" />
             <div className={`mt-3 h-7 w-40 rounded-md ${SHIMMER}`} />
             <div className={`mt-2 h-3 w-32 rounded ${SOFT}`} />
             <div className="mt-4 flex gap-3">
-              <div className="h-2.5 w-12 rounded bg-[#FF8FA3]/15 skeleton-shimmer" />
+              <div className="h-2.5 w-12 rounded bg-[var(--ud-primary)]/15 skeleton-shimmer" />
               <div className={`h-2.5 w-12 rounded ${SOFT}`} />
             </div>
           </div>

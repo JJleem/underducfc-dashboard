@@ -45,7 +45,7 @@ function ResultMark({ match }: { match: RecordMatch }) {
   const result = matchResult(match);
   const style =
     result === "승"
-      ? "bg-[#FF8FA3] text-white dark:bg-[#FFB6C1] dark:text-[#251116]"
+      ? "bg-[var(--ud-primary)] text-white dark:bg-[var(--ud-primary)] dark:text-[#251116]"
       : result === "무"
         ? "bg-amber-400 text-white dark:bg-amber-300 dark:text-amber-950"
         : "bg-gray-200 text-gray-500 dark:bg-white/10 dark:text-white/45";
@@ -93,7 +93,7 @@ function MatchHistory({ group, view }: { group: RecordGroup; view: View }) {
             <span
               className={`w-5 shrink-0 text-center text-[10px] font-black ${
                 result === "승"
-                  ? "text-[#FF8FA3] dark:text-[#FFB6C1]"
+                  ? "text-[var(--ud-primary)]"
                   : result === "무"
                     ? "text-amber-500"
                     : "text-gray-400 dark:text-white/30"

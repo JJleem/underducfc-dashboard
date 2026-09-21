@@ -52,7 +52,7 @@ const TIMES = [
 
 /** 결과 칩 색. 기존 홈과 같은 배색. */
 const RESULT_TONE: Record<string, string> = {
-  승: "bg-[#FF8FA3] text-white dark:bg-[#FFB6C1] dark:text-black",
+  승: "bg-[var(--ud-primary)] text-white dark:bg-[var(--ud-primary)] dark:text-black",
   패: "bg-gray-500 text-white",
   무: "bg-amber-400 text-white",
   자체전: "bg-violet-400 text-white",
@@ -67,7 +67,7 @@ const FIELD =
   "app-field-surface app-control-md w-full rounded-xl px-4 py-2.5 font-medium";
 const LABEL = "mb-2 text-[10px] font-semibold tracking-widest text-gray-400";
 const CHIP = "rounded-xl px-3 py-1.5 text-[11px] font-black transition-colors";
-const CHIP_ON = "bg-[#FF8FA3] text-white dark:bg-[#FFB6C1] dark:text-black";
+const CHIP_ON = "bg-[var(--ud-primary)] text-white dark:bg-[var(--ud-primary)] dark:text-black";
 const CHIP_OFF = "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300";
 
 export default function MatchEditor({
@@ -200,7 +200,7 @@ export default function MatchEditor({
                 }}
               />
               {date && (
-                <p className="mt-1.5 text-center text-[11px] font-black text-[#FF8FA3] dark:text-[#FFB6C1]">
+                <p className="mt-1.5 text-center text-[11px] font-black text-[var(--ud-primary)]">
                   {date} 선택됨
                 </p>
               )}
@@ -329,7 +329,7 @@ export default function MatchEditor({
                 <div>
                   <p className={LABEL}>
                     참석자{" "}
-                    <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{attendees.size}명</span>
+                    <span className="text-[var(--ud-primary)]">{attendees.size}명</span>
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {roster.map((name) => (
@@ -355,7 +355,7 @@ export default function MatchEditor({
                     <div className="mb-2 flex items-center justify-between">
                       <p className="text-[10px] font-semibold tracking-widest text-gray-400">
                         골 기록{" "}
-                        <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{goalEvents.length}골</span>
+                        <span className="text-[var(--ud-primary)]">{goalEvents.length}골</span>
                       </p>
                       {!pickerOpen && (
                         <button
@@ -365,7 +365,7 @@ export default function MatchEditor({
                             setPickScorer("");
                             setPickAssister("");
                           }}
-                          className="flex items-center gap-1 rounded-lg bg-[#FF8FA3]/10 px-2.5 py-1 text-[11px] font-black text-[#FF8FA3] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
+                          className="flex items-center gap-1 rounded-lg bg-[var(--ud-primary)]/10 px-2.5 py-1 text-[11px] font-black text-[var(--ud-primary)] dark:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)]"
                         >
                           <Plus width={12} height={12} strokeWidth={2.6} /> 골 추가
                         </button>

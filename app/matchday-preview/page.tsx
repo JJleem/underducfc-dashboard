@@ -85,7 +85,7 @@ function PreviewCard({
 
       <div
         className="relative flex aspect-square w-full flex-col items-center justify-center overflow-hidden"
-        style={{ background: "linear-gradient(160deg,#FFD9E1 0%,#FF8FA3 100%)" }}
+        style={{ background: "linear-gradient(160deg,#FFD9E1 0%,var(--ud-primary) 100%)" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -170,7 +170,7 @@ export default async function MatchdayPreviewPage({
     <main className="min-h-dvh bg-[#f6f6f7] pb-16 text-gray-900 dark:bg-[#09090b] dark:text-white">
       <div className="sticky top-0 z-20 border-b border-black/[0.06] bg-[#f6f6f7]/90 px-4 pb-3 pt-[max(14px,env(safe-area-inset-top))] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#09090b]/90">
         <div className="mx-auto max-w-[430px]">
-          <p className="text-[9px] font-black tracking-[0.18em] text-[#FF8FA3] dark:text-[#FFB6C1]">
+          <p className="text-[9px] font-black tracking-[0.18em] text-[var(--ud-primary)]">
             MATCHDAY LAB
           </p>
           <h1 className="mt-1 text-[18px] font-black tracking-[-0.04em]">피드 이미지 미리보기</h1>
@@ -199,7 +199,7 @@ export default async function MatchdayPreviewPage({
                 href={href(overlay, value)}
                 className={`rounded-full px-2.5 py-1.5 text-[9px] font-black ${
                   countdown === value
-                    ? "bg-[#FF8FA3] text-white"
+                    ? "bg-[var(--ud-primary)] text-white"
                     : "bg-white text-gray-400 dark:bg-white/[0.07] dark:text-white/40"
                 }`}
               >

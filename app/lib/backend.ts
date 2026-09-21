@@ -59,9 +59,16 @@ interface StatOut {
   id: number; no: string | null; name: string | null; pos: string | null;
   apps: number | null; goals: number | null; assists: number | null; mom: number | null;
 }
-export async function getStatsRows(): Promise<string[][]> {
+/**
+ * @param seasonId 주면 그 시즌 경기만 집계한다(백엔드 routers/stats.py 의 season 파라미터).
+ *                 생략하면 통산 — 지금까지와 같은 전 기간 누적이다.
+ *                 모르는 id 를 보내면 백엔드가 400 을 던진다. 조용히 통산으로
+ *                 떨어지면 시즌 화면에 통산 숫자가 뜨고도 아무도 모르기 때문이다.
+ */
+export async function getStatsRows(seasonId?: string): Promise<string[][]> {
+  const query = seasonId ? `?season=${encodeURIComponent(seasonId)}` : "";
   const [stats, roster] = await Promise.all([
-    udGet<StatOut[]>("/api/underduck/stats", udReadOptsFor(UD_TAG.stats)),
+    udGet<StatOut[]>(`/api/underduck/stats${query}`, udReadOptsFor(UD_TAG.stats)),
     udGet<RosterOut[]>("/api/underduck/roster", udReadOptsFor(UD_TAG.roster)),
   ]);
   const byName = new Map<string, { no: string; pos: string }>();

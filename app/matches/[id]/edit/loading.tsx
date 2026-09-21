@@ -23,7 +23,7 @@ export default function Loading() {
         </div>
         <div className="flex items-center gap-2" aria-hidden>
           <span className={`h-8 w-8 rounded-full ${SOFT_SHIMMER}`} />
-          <span className="h-[30px] w-[58px] rounded-xl bg-[#FF8FA3]/25 skeleton-shimmer dark:bg-[#FFB6C1]/15" />
+          <span className="h-[30px] w-[58px] rounded-xl bg-[var(--ud-primary)]/25 skeleton-shimmer dark:bg-[var(--ud-primary)]/15" />
         </div>
       </header>
 
@@ -38,7 +38,7 @@ export default function Loading() {
             <span
               key={item}
               className={`h-8 w-[54px] shrink-0 rounded-xl ${
-                item === 0 ? "bg-[#FF8FA3]/25 skeleton-shimmer" : SOFT_SHIMMER
+                item === 0 ? "bg-[var(--ud-primary)]/25 skeleton-shimmer" : SOFT_SHIMMER
               }`}
             />
           ))}

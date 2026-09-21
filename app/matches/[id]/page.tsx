@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { parseSubstitutions } from "../../lib/lineup";
 import { pickBadges, type EarnedTitle } from "../../lib/titles";
 import { getTeamTitleData } from "../../lib/titles-cache";
+import { currentSeasonId, seasonOf } from "../../lib/seasons";
 
 export default async function MatchDetailPage({
   params,
@@ -15,15 +16,22 @@ export default async function MatchDetailPage({
   const { id } = await params;
   const matchId = Number(id);
 
-  const [rawMatchesResult, rawLineupsResult, rawRosterResult, rawStatsResult, rawFeaturedResult] = await Promise.allSettled([
-    getMatchesRows(),
+  // 경기를 먼저 받아 이 경기가 **어느 시즌 것인지** 정한다. 선수 탭에 뜨는 "시즌 기록"은
+  // 지금 진행 중인 시즌이 아니라 그 경기가 치러진 시즌이어야 한다 — 지난 시즌 경기를
+  // 열었는데 새 시즌 0골이 뜨면 그 경기의 맥락이 사라진다.
+  // (getMatchesRows 는 45초 캐시라 이 한 단계가 대개 왕복을 더 만들지 않는다)
+  const rawMatchesResult = await Promise.allSettled([getMatchesRows()]).then((r) => r[0]);
+  const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
+  // 배열 index = matchId, 0번째는 헤더
+  const season = seasonOf(rawMatches[matchId + 1]?.[0]) ?? currentSeasonId();
+
+  const [rawLineupsResult, rawRosterResult, rawStatsResult, rawFeaturedResult] = await Promise.allSettled([
     getLineupRows(),
     getRosterRows(),
-    getStatsRows(),
+    getStatsRows(season),
     getFeaturedRows(),
   ]);
 
-  const rawMatches = rawMatchesResult.status === "fulfilled" ? rawMatchesResult.value : [];
   const rawLineups = rawLineupsResult.status === "fulfilled" ? rawLineupsResult.value : [];
   const rawRoster = rawRosterResult.status === "fulfilled" ? rawRosterResult.value : [];
   const rawStats = rawStatsResult.status === "fulfilled" ? rawStatsResult.value : [];
@@ -102,7 +110,7 @@ export default async function MatchDetailPage({
     .filter((l: LineupData) => l.matchId === matchId);
 
   // 칭호 산출은 45초 캐시된 팀 전체 결과를 재사용한다(요청마다 다시 계산하지 않는다).
-  const { allTitles } = await getTeamTitleData();
+  const { allTitles } = await getTeamTitleData(season);
   const featuredMap: Record<string, string[]> = {};
   rawFeatured.forEach((row) => {
     const name = (row[0] || "").trim();

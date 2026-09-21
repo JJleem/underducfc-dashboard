@@ -101,7 +101,7 @@ export default function AttendanceHeroVote({
               initial={reduceMotion ? false : { scale: 0.72, rotate: -7 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ duration: reduceMotion ? 0 : 0.4, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FF8FA3]/12 text-[#FF718B] dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--ud-primary)]/12 text-[#FF718B] dark:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)]"
             >
               <Check width={24} height={24} strokeWidth={3} />
             </motion.span>
@@ -122,7 +122,7 @@ export default function AttendanceHeroVote({
         className={`press-cta flex w-full items-center justify-center gap-1.5 rounded-2xl py-3.5 text-[13px] font-black transition-colors disabled:cursor-wait ${
           current === "참석"
             ? "bg-[#F56F88] text-white"
-            : "bg-[#FF8FA3] text-white active:bg-[#F97E95]"
+            : "bg-[var(--ud-primary)] text-white active:bg-[#F97E95]"
         }`}
       >
         {statusIcon("참석")}

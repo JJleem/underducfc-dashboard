@@ -75,8 +75,8 @@ export default function PushNotificationBanner() {
   return (
     <div className="fixed top-[calc(1rem+env(safe-area-inset-top))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm z-[60] animate-rise">
       <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl p-4 flex items-start gap-3">
-        <div className="w-9 h-9 rounded-xl bg-[#FF8FA3]/15 dark:bg-[#FFB6C1]/15 flex items-center justify-center shrink-0 mt-0.5">
-          <Bell className="w-4 h-4 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+        <div className="w-9 h-9 rounded-xl bg-[var(--ud-primary)]/15 flex items-center justify-center shrink-0 mt-0.5">
+          <Bell className="w-4 h-4 text-[var(--ud-primary)]" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-black text-gray-900 dark:text-white">경기 알림 받기</p>
@@ -93,7 +93,7 @@ export default function PushNotificationBanner() {
             <button
               onClick={handleAllow}
               disabled={loading}
-              className="flex-1 py-2 rounded-xl bg-gradient-to-b from-[#FF9FB0] to-[#FF8FA3] dark:from-[#FFC3CD] dark:to-[#FFB6C1] text-[12px] font-black text-white dark:text-black disabled:opacity-50"
+              className="flex-1 py-2 rounded-xl bg-gradient-to-b from-[#FF9FB0] to-[var(--ud-primary)] dark:from-[#FFC3CD] dark:to-[var(--ud-primary)] text-[12px] font-black text-white dark:text-black disabled:opacity-50"
             >
               {loading ? "처리중..." : "알림 허용"}
             </button>

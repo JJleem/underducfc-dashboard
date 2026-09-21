@@ -61,7 +61,7 @@ export default function StatsTable({ players }: { players: PlayerStat[] }) {
                 type="button"
                 onClick={() => setFilter((current) => (current === key ? null : key))}
                 aria-pressed={active}
-                className={`min-h-9 rounded-full text-[10.5px] font-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8FA3]/50 ${
+                className={`min-h-9 rounded-full text-[10.5px] font-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ud-primary)]/50 ${
                   active
                     ? "bg-gray-900 text-white shadow-sm dark:bg-white dark:text-gray-950"
                     : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-white/35 dark:hover:bg-white/[0.06] dark:hover:text-white/60"

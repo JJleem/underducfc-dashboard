@@ -262,7 +262,7 @@ export default function FeedbackThread({
             aria-label="이모티콘"
             aria-expanded={pickerOpen}
             className={`shrink-0 transition-colors ${
-              pickerOpen ? "text-[#FF8FA3] dark:text-[#FFB6C1]" : "text-gray-400 dark:text-white/30"
+              pickerOpen ? "text-[var(--ud-primary)]" : "text-gray-400 dark:text-white/30"
             }`}
           >
             <Smile width={17} height={17} strokeWidth={2.1} />
@@ -290,7 +290,7 @@ export default function FeedbackThread({
             onClick={submit}
             disabled={(!text.trim() && !emoticon) || sending}
             aria-label="댓글 등록"
-            className="shrink-0 text-[#FF8FA3] disabled:opacity-30 dark:text-[#FFB6C1]"
+            className="shrink-0 text-[var(--ud-primary)] disabled:opacity-30 dark:text-[var(--ud-primary)]"
           >
             {sending ? (
               <Loader2 width={16} height={16} className="animate-spin" />

@@ -119,7 +119,7 @@ function NavBar({ active }: { active: NavKey | null }) {
           }}
           transition={{ type: "spring", stiffness: 430, damping: 34, mass: 0.72 }}
         >
-          <div className="mx-auto mt-1 h-8 w-11 rounded-[14px] bg-[#FF8FA3]/11 ring-1 ring-[#FF8FA3]/10 dark:bg-[#FFB6C1]/10 dark:ring-[#FFB6C1]/10" />
+          <div className="mx-auto mt-1 h-8 w-11 rounded-[14px] bg-[var(--ud-primary)]/11 ring-1 ring-[var(--ud-primary)]/10 dark:bg-[var(--ud-primary)]/10 dark:ring-[var(--ud-primary)]/10" />
         </motion.div>
         {ITEMS.map(({ key, label, icon: Icon, href }) => {
           const selected = active === key;
@@ -131,7 +131,7 @@ function NavBar({ active }: { active: NavKey | null }) {
               aria-current={selected ? "page" : undefined}
               className={`relative z-10 flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-extrabold transition-colors ${
                 selected
-                  ? "text-[#FF8FA3] dark:text-[#FFB6C1]"
+                  ? "text-[var(--ud-primary)]"
                   : "text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200"
               }`}
             >
@@ -153,7 +153,7 @@ function NavBar({ active }: { active: NavKey | null }) {
             aria-current={active === "my" ? "page" : undefined}
             className={`relative z-10 flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-extrabold transition-colors ${
               active === "my"
-                ? "text-[#FF8FA3] dark:text-[#FFB6C1]"
+                ? "text-[var(--ud-primary)]"
                 : "text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200"
             }`}
           >

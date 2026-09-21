@@ -51,7 +51,7 @@ const full = (url: string) => cldFit(url);
 
 const resultTone = (result: string) =>
   result === "승"
-    ? "text-[#FF8FA3]"
+    ? "text-[var(--ud-primary)]"
     : result === "패"
       ? "text-gray-400 dark:text-gray-500"
       : "text-amber-500";
@@ -63,7 +63,7 @@ const resultTone = (result: string) =>
 function Score({ our, their }: { our: string; their: string }) {
   return (
     <span className="tabular-nums">
-      <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">{our}</span>
+      <span className="text-[var(--ud-primary)]">{our}</span>
       <span className="opacity-40">-</span>
       {their}
     </span>

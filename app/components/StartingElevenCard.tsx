@@ -131,7 +131,7 @@ function PlayerCell({
             {display}
           </span>
           {isCaptain && (
-            <span className="flex h-[10px] w-[10px] shrink-0 items-center justify-center rounded-full bg-[#FF8FA3] text-[6px] font-black leading-none text-black min-[390px]:h-[12px] min-[390px]:w-[12px] min-[390px]:text-[7px]">
+            <span className="flex h-[10px] w-[10px] shrink-0 items-center justify-center rounded-full bg-[var(--ud-primary)] text-[6px] font-black leading-none text-black min-[390px]:h-[12px] min-[390px]:w-[12px] min-[390px]:text-[7px]">
               C
             </span>
           )}
@@ -187,7 +187,7 @@ function SubsCell({
           className="absolute inset-0 flex flex-col pb-1.5 pl-2.5 pr-1.5 pt-1.5"
           style={{ transform: "skewX(5deg)" }}
         >
-          <span className="mb-1 text-[8px] font-black italic tracking-[0.08em] text-[#FF8FA3] min-[390px]:text-[9px]">
+          <span className="mb-1 text-[8px] font-black italic tracking-[0.08em] text-[var(--ud-primary)] min-[390px]:text-[9px]">
             SUBS
           </span>
           <span
@@ -198,7 +198,7 @@ function SubsCell({
             {subs.map((name) => (
               <span key={name} className="flex min-w-0 items-center gap-0.5 leading-[1.25]">
                 {!compact && (
-                  <span className="shrink-0 text-[7px] font-black text-[#FFB6C1]">
+                  <span className="shrink-0 text-[7px] font-black text-[var(--ud-primary)]">
                     {rosterMap[name] || "-"}
                   </span>
                 )}
@@ -314,7 +314,7 @@ const StartingElevenCard = forwardRef<
           </h1>
           <span
             aria-hidden
-            className="select-none pr-1 text-[72px] font-black italic leading-[0.62] tracking-[-0.04em] text-[#FF8FA3] min-[390px]:text-[80px]"
+            className="select-none pr-1 text-[72px] font-black italic leading-[0.62] tracking-[-0.04em] text-[var(--ud-primary)] min-[390px]:text-[80px]"
             style={{ transform: "skewX(-9deg)", textShadow: "0 4px 16px rgba(0,0,0,0.5)" }}
           >
             XI

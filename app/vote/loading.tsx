@@ -38,20 +38,20 @@ export default function Loading() {
         {/* 진행 중 투표 — 히어로 */}
         <section className="relative overflow-hidden px-4 pb-6 pt-5">
           <div
-            className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[#FF8FA3]"
+            className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[var(--ud-primary)]"
             style={{ opacity: 0.12, filter: "blur(46px)" }}
           />
           <div className="relative">
             <div className="flex items-end justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <div className="h-2.5 w-16 rounded bg-[#FF8FA3]/15 skeleton-shimmer" />
+                <div className="h-2.5 w-16 rounded bg-[var(--ud-primary)]/15 skeleton-shimmer" />
                 <div className={`mt-2.5 h-6 w-40 rounded-md ${SHIMMER}`} />
                 <div className={`mt-3 h-3 w-32 rounded ${SOFT}`} />
                 <div className={`mt-2 h-3 w-36 rounded ${SOFT}`} />
               </div>
               {/* D-day + 날씨 */}
               <div className="shrink-0 text-right">
-                <div className="h-9 w-20 rounded-md bg-[#FF8FA3]/15 skeleton-shimmer" />
+                <div className="h-9 w-20 rounded-md bg-[var(--ud-primary)]/15 skeleton-shimmer" />
                 <div className={`ml-auto mt-2.5 h-3 w-14 rounded ${SOFT}`} />
               </div>
             </div>
@@ -66,14 +66,14 @@ export default function Loading() {
             {/* 집계 막대 + 수치 */}
             <div className={`mt-4 h-[7px] w-full rounded-full ${SOFT}`} />
             <div className="mt-2.5 flex gap-3">
-              <div className="h-2.5 w-12 rounded bg-[#FF8FA3]/15 skeleton-shimmer" />
+              <div className="h-2.5 w-12 rounded bg-[var(--ud-primary)]/15 skeleton-shimmer" />
               <div className="h-2.5 w-12 rounded bg-amber-400/15 skeleton-shimmer" />
               <div className={`h-2.5 w-12 rounded ${SOFT}`} />
             </div>
 
             {/* 명단 — 참석/미정/불참/미투표 */}
             <div className="mt-4 flex flex-col gap-2.5 border-t border-gray-200 pt-3.5 dark:border-white/[0.08]">
-              <RosterLine tone="bg-[#FF8FA3]/20 skeleton-shimmer" chips={[46, 52, 46, 52, 46, 58]} />
+              <RosterLine tone="bg-[var(--ud-primary)]/20 skeleton-shimmer" chips={[46, 52, 46, 52, 46, 58]} />
               <RosterLine tone="bg-amber-400/20 skeleton-shimmer" chips={[46, 52, 46]} />
               <RosterLine tone={SOFT} chips={[52, 46, 52, 46]} />
               <RosterLine tone={SOFT} chips={[46, 52, 46, 58, 46]} />
@@ -113,7 +113,7 @@ export default function Loading() {
                   <div className={`mt-1.5 h-2.5 w-40 rounded ${SOFT}`} />
                   <div className={`mt-2 h-[5px] w-full rounded-full ${SOFT}`} />
                   <div className="mt-1.5 flex gap-2.5">
-                    <div className="h-2.5 w-11 rounded bg-[#FF8FA3]/15 skeleton-shimmer" />
+                    <div className="h-2.5 w-11 rounded bg-[var(--ud-primary)]/15 skeleton-shimmer" />
                     <div className="h-2.5 w-11 rounded bg-amber-400/15 skeleton-shimmer" />
                     <div className={`h-2.5 w-11 rounded ${SOFT}`} />
                   </div>

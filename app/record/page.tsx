@@ -1,10 +1,19 @@
 // /record — 상대와 경기장을 기준으로 다시 보는 경기 아카이브.
 // 집계 기준은 기존 홈 그대로다: 완료된 "일반 매칭"만, 자체전·풋살은 뺀다.
 
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { getMatchesRows } from "../lib/matches-backend";
 import PageHeader from "../components/home/PageHeader";
 import { getOpponentLogo } from "../lib/opponent-logos";
+import {
+  isInSeason,
+  resolveSeasonId,
+  seasonAccent,
+  seasonsWithMatches,
+} from "../lib/seasons";
+import SeasonEmpty from "../components/SeasonEmpty";
+import SeasonSelector from "../components/SeasonSelector";
 import RecordArchive, { type RecordGroup, type RecordMatch } from "./RecordArchive";
 
 export const dynamic = "force-dynamic";
@@ -53,8 +62,16 @@ function makeGroups(matches: RecordMatch[], by: "opponent" | "location"): Record
   }).sort((a, b) => b.latestDate.localeCompare(a.latestDate) || a.key.localeCompare(b.key, "ko"));
 }
 
-export default async function RecordPage() {
+export default async function RecordPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ season?: string }>;
+}) {
+  const season = resolveSeasonId((await searchParams).season);
   const rawMatches = await getMatchesRows();
+  const accent = seasonAccent(season);
+  const seasonsPlayed = [...seasonsWithMatches(rawMatches)];
+
   const matches: RecordMatch[] = rawMatches
     .slice(1)
     .map((r, index) => ({
@@ -70,6 +87,8 @@ export default async function RecordPage() {
     .filter(
       (match) =>
         match.date &&
+        // 시즌 스코프. 맞대결 히스토리를 시즌으로 자른다.
+        isInSeason(match.date, season) &&
         match.result !== "예정" &&
         match.result !== "" &&
         match.result !== "자체전" &&
@@ -81,9 +100,26 @@ export default async function RecordPage() {
   const venues = makeGroups(matches, "location");
 
   return (
-    <main className="relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100">
-      <PageHeader label="RECORD" back="/stats" />
-      <RecordArchive opponents={opponents} venues={venues} />
+    <main
+      className="season-scope relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100"
+      style={{ "--season-light": accent.light, "--season-dark": accent.dark } as CSSProperties}
+    >
+      <PageHeader
+        label="RECORD"
+        // 스탯에서 넘어왔을 때 보던 시즌을 그대로 들고 돌아간다
+        back={`/stats?season=${season}`}
+        right={<SeasonSelector current={season} withMatches={seasonsPlayed} />}
+      />
+      {matches.length === 0 ? (
+        <SeasonEmpty
+          seasonId={season}
+          accent="var(--season)"
+          basePath="/record"
+          withMatches={seasonsPlayed}
+        />
+      ) : (
+        <RecordArchive opponents={opponents} venues={venues} />
+      )}
     </main>
   );
 }

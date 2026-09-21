@@ -21,8 +21,10 @@ npm run gen:matchday       # 매치데이 아트 생성 (FAL_KEY)
 npm run backup:photos      # Cloudinary 사진 백업
 ```
 
-테스트는 `tests/*.test.mjs` 3개 파일이 있고 `app/lib` 의 `chemistry` · `home-state` · `lineup`
-만 덮습니다. `titles.ts` · `positions.ts` · 매치데이 순열은 아직 테스트가 없습니다.
+테스트는 `tests/*.test.mjs` 에 있고 `app/lib` 의 `chemistry` · `home-state` · `lineup` ·
+`matchday-art` · `seasons` · `wrapped` 를 덮습니다. `titles.ts` · `positions.ts` 는 아직 테스트가 없습니다.
+(`titles.ts` 는 확장자 없는 상대 import 가 있어 node ESM 테스트에서 바로 import 되지 않습니다 —
+그래서 `scaleSeasonTiers` 가 `seasons.ts` 에 있습니다.)
 
 ## Environment Variables
 
@@ -82,6 +84,72 @@ FAL_KEY=                        # 매치데이 아트 생성 스크립트 전용
 | `mom_vote` | A1:E500 | Man-of-the-match votes                                |
 | `attendance_vote` | A1:E500 | Attendance votes (matchId, kakaoId, nickname, response, timestamp) |
 
+**시즌:**
+
+시즌은 DB 컬럼이 아니라 **경기 날짜에서 파생**됩니다. 표는 두 군데에 **쌍둥이로** 있습니다:
+
+- `app/lib/seasons.ts` — `SEASONS` 배열 (프론트 집계 · 화면)
+- `underduck-backend/seasons.py` — 같은 표 (스탯 엔드포인트)
+
+**새 시즌을 열 때는 두 파일에 같은 줄을 넣습니다.** 어긋나면 `/api/underduck/stats?season=`
+가 400 을 던지도록 해 뒀습니다(조용히 통산으로 떨어지면 시즌 화면에 통산 숫자가 뜹니다).
+
+- 첫 시즌의 `start` 는 `null` — "경계 없음" 이라 아무리 오래된 경기도 받아냅니다.
+- **행을 지우지 말고 id 로 거릅니다.** `rawMatches` 의 배열 index 가 곧 `matchId` 이고
+  lineup · mom_vote · attendance 가 그 id 를 참조합니다. `seasonMatchIds()` /
+  `rowsOfMatchIds()` / `maskMatchRowsToSeason()` 이 그래서 있습니다.
+- 기본 시즌은 **오늘이 속한 시즌**(`currentSeasonId()`)입니다. 개막 직후 경기가 0건이어도
+  현재 시즌을 그대로 보여 줍니다 — "경기 있는 최신 시즌" 으로 넘기면 시즌이 바뀐 걸
+  아무도 눈치채지 못합니다.
+- 시즌마다 `accent`(대표색)가 다릅니다. **팀 브랜드 핑크와는 다른 축**입니다 —
+  `#FF8FA3`/`#FFB6C1` 은 CSS 토큰 없이 415군데 하드코딩돼 있어 시즌마다 못 바꿉니다.
+  시즌색은 `.season-scope` + `var(--season)` 으로 시즌 기록 화면에만 씁니다.
+
+**칭호 — 통산과 시즌 두 벌:**
+
+- **통산**: `TITLES`. 지금까지와 동일, 계속 쌓입니다. 뱃지 = 원형 + 광택.
+- **시즌**: `SEASON_TITLES`. 같은 칭호를 그 시즌 기록만으로 평가하되 컷이 낮습니다
+  (`SEASON_OVERRIDES` 수동값, 없으면 `scaleSeasonTiers` 로 통산 × 0.25). 뱃지 = 육각 + 브러시드
+  (`EarnedTitle.scope === "season"`). 기준은 한 시즌 ≈ 24경기.
+- **리더**(득점왕 등)는 임계값이 아니라 "지금 1위" 라서 **시즌 기준 하나만** 있습니다.
+- `getTeamTitleData(seasonId)` 가 `allTitles`(표시용) · `seasonTitles` · `careerTitles` 를
+  한 번에 냅니다. 대표 칭호(featured)는 **통산에서만** 고릅니다.
+- 통산 규칙 숫자를 바꾸면 전원의 칭호가 바뀝니다. 시즌 컷만 손볼 땐 `SEASON_OVERRIDES` 만
+  건드리세요.
+
+**시즌 래핑 (`/wrapped`) — 공개 전입니다:**
+
+스포티파이 래핑식 개인 돌아보기 + 선수카드. 미리 만들어 두고 **시즌이 끝나면 엽니다.**
+
+- **게이트는 404(`notFound`)** 입니다. 403 을 주면 "여기 뭔가 있다"가 드러나 공개 전에
+  소문이 먼저 돕니다. 공개일은 `SeasonDef.wrappedFrom` 한 줄 — 그 날이 지나면 회원 전원.
+  그 전까지는 `currentIsAdmin()` 인 사람만.
+- 대상은 로그인한 **본인**. 운영진은 `?player=이름` 으로 남의 것을 미리 볼 수 있고,
+  그때 화면에 "공개 전 · 운영진 미리보기" 가 찍힙니다.
+- `app/lib/wrapped.ts` 는 **의존성 없는 순수 계산**입니다(테스트 때문에 그렇게 뒀습니다 —
+  `seasons.ts` 를 값으로 import 하면 node ESM 테스트에서 못 불러옵니다. 시즌 라벨을
+  인자로 받는 이유).
+- 새로 세는 건 **팀 내 순위**뿐입니다. 나머지는 `buildPlayerStatsReport` ·
+  `buildPlayerChemistry` · 시즌 칭호 · 시즌 stats 를 불러 모읍니다.
+- 선수카드에 **종합 레이팅(OVR)은 없습니다.** 동호회에서 사람마다 숫자 등급을 매기면
+  재미보다 서운함이 먼저 옵니다 — 실제 기록만 싣습니다.
+- 내용이 없는 장은 만들지 않습니다. 빈 칸을 "아직 없어요" 로 채우면 여덟 장 중 다섯 장이
+  사과문이 됩니다.
+- **시즌 베스트 11** (`pickBestEleven`) 은 세 가지를 지킵니다. 하나라도 어기면 말이 안 되는
+  XI 가 나옵니다 — 셋 다 실제로 겪었습니다.
+  1. 틀을 **그 시즌 최다 사용 포메이션**에서 가져옵니다(4-3-3 고정으로 뒀더니, 윙어가
+     사실상 없는 팀(LW 7Q·RW 5Q)에 FW 3칸을 강제해 수비수가 최전방에 섰습니다.
+     이 팀은 4-2-3-1 을 72쿼터 중 59회 씁니다).
+  2. 4개 그룹이 아니라 **세부 역할**로 고릅니다(그룹으로 세면 "FW 8쿼터"가 주전 공격수).
+  3. 역할 27종은 72쿼터에 비해 너무 잘아서 **9개 버킷으로 병합**합니다(`roleBucket`).
+     좌우는 합치지 않습니다 — 왼쪽과 오른쪽은 다른 자리입니다.
+  한 선수는 한 자리만 차지합니다. 슬롯 순서대로 채우는 탐욕법인데, 실측 데이터에서
+  최대 가중 매칭과 결과가 같았습니다(307Q).
+- 피치는 `FormationField` 가 아니라 전용 `BestElevenPitch` 입니다 — 래핑에 탭 스탯 패널·
+  전술·주장 완장은 방해입니다.
+- 포지션 집계는 **라인업이 저장된 경기에서만** 나옵니다. 25-26 은 30경기 중 19경기뿐이라
+  화면에 커버리지를 밝힙니다(`lineupCoverage`). 안 밝히면 "왜 쟤가 저기 있지" 가 됩니다.
+
 **로그인 · 권한:**
 
 - `auth.ts` — Auth.js v5 + 카카오. 세션은 JWT(1년, 하루 1회 갱신).
@@ -117,9 +185,9 @@ Row index in the sheet = `matchId + 2` (header offset). This arithmetic appears 
 
 The app is **mobile-first** (max-w-md container). Dark mode is supported via `next-themes`.
 
-라우트는 17개입니다: `/` `/board` `/board/[id]` `/board/lineup` `/login` `/lounge`
+라우트는 18개입니다: `/` `/board` `/board/[id]` `/board/lineup` `/login` `/lounge`
 `/lounge/[id]` `/matches/[id]` `/matches/[id]/edit` `/matchday-gallery` `/matchday-preview`
-`/players/[name]` `/record` `/roster` `/stats` `/titles` `/vote`
+`/players/[name]` `/record` `/roster` `/stats` `/titles` `/vote` `/wrapped`
 
 - `app/components/home/NewHome.tsx` — 홈. 인스타 피드형이고 `/matchday-preview` 와 한 파일을 공유합니다.
 - `app/components/FormationField.tsx` — 포지션별 포메이션 렌더링, 7종 지원

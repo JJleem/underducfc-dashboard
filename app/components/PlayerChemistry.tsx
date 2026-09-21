@@ -12,7 +12,7 @@ function ResultDots({ results }: { results: ChemistryPartner["record"]["recent"]
           key={`${result}-${index}`}
           className={`flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-black ${
             result === "승"
-              ? "bg-[#FF8FA3]/15 text-[#F56F88] dark:bg-[#FFB6C1]/15 dark:text-[#FFB6C1]"
+              ? "bg-[var(--ud-primary)]/15 text-[#F56F88] dark:bg-[var(--ud-primary)]/15 dark:text-[var(--ud-primary)]"
               : result === "무"
                 ? "bg-gray-200 text-gray-500 dark:bg-white/10 dark:text-white/50"
                 : "bg-gray-100 text-gray-400 dark:bg-white/[0.05] dark:text-white/30"
@@ -45,7 +45,7 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
     <div className="space-y-7 pb-3">
       <section className="px-4">
         <div className="relative overflow-hidden rounded-[22px] border border-gray-200/80 bg-white px-4 pb-4 pt-4 shadow-[0_16px_45px_-32px_rgba(17,24,39,0.45)] dark:border-white/[0.08] dark:bg-white/[0.035]">
-          <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#FF8FA3]/60 to-transparent" />
+          <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[var(--ud-primary)]/60 to-transparent" />
           <div className="flex items-center justify-between">
             <p className="text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-white/35">SIGNATURE PARTNER</p>
             <span className="rounded-full bg-gray-100 px-2 py-1 text-[9px] font-black text-gray-500 dark:bg-white/[0.07] dark:text-white/45">
@@ -59,7 +59,7 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
               <PlayerFace name={featured.name} size={48} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold text-[#F56F88] dark:text-[#FFB6C1]">{featured.label}</p>
+              <p className="text-[10px] font-bold text-[#F56F88] dark:text-[var(--ud-primary)]">{featured.label}</p>
               <p className="mt-0.5 truncate text-[18px] font-black tracking-tight text-gray-950 dark:text-white">
                 {playerName} <span className="font-light text-gray-300 dark:text-white/20">×</span> {featured.name}
               </p>
@@ -96,7 +96,7 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="truncate text-[13px] font-black text-gray-900 dark:text-white">{partner.name}</span>
-                    <span className="truncate text-[9px] font-bold text-[#F56F88] dark:text-[#FFB6C1]">{partner.label}</span>
+                    <span className="truncate text-[9px] font-bold text-[#F56F88] dark:text-[var(--ud-primary)]">{partner.label}</span>
                   </div>
                   <p className="mt-0.5 text-[10px] font-medium text-gray-400 dark:text-white/30">
                     {partner.sharedQuarters}쿼터 · {partner.sharedMatches}경기 · 합작 {partner.combinedGoals}

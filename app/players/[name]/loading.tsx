@@ -11,7 +11,7 @@ export default function Loading() {
 
       <section className="relative overflow-hidden px-4 pt-5">
         <div
-          className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-[#FF8FA3]"
+          className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-[var(--ud-primary)]"
           style={{ opacity: 0.1, filter: "blur(48px)" }}
         />
         <div className="relative flex items-center gap-4">

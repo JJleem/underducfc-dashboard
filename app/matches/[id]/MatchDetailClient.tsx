@@ -110,7 +110,7 @@ export default function MatchDetailClient({
           className="press-icon -my-2 ml-auto flex h-11 w-11 items-center justify-center rounded-full text-gray-500 active:bg-gray-100 dark:text-gray-400 dark:active:bg-white/10"
         >
           <Moon className="h-[17px] w-[17px] dark:hidden" />
-          <Sun className="hidden h-[17px] w-[17px] text-[#FFB6C1] dark:block" />
+          <Sun className="hidden h-[17px] w-[17px] text-[var(--ud-primary)] dark:block" />
         </button>
       </header>
 
@@ -124,7 +124,7 @@ export default function MatchDetailClient({
             </p>
             <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-bold text-gray-400 dark:text-white/35">
               <span className="flex min-w-0 items-center gap-1">
-                <MapPin className="h-3 w-3 shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+                <MapPin className="h-3 w-3 shrink-0 text-[var(--ud-primary)]" />
                 <span className="truncate">{match.location}</span>
               </span>
               {match.type && (
@@ -174,7 +174,7 @@ export default function MatchDetailClient({
               </span>
             ) : (
               <div className="flex items-baseline justify-center gap-3 font-black tabular-nums">
-                <span className="text-[40px] leading-none tracking-[-0.05em] text-[#FF8FA3] dark:text-[#FFB6C1]">
+                <span className="text-[40px] leading-none tracking-[-0.05em] text-[var(--ud-primary)]">
                   {match.ourScore}
                 </span>
                 <span className="text-[16px] text-gray-300 dark:text-white/20">:</span>
@@ -211,7 +211,7 @@ export default function MatchDetailClient({
                 {goals.map((scorer, index) => (
                   <div key={`${scorer}-${index}`} className="flex min-w-0 items-center justify-between gap-3">
                     <span className="flex min-w-0 items-center gap-1.5">
-                      <SoccerBall className="h-3.5 w-3.5 shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+                      <SoccerBall className="h-3.5 w-3.5 shrink-0 text-[var(--ud-primary)]" />
                       <b className="truncate text-[13px] font-black">{scorer}</b>
                     </span>
                     {assists[index] && (
@@ -245,7 +245,7 @@ export default function MatchDetailClient({
                   <Link
                     key={name}
                     href={`/players/${encodeURIComponent(name)}`}
-                    className="text-[12px] font-bold text-gray-600 active:text-[#FF8FA3] dark:text-white/60 dark:active:text-[#FFB6C1]"
+                    className="text-[12px] font-bold text-gray-600 active:text-[var(--ud-primary)] dark:text-white/60 dark:active:text-[var(--ud-primary)]"
                   >
                     {name}
                   </Link>
@@ -294,7 +294,7 @@ export default function MatchDetailClient({
           </div>
           <Link
             href={`/matches/${match.id}/edit`}
-            className="flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-[11px] font-black text-[#FF8FA3] active:bg-[#FF8FA3]/10 dark:text-[#FFB6C1] dark:active:bg-[#FFB6C1]/10"
+            className="flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-[11px] font-black text-[var(--ud-primary)] active:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)] dark:active:bg-[var(--ud-primary)]/10"
           >
             <Pencil className="h-3.5 w-3.5" /> {lineups.length > 0 ? "편집" : "추가"}
           </Link>

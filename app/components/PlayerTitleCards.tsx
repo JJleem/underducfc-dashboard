@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { useTheme } from "next-themes";
-import { EarnedTitle, pickBadges } from "../lib/titles";
+import { EarnedTitle, featureKey, pickBadges } from "../lib/titles";
 import { TitleBadge, titleSurface } from "./TitleBadges";
 import ModalPortal from "./ModalPortal";
 import useAppOverlay from "./useAppOverlay";
@@ -20,11 +20,14 @@ function Highlight({
   isLight,
   width,
   onClick,
+  showSeason,
 }: {
   title: EarnedTitle;
   isLight: boolean;
   width: number;
   onClick: () => void;
+  /** 시즌 칭호 위에 "25-26" 을 붙인다. 시즌이 섞여 보이는 줄에서만 켠다. */
+  showSeason?: boolean;
 }) {
   const s = titleSurface(title, isLight);
   return (
@@ -44,11 +47,22 @@ function Highlight({
       >
         <TitleBadge title={title} size={50} />
       </span>
-      <span
-        className="line-clamp-2 text-center text-[9.5px] font-black leading-[1.25] tracking-[-0.02em]"
-        style={{ color: s.fg }}
-      >
-        {title.name}
+      <span className="flex w-full flex-col items-center">
+        {showSeason && title.seasonLabel && (
+          // 어느 시즌 건지 안 붙이면 "득점왕" 뱃지 두 개가 나란히 떠도 구분이 안 된다.
+          <span
+            className="mb-0.5 text-[8px] font-black tabular-nums leading-none opacity-70"
+            style={{ color: s.fg }}
+          >
+            {title.seasonLabel}
+          </span>
+        )}
+        <span
+          className="line-clamp-2 text-center text-[9.5px] font-black leading-[1.25] tracking-[-0.02em]"
+          style={{ color: s.fg }}
+        >
+          {title.name}
+        </span>
       </span>
     </button>
   );
@@ -58,11 +72,17 @@ export default function PlayerTitleCards({
   titles,
   featuredIds,
   leading,
+  showSeason,
 }: {
   titles: EarnedTitle[];
   featuredIds?: string[];
   /** 줄 맨 앞에 붙는 항목(본인 프로필의 ＋ 대표 고르기). 칭호와 같은 폭으로 맞춰 그린다. */
   leading?: React.ReactNode;
+  /**
+   * 시즌 칭호에 시즌 라벨을 붙인다. 시즌이 섞이는 줄(대표 칭호)에서만 켠다 —
+   * "26-27 시즌" 헤더가 이미 있는 섹션에서는 중복이라 끈다.
+   */
+  showSeason?: boolean;
 }) {
   const [selected, setSelected] = useState<EarnedTitle | null>(null);
   const dismissSelected = useAppOverlay(!!selected, () => setSelected(null));
@@ -147,11 +167,13 @@ export default function PlayerTitleCards({
           )}
           {ordered.map((t) => (
             <Highlight
-              key={t.id}
+              // 같은 칭호가 시즌판·통산판으로 둘 다 올 수 있어 id 만으로는 키가 겹친다.
+              key={featureKey(t)}
               title={t}
               isLight={isLight}
               width={itemW}
               onClick={() => setSelected(t)}
+              showSeason={showSeason}
             />
           ))}
         </div>
@@ -200,6 +222,7 @@ export default function PlayerTitleCards({
                   {selected.hidden && <span className="rounded-full bg-cyan-300/15 px-1.5 py-0.5 text-[7px] font-black text-cyan-600 dark:text-cyan-200">HIDDEN</span>}
                 </div>
                 <p className="mt-0.5 text-[9px] font-bold text-gray-500 dark:text-white/45">
+                  {selected.seasonLabel ? `${selected.seasonLabel} 시즌 · ` : ""}
                   {selected.tierLabel ?? selected.category}
                 </p>
               </div>

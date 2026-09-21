@@ -115,7 +115,7 @@ export default function NoticeEditor({
                     type="checkbox"
                     checked={form.important}
                     onChange={(e) => setForm((p) => ({ ...p, important: e.target.checked }))}
-                    className="h-4 w-4 accent-[#FF8FA3]"
+                    className="h-4 w-4 accent-[var(--ud-primary)]"
                   />
                   중요 공지로 표시
                 </label>

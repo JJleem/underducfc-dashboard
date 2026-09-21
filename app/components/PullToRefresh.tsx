@@ -171,7 +171,7 @@ export default function PullToRefresh({
           <RotateCw
             className={`w-4 h-4 ${
               progress >= 1 || refreshing
-                ? "text-[#FF8FA3] dark:text-[#FFB6C1]"
+                ? "text-[var(--ud-primary)]"
                 : "text-gray-400"
             } ${refreshing ? "animate-spin" : ""}`}
             style={

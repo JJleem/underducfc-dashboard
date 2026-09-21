@@ -131,7 +131,7 @@ export default function BoardClient({
             aria-label="글쓰기"
             className="press-icon -my-1.5 ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:opacity-80"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3] text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--ud-primary)] text-white">
               <Plus width={14} height={14} strokeWidth={2.6} />
             </span>
           </button>
@@ -202,7 +202,7 @@ export default function BoardClient({
               onClick={() => setComposer("video")}
               className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 p-3.5 text-left active:opacity-70 dark:border-white/10"
             >
-              <div className="flex shrink-0 items-center gap-1 text-[#FF8FA3] dark:text-[#FFB6C1]">
+              <div className="flex shrink-0 items-center gap-1 text-[var(--ud-primary)]">
                 <Youtube className="h-6 w-6" />
                 <Instagram className="h-5 w-5" />
               </div>
@@ -215,7 +215,7 @@ export default function BoardClient({
               href="/board/lineup"
               className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 p-3.5 text-left active:opacity-70 dark:border-white/10"
             >
-              <ClipboardList className="h-6 w-6 shrink-0 text-[#FF8FA3] dark:text-[#FFB6C1]" />
+              <ClipboardList className="h-6 w-6 shrink-0 text-[var(--ud-primary)]" />
               <span>
                 <span className="block text-sm font-black">전술 짜기</span>
                 <span className="block text-[11px] text-gray-400">

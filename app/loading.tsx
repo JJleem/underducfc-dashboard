@@ -56,15 +56,15 @@ function FeedSkeleton({ goals = false }: { goals?: boolean }) {
         </div>
 
         {/* MOM · 주목 포인트의 옅은 핑크 후일담 영역 */}
-        <div className="-mx-4 bg-gradient-to-r from-[#FF8FA3]/[0.07] via-[#FF8FA3]/[0.025] to-transparent px-4 dark:from-[#FFB6C1]/[0.12] dark:via-[#FFB6C1]/[0.045]">
+        <div className="-mx-4 bg-gradient-to-r from-[var(--ud-primary)]/[0.07] via-[var(--ud-primary)]/[0.025] to-transparent px-4 dark:from-[var(--ud-primary)]/[0.12] dark:via-[var(--ud-primary)]/[0.045]">
           {[0, 1].map((item) => (
             <div
               key={item}
               className={`flex min-h-10 items-center gap-2 py-2.5 ${
-                item ? "border-t border-[#FF8FA3]/15 dark:border-[#FFB6C1]/10" : ""
+                item ? "border-t border-[var(--ud-primary)]/15" : ""
               }`}
             >
-              <div className="h-2.5 w-[68px] rounded bg-[#FF8FA3]/15 skeleton-shimmer dark:bg-[#FFB6C1]/10" />
+              <div className="h-2.5 w-[68px] rounded bg-[var(--ud-primary)]/15 skeleton-shimmer dark:bg-[var(--ud-primary)]/10" />
               <div className={`h-3 flex-1 rounded ${SOFT_SHIMMER}`} />
               <div className={`h-3 w-9 rounded ${SOFT_SHIMMER}`} />
             </div>
@@ -96,11 +96,11 @@ export default function Loading() {
       {/* 앱 헤더는 실제 높이를 그대로 유지한다. */}
       <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white/70 px-5 safe-header-py-35 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/70">
         <span className="flex items-center gap-2 text-[15px] font-extrabold uppercase tracking-tight text-gray-900 dark:text-white">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#FF8FA3]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--ud-primary)]" />
           UNDERDUCK
         </span>
         <div className="flex items-center gap-2">
-          <span className="h-8 w-8 rounded-full bg-[#FF8FA3]/10 skeleton-shimmer" />
+          <span className="h-8 w-8 rounded-full bg-[var(--ud-primary)]/10 skeleton-shimmer" />
           <span className={`h-8 w-[76px] rounded-full ${SHIMMER}`} />
           <span className={`h-8 w-8 rounded-full ${SHIMMER}`} />
         </div>
@@ -110,12 +110,12 @@ export default function Loading() {
         {/* 카드로 감싸지 않는 현재 홈 히어로의 골격 */}
         <section className="relative overflow-hidden px-4 pb-4 pt-5" aria-hidden>
           <div
-            className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[#FF8FA3]"
+            className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[var(--ud-primary)]"
             style={{ opacity: 0.12, filter: "blur(46px)" }}
           />
           <div className="relative">
             <div className="flex items-center justify-between">
-              <div className="h-2.5 w-24 rounded bg-[#FF8FA3]/15 skeleton-shimmer" />
+              <div className="h-2.5 w-24 rounded bg-[var(--ud-primary)]/15 skeleton-shimmer" />
               <div className={`h-2.5 w-20 rounded ${SOFT_SHIMMER}`} />
             </div>
             <div className="mt-3 space-y-2">
@@ -126,7 +126,7 @@ export default function Loading() {
             <div className={`mt-2 h-2.5 w-44 rounded ${SOFT_SHIMMER}`} />
             <div className={`mt-4 h-[7px] w-full rounded-full ${SOFT_SHIMMER}`} />
             <div className="mt-2 flex gap-3">
-              <div className="h-2.5 w-14 rounded bg-[#FF8FA3]/15 skeleton-shimmer" />
+              <div className="h-2.5 w-14 rounded bg-[var(--ud-primary)]/15 skeleton-shimmer" />
               <div className="h-2.5 w-14 rounded bg-amber-400/15 skeleton-shimmer" />
               <div className={`h-2.5 w-14 rounded ${SOFT_SHIMMER}`} />
             </div>

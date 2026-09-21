@@ -111,7 +111,7 @@ export default function LoungeClient({
             aria-label="글쓰기"
             className="press-icon -my-1.5 ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:opacity-80"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8FA3] text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--ud-primary)] text-white">
               <Plus width={14} height={14} strokeWidth={2.6} />
             </span>
           </button>
@@ -136,7 +136,7 @@ export default function LoungeClient({
       </header>
 
       {/* 익명이라는 걸 모르면 아무도 안 쓴다. 목록 맨 위에 한 줄로 계속 붙여 둔다. */}
-      <p className="mx-5 mt-4 flex items-center gap-2 rounded-xl bg-[#FF8FA3]/[0.07] px-3.5 py-2.5 text-[11px] font-bold text-[#e9758b] dark:bg-[#FFB6C1]/[0.07] dark:text-[#FFB6C1]">
+      <p className="mx-5 mt-4 flex items-center gap-2 rounded-xl bg-[var(--ud-primary)]/[0.07] px-3.5 py-2.5 text-[11px] font-bold text-[#e9758b] dark:bg-[var(--ud-primary)]/[0.07] dark:text-[var(--ud-primary)]">
         <MessageSquareHeart className="h-3.5 w-3.5 shrink-0" />
         {ANON_NOTICE}
       </p>
@@ -181,7 +181,7 @@ export default function LoungeClient({
                         </span>
                       )}
                       {post.mine && (
-                        <span className="rounded-md bg-[#FF8FA3]/12 px-2 py-1 text-[10px] font-black text-[#e9758b] dark:bg-[#FFB6C1]/12 dark:text-[#FFB6C1]">
+                        <span className="rounded-md bg-[var(--ud-primary)]/12 px-2 py-1 text-[10px] font-black text-[#e9758b] dark:bg-[var(--ud-primary)]/12 dark:text-[var(--ud-primary)]">
                           내 글
                         </span>
                       )}
@@ -201,7 +201,7 @@ export default function LoungeClient({
                       {post.likeCount > 0 && (
                         <span
                           className={`flex items-center gap-1 ${
-                            post.likedByMe ? "text-[#e9758b] dark:text-[#FFB6C1]" : ""
+                            post.likedByMe ? "text-[#e9758b] dark:text-[var(--ud-primary)]" : ""
                           }`}
                         >
                           <Heart

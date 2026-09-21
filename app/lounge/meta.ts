@@ -10,7 +10,7 @@ export const CATEGORY_LABEL: Record<LoungeCategory, string> = {
 };
 
 /**
- * 상태 색. 팀 핑크(#FF8FA3)는 여기 쓰지 않는다 — 앱 전체에서 "누를 수 있는 것"의
+ * 상태 색. 팀 핑크(var(--ud-primary))는 여기 쓰지 않는다 — 앱 전체에서 "누를 수 있는 것"의
  * 색이라 상태 뱃지에 쓰면 버튼으로 읽힌다.
  */
 export const STATUS_META: Record<LoungeStatus, { label: string; dot: string; chip: string }> = {

@@ -1,7 +1,9 @@
 // app/players/[name]/page.tsx
 // 선수 전용 페이지 (페이스온). 칭호 + 스탯 + 출석률 + 최근 활약.
+import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
+import { currentIsAdmin } from "../../lib/admin";
 import { getMatchesRows } from "../../lib/matches-backend";
 import { isCasualMatch, isMomOf, isOuting, matchLogo } from "../../components/home/match-result";
 import {
@@ -11,12 +13,28 @@ import {
   getFeaturedRows,
 } from "../../lib/backend";
 import {
+  featureKey,
   managerTitle,
   MANAGER_NAME,
   type EarnedTitle,
 } from "../../lib/titles";
 import { getTeamTitleData } from "../../lib/titles-cache";
+import {
+  isInSeason,
+  isWrappedPublic,
+  resolveSeasonId,
+  seasonAccent,
+  seasonLabel,
+  seasonMatchIds,
+  maskMatchRowsToSeason,
+  seasonsWithMatches,
+  SEASONS,
+  rowsOfMatchIds,
+} from "../../lib/seasons";
 import TitleHighlights from "../../components/TitleHighlights";
+import PlayerTitleCards from "../../components/PlayerTitleCards";
+import SeasonSelector from "../../components/SeasonSelector";
+import { Sparkles, ChevronRight } from "lucide-react";
 import ProfileTabs from "../../components/ProfileTabs";
 import PrefPosEditor from "../../components/PrefPosEditor";
 import PlayerAvatar from "../../components/PlayerAvatar";
@@ -40,11 +58,15 @@ const posColor = (pos: string): string => {
 
 export default async function PlayerPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ name: string }>;
+  searchParams: Promise<{ season?: string }>;
 }) {
   const { name: rawName } = await params;
   const name = decodeURIComponent(rawName).trim();
+  // 프로필의 숫자·경기·케미는 전부 이 시즌 것이다. 칭호만 시즌/통산 두 벌을 보여 준다.
+  const season = resolveSeasonId((await searchParams).season);
 
   // 순차로 await 하면 직렬 왕복이 그대로 누적돼 MY 탭이 눌린 뒤 멈춘 것처럼 보인다.
   // 전부 독립이라 병렬로 받는다. 필수 3개(stats/roster/matches)는 실패 시 그대로
@@ -53,7 +75,7 @@ export default async function PlayerPage({
   const optional = (): string[][] => [];
   const [rawStats, rawRoster, rawMatches, rawLineups, rawFeatured]: string[][][] =
     await Promise.all([
-      getStatsRows(),
+      getStatsRows(season),
       getRosterRows(),
       getMatchesRows(),
       getLineupRows().catch(optional),
@@ -89,10 +111,20 @@ export default async function PlayerPage({
   // 등록되지 않은 이름 (감독 제외) → 404
   if (!rosterRow && !statRow && !isManager) notFound();
 
+  const seasonsPlayed = [...seasonsWithMatches(rawMatches)];
+
+  // 첫 시즌 동안은 "시즌 = 통산" 이다. 지금까지 치른 경기가 전부 이 시즌 것이라
+  // 두 섹션이 같은 데이터를 컷만 달리해서 보여 준다 — "철인 프로(시즌)" 와
+  // "철인 아마추어(통산)" 가 나란히 뜨는 꼴이라 읽는 사람만 헷갈린다.
+  // 다음 시즌 경기가 한 건이라도 생기면 그때부터 시즌 섹션이 진짜 부분집합이 되므로
+  // 자동으로 열린다.
+  const seasonIsEverything = seasonsPlayed.length <= 1 && seasonsPlayed[0] === season;
+
+
   // 칭호 — 45초 캐시된 팀 전체 산출 결과를 재사용한다(요청마다 다시 계산하지 않는다).
   // allTitles[name] 은 감독 → 리더 → 자동 칭호 순으로 이미 정렬돼 있어서
   // 예전에 여기서 조립하던 순서와 동일하다.
-  const { allTitles, posLineupCounts } = await getTeamTitleData();
+  const { allTitles, seasonTitles, careerTitles, posLineupCounts } = await getTeamTitleData(season);
   const posCounts = posLineupCounts[name] ?? null;
   const maxPositionCount = posCounts ? Math.max(...Object.values(posCounts)) : 0;
   const mostPlayedPositions = posCounts
@@ -104,7 +136,37 @@ export default async function PlayerPage({
     ...(registeredPos !== "-" ? [registeredPos] : []),
     ...mostPlayedPositions,
   ]));
+  // 시즌 칭호 — 그 시즌 기록만으로 딴 것. 등급 컷이 통산보다 낮아 매 시즌 다시 등반한다.
+  const seasonEarned: EarnedTitle[] = seasonTitles[name] ?? [];
+  const careerEarned: EarnedTitle[] = careerTitles[name] ?? (isManager ? [managerTitle()] : []);
+
+  // 섹션을 하나만 쓸 때 보여 줄 목록 — 감독 → 리더(시즌 1위) → 통산 자동 칭호.
+  // 시즌제 이전과 같은 구성이다.
+  //
+  // ⚠️ 리더 칭호는 seasonTitles 에만 있다. 여기에 careerTitles 만 넘기면 득점왕·도움왕이
+  //    프로필에서 아예 사라진다.
   const titles: EarnedTitle[] = allTitles[name] ?? (isManager ? [managerTitle()] : []);
+
+  // 대표 칭호를 **고르는** 모집단은 통산 + 모든 시즌이다.
+  //
+  // 시즌 칭호는 휘발성이라(26-27 득점왕이어도 27-28엔 사라진다) 대표로 걸어 둬야
+  // 그 시즌 사실로 남는다. 지난 시즌도 고를 수 있어야 뒤늦게 아는 사람이 못 거는
+  // 함정이 안 생긴다. 기록이 있는 시즌만 부르고, 각 호출은 45초 캐시된다.
+  const otherSeasons = seasonsPlayed.filter((id) => id !== season);
+  const otherSeasonTitles = (
+    await Promise.all(
+      otherSeasons.map((id) =>
+        getTeamTitleData(id)
+          .then((d) => d.seasonTitles[name] ?? [])
+          // 한 시즌 집계가 실패해도 대표 편집 자체는 열려야 한다.
+          .catch((): EarnedTitle[] => []),
+      ),
+    )
+  ).flat();
+  // 리더는 titles(allTitles)와 seasonEarned 양쪽에 같은 키로 들어 있다 — 키로 한 번만 남긴다.
+  const featurePool: EarnedTitle[] = [...new Map(
+    [...titles, ...seasonEarned, ...otherSeasonTitles].map((t) => [featureKey(t), t]),
+  ).values()];
 
   // 출석률 + 최근 활약 경기
   const completed = rawMatches.slice(1)
@@ -128,7 +190,8 @@ export default async function PlayerPage({
         photos: r[12] || "",
       };
     })
-    .filter((m) => m.result !== "예정");
+    // 시즌 스코프 — 출석률·경기 그리드·연속 출석이 전부 이 목록에서 나온다.
+    .filter((m) => m.result !== "예정" && isInSeason(m.date, season));
 
   // 야유회는 경기가 아니라 행사다. 출석률·연속출석 어디에도 넣지 않는다 —
   // 백엔드 stats 도 출전 수에서 뺀다(routers/stats.py._is_outing).
@@ -182,23 +245,51 @@ export default async function PlayerPage({
   const rosterNames = new Set(
     rawRoster.slice(1).map((row) => (row[1] || "").trim()).filter(Boolean),
   );
-  const chemistry = buildPlayerChemistry(name, rawMatches, rawLineups, rosterNames);
-  const teamChemistry = canEdit ? buildTeamChemistry(rawMatches, rawLineups, rosterNames) : null;
+  // 시즌 밖 경기는 가려서 넘긴다(행은 그대로 둬야 index=matchId 링크가 안 깨진다).
+  // 라인업은 matchId 를 직접 들고 있어 그냥 걸러도 안전하다.
+  const seasonMatchRows = maskMatchRowsToSeason(rawMatches, season);
+  const seasonLineups = rowsOfMatchIds(rawLineups, seasonMatchIds(rawMatches, season));
+  const chemistry = buildPlayerChemistry(name, seasonMatchRows, seasonLineups, rosterNames);
+  const teamChemistry = canEdit
+    ? buildTeamChemistry(seasonMatchRows, seasonLineups, rosterNames)
+    : null;
 
   const accent = posColor(displayPositions[0] || registeredPos);
-  const statsReport = buildPlayerStatsReport(name, rawMatches, rawLineups, { apps, goals, assists, mom });
+  const season_ = seasonAccent(season);
+
+  // 시즌 래핑 진입점.
+  //   · 공개일([[seasons]] wrappedFrom) 전에는 운영진에게만 보인다 — 시즌이 안 끝났는데
+  //     "올 시즌 당신은…" 을 띄우면 김이 샌다.
+  //   · 남의 프로필에서는 안 띄운다(본인 것이거나 운영진일 때만). 래핑은 "내 것" 이다.
+  //   · 그 시즌 기록이 없으면 링크할 이유가 없다.
+  const showSeasonTitles = seasonEarned.length > 0 && !seasonIsEverything;
+  const wrappedPublic = isWrappedPublic(season);
+  const viewerIsAdmin = await currentIsAdmin();
+  const showWrapped = (wrappedPublic || viewerIsAdmin) && (canEdit || viewerIsAdmin) && apps > 0;
+  const statsReport = buildPlayerStatsReport(name, seasonMatchRows, seasonLineups, {
+    apps,
+    goals,
+    assists,
+    mom,
+  });
 
   // 탭이 통째로 빈 경우를 구분해야 빈 화면 대신 안내를 띄울 수 있다.
   const hasStatsTab = statsReport.totalQuarters > 0 || statsReport.recent.length > 0 || attendRate !== null;
   const hasChemTab = chemistry.partners.length > 0;
 
   return (
-    <main className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-white">
+    <main
+      className="season-scope min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-white"
+      style={{ "--season-light": season_.light, "--season-dark": season_.dark } as CSSProperties}
+    >
       <div className="max-w-md mx-auto pb-28">
         {/* 상단 바 */}
         <div className="app-page-header safe-header-py-3">
           <PlayerProfileBackButton />
           <span className="app-header-label">PLAYER</span>
+          <span className="ml-auto flex items-center">
+            <SeasonSelector current={season} withMatches={seasonsPlayed} />
+          </span>
         </div>
 
         {/* 히어로 — 인스타 프로필 구조.
@@ -306,9 +397,63 @@ export default async function PlayerPage({
         {/* 칭호 — 인스타 스토리 하이라이트 자리.
             라벨 줄("칭호 (12) · 대표 고르기")을 통째로 걷어냈다. 레퍼런스엔 하이라이트 위에
             라벨도 개수도 없고 편집은 줄 맨 앞 ＋ 동그라미가 맡는다(TitleHighlights). */}
+        {/* 칭호 — 시즌과 통산을 나눠 보여 준다.
+            시즌 칭호는 뱃지가 육각 + 브러시드라 통산(원형 + 광택)과 한눈에 갈린다.
+            대표 칭호(featured)는 통산에서만 고른다 — 시즌이 넘어가도 대표가 안 사라진다. */}
+        {showSeasonTitles && (
+          <section className="px-4 mt-4">
+            <p className="mb-2 text-[9.5px] font-black uppercase tracking-[0.16em] season-accent">
+              {seasonLabel(season)} 시즌
+            </p>
+            <PlayerTitleCards titles={seasonEarned} />
+          </section>
+        )}
+
+        {/* 대표 칭호를 고르는 줄. 시즌 섹션을 접는 동안에는 리더까지 포함한 전체(titles)를,
+            두 섹션으로 갈릴 때는 통산만(careerEarned) 보여 준다 — 리더는 위 시즌 줄에 있다. */}
         <section className="px-4 mt-4">
-          <TitleHighlights titles={titles} featuredIds={featuredIds} canEdit={canEdit} />
+          {showSeasonTitles && (
+            <p className="mb-2 text-[9.5px] font-black uppercase tracking-[0.16em] text-gray-400 dark:text-white/35">
+              통산
+            </p>
+          )}
+          <TitleHighlights
+            titles={showSeasonTitles ? careerEarned : titles}
+            featuredIds={featuredIds}
+            canEdit={canEdit}
+            featurePool={featurePool}
+          />
         </section>
+
+        {/* 시즌 래핑 진입 */}
+        {showWrapped && (
+          <a
+            href={`/wrapped?season=${season}${canEdit ? "" : `&player=${encodeURIComponent(name)}`}`}
+            className="mx-4 mt-4 flex items-center gap-3 rounded-2xl px-3.5 py-3 active:opacity-70"
+            style={{
+              background: "color-mix(in srgb, var(--season) 10%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--season) 26%, transparent)",
+            }}
+          >
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+              style={{ background: "color-mix(in srgb, var(--season) 18%, transparent)", color: "var(--season)" }}
+            >
+              <Sparkles width={16} height={16} strokeWidth={2.4} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[12.5px] font-black text-gray-900 dark:text-white">
+                {seasonLabel(season)} 시즌 돌아보기
+              </span>
+              <span className="mt-0.5 block text-[10px] font-bold text-gray-400 dark:text-white/35">
+                {wrappedPublic
+                  ? "한 장씩 넘겨 보는 나의 시즌 · 선수카드"
+                  : "공개 전 · 운영진만 보입니다"}
+              </span>
+            </span>
+            <ChevronRight width={15} height={15} strokeWidth={2.4} className="shrink-0 text-gray-300 dark:text-white/25" />
+          </a>
+        )}
 
         {/* 탭 — 피드 / 숫자 / 사람 */}
         <ProfileTabs
@@ -325,6 +470,7 @@ export default async function PlayerPage({
             hasStatsTab ? (
               <PlayerStatsReport
                 report={statsReport}
+                season={seasonLabel(season)}
                 attendance={{
                   rate: attendRate,
                   count: attendCount,

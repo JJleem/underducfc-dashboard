@@ -173,7 +173,7 @@ export async function drawStoryCanvas(
   setLetterSpacing(ctx, 0);
 
   const brand = ctx.createLinearGradient(W / 2 - 260, 0, W / 2 + 260, 0);
-  brand.addColorStop(0, "#FFB6C1");
+  brand.addColorStop(0, "#FF8FA3");
   brand.addColorStop(1, "#FF8FA3");
   ctx.fillStyle = brand;
   ctx.font = `900 66px ${FONT}`;
@@ -231,7 +231,7 @@ export async function drawStoryCanvas(
   setLetterSpacing(ctx, 0);
 
   const resultColor =
-    match.result === "승" ? "#FFB6C1" : match.result === "무" ? "#cbd5e1" : "#94a3b8";
+    match.result === "승" ? "#FF8FA3" : match.result === "무" ? "#cbd5e1" : "#94a3b8";
 
   ctx.font = `900 ${L.scoreSize}px ${FONT}`;
   ctx.fillStyle = resultColor;
@@ -305,7 +305,7 @@ export async function drawStoryCanvas(
       ctx.fillText(goalText, startX, gy);
       if (assistant) {
         ctx.font = `700 ${L.assistFont}px ${FONT}`;
-        ctx.fillStyle = "#FFB6C1";
+        ctx.fillStyle = "#FF8FA3";
         ctx.fillText(assistText, startX + gw, gy);
       }
       ctx.textAlign = "center";

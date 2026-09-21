@@ -578,3 +578,44 @@ body {
     scroll-behavior: auto;
   }
 }
+
+/* ── 시즌 대표색 ──
+   시즌마다 다른 핑크를 쓴다([[app/lib/seasons.ts]] 의 SeasonAccent).
+   서버 컴포넌트는 테마를 알 수 없으므로, 라이트/다크 두 값을 인라인 변수로 같이 내려주고
+   실제로 쓸 값은 여기서 고른다. 팀 브랜드 핑크(#FF8FA3)와는 별개의 축이다 —
+   탭바·버튼 같은 브랜드 면은 건드리지 않는다. */
+.season-scope {
+  --season: var(--season-light);
+  --ud-primary: var(--season-light);
+}
+.dark .season-scope {
+  --season: var(--season-dark);
+  --ud-primary: var(--season-dark);
+}
+.season-accent {
+  color: var(--season);
+}
+.season-accent-bg {
+  background: var(--season);
+}
+
+/* ── 팀 프라이머리 = 시즌 색 ──────────────────────────────────
+   원래 #FF8FA3 / #FFB6C1 이 497곳에 하드코딩돼 있어 시즌마다 바꿀 수가 없었다.
+   토큰 하나로 모으고, 보고 있는 시즌에 따라 이 값을 갈아끼운다.
+
+   --ud-primary 는 **이미 테마가 반영된 값**이다. 그래서 소비처는
+   `text-[#FF8FA3] dark:text-[#FFB6C1]` 대신 `text-[var(--ud-primary)]` 한 줄만 쓴다.
+
+   값은 [[app/lib/seasons.ts]] 의 SeasonAccent 에서 온다. 루트 레이아웃이 현재 시즌으로
+   깔고, 지난 시즌을 보는 화면이 자기 컨테이너에서 덮어쓴다. */
+:root {
+  /* 레이아웃이 현재 시즌 값을 인라인으로 덮어쓴다. 여기 값은 폴백. */
+  --season-light: #ff8fa3;
+  --season-dark: #ffb6c1;
+  --season: var(--season-light);
+  --ud-primary: var(--season-light);
+}
+.dark {
+  --season: var(--season-dark);
+  --ud-primary: var(--season-dark);
+}

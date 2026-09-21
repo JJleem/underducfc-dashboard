@@ -337,7 +337,7 @@ export default function LineupPitch({
                   fontSize: hasPlayer ? (displayLabel.length > 2 ? 9 : 13) : 11,
                   backgroundColor: isTbd ? "#374151" : hasPlayer ? color : "rgba(255,255,255,0.15)",
                   border: isSwapSource
-                    ? "2.5px solid #FF8FA3"
+                    ? "2.5px solid var(--ud-primary)"
                     : isActive
                     ? "2.5px solid #FBBF24"
                     : hasPlayer
@@ -442,7 +442,7 @@ export default function LineupPitch({
                         }
                         className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-black transition-all ${
                           on
-                            ? "bg-[#FF8FA3] text-white"
+                            ? "bg-[var(--ud-primary)] text-white"
                             : full
                             ? "bg-white/5 text-white/25"
                             : "bg-white/10 text-white/80"
@@ -460,7 +460,7 @@ export default function LineupPitch({
                     aria-pressed={swapSlot === slot}
                     className={`flex h-6 shrink-0 items-center gap-1 rounded-lg px-1.5 transition-all ${
                       swapSlot === slot
-                        ? "bg-[#FF8FA3] text-white ring-2 ring-[#FF8FA3]/45"
+                        ? "bg-[var(--ud-primary)] text-white ring-2 ring-[var(--ud-primary)]/45"
                         : "bg-white/10 text-white/70"
                     }`}
                   >

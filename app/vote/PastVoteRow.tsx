@@ -35,8 +35,8 @@ const GROUPS = [
   {
     key: "attending",
     label: "참석",
-    labelTone: "text-[#FF8FA3] dark:text-[#FFB6C1]",
-    chipTone: "bg-[#FF8FA3]/10 text-[#FF8FA3] dark:bg-[#FFB6C1]/15 dark:text-[#FFB6C1]",
+    labelTone: "text-[var(--ud-primary)]",
+    chipTone: "bg-[var(--ud-primary)]/10 text-[var(--ud-primary)] dark:bg-[var(--ud-primary)]/15 dark:text-[var(--ud-primary)]",
   },
   {
     key: "maybe",
@@ -130,7 +130,7 @@ export default function PastVoteRow({
             <>
               <div className="mt-2 flex h-[5px] overflow-hidden rounded-full bg-gray-100 dark:bg-white/5">
                 {tally.attending.length > 0 && (
-                  <div className="bg-[#FF8FA3]" style={{ width: pct(tally.attending.length) }} />
+                  <div className="bg-[var(--ud-primary)]" style={{ width: pct(tally.attending.length) }} />
                 )}
                 {tally.maybe.length > 0 && (
                   <div className="bg-amber-400" style={{ width: pct(tally.maybe.length) }} />
@@ -143,7 +143,7 @@ export default function PastVoteRow({
                 )}
               </div>
               <p className="mt-1.5 flex gap-2.5 text-[11px] font-bold">
-                <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">
+                <span className="text-[var(--ud-primary)]">
                   참석 <span className="tabular-nums">{tally.attending.length}</span>
                 </span>
                 <span className="text-amber-500 dark:text-amber-400">

@@ -1,4 +1,6 @@
 // app/layout.tsx
+import type { CSSProperties } from "react";
+import { currentSeasonId, seasonAccent } from "./lib/seasons";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { SessionProvider } from "next-auth/react";
@@ -101,12 +103,19 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const rootAccent = seasonAccent(currentSeasonId());
   const session = await auth();
   const signedIn = !!session?.user;
 
   return (
     // suppressHydrationWarning은 테마 깜빡임 방지용 필수 속성입니다
-    <html lang="ko" suppressHydrationWarning>
+    // 팀 프라이머리(--ud-primary)의 기본값을 **현재 시즌** 색으로 깐다.
+    // 지난 시즌을 보는 화면은 자기 컨테이너에 .season-scope 를 달아 덮어쓴다.
+    <html
+      lang="ko"
+      suppressHydrationWarning
+      style={{ "--season-light": rootAccent.light, "--season-dark": rootAccent.dark } as CSSProperties}
+    >
       <head>
         {/* Pretendard: 한글 가독성 + 고급스러운 타이포 (동적 서브셋) */}
         <link
@@ -153,7 +162,7 @@ export default async function RootLayout({
             <footer className="mt-auto w-full border-t border-gray-200/60 px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-6 dark:border-white/[0.06]">
               <div className="flex items-end justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FF8FA3] dark:text-[#FFB6C1]">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--ud-primary)]">
                     UNDERDUCK FC
                   </p>
                   <p className="mt-1.5 text-[9.5px] font-bold tracking-[0.06em] text-gray-400 dark:text-white/30">
@@ -163,7 +172,7 @@ export default async function RootLayout({
                 <Link
                   href="https://github.com/JJleem"
                   aria-label="molt GitHub"
-                  className="flex min-h-10 shrink-0 items-center gap-1.5 text-[10px] font-black text-gray-400 active:text-[#FF8FA3] dark:text-white/35 dark:active:text-[#FFB6C1]"
+                  className="flex min-h-10 shrink-0 items-center gap-1.5 text-[10px] font-black text-gray-400 active:text-[var(--ud-primary)] dark:text-white/35 dark:active:text-[var(--ud-primary)]"
                 >
                   <span className="relative h-4 w-4 overflow-hidden rounded-sm opacity-65">
                     <Image src="/molt.png" alt="" fill sizes="16px" className="object-contain" />

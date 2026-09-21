@@ -287,7 +287,7 @@ export default function LoungeDetailClient({
           aria-label={liked ? "좋아요 취소" : "좋아요"}
           className={`mt-5 flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-[12px] font-black transition-colors ${
             liked
-              ? "border-[#FF8FA3]/40 bg-[#FF8FA3]/10 text-[#e9758b] dark:border-[#FFB6C1]/30 dark:bg-[#FFB6C1]/10 dark:text-[#FFB6C1]"
+              ? "border-[var(--ud-primary)]/40 bg-[var(--ud-primary)]/10 text-[#e9758b] dark:border-[var(--ud-primary)]/30 dark:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)]"
               : "border-gray-200 text-gray-400 dark:border-white/10 dark:text-white/35"
           }`}
         >
@@ -311,8 +311,8 @@ export default function LoungeDetailClient({
 
       {/* 운영진 답변 — 본문 바로 아래. 답이 달린다는 게 보여야 다음 사람이 쓴다. */}
       {savedReply && (
-        <section className="mx-5 mt-6 rounded-2xl border border-[#FF8FA3]/25 bg-[#FF8FA3]/[0.06] p-4 dark:border-[#FFB6C1]/20 dark:bg-[#FFB6C1]/[0.06]">
-          <p className="flex flex-wrap items-center gap-1.5 text-[11px] font-black text-[#e9758b] dark:text-[#FFB6C1]">
+        <section className="mx-5 mt-6 rounded-2xl border border-[var(--ud-primary)]/25 bg-[var(--ud-primary)]/[0.06] p-4 dark:border-[var(--ud-primary)]/20 dark:bg-[var(--ud-primary)]/[0.06]">
+          <p className="flex flex-wrap items-center gap-1.5 text-[11px] font-black text-[#e9758b] dark:text-[var(--ud-primary)]">
             <ShieldCheck className="h-3.5 w-3.5" />
             운영진 답변
             {replyAuthor && <span className="opacity-70">· {replyAuthor}</span>}
@@ -463,7 +463,7 @@ export default function LoungeDetailClient({
             aria-expanded={pickerOpen}
             className={`shrink-0 transition-colors ${
               pickerOpen
-                ? "text-[#FF8FA3] dark:text-[#FFB6C1]"
+                ? "text-[var(--ud-primary)]"
                 : "text-gray-400 dark:text-white/30"
             }`}
           >
@@ -484,7 +484,7 @@ export default function LoungeDetailClient({
             onClick={addComment}
             disabled={sending || (!text.trim() && !emoticon)}
             aria-label="댓글 등록"
-            className="shrink-0 text-[#FF8FA3] disabled:opacity-30 dark:text-[#FFB6C1]"
+            className="shrink-0 text-[var(--ud-primary)] disabled:opacity-30 dark:text-[var(--ud-primary)]"
           >
             {sending ? (
               <Loader2 width={18} height={18} className="animate-spin" />

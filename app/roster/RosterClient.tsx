@@ -232,7 +232,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
             className="app-icon-action app-icon-action-neutral press-icon -my-1"
           >
             <Moon className="block h-4 w-4 text-gray-700 dark:hidden" />
-            <Sun className="hidden h-4 w-4 text-[#FFB6C1] dark:block" />
+            <Sun className="hidden h-4 w-4 text-[var(--ud-primary)] dark:block" />
           </button>
         </div>
       </header>
@@ -240,7 +240,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
       <main className="pb-28">
         <section className="relative overflow-hidden px-4 pb-5 pt-5">
           <div
-            className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[#FF8FA3]"
+            className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[var(--ud-primary)]"
             style={{ opacity: 0.15, filter: "blur(46px)" }}
           />
           <div
@@ -256,7 +256,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
             }}
           />
           <div className="relative">
-            <p className="text-[10px] font-black tracking-[0.18em] text-[#FF8FA3] dark:text-[#FFB6C1]">
+            <p className="text-[10px] font-black tracking-[0.18em] text-[var(--ud-primary)]">
               UNDERDUCK FC
             </p>
             <h1 className="mt-2 text-[25px] font-black leading-tight tracking-[-0.04em] text-gray-900 dark:text-white">
@@ -266,7 +266,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
               함께 뛰는 {playerList.length}명의 선수들
             </p>
             <div className="mt-4 flex items-center gap-3 text-[10px] font-black">
-              <span className="text-[#FF8FA3] dark:text-[#FFB6C1]">
+              <span className="text-[var(--ud-primary)]">
                 활동 {statusCounts.active}
               </span>
               {statusCounts.injured > 0 && (
@@ -476,7 +476,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                     className={`flex-1 rounded-xl py-2.5 text-[12px] font-black transition-colors ${
                       form.status === s
                         ? s === "활동"
-                          ? "bg-[#FF8FA3] text-white"
+                          ? "bg-[var(--ud-primary)] text-white"
                           : s === "부상"
                             ? "bg-red-500 text-white"
                             : "bg-gray-500 text-white dark:bg-white/35 dark:text-black"
@@ -505,7 +505,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                     className={`flex-1 rounded-xl py-2.5 text-[12px] font-black transition-colors ${
                       form.memo === r.value
                         ? r.value
-                          ? "bg-[#FF8FA3] text-white"
+                          ? "bg-[var(--ud-primary)] text-white"
                           : "bg-gray-500 text-white dark:bg-white/35 dark:text-black"
                         : "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300"
                     }`}

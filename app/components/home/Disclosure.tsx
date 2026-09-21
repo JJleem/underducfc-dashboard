@@ -69,7 +69,7 @@ export default function Disclosure({
         {showDot && (
           <span
             aria-label="새 내용"
-            className="pulse-new shrink-0 rounded-full bg-[#FF8FA3] px-1.5 py-[1px] text-[8px] font-black leading-[1.5] tracking-[0.06em] text-white dark:bg-[#FFB6C1] dark:text-gray-950"
+            className="pulse-new shrink-0 rounded-full bg-[var(--ud-primary)] px-1.5 py-[1px] text-[8px] font-black leading-[1.5] tracking-[0.06em] text-white dark:bg-[var(--ud-primary)] dark:text-gray-950"
           >
             NEW
           </span>

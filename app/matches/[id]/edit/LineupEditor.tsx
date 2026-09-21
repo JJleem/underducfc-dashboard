@@ -611,7 +611,7 @@ export default function LineupEditor({
             className="touch-target flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10"
           >
             <Moon className="block dark:hidden w-4 h-4 text-gray-700" />
-            <Sun className="hidden dark:block w-4 h-4 text-[#FFB6C1]" />
+            <Sun className="hidden dark:block w-4 h-4 text-[var(--ud-primary)]" />
           </button>
           <button
             onClick={handleSave}
@@ -621,7 +621,7 @@ export default function LineupEditor({
                 ? "bg-green-500 text-white"
                 : dirtyQuarters.length === 0
                 ? "bg-gray-100 text-gray-400 dark:bg-white/10 dark:text-gray-500"
-                : "bg-[#FFB6C1] text-black hover:bg-[#FF8FA3]"
+                : "bg-[var(--ud-primary)] text-black hover:bg-[var(--ud-primary)]"
             }`}
           >
             {saved ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
@@ -657,7 +657,7 @@ export default function LineupEditor({
                 onClick={() => setQuarter(q)}
                 className={`flex-shrink-0 text-[11px] font-black px-4 py-2 rounded-xl transition-all ${
                   quarter === q
-                    ? "bg-[#FFB6C1] text-black"
+                    ? "bg-[var(--ud-primary)] text-black"
                     : "bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10"
                 }`}
               >
@@ -761,7 +761,7 @@ export default function LineupEditor({
                             onClick={() => importFromBoard(pendingImport, q)}
                             className={`rounded-xl px-3 py-1.5 text-[11px] font-black text-white transition-all ${
                               q === pendingImport.quarter.quarter
-                                ? "bg-[#FF8FA3] hover:opacity-85"
+                                ? "bg-[var(--ud-primary)] hover:opacity-85"
                                 : "bg-blue-500 hover:bg-blue-600"
                             }`}
                           >
@@ -787,9 +787,9 @@ export default function LineupEditor({
                       if (!selectedPost) return null;
                       return (
                         <>
-                          <div className="flex items-center justify-between rounded-xl bg-[#FF8FA3]/10 px-3 py-2">
+                          <div className="flex items-center justify-between rounded-xl bg-[var(--ud-primary)]/10 px-3 py-2">
                             <div className="min-w-0">
-                              <p className="truncate text-[12px] font-black text-[#d94e6c] dark:text-[#FFB6C1]">
+                              <p className="truncate text-[12px] font-black text-[#d94e6c] dark:text-[var(--ud-primary)]">
                                 {selectedPost.author}님의 전술
                               </p>
                               <p className="truncate text-[10px] text-gray-400">
@@ -815,7 +815,7 @@ export default function LineupEditor({
                                 <button
                                   key={`${option.postId}-${option.quarter.quarter}`}
                                   onClick={() => setPendingImport(option)}
-                                  className="rounded-xl border border-gray-200 px-3 py-2 text-left transition-all hover:border-[#FF8FA3]/60 active:scale-[0.98] dark:border-white/10"
+                                  className="rounded-xl border border-gray-200 px-3 py-2 text-left transition-all hover:border-[var(--ud-primary)]/60 active:scale-[0.98] dark:border-white/10"
                                 >
                                   <span className="block text-[12px] font-black">
                                     {option.quarter.quarter}
@@ -847,9 +847,9 @@ export default function LineupEditor({
                       <button
                         key={group.postId}
                         onClick={() => setSelectedImportPostId(group.postId)}
-                        className="flex w-full items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-left transition-all hover:border-[#FF8FA3]/50 dark:border-white/10"
+                        className="flex w-full items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-left transition-all hover:border-[var(--ud-primary)]/50 dark:border-white/10"
                       >
-                        <span className="shrink-0 rounded-lg bg-[#FF8FA3]/15 px-2 py-1 text-[11px] font-black text-[#e75f7c] dark:text-[#FFB6C1]">
+                        <span className="shrink-0 rounded-lg bg-[var(--ud-primary)]/15 px-2 py-1 text-[11px] font-black text-[#e75f7c] dark:text-[var(--ud-primary)]">
                           {group.options.length}쿼터
                         </span>
                         <span className="min-w-0 flex-1">
@@ -872,7 +872,7 @@ export default function LineupEditor({
               </div>
             )}
             {importNote && (
-              <p className="rounded-xl bg-[#FF8FA3]/10 px-3 py-2 text-[11px] font-bold text-[#e75f7c] dark:text-[#FFB6C1]">
+              <p className="rounded-xl bg-[var(--ud-primary)]/10 px-3 py-2 text-[11px] font-bold text-[#e75f7c] dark:text-[var(--ud-primary)]">
                 {importNote}
               </p>
             )}
@@ -887,7 +887,7 @@ export default function LineupEditor({
               {shapeName}
             </span>
             {isCustom && (
-              <span className="text-[10px] font-black text-[#FF8FA3]">커스텀 배치</span>
+              <span className="text-[10px] font-black text-[var(--ud-primary)]">커스텀 배치</span>
             )}
           </div>
           <div className="flex gap-1.5 overflow-x-auto pb-1">
@@ -918,7 +918,7 @@ export default function LineupEditor({
                 title={t.desc}
                 className={`flex-shrink-0 text-[10px] font-black px-2.5 py-1 rounded-lg transition-all ${
                   tactic === t.id
-                    ? "bg-[#FF8FA3] text-white"
+                    ? "bg-[var(--ud-primary)] text-white"
                     : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400"
                 }`}
               >
@@ -956,7 +956,7 @@ export default function LineupEditor({
               {isCustom && (
                 <button
                   onClick={resetPositions}
-                  className="flex items-center gap-1 text-[10px] font-bold text-[#FF8FA3] hover:opacity-75"
+                  className="flex items-center gap-1 text-[10px] font-bold text-[var(--ud-primary)] hover:opacity-75"
                 >
                   <Move className="w-3 h-3" /> 배치 복귀
                 </button>
@@ -1020,7 +1020,7 @@ export default function LineupEditor({
                   onClick={() => handleSlotClick("sub", i)}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-black transition-all border ${
                     isSwapSource
-                      ? "border-[#FF8FA3] bg-[#FF8FA3]/10 text-[#e75f7c] dark:text-[#FFB6C1]"
+                      ? "border-[var(--ud-primary)] bg-[var(--ud-primary)]/10 text-[#e75f7c] dark:text-[var(--ud-primary)]"
                       : isActive
                       ? "border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300"
                       : sub
@@ -1053,7 +1053,7 @@ export default function LineupEditor({
                   if (e.key === "Enter" && !e.nativeEvent.isComposing) addGuest();
                 }}
                 placeholder="게스트 이름 입력"
-                className="flex-1 bg-transparent text-[12px] font-bold text-gray-800 outline-none placeholder-gray-400 focus-visible:ring-2 focus-visible:ring-[#FF8FA3]/30 dark:text-gray-100"
+                className="flex-1 bg-transparent text-[12px] font-bold text-gray-800 outline-none placeholder-gray-400 focus-visible:ring-2 focus-visible:ring-[var(--ud-primary)]/30 dark:text-gray-100"
               />
             </div>
             <button
@@ -1070,7 +1070,7 @@ export default function LineupEditor({
               onClick={() => handlePlayerClick("미정")}
               className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all border border-dashed cursor-pointer ${
                 pickedPlayer === "미정"
-                  ? "border-[#FF8FA3] bg-[#FF8FA3] text-white ring-2 ring-[#FF8FA3]/40"
+                  ? "border-[var(--ud-primary)] bg-[var(--ud-primary)] text-white ring-2 ring-[var(--ud-primary)]/40"
                   : "border-gray-400 dark:border-white/30 bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10"
               }`}
             >
@@ -1097,13 +1097,13 @@ export default function LineupEditor({
                       onClick={() => handlePlayerClick(name)}
                       className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
                         isPicked
-                          ? "bg-[#FF8FA3] text-white border border-[#FF8FA3] ring-2 ring-[#FF8FA3]/40"
+                          ? "bg-[var(--ud-primary)] text-white border border-[var(--ud-primary)] ring-2 ring-[var(--ud-primary)]/40"
                           : isGuest
                           ? used
                             ? "bg-gray-200 dark:bg-white/10 text-gray-500 border border-gray-300 dark:border-white/10"
                             : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 border border-dashed border-gray-400 dark:border-white/30 hover:bg-gray-200 dark:hover:bg-white/20"
                           : used
-                          ? "bg-[#FFB6C1]/20 text-[#FF8FA3] dark:text-[#FFB6C1] border border-[#FFB6C1]/30"
+                          ? "bg-[var(--ud-primary)]/20 text-[var(--ud-primary)] border border-[var(--ud-primary)]/30"
                           : "bg-white dark:bg-white/10 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-white/20"
                       }`}
                     >
@@ -1157,7 +1157,7 @@ export default function LineupEditor({
           <div className="mb-3 flex items-center justify-between">
             <div>
               <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-300">
-                <ArrowRightLeft className="h-3.5 w-3.5 text-[#FF8FA3]" />
+                <ArrowRightLeft className="h-3.5 w-3.5 text-[var(--ud-primary)]" />
                 교체 기록
               </p>
               <p className="mt-1 text-[10px] font-semibold text-gray-400">경기 중 나간 선수와 들어온 선수를 기록합니다</p>
@@ -1175,7 +1175,7 @@ export default function LineupEditor({
             <button
               type="button"
               onClick={() => setSubstitutions([{ out: "", in: "", time: "" }])}
-              className="w-full rounded-xl border border-dashed border-gray-200 py-4 text-[11px] font-bold text-gray-400 transition-colors hover:border-[#FF8FA3]/50 hover:text-[#FF8FA3] dark:border-white/10"
+              className="w-full rounded-xl border border-dashed border-gray-200 py-4 text-[11px] font-bold text-gray-400 transition-colors hover:border-[var(--ud-primary)]/50 hover:text-[var(--ud-primary)] dark:border-white/10"
             >
               + 첫 교체 기록 추가
             </button>
@@ -1285,7 +1285,7 @@ export default function LineupEditor({
                 ? "bg-emerald-500 text-white"
                 : dirtyQuarters.length === 0
                 ? "bg-gray-100 text-gray-400 dark:bg-white/5 dark:text-gray-500"
-                : "bg-[#FFB6C1] text-black hover:bg-[#FF8FA3]"
+                : "bg-[var(--ud-primary)] text-black hover:bg-[var(--ud-primary)]"
             } disabled:opacity-70`}
           >
             {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
