@@ -51,9 +51,19 @@ export function useReportNavTab(key: NavKey | null): void {
   }, [key, setOverride]);
 }
 
-/** 에디터는 전체화면 작업 모드라 탭바를 띄우지 않는다. */
+/**
+ * 전체화면 모드라 탭바를 띄우지 않는 곳.
+ *
+ * 에디터는 작업 모드라서, 래핑(/wrapped)은 한 장씩 넘겨 보는 스토리라서 그렇다.
+ * 래핑은 탭바가 있으면 아래 화살표·진행바와 겹쳐 읽히고, 무엇보다 "한 해를 닫는
+ * 화면" 이 앱 메뉴 위에 얹힌 꼴이 된다. 나가는 길은 오른쪽 위 X 하나로 둔다.
+ */
 function isFullscreenRoute(pathname: string): boolean {
-  return pathname.startsWith("/matchday-gallery") || /^\/matches\/[^/]+\/edit\/?$/.test(pathname);
+  return (
+    pathname.startsWith("/matchday-gallery") ||
+    pathname.startsWith("/wrapped") ||
+    /^\/matches\/[^/]+\/edit\/?$/.test(pathname)
+  );
 }
 
 function activeFromPath(pathname: string, tab: string | null): NavKey | null {
