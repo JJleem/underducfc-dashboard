@@ -17,6 +17,7 @@ import {
   maskMatchRowsToSeason,
   seasonStatus,
   daysUntilSeason,
+  latestPublicWrappedSeason,
 } from "../app/lib/seasons.ts";
 
 
@@ -266,4 +267,15 @@ test("아는 시즌은 그 시즌으로, 모르는 값은 전체로 떨어진다
   assert.equal(resolveSeasonFilter("2627"), "2627");
   assert.equal(resolveSeasonFilter("9999"), null);
   assert.equal(resolveSeasonFilter(["2526", "2627"]), "2526");
+});
+
+test("래핑 기본 시즌은 '전원 공개된 가장 최근 시즌' 이다 — 현재 시즌이 아니다", () => {
+  // 개막일(11/1)부터 현재 시즌은 26-27 인데 그 래핑은 아직 안 열렸다.
+  // 기본을 현재 시즌으로 두면 막 열린 25-26 래핑 대신 404 가 뜬다.
+  const kst = (d, h = 0) => new Date(`${d}T${String(h).padStart(2, "0")}:00:00+09:00`);
+  assert.equal(latestPublicWrappedSeason(kst("2026-10-31", 23)), null);
+  assert.equal(latestPublicWrappedSeason(kst("2026-11-01", 0)), "2526");
+  assert.equal(latestPublicWrappedSeason(kst("2027-03-01", 12)), "2526");
+  // 같은 순간 현재 시즌은 이미 26-27 이다.
+  assert.equal(currentSeasonId(kst("2026-11-01", 0)), "2627");
 });

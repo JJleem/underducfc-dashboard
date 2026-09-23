@@ -140,6 +140,9 @@ const ROSETTE = rosettePath();
  * 원형(통산)·방패(감독)·톱니(리더)와 12px 에서도 실루엣만으로 갈린다.
  * 외접원 반지름 49로 원형 코인과 같은 시각 크기를 맞춘다.
  */
+/** 사진을 박을 때의 원 반지름. 톱니 안쪽(≈34.8)보다 살짝 크게 잡아 금속 테를 조금 덮는다. */
+const PHOTO_R = 36;
+
 const HEX = "M50 1 L92.43 25.5 L92.43 74.5 L50 99 L7.57 74.5 L7.57 25.5 Z";
 
 /** 코인 한 장. circle 통산 / hex 시즌 / shield 감독 / rosette 리더 */
@@ -148,11 +151,14 @@ function Coin({
   size,
   metal,
   shape = "circle",
+  photo,
 }: {
   title: EarnedTitle;
   size: number;
   metal: Metal;
   shape?: "circle" | "hex" | "shield" | "rosette";
+  /** 에나멜 자리에 아이콘 대신 박을 사진(선수 얼굴). 시즌 리더 같은 큰 메달 전용. */
+  photo?: string | null;
 }) {
   const [xhi, hi, base, shadow, dark] = metal.ramp;
   // 14px 미만에선 스페큘러·이너베벨을 끈다. 작을 때 디테일은 노이즈가 된다.
@@ -241,6 +247,12 @@ function Coin({
         <clipPath id={`${uid}-k`}>
           <path d={outer} />
         </clipPath>
+        {photo && (
+          // 사진은 모양과 상관없이 원으로 자른다. 톱니 안쪽 모양 그대로 자르면 얼굴 테두리가 거칠다.
+          <clipPath id={`${uid}-p`}>
+            <circle cx="50" cy="50" r={PHOTO_R} />
+          </clipPath>
+        )}
       </defs>
 
       <path d={outer} fill={`url(#${uid}-r)`} />
@@ -282,13 +294,32 @@ function Coin({
         />
       )}
 
-      {/* 에나멜: 금속 위에 잉크빛 단색으로 박아 넣는다 */}
-      {icon}
+      {/* 에나멜: 금속 위에 잉크빛 단색으로 박아 넣는다. 사진이 있으면 그 자리에 사진을 박는다. */}
+      {photo ? (
+        <g clipPath={`url(#${uid}-p)`}>
+          <rect width="100" height="100" fill={ENAMEL_MID} />
+          <image href={photo} x="14" y="12" width="72" height="96" preserveAspectRatio="xMidYMin slice" />
+          {/* 사진 아래를 에나멜 쪽으로 가라앉혀 테두리 금속과 이어지게 한다 */}
+          <rect width="100" height="100" fill={`url(#${uid}-f)`} opacity="0.22" />
+          <circle cx="50" cy="50" r={PHOTO_R - 0.6} fill="none" stroke={xhi} strokeWidth="1.2" opacity="0.7" />
+        </g>
+      ) : (
+        icon
+      )}
     </svg>
   );
 }
 
-export function TitleBadge({ title, size = 26 }: { title: EarnedTitle; size?: number }) {
+export function TitleBadge({
+  title,
+  size = 26,
+  photo,
+}: {
+  title: EarnedTitle;
+  size?: number;
+  /** 아이콘 대신 에나멜에 박을 사진. 리더 메달에서만 쓴다. */
+  photo?: string | null;
+}) {
   const label = title.tierLabel ? `${title.name} · ${title.tierLabel}` : title.name;
 
   // 감독은 방패, 리더는 톱니 메달. 등급 사다리 밖의 칭호는 실루엣부터 다르게 간다 —
@@ -303,7 +334,7 @@ export function TitleBadge({ title, size = 26 }: { title: EarnedTitle; size?: nu
   if (title.variant === "leader") {
     return (
       <span title={label} aria-label={label} style={{ display: "inline-flex", flex: "0 0 auto" }}>
-        <Coin title={title} size={size} metal={LEADER_METAL} shape="rosette" />
+        <Coin title={title} size={size} metal={LEADER_METAL} shape="rosette" photo={photo} />
       </span>
     );
   }

@@ -4,8 +4,7 @@ import { LineupData, MatchData } from "../../lib/match-types";
 import MatchDetailClient from "./MatchDetailClient";
 import { notFound } from "next/navigation";
 import { parseSubstitutions } from "../../lib/lineup";
-import { pickBadges, type EarnedTitle } from "../../lib/titles";
-import { getTeamTitleData } from "../../lib/titles-cache";
+import { buildPlayerBadges, getTeamTitleData } from "../../lib/titles-cache";
 import { currentSeasonId, seasonOf } from "../../lib/seasons";
 
 export default async function MatchDetailPage({
@@ -118,10 +117,7 @@ export default async function MatchDetailPage({
     const ids = [row[1], row[2], row[3]].map((value) => (value || "").trim()).filter(Boolean);
     if (ids.length) featuredMap[name] = ids;
   });
-  const playerTitles: Record<string, EarnedTitle[]> = {};
-  Object.entries(allTitles).forEach(([name, all]) => {
-    playerTitles[name] = pickBadges(all, featuredMap[name]);
-  });
+  const playerTitles = await buildPlayerBadges(allTitles, featuredMap);
 
   return (
     <MatchDetailClient

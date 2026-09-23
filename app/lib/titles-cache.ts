@@ -27,7 +27,7 @@
 
 import { unstable_cache } from "next/cache";
 import { UD_READ_REVALIDATE, UD_READ_TAG, UD_TAG } from "./cache";
-import { seasonLabel } from "./seasons";
+import { seasonById, seasonLabel } from "./seasons";
 import { getMatchesRows } from "./matches-backend";
 import {
   getStatsRows,
@@ -44,7 +44,10 @@ import {
   buildContexts,
   evaluateLeaders,
   evaluatePlayer,
+  featureKey,
   managerTitle,
+  normalizeFeatureKey,
+  pickBadges,
   MANAGER_NAME,
   SEASON_TITLES,
   type EarnedTitle,
@@ -190,3 +193,43 @@ export const getTeamTitleData = unstable_cache(
   ["underduck-team-titles"],
   { revalidate: UD_READ_REVALIDATE, tags: [UD_READ_TAG, UD_TAG.titles] },
 );
+
+/**
+ * 선수별 뱃지(대표 칭호 우선, 없으면 자동 상위 3) — 홈·게시판·경기 상세 공용.
+ *
+ * allTitles 는 "그 시즌 리더 + 통산" 뿐이다. 대표로 걸어 둔 **시즌 칭호**(지난 시즌
+ * 득점왕, 시즌 등급 칭호)는 거기 없어서 pickBadges 에 그대로 넘기면 조용히 빠진다 —
+ * 개막일 아침에 전 시즌 득점왕 대표가 전원 사라진다. 그래서 대표 키가 가리키는 시즌의
+ * seasonTitles 에서 찾아 붙인다. **걸어 둔 것만** 붙인다(자동 채움에 지난 시즌이 섞이면 안 된다).
+ */
+export async function buildPlayerBadges(
+  allTitles: Record<string, EarnedTitle[]>,
+  featuredMap: Record<string, string[]>,
+): Promise<Record<string, EarnedTitle[]>> {
+  const seasonIds = new Set<string>();
+  Object.values(featuredMap).flat().forEach((raw) => {
+    const id = normalizeFeatureKey(raw).match(/^season:([^:]+):/)?.[1];
+    if (id && seasonById(id)) seasonIds.add(id);
+  });
+  // 한 시즌 집계가 실패해도 나머지 뱃지는 그대로 뜬다.
+  const bySeason = await Promise.all(
+    [...seasonIds].map((id) =>
+      getTeamTitleData(id)
+        .then((d) => d.seasonTitles)
+        .catch((): Record<string, EarnedTitle[]> => ({})),
+    ),
+  );
+
+  const out: Record<string, EarnedTitle[]> = {};
+  new Set([...Object.keys(allTitles), ...Object.keys(featuredMap)]).forEach((name) => {
+    const own = allTitles[name] ?? [];
+    const wanted = new Set((featuredMap[name] ?? []).map(normalizeFeatureKey));
+    const have = new Set(own.map(featureKey));
+    const pinned = bySeason.flatMap((titles) =>
+      (titles[name] ?? []).filter((t) => wanted.has(featureKey(t)) && !have.has(featureKey(t))),
+    );
+    const badges = pickBadges([...own, ...pinned], featuredMap[name]);
+    if (badges.length) out[name] = badges;
+  });
+  return out;
+}

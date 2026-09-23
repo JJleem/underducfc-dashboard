@@ -28,10 +28,12 @@ import { isOuting, isCasualMatch, isMomOf } from "../components/home/match-resul
 import {
   isInSeason,
   isWrappedPublic,
+  latestPublicWrappedSeason,
   maskMatchRowsToSeason,
   resolveSeasonId,
   rowsOfMatchIds,
   seasonAccent,
+  seasonById,
   seasonLabel,
   seasonMatchIds,
 } from "../lib/seasons";
@@ -52,7 +54,9 @@ export default async function WrappedPage({
   searchParams: Promise<{ season?: string; player?: string }>;
 }) {
   const { season: seasonParam, player: playerParam } = await searchParams;
-  const season = resolveSeasonId(seasonParam);
+  // 시즌을 안 찍고 들어오면 **막 열린 래핑**을 보여 준다. 현재 시즌이 아니다 —
+  // 공개일부터 현재 시즌은 아직 안 열린 새 시즌이라 404 가 뜬다([[seasons]] 참고).
+  const season = seasonById(seasonParam)?.id ?? latestPublicWrappedSeason() ?? resolveSeasonId(undefined);
 
   const session = await auth();
   const myName = session?.user?.name?.trim() || "";

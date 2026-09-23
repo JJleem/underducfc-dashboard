@@ -14,13 +14,25 @@ import {
   isInSeason,
   resolveSeasonId,
   seasonAccent,
+  seasonStatus,
   seasonsWithMatches,
 } from "../lib/seasons";
+import { getTeamTitleData } from "../lib/titles-cache";
 import PageHeader from "../components/home/PageHeader";
 import PlayerFace from "../components/PlayerFace";
 import SeasonEmpty from "../components/SeasonEmpty";
 import SeasonSelector from "../components/SeasonSelector";
 import StatsTable, { type PlayerStat } from "./StatsTable";
+import SeasonLeaders, { type SeasonLeader } from "./SeasonLeaders";
+
+// 보여 줄 순서와 단위. 리더 판정 자체는 titles.LEADER_TITLES 가 한다.
+const LEADER_ORDER: { id: string; unit: string }[] = [
+  { id: "lead_goals", unit: "골" },
+  { id: "lead_apps", unit: "경기" },
+  { id: "lead_assists", unit: "도움" },
+  { id: "lead_points", unit: "P" },
+  { id: "lead_cleansheet", unit: "경기" },
+];
 
 export const dynamic = "force-dynamic";
 
@@ -37,12 +49,31 @@ export default async function StatsPage({
   // 모르는 ?season= 값은 조용히 현재 시즌으로 떨어진다.
   const season = resolveSeasonId((await searchParams).season);
 
-  const [rawMatches, rawStats, rawRoster] = await Promise.all([
+  const [rawMatches, rawStats, rawRoster, seasonTitles] = await Promise.all([
     getMatchesRows(),
     // 선수 순위는 백엔드가 그 시즌 경기만 집계해서 준다.
     getStatsRows(season).catch((): string[][] => []),
     getRosterRows().catch((): string[][] => []),
+    // 리더는 칭호 계산 결과를 그대로 쓴다. 실패하면 리더 줄만 빠진다.
+    getTeamTitleData(season)
+      .then((d) => d.seasonTitles)
+      .catch(() => ({}) as Awaited<ReturnType<typeof getTeamTitleData>>["seasonTitles"]),
   ]);
+
+  const leaders: SeasonLeader[] = LEADER_ORDER.flatMap(({ id, unit }) => {
+    const won = Object.entries(seasonTitles)
+      .map(([name, titles]) => ({ name, t: titles.find((t) => t.id === id) }))
+      .filter((x) => x.t);
+    if (!won.length) return [];
+    const t = won[0].t!;
+    return [{
+      id,
+      title: t,
+      unit,
+      value: Number(t.stats?.[0]?.value) || 0,
+      holders: won.map((x) => x.name).sort((a, b) => a.localeCompare(b, "ko")),
+    }];
+  });
 
   const accent = seasonAccent(season);
   const seasonsPlayed = [...seasonsWithMatches(rawMatches)];
@@ -120,6 +151,8 @@ export default async function StatsPage({
         />
       ) : (
         <>
+      <SeasonLeaders leaders={leaders} final={seasonStatus(season) === "past"} />
+
       {/* 시즌 요약 — 카드로 감싸지 않는다. 프로필 히어로와 같은 문법. */}
       <section className="relative overflow-hidden px-4 pt-5">
         {/* 글로우는 시즌 대표색. 지금 어느 시즌을 보는지 라벨을 안 읽어도 알게 된다. */}

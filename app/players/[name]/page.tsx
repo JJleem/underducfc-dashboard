@@ -22,6 +22,7 @@ import { getTeamTitleData } from "../../lib/titles-cache";
 import {
   isInSeason,
   isWrappedPublic,
+  latestPublicWrappedSeason,
   resolveSeasonId,
   seasonAccent,
   seasonLabel,
@@ -263,9 +264,23 @@ export default async function PlayerPage({
   //   · 남의 프로필에서는 안 띄운다(본인 것이거나 운영진일 때만). 래핑은 "내 것" 이다.
   //   · 그 시즌 기록이 없으면 링크할 이유가 없다.
   const showSeasonTitles = seasonEarned.length > 0 && !seasonIsEverything;
-  const wrappedPublic = isWrappedPublic(season);
+  //   · 보고 있는 시즌이 아직 안 열렸으면 **막 열린 지난 시즌**을 띄운다. 공개일이 곧
+  //     다음 시즌 개막일이라, 프로필 기본(현재 시즌)만 보면 버튼이 영영 안 뜬다.
   const viewerIsAdmin = await currentIsAdmin();
-  const showWrapped = (wrappedPublic || viewerIsAdmin) && (canEdit || viewerIsAdmin) && apps > 0;
+  const wrappedSeason =
+    (isWrappedPublic(season) || viewerIsAdmin) && apps > 0 ? season : latestPublicWrappedSeason();
+  const wrappedApps =
+    wrappedSeason === season
+      ? apps
+      : rawMatches.slice(1).filter(
+          (r) =>
+            isInSeason(r[0], wrappedSeason ?? "") &&
+            (r[6] || "예정") !== "예정" &&
+            !isOuting(r[7] || "") &&
+            (r[11] || "").split(",").map((v) => v.trim()).includes(name),
+        ).length;
+  const wrappedPublic = !!wrappedSeason && isWrappedPublic(wrappedSeason);
+  const showWrapped = !!wrappedSeason && (canEdit || viewerIsAdmin) && wrappedApps > 0;
   const statsReport = buildPlayerStatsReport(name, seasonMatchRows, seasonLineups, {
     apps,
     goals,
@@ -428,7 +443,7 @@ export default async function PlayerPage({
         {/* 시즌 래핑 진입 */}
         {showWrapped && (
           <a
-            href={`/wrapped?season=${season}${canEdit ? "" : `&player=${encodeURIComponent(name)}`}`}
+            href={`/wrapped?season=${wrappedSeason}${canEdit ? "" : `&player=${encodeURIComponent(name)}`}`}
             className="mx-4 mt-4 flex items-center gap-3 rounded-2xl px-3.5 py-3 active:opacity-70"
             style={{
               background: "color-mix(in srgb, var(--season) 10%, transparent)",
@@ -443,7 +458,7 @@ export default async function PlayerPage({
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-[12.5px] font-black text-gray-900 dark:text-white">
-                {seasonLabel(season)} 시즌 돌아보기
+                {seasonLabel(wrappedSeason ?? season)} 시즌 돌아보기
               </span>
               <span className="mt-0.5 block text-[10px] font-bold text-gray-400 dark:text-white/35">
                 {wrappedPublic

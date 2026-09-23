@@ -219,6 +219,20 @@ export function isWrappedPublic(seasonId: string, now: Date = new Date()): boole
 }
 
 /**
+ * 래핑이 전원에게 열린 시즌 중 가장 최근 것. 없으면 null.
+ *
+ * /wrapped 와 프로필 진입 버튼의 기본값이다. 현재 시즌을 기본으로 두면 안 된다 —
+ * 래핑은 시즌이 **끝난 뒤** 열리므로, 공개일(= 다음 시즌 개막일)부터 현재 시즌은
+ * 이미 아직 안 열린 새 시즌이고 막 열린 래핑 대신 404 가 뜬다.
+ */
+export function latestPublicWrappedSeason(now: Date = new Date()): string | null {
+  for (let i = SEASONS.length - 1; i >= 0; i--) {
+    if (isWrappedPublic(SEASONS[i].id, now)) return SEASONS[i].id;
+  }
+  return null;
+}
+
+/**
  * 개막까지 남은 날수. 이미 시작했거나 시작일이 없으면 null.
  * 개막일 확정 전의 임시 날짜여도 "며칠 남았다" 자체는 맞는 말이라 그대로 보여 준다.
  */

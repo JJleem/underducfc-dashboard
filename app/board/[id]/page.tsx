@@ -3,11 +3,8 @@ import { auth } from "@/auth";
 import { isAdmin } from "../../lib/admin";
 import { getBoardPost, listBoardComments, getMyLikedPostIds, listBoardPosts } from "../../lib/board";
 import { getRosterRows, getStatsRows, getFeaturedRows } from "../../lib/backend";
-import {
-  pickBadges,
-  type EarnedTitle,
-} from "../../lib/titles";
-import { getTeamTitleData } from "../../lib/titles-cache";
+import type { EarnedTitle } from "../../lib/titles";
+import { buildPlayerBadges, getTeamTitleData } from "../../lib/titles-cache";
 import { currentSeasonId } from "../../lib/seasons";
 import BoardDetailClient from "./BoardDetailClient";
 
@@ -89,9 +86,7 @@ export default async function BoardDetailPage({
       const ids = [row[1], row[2], row[3]].map((v) => (v || "").trim()).filter(Boolean);
       if (ids.length) featuredMap[name] = ids;
     });
-    Object.entries(allTitles).forEach(([name, all]) => {
-      playerTitles[name] = pickBadges(all, featuredMap[name]);
-    });
+    Object.assign(playerTitles, await buildPlayerBadges(allTitles, featuredMap));
   }
 
   const currentUser = session?.user

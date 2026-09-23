@@ -25,8 +25,7 @@ import {
 import { parseSubstitutions } from "../../lib/lineup";
 import { isVoteClosed, isMatchDayOver } from "../../lib/vote-deadline";
 import { buildMatchStorylines, type Storyline } from "../../lib/storylines";
-import { pickBadges, type EarnedTitle } from "../../lib/titles";
-import { getTeamTitleData } from "../../lib/titles-cache";
+import { buildPlayerBadges, getTeamTitleData } from "../../lib/titles-cache";
 import {
   ALL_SEASONS,
   SEASONS,
@@ -360,10 +359,7 @@ export default async function NewHome({
     const ids = [r[1], r[2], r[3]].map((x) => (x || "").trim()).filter(Boolean);
     if (ids.length) featuredMap[name] = ids;
   });
-  const playerTitles: Record<string, EarnedTitle[]> = {};
-  Object.entries(allTitles).forEach(([name, all]) => {
-    playerTitles[name] = pickBadges(all, featuredMap[name]);
-  });
+  const playerTitles = await buildPlayerBadges(allTitles, featuredMap);
 
   const storylinesByMatch: Record<number, Storyline[]> = {};
   matches.forEach((m) => {
