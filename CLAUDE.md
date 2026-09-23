@@ -22,7 +22,7 @@ npm run backup:photos      # Cloudinary 사진 백업
 ```
 
 테스트는 `tests/*.test.mjs` 에 있고 `app/lib` 의 `chemistry` · `home-state` · `lineup` ·
-`matchday-art` · `seasons` · `wrapped` 를 덮습니다. `titles.ts` · `positions.ts` 는 아직 테스트가 없습니다.
+`matchday-art` · `season-compare` · `seasons` · `wrapped` 를 덮습니다. `titles.ts` · `positions.ts` 는 아직 테스트가 없습니다.
 (`titles.ts` 는 확장자 없는 상대 import 가 있어 node ESM 테스트에서 바로 import 되지 않습니다 —
 그래서 `scaleSeasonTiers` 가 `seasons.ts` 에 있습니다.)
 

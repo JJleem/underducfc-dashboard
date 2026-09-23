@@ -248,6 +248,23 @@ export function daysUntilSeason(seasonId: string, now: Date = new Date()): numbe
   return Math.round((toUtc(start) - toUtc(today)) / 86_400_000);
 }
 
+/** 개막 카운트다운을 띄우기 시작하는 날수. 한 달 반 — 그보다 이르면 "D-120" 이 오래 떠 있어 무뎌진다. */
+export const OPENING_COUNTDOWN_DAYS = 45;
+
+/**
+ * 다음 시즌 개막 카운트다운(홈 헤더). 개막 45일 전 ~ 전날까지만 값이 있다.
+ * 개막일 당일부터는 null — 그땐 이미 현재 시즌이라 헤더의 시즌 표기가 바뀐다.
+ */
+export function openingCountdown(
+  now: Date = new Date(),
+): { seasonId: string; label: string; days: number } | null {
+  for (const s of SEASONS) {
+    const days = daysUntilSeason(s.id, now);
+    if (days !== null && days <= OPENING_COUNTDOWN_DAYS) return { seasonId: s.id, label: s.label, days };
+  }
+  return null;
+}
+
 /**
  * matches 행(헤더 포함, 배열 index = matchId)에서 해당 시즌 경기의 matchId 집합.
  *

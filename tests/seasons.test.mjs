@@ -18,6 +18,7 @@ import {
   seasonStatus,
   daysUntilSeason,
   latestPublicWrappedSeason,
+  openingCountdown,
 } from "../app/lib/seasons.ts";
 
 
@@ -278,4 +279,32 @@ test("래핑 기본 시즌은 '전원 공개된 가장 최근 시즌' 이다 —
   assert.equal(latestPublicWrappedSeason(kst("2027-03-01", 12)), "2526");
   // 같은 순간 현재 시즌은 이미 26-27 이다.
   assert.equal(currentSeasonId(kst("2026-11-01", 0)), "2627");
+});
+
+// ───────────────────────── 26-27 전환 회귀 ─────────────────────────
+// 경계는 KST 11/1 0시 = UTC 10/31 15:00. Vercel 은 UTC 로 돈다.
+
+test("전환 경계: UTC 10/31 14:59:59 까지는 25-26, 15:00 부터 26-27", () => {
+  const before = new Date("2026-10-31T14:59:59Z");
+  const at = new Date("2026-10-31T15:00:00Z");
+  assert.equal(currentSeasonId(before), "2526");
+  assert.equal(currentSeasonId(at), "2627");
+  assert.equal(resolveSeasonId(undefined, at), "2627");
+  assert.equal(seasonStatus("2526", at), "past");
+  assert.equal(seasonStatus("2627", at), "current");
+});
+
+test("전환 경계: 같은 순간 래핑 기본 시즌은 막 열린 25-26 이다", () => {
+  assert.equal(latestPublicWrappedSeason(new Date("2026-10-31T14:59:59Z")), null);
+  assert.equal(latestPublicWrappedSeason(new Date("2026-10-31T15:00:00Z")), "2526");
+});
+
+test("개막 D-day 는 개막 45일 전부터만 뜬다", () => {
+  const kst = (d) => new Date(`${d}T09:00:00+09:00`);
+  assert.equal(openingCountdown(kst("2026-09-16")), null); // 46일 전
+  assert.deepEqual(openingCountdown(kst("2026-09-17")), { seasonId: "2627", label: "26-27", days: 45 });
+  assert.deepEqual(openingCountdown(kst("2026-09-23")), { seasonId: "2627", label: "26-27", days: 39 });
+  assert.deepEqual(openingCountdown(kst("2026-10-31")), { seasonId: "2627", label: "26-27", days: 1 });
+  // 개막일 당일부터는 D-day 가 아니라 그냥 현재 시즌이다.
+  assert.equal(openingCountdown(kst("2026-11-01")), null);
 });

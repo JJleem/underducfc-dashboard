@@ -45,6 +45,8 @@ import ChemistryHub from "../../components/ChemistryHub";
 import { buildPlayerChemistry, buildTeamChemistry } from "../../lib/chemistry";
 import PlayerStatsReport from "../../components/PlayerStatsReport";
 import { buildPlayerStatsReport } from "../../lib/player-stats";
+import { buildSeasonCompare, type SeasonLine } from "../../lib/season-compare";
+import SeasonCompareTable from "../../components/SeasonCompareTable";
 
 export const dynamic = "force-dynamic";
 
@@ -290,11 +292,45 @@ export default async function PlayerPage({
 
   // 탭이 통째로 빈 경우를 구분해야 빈 화면 대신 안내를 띄울 수 있다.
   const hasStatsTab = statsReport.totalQuarters > 0 || statsReport.recent.length > 0 || attendRate !== null;
+
+  // 시즌 비교 — 기록이 있는 시즌이 둘 이상일 때만 뜬다. 스탯은 백엔드 시즌 집계,
+  // 출석률은 위 출석률과 같은 기준(치른 경기 · 명단 있음 · 야유회 제외)으로 센다.
+  const compareSeasons = SEASONS.filter((s) => seasonsPlayed.includes(s.id));
+  const seasonCompare =
+    compareSeasons.length < 2
+      ? null
+      : buildSeasonCompare(
+          await Promise.all(
+            compareSeasons.map(async (s): Promise<SeasonLine> => {
+              const rows = s.id === season ? rawStats : await getStatsRows(s.id).catch(optional);
+              const r = rows.slice(1).find((x) => (x[1] || "").trim() === name);
+              const teamGames = rawMatches.slice(1).filter(
+                (m) =>
+                  (m[6] || "예정") !== "예정" &&
+                  isInSeason(m[0], s.id) &&
+                  (m[11] || "").trim() &&
+                  !isOuting(m[7] || ""),
+              );
+              return {
+                id: s.id,
+                label: s.label,
+                apps: Number(r?.[3]) || 0,
+                goals: Number(r?.[4]) || 0,
+                assists: Number(r?.[5]) || 0,
+                mom: Number(r?.[6]) || 0,
+                attended: teamGames.filter((m) =>
+                  (m[11] || "").split(",").map((v) => v.trim()).includes(name),
+                ).length,
+                total: teamGames.length,
+              };
+            }),
+          ),
+        );
   const hasChemTab = chemistry.partners.length > 0;
 
   return (
     <main
-      className="season-scope min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-white"
+      className="season-scope min-h-dvh bg-gray-50 text-gray-900 dark:bg-background dark:text-white"
       style={{ "--season-light": season_.light, "--season-dark": season_.dark } as CSSProperties}
     >
       <div className="max-w-md mx-auto pb-28">
@@ -482,7 +518,14 @@ export default async function PlayerPage({
             )
           }
           stats={
-            hasStatsTab ? (
+            hasStatsTab || seasonCompare ? (
+              <>
+              {seasonCompare && (
+                <div className="pt-4">
+                  <SeasonCompareTable compare={seasonCompare} />
+                </div>
+              )}
+              {hasStatsTab && (
               <PlayerStatsReport
                 report={statsReport}
                 season={seasonLabel(season)}
@@ -494,6 +537,8 @@ export default async function PlayerPage({
                   accent,
                 }}
               />
+              )}
+              </>
             ) : (
               <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-gray-600">
                 아직 쌓인 기록이 없어요.

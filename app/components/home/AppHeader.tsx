@@ -21,7 +21,7 @@ import {
 } from "../ui/dropdown-menu";
 import NewMatchButton from "./NewMatchButton";
 import { MATCHDAY_GALLERY_SEEN_KEY } from "../../lib/matchday-gallery";
-import { currentSeasonId, seasonAccent, seasonLabel } from "../../lib/seasons";
+import { currentSeasonId, openingCountdown, seasonAccent, seasonLabel } from "../../lib/seasons";
 
 /**
  * 로고 옆 시즌 표기. "25-26" 에서 **뒷자리만** 그 시즌 대표색으로 칠한다
@@ -51,6 +51,36 @@ function SeasonMark() {
   );
 }
 
+/**
+ * 다음 시즌 개막 카운트다운. 개막 한 달 전부터 전날까지만 뜬다(openingCountdown).
+ * 색은 **다음 시즌** 대표색 — 곧 바뀔 색을 미리 보여 준다. 헤더 폭 때문에 글자는 "D-9" 뿐이고 시즌 표기 위에 뜬다.
+ */
+function OpeningCountdown() {
+  const next = openingCountdown();
+  if (!next) return null;
+  const accent = seasonAccent(next.seasonId);
+  return (
+    <span
+      className="season-scope absolute -right-1 -top-3 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[7.5px] font-black normal-case leading-none tracking-wide tabular-nums text-white shadow-sm"
+      style={
+        {
+          "--season-light": accent.light,
+          "--season-dark": accent.dark,
+          background: "var(--season)",
+        } as CSSProperties
+      }
+      aria-label={`${next.label} 시즌 개막까지 ${next.days}일`}
+      title={`${next.label} 시즌 개막까지 ${next.days}일`}
+      // 자정 전후로 서버·브라우저 날짜가 하루 어긋날 수 있다. 한 글자 차이라 경고만 끈다.
+      suppressHydrationWarning
+    >
+      {/* 360px 폰에서 헤더에 남는 폭이 0 이라, 갤러리 NEW 뱃지처럼 시즌 표기 위에 띄운다
+          (레이아웃 폭을 안 먹는다). 어느 시즌 개막인지는 뱃지 색과 aria-label 이 말한다. */}
+      D-{next.days}
+    </span>
+  );
+}
+
 export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[] }) {
   const { resolvedTheme, setTheme } = useTheme();
   const { data: session } = useSession();
@@ -67,11 +97,14 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white/70 px-5 safe-header-py-35 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/70">
+    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white/70 px-5 safe-header-py-35 backdrop-blur-xl dark:border-white/[0.06] dark:bg-background/70">
       <span className="flex items-center gap-2 text-[15px] font-extrabold uppercase tracking-tight text-gray-900 dark:text-white">
         <span className="h-1.5 w-1.5 rounded-full bg-[var(--ud-primary)]" />
         UNDERDUCK
-        <SeasonMark />
+        <span className="relative">
+          <SeasonMark />
+          <OpeningCountdown />
+        </span>
       </span>
 
       <div className="flex items-center gap-2">
