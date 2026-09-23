@@ -131,7 +131,7 @@ export default async function StatsPage({
 
   return (
     <main
-      className="season-scope relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100"
+      className="season-scope relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-background dark:text-zinc-100"
       // 라이트/다크 두 값을 같이 내려주고 globals.css 가 테마에 맞는 쪽을 고른다
       // (서버 컴포넌트라 여기서는 테마를 알 수 없다).
       style={{ "--season-light": accent.light, "--season-dark": accent.dark } as CSSProperties}

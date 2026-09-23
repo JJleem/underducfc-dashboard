@@ -201,7 +201,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
   );
 
   return (
-    <div className="relative mx-auto min-h-[100dvh] max-w-md overflow-hidden bg-gray-50 font-sans text-gray-900 transition-colors duration-300 dark:bg-[#09090b] dark:text-zinc-100">
+    <div className="relative mx-auto min-h-[100dvh] max-w-md overflow-hidden bg-gray-50 font-sans text-gray-900 transition-colors duration-300 dark:bg-background dark:text-zinc-100">
       <header className="app-workspace-header safe-header-py-3">
         <div className="flex items-center gap-2">
           <Link

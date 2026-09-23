@@ -101,7 +101,7 @@ export default async function RecordPage({
 
   return (
     <main
-      className="season-scope relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100"
+      className="season-scope relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-background dark:text-zinc-100"
       style={{ "--season-light": accent.light, "--season-dark": accent.dark } as CSSProperties}
     >
       <PageHeader

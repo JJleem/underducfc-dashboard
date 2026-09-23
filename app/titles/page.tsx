@@ -142,7 +142,7 @@ export default function TitlesPage() {
   const categories = Array.from(new Set(visibleTitles.map((title) => title.category)));
 
   return (
-    <main className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-white">
+    <main className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-background dark:text-white">
       <header className="app-header-surface sticky top-0 z-40 flex safe-header-h-14 items-center gap-3 px-4">
         <Link
           href="/"

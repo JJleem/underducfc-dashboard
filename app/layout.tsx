@@ -78,8 +78,8 @@ export const viewport: Viewport = {
   //    pb-[env(safe-area-inset-bottom)] 이 무효가 되고 홈 인디케이터와 겹친다.
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f9fafb" },
-    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+    { media: "(prefers-color-scheme: light)", color: "#faf9f9" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f0f13" },
   ],
 };
 // iOS standalone 실행 시 흰 화면 번쩍임을 없애는 스플래시 이미지.
@@ -148,7 +148,7 @@ export default async function RootLayout({
           <NavTabProvider>
           <ServiceWorkerRegister />
           {/* 📱 모바일 앱 프레임 래퍼 */}
-          <div className="max-w-md mx-auto min-h-[100dvh] flex flex-col bg-gray-50 dark:bg-[#09090b] shadow-2xl relative overflow-hidden transition-colors duration-300">
+          <div className="max-w-md mx-auto min-h-[100dvh] flex flex-col bg-gray-50 dark:bg-background shadow-2xl relative overflow-hidden transition-colors duration-300">
             {signedIn ? (
             <>
             <PushNotificationBanner />

@@ -403,10 +403,10 @@ export default async function NewHome({
   });
 
   return (
-    <main className="relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100">
+    <main className="relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-background dark:text-zinc-100">
       {/* 미리보기 전용 스위치 — 실제 홈에는 없다 */}
       {preview && (
-      <div className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/85 px-3 safe-header-py-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/85">
+      <div className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/85 px-3 safe-header-py-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-background/85">
         <div className="flex items-center gap-1.5 overflow-x-auto">
           <span className="shrink-0 pr-1 text-[9px] font-black tracking-[0.14em] text-gray-400">
             PREVIEW

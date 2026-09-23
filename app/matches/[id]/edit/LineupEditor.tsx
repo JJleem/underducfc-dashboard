@@ -587,7 +587,7 @@ export default function LineupEditor({
   };
 
   return (
-    <div className="min-h-dvh bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto shadow-2xl overflow-hidden">
+    <div className="min-h-dvh bg-gray-50 dark:bg-background text-gray-900 dark:text-zinc-100 font-sans max-w-md mx-auto shadow-2xl overflow-hidden">
       {/* 헤더 */}
       <header className="app-workspace-header app-workspace-header-wide safe-header-py-35">
         <button

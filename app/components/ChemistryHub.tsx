@@ -69,9 +69,9 @@ function TeamMap({ report, playerName }: { report: TeamChemistry; playerName: st
       </div>
 
       <div className="mt-4 overflow-x-auto border-y border-gray-200/70 dark:border-white/[0.07]">
-        <div className="w-max min-w-full bg-gray-50 dark:bg-[#09090b]">
+        <div className="w-max min-w-full bg-gray-50 dark:bg-background">
           <div className="grid" style={{ gridTemplateColumns: `64px repeat(${orderedPlayers.length}, 42px)` }}>
-            <div className="sticky left-0 z-20 border-r border-white/70 bg-gray-50/75 shadow-[8px_0_18px_-14px_rgba(17,24,39,0.45)] backdrop-blur-md dark:border-white/[0.07] dark:bg-[#09090b]/70" />
+            <div className="sticky left-0 z-20 border-r border-white/70 bg-gray-50/75 shadow-[8px_0_18px_-14px_rgba(17,24,39,0.45)] backdrop-blur-md dark:border-white/[0.07] dark:bg-background/70" />
             {orderedPlayers.map((name) => (
               <div key={name} className={`relative h-16 ${name === playerName ? "bg-[var(--ud-primary)]/10 text-[#F56F88] dark:bg-[var(--ud-primary)]/[0.08] dark:text-[var(--ud-primary)]" : "text-gray-400 dark:text-white/30"}`}>
                 <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black leading-none [writing-mode:vertical-rl]">
@@ -81,7 +81,7 @@ function TeamMap({ report, playerName }: { report: TeamChemistry; playerName: st
             ))}
             {orderedPlayers.map((rowName) => (
               <div key={`row-${rowName}`} className="contents">
-                <div className={`sticky left-0 z-10 flex h-10 items-center truncate border-r border-t px-2 text-[9px] font-black shadow-[8px_0_18px_-14px_rgba(17,24,39,0.45)] backdrop-blur-md ${rowName === playerName ? "border-r-white/70 border-t-[var(--ud-primary)]/20 bg-[#FFDCE3]/75 text-[#F56F88] dark:border-r-white/[0.07] dark:border-t-[var(--ud-primary)]/15 dark:bg-[#351D24]/70 dark:text-[var(--ud-primary)]" : "border-r-white/70 border-t-gray-100 bg-gray-50/75 text-gray-500 dark:border-r-white/[0.07] dark:border-t-white/[0.04] dark:bg-[#09090b]/70 dark:text-white/35"}`}>{rowName}</div>
+                <div className={`sticky left-0 z-10 flex h-10 items-center truncate border-r border-t px-2 text-[9px] font-black shadow-[8px_0_18px_-14px_rgba(17,24,39,0.45)] backdrop-blur-md ${rowName === playerName ? "border-r-white/70 border-t-[var(--ud-primary)]/20 bg-[#FFDCE3]/75 text-[#F56F88] dark:border-r-white/[0.07] dark:border-t-[var(--ud-primary)]/15 dark:bg-[#351D24]/70 dark:text-[var(--ud-primary)]" : "border-r-white/70 border-t-gray-100 bg-gray-50/75 text-gray-500 dark:border-r-white/[0.07] dark:border-t-white/[0.04] dark:bg-background/70 dark:text-white/35"}`}>{rowName}</div>
                 {orderedPlayers.map((colName) => {
                   const pair = rowName === colName ? null : pairs.get(pairId(rowName, colName));
                   const value = pair ? valueOf(pair) : 0;

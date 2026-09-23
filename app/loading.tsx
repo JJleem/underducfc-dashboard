@@ -89,12 +89,12 @@ function FeedSkeleton({ goals = false }: { goals?: boolean }) {
 export default function Loading() {
   return (
     <div
-      className="mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100"
+      className="mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-background dark:text-zinc-100"
       aria-label="홈을 불러오는 중"
       aria-busy="true"
     >
       {/* 앱 헤더는 실제 높이를 그대로 유지한다. */}
-      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white/70 px-5 safe-header-py-35 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#09090b]/70">
+      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white/70 px-5 safe-header-py-35 backdrop-blur-xl dark:border-white/[0.06] dark:bg-background/70">
         <span className="flex items-center gap-2 text-[15px] font-extrabold uppercase tracking-tight text-gray-900 dark:text-white">
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--ud-primary)]" />
           UNDERDUCK

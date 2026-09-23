@@ -724,7 +724,7 @@ export default function VoteClient({
   };
 
   return (
-    <main className="relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100">
+    <main className="relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-background dark:text-zinc-100">
       <div className="app-page-header safe-header-py-3">
         <Link
           href="/"

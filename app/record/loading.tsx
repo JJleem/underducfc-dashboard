@@ -9,7 +9,7 @@ const SOFT = "skeleton-shimmer bg-gray-100 dark:bg-white/[0.05]";
 export default function Loading() {
   return (
     <div
-      className="mx-auto min-h-dvh max-w-md bg-gray-50 dark:bg-[#09090b]"
+      className="mx-auto min-h-dvh max-w-md bg-gray-50 dark:bg-background"
       aria-label="전적을 불러오는 중"
       aria-busy="true"
     >
@@ -21,7 +21,7 @@ export default function Loading() {
 
       <main aria-hidden>
         {/* 상대팀 / 경기장 세그먼트 스위치 */}
-        <div className="sticky top-[49px] z-[9] border-b border-gray-200/60 bg-gray-50/90 px-4 py-3 backdrop-blur dark:border-white/[0.06] dark:bg-[#09090b]/90">
+        <div className="sticky top-[49px] z-[9] border-b border-gray-200/60 bg-gray-50/90 px-4 py-3 backdrop-blur dark:border-white/[0.06] dark:bg-background/90">
           <div className="grid grid-cols-2 gap-1 rounded-xl bg-gray-200/65 p-1 dark:bg-white/[0.07]">
             <div className={`h-8 rounded-lg ${SHIMMER}`} />
             <div className={`h-8 rounded-lg ${SOFT}`} />

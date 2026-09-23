@@ -12,7 +12,7 @@ const PLAYER_POINTS = [
 export default function Loading() {
   return (
     <div
-      className="mx-auto min-h-dvh max-w-md overflow-hidden bg-gray-50 text-gray-900 shadow-2xl dark:bg-[#09090b] dark:text-zinc-100"
+      className="mx-auto min-h-dvh max-w-md overflow-hidden bg-gray-50 text-gray-900 shadow-2xl dark:bg-background dark:text-zinc-100"
       aria-label="라인업 편집 화면을 불러오는 중"
       aria-busy="true"
     >

@@ -25,7 +25,7 @@ export default function LoginGate() {
   const [installOpen, setInstallOpen] = useState(false);
 
   return (
-    <main className="relative flex min-h-dvh flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain bg-gray-50 px-5 text-gray-900 dark:bg-[#09090b] dark:text-white">
+    <main className="relative flex min-h-dvh flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain bg-gray-50 px-5 text-gray-900 dark:bg-background dark:text-white">
       {/* 언더덕 마크를 종이의 워터마크처럼 아주 옅게 깐다. */}
       <div
         aria-hidden

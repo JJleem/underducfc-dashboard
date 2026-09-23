@@ -93,7 +93,7 @@ export default function MatchDetailClient({
   const upcoming = match.result === "예정";
 
   return (
-    <main className="min-h-dvh bg-gray-50 pb-6 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100">
+    <main className="min-h-dvh bg-gray-50 pb-6 text-gray-900 dark:bg-background dark:text-zinc-100">
       <header className="app-page-header safe-header-py-3">
         <Link
           href="/"

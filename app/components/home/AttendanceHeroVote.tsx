@@ -95,7 +95,7 @@ export default function AttendanceHeroVote({
             animate={{ opacity: 1, scale: 1 }}
             exit={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.99 }}
             transition={{ duration: reduceMotion ? 0 : 0.32, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute -inset-x-4 -bottom-1 -top-5 z-20 flex flex-col items-center justify-center bg-gray-50 text-center dark:bg-[#09090b]"
+            className="absolute -inset-x-4 -bottom-1 -top-5 z-20 flex flex-col items-center justify-center bg-gray-50 text-center dark:bg-background"
           >
             <motion.span
               initial={reduceMotion ? false : { scale: 0.72, rotate: -7 }}

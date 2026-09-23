@@ -231,7 +231,7 @@ export default function BoardLineupClient({
   }
 
   return (
-    <div className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100 font-sans max-w-md mx-auto shadow-2xl">
+    <div className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-background dark:text-zinc-100 font-sans max-w-md mx-auto shadow-2xl">
       <header className="app-workspace-header safe-header-py-3">
         <Link href="/board" aria-label="전술 게시판으로" className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300">
           <ArrowLeft className="h-[18px] w-[18px]" />

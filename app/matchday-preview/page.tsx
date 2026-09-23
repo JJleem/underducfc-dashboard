@@ -62,7 +62,7 @@ function PreviewCard({
   const dDay = Number(countdown);
 
   return (
-    <article className="overflow-hidden border-y border-gray-200 bg-white dark:border-white/[0.08] dark:bg-[#09090b]">
+    <article className="overflow-hidden border-y border-gray-200 bg-white dark:border-white/[0.08] dark:bg-background">
       <header className="flex items-center gap-2.5 px-4 py-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -167,8 +167,8 @@ export default async function MatchdayPreviewPage({
   const files = candidates();
 
   return (
-    <main className="min-h-dvh bg-[#f6f6f7] pb-16 text-gray-900 dark:bg-[#09090b] dark:text-white">
-      <div className="sticky top-0 z-20 border-b border-black/[0.06] bg-[#f6f6f7]/90 px-4 pb-3 pt-[max(14px,env(safe-area-inset-top))] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#09090b]/90">
+    <main className="min-h-dvh bg-[#f6f6f7] pb-16 text-gray-900 dark:bg-background dark:text-white">
+      <div className="sticky top-0 z-20 border-b border-black/[0.06] bg-[#f6f6f7]/90 px-4 pb-3 pt-[max(14px,env(safe-area-inset-top))] backdrop-blur-xl dark:border-white/[0.08] dark:bg-background/90">
         <div className="mx-auto max-w-[430px]">
           <p className="text-[9px] font-black tracking-[0.18em] text-[var(--ud-primary)]">
             MATCHDAY LAB

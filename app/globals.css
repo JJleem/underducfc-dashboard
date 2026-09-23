@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f6f6f7;
+  --background: #f7f6f6;
   --foreground: #18181b;
   --app-brand: #ff8fa3;
   --app-brand-strong: #f56f88;
@@ -24,11 +24,12 @@
 }
 
 .dark {
-  --background: #09090b;
+  /* 순검정(#09090b)에서 한 톤 올린 먹색. 화면이 덜 꺼져 보이고 카드 경계가 부드러워진다. */
+  --background: #0f0f13;
   --foreground: #f4f4f5;
   --app-brand: #ffb6c1;
   --app-brand-strong: #ff8fa3;
-  --app-surface: #09090b;
+  --app-surface: #0f0f13;
   --app-surface-raised: rgba(9, 9, 11, 0.86);
   --app-border-subtle: rgba(255, 255, 255, 0.065);
   --app-text-muted: rgba(255, 255, 255, 0.38);
@@ -48,6 +49,29 @@
     BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Roboto,
     "Helvetica Neue", "Noto Sans KR", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+
+/* ── 전체 톤 — "살짝 부드럽게" ──
+   클래스는 한 줄도 안 바꾸고 Tailwind 공용 값만 덮어쓴다. 되돌리려면 이 블록을 지우면 된다.
+   · 굵기: font-black 이 600곳 가까이 쓰여 화면이 딱딱했다. Pretendard 는 가변 굵기라
+     한 단계씩만 내린다(900→820, 800→760, 700→650). 위계는 그대로 남는다.
+   · 모서리: xl·2xl·3xl 을 한 단계씩 둥글게.
+   · 움직임: 기본 전환을 150ms 선형 감속 → 220ms 부드러운 감속 곡선.
+   · 회색 50: 차가운 청회색(#f9fafb)을 아주 옅게 따뜻하게. 페이지 바탕 50여 곳이 이걸 쓴다. */
+@theme {
+  --font-weight-bold: 650;
+  --font-weight-extrabold: 760;
+  --font-weight-black: 820;
+
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
+
+  --default-transition-duration: 220ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --color-gray-50: #faf9f9;
 }
 
 html {

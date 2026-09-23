@@ -3,7 +3,7 @@ const SOFT = "skeleton-shimmer bg-gray-100 dark:bg-white/[0.05]";
 
 export default function Loading() {
   return (
-    <div className="mx-auto min-h-dvh max-w-md bg-gray-50 pb-28 dark:bg-[#09090b]">
+    <div className="mx-auto min-h-dvh max-w-md bg-gray-50 pb-28 dark:bg-background">
       <div className="app-page-header safe-header-py-3">
         <div className={`h-[18px] w-[18px] rounded ${SHIMMER}`} />
         <div className={`h-3 w-16 rounded ${SOFT}`} />

@@ -24,7 +24,7 @@ function RosterLine({ chips, tone }: { chips: number[]; tone: string }) {
 export default function Loading() {
   return (
     <div
-      className="mx-auto min-h-dvh max-w-md bg-gray-50 dark:bg-[#09090b]"
+      className="mx-auto min-h-dvh max-w-md bg-gray-50 dark:bg-background"
       aria-label="출석 투표를 불러오는 중"
       aria-busy="true"
     >
