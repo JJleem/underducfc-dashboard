@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateAppData } from "@/app/lib/cache";
 import { finalizeMomVotes } from "@/app/lib/finalize-mom";
 
-// 매주 월요일 12:00 KST. 토요일 경기의 투표는 일요일 정오쯤 닫히므로 여유가 있다.
+// 매분 실행. 경기별 투표 마감 시각이 지나면 바로 다음 실행에서 확정한다.
 // 확정할 게 없으면 아무것도 쓰지 않는다(멱등).
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
