@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { revalidateAppData } from "@/app/lib/cache";
-import { requireAdmin } from "@/app/lib/admin";
+import { requireUser } from "@/app/lib/admin";
 import { finalizeMomVotes } from "@/app/lib/finalize-mom";
 
-// 관리자 수동 실행. 정기 확정은 크론이 한다(app/api/cron/finalize-mom).
+// 로그인 회원이 투표 마감을 감지하면 호출한다. 입력값 없이 서버가 마감 경기만 확정한다.
 export async function POST() {
-  const denied = await requireAdmin();
+  const denied = await requireUser();
   if (denied) return denied;
   try {
     const finalized = await finalizeMomVotes();

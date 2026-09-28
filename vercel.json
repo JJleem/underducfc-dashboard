@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/finalize-mom",
-      "schedule": "* * * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }

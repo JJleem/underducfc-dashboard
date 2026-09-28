@@ -12,7 +12,7 @@
 // 처음엔 칩을 본문에 늘어놓았더니 "뭘 누르는 화면인지" 알 수가 없었다.
 // 결과(막대)와 투표(드로어)를 분리해야 각각이 무슨 화면인지 읽힌다.
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Crown, Loader2, Shield, Star, Target } from "lucide-react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer";
@@ -251,6 +251,21 @@ export default function MomVote({
   const deadline = countdownPreview ? previewDeadline : actualDeadline;
   const closed = now !== null && (!deadline || now >= deadline.getTime());
   const shownMoms = countdownPreview ? [] : confirmedMoms;
+  const finalizeRequested = useRef(false);
+
+  useEffect(() => {
+    if (countdownPreview || !closed || shownMoms.length > 0 || serverVotes.length === 0 || !userName) return;
+    if (finalizeRequested.current) return;
+    finalizeRequested.current = true;
+    void fetch("/api/mom-vote/finalize", { method: "POST" })
+      .then((response) => {
+        if (!response.ok) throw new Error(`MOM finalize failed: ${response.status}`);
+        router.refresh();
+      })
+      .catch(() => {
+        finalizeRequested.current = false;
+      });
+  }, [closed, countdownPreview, router, serverVotes.length, shownMoms.length, userName]);
 
   const candidates = (tally: Record<string, number>, allow: Set<string>) =>
     attendees.filter((n) => {
