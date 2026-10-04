@@ -387,7 +387,11 @@ export default function MatchEditor({
                                 </span>
                               ) : (
                                 <>
-                                  <span className="text-[13px] font-bold text-gray-900 dark:text-white">
+                                  <span className={`text-[13px] font-bold ${
+                                    event.scorer === "게스트"
+                                      ? "text-teal-600 dark:text-teal-400"
+                                      : "text-gray-900 dark:text-white"
+                                  }`}>
                                     {event.scorer}
                                   </span>
                                   {event.assister && (
@@ -433,6 +437,20 @@ export default function MatchEditor({
                                 {name}
                               </button>
                             ))}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPickScorer("게스트");
+                                setPickAssister("");
+                              }}
+                              className={`${CHIP} ${
+                                pickScorer === "게스트"
+                                  ? "bg-teal-500 text-white"
+                                  : "border border-teal-200 bg-teal-50 text-teal-600 dark:border-teal-800/50 dark:bg-teal-950/30 dark:text-teal-400"
+                              }`}
+                            >
+                              게스트
+                            </button>
                             <button
                               type="button"
                               onClick={() => {
