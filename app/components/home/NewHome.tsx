@@ -30,6 +30,7 @@ import {
   ALL_SEASONS,
   SEASONS,
   currentSeasonId,
+  latestPublicWrappedSeason,
   resolveSeasonFilter,
   seasonLabel,
   seasonOf,
@@ -37,6 +38,7 @@ import {
   seasonsWithMatches,
 } from "../../lib/seasons";
 import SeasonSelector from "../SeasonSelector";
+import WrappedAutoOpen from "../wrapped/WrappedAutoOpen";
 import type { LineupData, MatchData } from "../../lib/match-types";
 import {
   HOME_STATES,
@@ -129,6 +131,7 @@ export default async function NewHome({
   const kakaoId = (session?.user as { kakaoId?: string } | undefined)?.kakaoId ?? "";
   const userName = session?.user?.name?.trim() || undefined;
   const admin = isAdmin(session?.user);
+  const wrappedSeasonToOpen = latestPublicWrappedSeason();
   const failedSections: string[] = [];
   const optionalRows = async (label: string, read: Promise<string[][]>) => {
     try {
@@ -404,6 +407,8 @@ export default async function NewHome({
 
   return (
     <main className="relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-background dark:text-zinc-100">
+      {/* 래핑이 막 공개됐으면 첫 진입 한 번만 데려간다 */}
+      {!preview && userName && wrappedSeasonToOpen && <WrappedAutoOpen seasonId={wrappedSeasonToOpen} />}
       {/* 미리보기 전용 스위치 — 실제 홈에는 없다 */}
       {preview && (
       <div className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/85 px-3 safe-header-py-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-background/85">

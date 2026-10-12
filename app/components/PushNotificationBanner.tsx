@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { usePathname } from "next/navigation";
 import { Bell, X } from "lucide-react";
 
 const STORAGE_KEY = "push_banner_dismissed";
@@ -27,7 +28,9 @@ export default function PushNotificationBanner() {
   );
   const [dismissed, setDismissed] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-  const show = ask && !dismissed;
+  // 래핑은 전체화면 스토리라 배너가 건너뛰기·닫기 버튼을 덮는다(하단 탭도 거기선 숨긴다).
+  const onWrapped = usePathname().startsWith("/wrapped");
+  const show = ask && !dismissed && !onWrapped;
   const setShow = (v: boolean) => setDismissed(!v);
 
   const handleAllow = async () => {
