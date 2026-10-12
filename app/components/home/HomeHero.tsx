@@ -304,6 +304,7 @@ export default function HomeHero({
               playerStats={playerStats}
               playerTitles={playerTitles}
               editHref={isAdmin ? `/matches/${nextMatch.id}/edit` : undefined}
+              autoReveal
             />
           </div>
         )}

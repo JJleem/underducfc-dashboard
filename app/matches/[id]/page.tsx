@@ -122,8 +122,9 @@ export default async function MatchDetailPage({
   });
   const playerTitles = await buildPlayerBadges(allTitles, featuredMap);
 
-  // 결과 공개 축하 화면 — 정식 경기 + 스코어가 있는 승·무·패 + 경기 후 3일 이내만.
-  // 지난 경기를 처음 구경하러 들어갔는데 축포가 터지면 어색하다.
+  // 결과 공개 축하 화면 재료 — 정식 경기 + 스코어가 있는 승·무·패.
+  // 자동으로 띄우는 건 경기 후 3일 이내만(지난 경기를 처음 구경하러 들어갔는데 축포가 터지면 어색하다).
+  // 다시 보기(스코어 누르기)는 날짜와 상관없이 된다.
   const our = Number(match.ourScore);
   const their = Number(match.theirScore);
   const age = daysSince(match.date);
@@ -131,10 +132,7 @@ export default async function MatchDetailPage({
     ["승", "무", "패"].includes(match.result) &&
     !isCasualMatch(match.result, match.type, match.opponent) &&
     Number.isFinite(our) &&
-    Number.isFinite(their) &&
-    age !== null &&
-    age >= 0 &&
-    age <= 3
+    Number.isFinite(their)
       ? {
           matchId,
           our,
@@ -146,6 +144,7 @@ export default async function MatchDetailPage({
           mom: match.mom ?? "",
         }
       : null;
+  const autoReveal = reveal && age !== null && age >= 0 && age <= 3;
 
   return (
     <>
@@ -156,8 +155,9 @@ export default async function MatchDetailPage({
         captainRoles={captainRoles}
         playerStats={playerStats}
         playerTitles={playerTitles}
+        reveal={reveal}
       />
-      {reveal && <ResultReveal data={reveal} accent={seasonAccent(season).light} />}
+      {autoReveal && <ResultReveal data={reveal} accent={seasonAccent(season).light} />}
     </>
   );
 }

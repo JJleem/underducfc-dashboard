@@ -1,8 +1,9 @@
 "use client";
 
-// 경기 결과 공개 — 결과가 나온 경기의 상세에 처음 들어오면 한 번 뜬다.
+// 경기 결과 공개 — 결과가 나온 경기의 상세에 처음 들어오면 한 번 뜬다(기본 내보내기).
+// 다시 보기는 경기 상세의 스코어를 누르면 ResultRevealView 를 직접 띄운다.
 //
-// 띄울지(최근 정식 경기인가)는 서버가 정해서 이 컴포넌트를 그릴지 말지로 넘긴다.
+// 자동으로 띄울지(최근 정식 경기인가)는 서버가 정해서 이 컴포넌트를 그릴지 말지로 넘긴다.
 // 여기선 "이 기기에서 봤는가" 만 본다. 승리일 때만 컨페티 — 진 경기에 축포를 쏘면 놀리는 것 같다.
 
 import { useState, useSyncExternalStore } from "react";
@@ -30,8 +31,6 @@ const COPY: Record<string, { title: string; sub: string }> = {
 };
 
 export default function ResultReveal({ data, accent }: { data: ResultRevealData; accent: string }) {
-  const reduce = !!useReducedMotion();
-  const from = <T extends object>(v: T): T | false => (reduce ? false : v);
   const store = `fx_result_${data.matchId}`;
   const isClient = useSyncExternalStore(
     () => () => {},
@@ -40,6 +39,29 @@ export default function ResultReveal({ data, accent }: { data: ResultRevealData;
   );
   const [closed, setClosed] = useState(false);
   if (!isClient || closed || wasSeen(store)) return null;
+  return (
+    <ResultRevealView
+      data={data}
+      accent={accent}
+      onClose={() => {
+        markSeen(store);
+        setClosed(true);
+      }}
+    />
+  );
+}
+
+export function ResultRevealView({
+  data,
+  accent,
+  onClose,
+}: {
+  data: ResultRevealData;
+  accent: string;
+  onClose: () => void;
+}) {
+  const reduce = !!useReducedMotion();
+  const from = <T extends object>(v: T): T | false => (reduce ? false : v);
 
   const won = data.result === "승";
   const lost = data.result === "패";
@@ -60,10 +82,7 @@ export default function ResultReveal({ data, accent }: { data: ResultRevealData;
     <Celebration
       color={won ? GOLD : accent}
       confetti={won}
-      onClose={() => {
-        markSeen(store);
-        setClosed(true);
-      }}
+      onClose={onClose}
     >
       <motion.div
         animate={reduce || lost ? undefined : { x: [0, -10, 9, -6, 4, -2, 0], y: [0, 6, -5, 3, -2, 0, 0] }}

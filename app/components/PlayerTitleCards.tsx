@@ -3,12 +3,14 @@
 // 라이트/다크 테마 대응: 어두운 배경에선 밝은 accent 텍스트(a.text), 라이트에선 진한 accent(a.ring).
 
 import { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { Play, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { EarnedTitle, featureKey, pickBadges } from "../lib/titles";
 import { TitleBadge, titleSurface } from "./TitleBadges";
 import ModalPortal from "./ModalPortal";
 import useAppOverlay from "./useAppOverlay";
+import TitleReveal from "./fx/TitleReveal";
+import { pageAccent } from "./fx/effects";
 
 // 인스타 스토리 하이라이트처럼 가로로 넘긴다. 대표 칭호가 맨 앞, 나머지는 희귀도순.
 // 보유 수는 최대 17개 · 평균 7개라 한 줄 스크롤로 전부 담긴다.
@@ -86,6 +88,8 @@ export default function PlayerTitleCards({
 }) {
   const [selected, setSelected] = useState<EarnedTitle | null>(null);
   const dismissSelected = useAppOverlay(!!selected, () => setSelected(null));
+  // 칭호 획득 화면 다시 보기 — 상세 카드 맨 아래 버튼으로 연다.
+  const [replayTitle, setReplayTitle] = useState<EarnedTitle | null>(null);
   const { resolvedTheme } = useTheme();
   const isLight = resolvedTheme === "light";
 
@@ -285,9 +289,23 @@ export default function PlayerTitleCards({
                 </div>
               </div>
             )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setReplayTitle(selected);
+                dismissSelected();
+              }}
+              className="relative mt-4 flex w-full items-center justify-center gap-1.5 rounded-full bg-white/50 py-2.5 text-[11px] font-black text-gray-600 active:opacity-70 dark:bg-white/10 dark:text-white/70"
+            >
+              <Play className="h-3 w-3 fill-current" /> 획득 화면 다시 보기
+            </button>
           </div>
         </div>
         </ModalPortal>
+      )}
+      {replayTitle && (
+        <TitleReveal titles={[replayTitle]} accent={pageAccent()} onClose={() => setReplayTitle(null)} />
       )}
     </>
   );

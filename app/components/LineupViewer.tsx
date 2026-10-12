@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Download, Maximize2, Pencil, Share2 } from "lucide-react";
+import { Download, Maximize2, Pencil, Play, Share2 } from "lucide-react";
 import { toBlob } from "html-to-image";
 import {
   Dialog,
@@ -19,6 +19,9 @@ import SubstitutionEvents from "./SubstitutionEvents";
 import type { EarnedTitle } from "../lib/titles";
 import type { LineupData, MatchData } from "../lib/match-types";
 import { playerFaceOnSrc } from "../lib/player-faceons";
+import LineupReveal from "./fx/LineupReveal";
+import { pageAccent } from "./fx/effects";
+import { markSeen, wasSeen } from "./fx/seen";
 
 const QUARTER_ORDER = ["예상", "1Q", "2Q", "3Q", "4Q", "5Q", "6Q"];
 const DECODED_FACEONS = new Set<string>();
@@ -131,6 +134,7 @@ export default function LineupViewer({
   playerStats,
   playerTitles = {},
   editHref,
+  autoReveal = false,
 }: {
   match: MatchData;
   lineups: LineupData[];
@@ -139,6 +143,11 @@ export default function LineupViewer({
   playerStats?: Record<string, SeasonStat>;
   playerTitles?: Record<string, EarnedTitle[]>;
   editHref?: string;
+  /**
+   * 라인업 공개 연출을 이 기기에서 처음 한 번 자동으로 띄운다. 홈의 다음 경기에서만 켠다.
+   * 키가 경기 단위라 라인업을 고쳐 저장해도 다시 뜨지 않는다.
+   */
+  autoReveal?: boolean;
 }) {
   const sortedQuarters = QUARTER_ORDER.filter((quarter) =>
     lineups.some((lineup) => lineup.quarter === quarter)
@@ -152,6 +161,22 @@ export default function LineupViewer({
   const captureRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const lineup = lineups.find((item) => item.quarter === activeQuarter) ?? lineups[0];
+
+  // ── 라인업 공개 연출(1쿼터 선발만)
+  const revealStore = `fx_lineup_${match.id}`;
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+  const [revealOpen, setRevealOpen] = useState(false);
+  const [autoDone, setAutoDone] = useState(false);
+  const firstLineup = lineups.find((item) => item.quarter === sortedQuarters[0]) ?? lineups[0];
+  const showReveal =
+    !!firstLineup && (revealOpen || (autoReveal && isClient && !autoDone && !wasSeen(revealStore)));
+  const xi = firstLineup ? firstLineup.players.map((n) => n.trim()) : [];
+  // 완장: 주장이 뛰면 주장, 아니면 선발 부주장 중 첫 사람(FormationField 와 같은 규칙의 단순판).
+  const captain = xi.find((n) => captainRoles[n] === "C") ?? xi.find((n) => captainRoles[n] === "VC");
 
   // 라인업을 연 순간 다른 쿼터의 페이스온까지 브라우저 캐시에서 디코딩한다.
   // 탭을 누른 뒤 네트워크·디코딩을 시작하면 짧게 사라져 보이므로 한 박자 앞당긴다.
@@ -358,9 +383,17 @@ export default function LineupViewer({
           )}
           <button
             type="button"
+            onClick={() => setRevealOpen(true)}
+            className={`${sortedQuarters.length > 1 ? "" : "ml-auto "}flex h-7 shrink-0 items-center gap-1 rounded-lg bg-black/5 px-2 text-[9px] font-black text-gray-500 dark:bg-white/[0.06] dark:text-white/55`}
+          >
+            <Play className="h-2.5 w-2.5 fill-current" />
+            공개 영상
+          </button>
+          <button
+            type="button"
             onClick={saveLineupCard}
             disabled={savingCard}
-            className="ml-auto flex h-7 shrink-0 items-center gap-1 rounded-lg border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/10 px-2 text-[9px] font-black text-[#e75f7c] transition-opacity disabled:opacity-60 dark:text-[var(--ud-primary)]"
+            className="flex h-7 shrink-0 items-center gap-1 rounded-lg border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/10 px-2 text-[9px] font-black text-[#e75f7c] transition-opacity disabled:opacity-60 dark:text-[var(--ud-primary)]"
           >
             <Download className={`h-3 w-3 ${savingCard ? "animate-bounce" : ""}`} />
             {savingCard ? "만드는 중" : "저장"}
@@ -556,6 +589,24 @@ export default function LineupViewer({
         </div>
       </DialogContent>
       <AppToast message={toastError} tone="error" />
+      {showReveal && firstLineup && (
+        <LineupReveal
+          data={{
+            opponent: match.opponent,
+            date: match.date,
+            formation: firstLineup.formation,
+            players: firstLineup.players,
+            positions: firstLineup.positions,
+            captain,
+          }}
+          accent={pageAccent()}
+          onClose={() => {
+            markSeen(revealStore);
+            setAutoDone(true);
+            setRevealOpen(false);
+          }}
+        />
+      )}
     </Dialog>
   );
 }

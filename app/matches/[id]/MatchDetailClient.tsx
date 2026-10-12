@@ -13,6 +13,7 @@ import {
   MapPin,
   Moon,
   Pencil,
+  Play,
   Sun,
   Target,
   Users,
@@ -26,10 +27,15 @@ import { cldFit, cldThumb } from "../../lib/cloudinary";
 import useAppOverlay from "../../components/useAppOverlay";
 import { parseWeather, weatherEmoji } from "../../lib/weather";
 import type { EarnedTitle } from "../../lib/titles";
+import { useSession } from "next-auth/react";
+import { ResultRevealView, type ResultRevealData } from "../../components/fx/ResultReveal";
+import MomReveal from "../../components/fx/MomReveal";
+import { pageAccent } from "../../components/fx/effects";
 import {
   casualKind,
   hasScore,
   isCasualMatch,
+  momNames,
   resultTextTone,
   resultWord,
 } from "../../components/home/match-result";
@@ -44,6 +50,8 @@ interface MatchDetailClientProps {
     { apps: number; goals: number; assists: number; mom: number; pos?: string }
   >;
   playerTitles?: Record<string, EarnedTitle[]>;
+  /** 결과 공개 축하 화면 재료. 있으면 스코어를 눌러 다시 볼 수 있다. */
+  reveal?: ResultRevealData | null;
 }
 
 function SoccerBall({ className = "" }: { className?: string }) {
@@ -72,7 +80,11 @@ export default function MatchDetailClient({
   captainRoles,
   playerStats,
   playerTitles = {},
+  reveal = null,
 }: MatchDetailClientProps) {
+  const { data: session } = useSession();
+  // 축하 화면 다시 보기 — 스코어(결과) · MOM 줄(MOM)을 누르면 연다.
+  const [replay, setReplay] = useState<"result" | "mom" | null>(null);
   const { resolvedTheme, setTheme } = useTheme();
   const [lightbox, setLightbox] = useState<{ urls: string[]; index: number } | null>(null);
   const closeLightbox = useAppOverlay(!!lightbox, () => setLightbox(null));
@@ -173,15 +185,28 @@ export default function MatchDetailClient({
                 VS
               </span>
             ) : (
-              <div className="flex items-baseline justify-center gap-3 font-black tabular-nums">
-                <span className="text-[40px] leading-none tracking-[-0.05em] text-[var(--ud-primary)]">
-                  {match.ourScore}
+              <button
+                type="button"
+                disabled={!reveal}
+                onClick={() => setReplay("result")}
+                aria-label={reveal ? "경기 결과 다시 보기" : undefined}
+                className="press-control flex w-full flex-col items-center disabled:cursor-default"
+              >
+                <span className="flex items-baseline justify-center gap-3 font-black tabular-nums">
+                  <span className="text-[40px] leading-none tracking-[-0.05em] text-[var(--ud-primary)]">
+                    {match.ourScore}
+                  </span>
+                  <span className="text-[16px] text-gray-300 dark:text-white/20">:</span>
+                  <span className="text-[40px] leading-none tracking-[-0.05em] text-gray-700 dark:text-white/75">
+                    {match.theirScore}
+                  </span>
                 </span>
-                <span className="text-[16px] text-gray-300 dark:text-white/20">:</span>
-                <span className="text-[40px] leading-none tracking-[-0.05em] text-gray-700 dark:text-white/75">
-                  {match.theirScore}
-                </span>
-              </div>
+                {reveal && (
+                  <span className="mt-1.5 inline-flex items-center gap-0.5 text-[9.5px] font-black text-gray-400 dark:text-white/35">
+                    <Play className="h-2.5 w-2.5 fill-current" /> 다시 보기
+                  </span>
+                )}
+              </button>
             )}
           </div>
 
@@ -227,11 +252,18 @@ export default function MatchDetailClient({
           )}
 
           {match.mom && (
-            <div className="flex items-center gap-3 py-4">
+            <button
+              type="button"
+              disabled={casual}
+              onClick={() => setReplay("mom")}
+              aria-label={casual ? undefined : "MOM 발표 다시 보기"}
+              className="press-control flex w-full items-center gap-3 py-4 text-left disabled:cursor-default"
+            >
               <Crown className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400" />
               <span className="text-[11px] font-black tracking-[0.1em] text-gray-400 dark:text-white/35">MOM</span>
               <span className="min-w-0 flex-1 truncate text-right text-[13px] font-black">{match.mom}</span>
-            </div>
+              {!casual && <Play className="h-3 w-3 shrink-0 fill-current text-gray-300 dark:text-white/25" />}
+            </button>
           )}
 
           {attendees.length > 0 && (
@@ -376,6 +408,17 @@ export default function MatchDetailClient({
             )}
           </div>
         </ModalPortal>
+      )}
+      {replay === "result" && reveal && (
+        <ResultRevealView data={reveal} accent={pageAccent()} onClose={() => setReplay(null)} />
+      )}
+      {replay === "mom" && match.mom && (
+        <MomReveal
+          data={{ matchId: match.id, names: momNames(match.mom), opponent: match.opponent, date: match.date }}
+          me={session?.user?.name?.trim()}
+          accent={pageAccent()}
+          onClose={() => setReplay(null)}
+        />
       )}
     </main>
   );

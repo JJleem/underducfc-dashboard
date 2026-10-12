@@ -91,3 +91,15 @@ export function Confetti({ colors }: { colors: string[] }) {
     </div>
   );
 }
+
+/**
+ * 지금 화면의 시즌 대표색. 루트 레이아웃이 --season-light 로 깔아 둔다([[seasons]]).
+ * 축하 화면을 클릭으로 다시 열 때처럼 서버에서 색을 넘겨받기 번거로운 자리에서 쓴다.
+ */
+export function pageAccent(): string {
+  try {
+    return getComputedStyle(document.documentElement).getPropertyValue("--season-light").trim() || "#FF8FA3";
+  } catch {
+    return "#FF8FA3";
+  }
+}
