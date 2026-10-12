@@ -5,7 +5,10 @@ import MatchDetailClient from "./MatchDetailClient";
 import { notFound } from "next/navigation";
 import { parseSubstitutions } from "../../lib/lineup";
 import { buildPlayerBadges, getTeamTitleData } from "../../lib/titles-cache";
-import { currentSeasonId, seasonOf } from "../../lib/seasons";
+import { currentSeasonId, daysSince, seasonAccent, seasonOf } from "../../lib/seasons";
+import { getOpponentLogo } from "../../lib/opponent-logos";
+import { isCasualMatch } from "../../components/home/match-result";
+import ResultReveal from "../../components/fx/ResultReveal";
 
 export default async function MatchDetailPage({
   params,
@@ -119,14 +122,42 @@ export default async function MatchDetailPage({
   });
   const playerTitles = await buildPlayerBadges(allTitles, featuredMap);
 
+  // 결과 공개 축하 화면 — 정식 경기 + 스코어가 있는 승·무·패 + 경기 후 3일 이내만.
+  // 지난 경기를 처음 구경하러 들어갔는데 축포가 터지면 어색하다.
+  const our = Number(match.ourScore);
+  const their = Number(match.theirScore);
+  const age = daysSince(match.date);
+  const reveal =
+    ["승", "무", "패"].includes(match.result) &&
+    !isCasualMatch(match.result, match.type, match.opponent) &&
+    Number.isFinite(our) &&
+    Number.isFinite(their) &&
+    age !== null &&
+    age >= 0 &&
+    age <= 3
+      ? {
+          matchId,
+          our,
+          their,
+          result: match.result,
+          opponent: match.opponent,
+          logo: getOpponentLogo(match.opponent),
+          goals: match.goals ?? "",
+          mom: match.mom ?? "",
+        }
+      : null;
+
   return (
-    <MatchDetailClient
-      match={match}
-      lineups={lineups}
-      rosterMap={rosterMap}
-      captainRoles={captainRoles}
-      playerStats={playerStats}
-      playerTitles={playerTitles}
-    />
+    <>
+      <MatchDetailClient
+        match={match}
+        lineups={lineups}
+        rosterMap={rosterMap}
+        captainRoles={captainRoles}
+        playerStats={playerStats}
+        playerTitles={playerTitles}
+      />
+      {reveal && <ResultReveal data={reveal} accent={seasonAccent(season).light} />}
+    </>
   );
 }

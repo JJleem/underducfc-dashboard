@@ -147,6 +147,17 @@ export function todayInKst(now: Date = new Date()): string {
   return parts; // en-CA 는 YYYY-MM-DD
 }
 
+/**
+ * 경기 날짜로부터 며칠 지났는가(한국 날짜 기준). 당일 0, 미래면 음수. 날짜를 못 읽으면 null.
+ * "최근 경기에만 축하 화면을 띄운다" 같은 판정에 쓴다.
+ */
+export function daysSince(date: string | null | undefined, now: Date = new Date()): number | null {
+  const d = normalizeDate(date);
+  if (!d) return null;
+  const DAY = 86_400_000;
+  return Math.round((Date.parse(todayInKst(now)) - Date.parse(d)) / DAY);
+}
+
 /** 오늘이 속한 시즌 id. 경기가 한 경기도 없어도 날짜만으로 정해진다. */
 export function currentSeasonId(now: Date = new Date()): string {
   return seasonOf(todayInKst(now)) ?? SEASONS[0].id;

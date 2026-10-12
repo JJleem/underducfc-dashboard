@@ -18,6 +18,7 @@ import {
   seasonStatus,
   daysUntilSeason,
   latestPublicWrappedSeason,
+  daysSince,
   openingCountdown,
 } from "../app/lib/seasons.ts";
 
@@ -307,4 +308,14 @@ test("개막 D-day 는 개막 45일 전부터만 뜬다", () => {
   assert.deepEqual(openingCountdown(kst("2026-10-31")), { seasonId: "2627", label: "26-27", days: 1 });
   // 개막일 당일부터는 D-day 가 아니라 그냥 현재 시즌이다.
   assert.equal(openingCountdown(kst("2026-11-01")), null);
+});
+
+test("daysSince — 한국 날짜 기준으로 센다", () => {
+  // 2026-10-12 00:30 KST = 2026-10-11 15:30 UTC. UTC 날짜로 세면 하루가 밀린다.
+  const now = new Date("2026-10-11T15:30:00Z");
+  assert.equal(daysSince("2026-10-12", now), 0);
+  assert.equal(daysSince("2026-10-05", now), 7);
+  assert.equal(daysSince("2026-10-13", now), -1);
+  assert.equal(daysSince("2026-9-30", now), 12); // 옛 시트식 날짜도 읽는다
+  assert.equal(daysSince("", now), null);
 });

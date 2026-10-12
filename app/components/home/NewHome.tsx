@@ -30,7 +30,9 @@ import {
   ALL_SEASONS,
   SEASONS,
   currentSeasonId,
+  daysSince,
   latestPublicWrappedSeason,
+  seasonAccent,
   resolveSeasonFilter,
   seasonLabel,
   seasonOf,
@@ -39,6 +41,9 @@ import {
 } from "../../lib/seasons";
 import SeasonSelector from "../SeasonSelector";
 import WrappedAutoOpen from "../wrapped/WrappedAutoOpen";
+import HomeCelebrations from "../fx/HomeCelebrations";
+import type { EarnedTitle } from "../../lib/titles";
+import { isCasualMatch, momNames } from "./match-result";
 import type { LineupData, MatchData } from "../../lib/match-types";
 import {
   HOME_STATES,
@@ -364,6 +369,21 @@ export default async function NewHome({
   });
   const playerTitles = await buildPlayerBadges(allTitles, featuredMap);
 
+  // ── 축하 화면 재료(HomeCelebrations). 띄울지 최종 판단(이 기기에서 봤나)은 클라이언트가 한다.
+  // MOM 발표는 정식 경기 + MOM 확정 + 경기 후 7일 이내만. 자체전류는 MOM 투표 자체가 없다.
+  const momAge = lastMatch ? daysSince(lastMatch.date) : null;
+  const momReveal =
+    lastMatch &&
+    lastMatch.mom.trim() &&
+    !isCasualMatch(lastMatch.result, lastMatch.type, lastMatch.opponent) &&
+    momAge !== null &&
+    momAge >= 0 &&
+    momAge <= 7
+      ? { matchId: lastMatch.id, names: momNames(lastMatch.mom), opponent: lastMatch.opponent, date: lastMatch.date }
+      : null;
+  // 칭호 계산이 실패하면 allTitles 가 {} 로 온다(위 catch) — 그래서 타입이 좁혀지지 않는다.
+  const myTitles = userName ? (allTitles as Record<string, EarnedTitle[] | undefined>)[userName] ?? [] : [];
+
   const storylinesByMatch: Record<number, Storyline[]> = {};
   matches.forEach((m) => {
     const att = (m.attendees || "").split(",").map((x) => x.trim()).filter(Boolean);
@@ -409,6 +429,14 @@ export default async function NewHome({
     <main className="relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-background dark:text-zinc-100">
       {/* 래핑이 막 공개됐으면 첫 진입 한 번만 데려간다 */}
       {!preview && userName && wrappedSeasonToOpen && <WrappedAutoOpen seasonId={wrappedSeasonToOpen} />}
+      {!preview && userName && (
+        <HomeCelebrations
+          mom={momReveal}
+          myTitles={myTitles}
+          me={userName}
+          accent={seasonAccent(currentSeasonId()).light}
+        />
+      )}
       {/* 미리보기 전용 스위치 — 실제 홈에는 없다 */}
       {preview && (
       <div className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/85 px-3 safe-header-py-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-background/85">
