@@ -4,6 +4,8 @@ import { finalizeAttendance, setAttendanceStatus, updateMatchResult } from "@/ap
 import { sendPushToAll } from "@/app/lib/send-push";
 import { requireAdmin } from "@/app/lib/admin";
 import { isCasualMatch } from "@/app/components/home/match-result";
+import { udGet } from "@/app/lib/underduck";
+import type { MatchOut } from "@/app/lib/matches-backend";
 
 export async function PUT(
   req: NextRequest,
@@ -19,6 +21,17 @@ export async function PUT(
     }
     const body = await req.json();
     const { date, time, location, opponent, type, result, ourScore, theirScore, goals, assists, attendees } = body;
+    // 저장 전 결과를 본다. 이미 끝난 경기를 고쳐 저장(득점자·참석자 수정 등)할 때마다
+    // "경기 종료" 알림이 또 나가지 않도록, 예정 → 결과 로 바뀌는 첫 저장에만 보낸다.
+    // 캐시된 값이면 방금 저장한 걸 못 볼 수 있어 no-store 로 읽는다.
+    // 조회가 실패하면 예전처럼 보낸다(알림 누락보다 중복이 낫다).
+    let wasFinished = false;
+    try {
+      const prev = await udGet<MatchOut>(`/api/underduck/matches/${matchId}`, { cache: "no-store" });
+      wasFinished = !!prev.result && prev.result !== "예정";
+    } catch (e) {
+      console.error("[match] 이전 결과 조회 실패 (알림은 그대로 보냄):", e);
+    }
     await updateMatchResult(matchId, {
       date: date ?? "",
       time: time ?? "",
@@ -58,7 +71,7 @@ export async function PUT(
       // 자체전·풋살·야유회는 알림을 보내지 않는다. 매주 치르는 경기라
       // 전체 알림이 매주 나가면 알림 피로만 쌓이고, 본문이 MOM 투표를
       // 재촉하는 내용인데 그 경기들은 MOM 투표 자체를 열지 않는다.
-      if (!isCasualMatch(result, type)) {
+      if (!wasFinished && !isCasualMatch(result, type)) {
         try {
           await sendPushToAll({
             title: "경기가 종료되었어요. 모두 고생하셨습니다!",
