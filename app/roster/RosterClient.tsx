@@ -10,6 +10,8 @@ import {
   Loader2,
   User,
   UserPlus,
+  Shirt,
+  ChevronRight,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "../components/ui/drawer";
@@ -279,6 +281,23 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
               )}
             </div>
           </div>
+
+          {/* 유니폼·사이즈표 — 신입이 계속 찾아보는 정보라 명단 탭에 고정으로 둔다 */}
+          <Link
+            href="/uniform"
+            className="press-card relative mt-5 flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-3.5 py-3 dark:border-white/[0.08] dark:bg-white/[0.04]"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--ud-primary)]/15 text-[var(--ud-primary)]">
+              <Shirt width={17} height={17} strokeWidth={2.3} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[12.5px] font-black text-gray-900 dark:text-white">유니폼 · 사이즈표</span>
+              <span className="mt-0.5 block text-[10px] font-bold text-gray-400 dark:text-white/35">
+                하계 반팔 세트 · 동계 하프집업
+              </span>
+            </span>
+            <ChevronRight width={16} height={16} strokeWidth={2.4} className="shrink-0 text-gray-300 dark:text-white/25" />
+          </Link>
         </section>
 
         {/* 포지션별 스쿼드 그리드 */}

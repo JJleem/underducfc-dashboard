@@ -188,9 +188,9 @@ Row index in the sheet = `matchId + 2` (header offset). This arithmetic appears 
 
 The app is **mobile-first** (max-w-md container). Dark mode is supported via `next-themes`.
 
-라우트는 18개입니다: `/` `/board` `/board/[id]` `/board/lineup` `/login` `/lounge`
+라우트는 19개입니다: `/` `/board` `/board/[id]` `/board/lineup` `/login` `/lounge`
 `/lounge/[id]` `/matches/[id]` `/matches/[id]/edit` `/matchday-gallery` `/matchday-preview`
-`/players/[name]` `/record` `/roster` `/stats` `/titles` `/vote` `/wrapped`
+`/players/[name]` `/record` `/roster` `/stats` `/titles` `/uniform` `/vote` `/wrapped`
 
 - `app/components/home/NewHome.tsx` — 홈. 인스타 피드형이고 `/matchday-preview` 와 한 파일을 공유합니다.
 - `app/components/FormationField.tsx` — 포지션별 포메이션 렌더링, 7종 지원
