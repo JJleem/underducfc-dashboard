@@ -11,6 +11,7 @@ import { motion, useReducedMotion } from "motion/react";
 import Celebration, { shimmerStyle } from "./Celebration";
 import { Burst, GOLD, Rings } from "./effects";
 import { markSeen, wasSeen } from "./seen";
+import { momNames } from "../home/match-result";
 
 export interface ResultRevealData {
   matchId: number;
@@ -165,7 +166,8 @@ export function ResultRevealView({
             {data.mom && (
               <p>
                 <span className="mr-2" style={{ color: GOLD }}>MOM</span>
-                {data.mom}
+                {/* 저장값은 "공격 / 수비" 와 공동 수상 쉼표가 섞여 있다("A / B,C") */}
+                {momNames(data.mom).join(" · ")}
               </p>
             )}
           </motion.div>

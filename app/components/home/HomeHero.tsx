@@ -8,6 +8,7 @@
 import Link from "next/link";
 import { CalendarDays, Check, Clock, Flame, MapPin } from "lucide-react";
 import LineupViewer from "../LineupViewer";
+import ResultReplay from "../fx/ResultReplay";
 import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
 import type { LineupData } from "../../lib/match-types";
@@ -534,11 +535,11 @@ function AfterMatch({
             <span className="ml-1 text-[20px] text-gray-400 dark:text-white/40">명</span>
           </>
         ) : (
-          <>
+          <ResultReplay match={match}>
             <span className="text-gray-400 dark:text-white/40">{match.ourScore}</span>
             <span className="mx-1.5 text-gray-300 dark:text-white/20">:</span>
             {match.theirScore}
-          </>
+          </ResultReplay>
         )}
       </p>
       <p className="mt-1.5 text-center text-[11px] font-black text-gray-400 dark:text-white/40">

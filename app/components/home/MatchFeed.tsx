@@ -21,10 +21,12 @@ import {
   Loader2,
   MessageCircle,
   Pencil,
+  Play,
   Sparkles,
   Users,
 } from "lucide-react";
 import LineupViewer from "../LineupViewer";
+import ResultReplay, { resultRevealData } from "../fx/ResultReplay";
 import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
 import type { LineupData, MatchData } from "../../lib/match-types";
@@ -407,11 +409,14 @@ export default function MatchFeed({
               </div>
 
               {scored ? (
-                <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center text-[clamp(52px,17vw,72px)] font-black leading-none tracking-[-0.055em] tabular-nums">
+                <ResultReplay
+                  match={match}
+                  className="mt-2 grid w-full grid-cols-[1fr_auto_1fr] items-center text-[clamp(52px,17vw,72px)] font-black leading-none tracking-[-0.055em] tabular-nums"
+                >
                   <span className="text-[var(--ud-primary)]">{match.ourScore}</span>
                   <span className="px-3 text-[0.58em] text-white/20">:</span>
                   <span className="text-white/85">{match.theirScore}</span>
-                </div>
+                </ResultReplay>
               ) : (
                 <p className="mt-4 text-[32px] font-black leading-tight tracking-[-0.04em] text-white/85">
                   기록 없음
@@ -913,13 +918,19 @@ export default function MatchFeed({
             <div className="flex min-h-10 items-center gap-2 py-2.5">
               <FeedSummaryLabel>경기 결과</FeedSummaryLabel>
               {scored ? (
-                <span className="min-w-0 flex-1 text-[15px] font-black tabular-nums text-gray-900 dark:text-white">
+                <ResultReplay
+                  match={match}
+                  className="flex min-w-0 flex-1 items-center text-left text-[15px] font-black tabular-nums text-gray-900 dark:text-white"
+                >
                   <span className="text-[var(--ud-primary)]">
                     {match.ourScore}
                   </span>
                   <span className="mx-1.5 text-gray-300 dark:text-white/25">:</span>
                   {match.theirScore}
-                </span>
+                  {resultRevealData(match) && (
+                    <Play className="ml-1.5 h-2.5 w-2.5 fill-current text-gray-300 dark:text-white/25" />
+                  )}
+                </ResultReplay>
               ) : (
                 <span className="min-w-0 flex-1 text-[12px] font-bold text-gray-400 dark:text-white/35">
                   스코어 기록 없음
