@@ -8,6 +8,7 @@ import PageHeader from "../components/home/PageHeader";
 import { getOpponentLogo } from "../lib/opponent-logos";
 import {
   isInSeason,
+  activeSeasonId,
   resolveSeasonId,
   seasonAccent,
   seasonsWithMatches,
@@ -67,8 +68,9 @@ export default async function RecordPage({
 }: {
   searchParams: Promise<{ season?: string }>;
 }) {
-  const season = resolveSeasonId((await searchParams).season);
   const rawMatches = await getMatchesRows();
+  const defaultSeason = activeSeasonId(rawMatches);
+  const season = resolveSeasonId((await searchParams).season, undefined, defaultSeason);
   const accent = seasonAccent(season);
   const seasonsPlayed = [...seasonsWithMatches(rawMatches)];
 
@@ -108,7 +110,7 @@ export default async function RecordPage({
         label="RECORD"
         // 스탯에서 넘어왔을 때 보던 시즌을 그대로 들고 돌아간다
         back={`/stats?season=${season}`}
-        right={<SeasonSelector current={season} withMatches={seasonsPlayed} />}
+        right={<SeasonSelector current={season} defaultSeason={defaultSeason} withMatches={seasonsPlayed} />}
       />
       {matches.length === 0 ? (
         <SeasonEmpty

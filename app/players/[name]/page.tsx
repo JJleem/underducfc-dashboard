@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { currentIsAdmin } from "../../lib/admin";
-import { getMatchesRows } from "../../lib/matches-backend";
+import { getActiveSeasonId, getMatchesRows } from "../../lib/matches-backend";
 import { isCasualMatch, isMomOf, isOuting, matchLogo } from "../../components/home/match-result";
 import {
   getStatsRows,
@@ -69,7 +69,9 @@ export default async function PlayerPage({
   const { name: rawName } = await params;
   const name = decodeURIComponent(rawName).trim();
   // 프로필의 숫자·경기·케미는 전부 이 시즌 것이다. 칭호만 시즌/통산 두 벌을 보여 준다.
-  const season = resolveSeasonId((await searchParams).season);
+  // 새 시즌 첫 경기 전까지는 지난 시즌이 기본이다(activeSeasonId).
+  const defaultSeason = await getActiveSeasonId();
+  const season = resolveSeasonId((await searchParams).season, undefined, defaultSeason);
 
   // 순차로 await 하면 직렬 왕복이 그대로 누적돼 MY 탭이 눌린 뒤 멈춘 것처럼 보인다.
   // 전부 독립이라 병렬로 받는다. 필수 3개(stats/roster/matches)는 실패 시 그대로
@@ -339,7 +341,7 @@ export default async function PlayerPage({
           <PlayerProfileBackButton />
           <span className="app-header-label">PLAYER</span>
           <span className="ml-auto flex items-center">
-            <SeasonSelector current={season} withMatches={seasonsPlayed} />
+            <SeasonSelector current={season} defaultSeason={defaultSeason} withMatches={seasonsPlayed} />
           </span>
         </div>
 

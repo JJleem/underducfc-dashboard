@@ -28,8 +28,11 @@ export default function SeasonSelector({
    * 이때 current 에 "all" 을 넘기면 전체가 선택된 상태다.
    */
   allowAll = false,
+  /** 쿼리가 없을 때 그 화면이 보여 주는 시즌(서버의 activeSeasonId). 안 주면 오늘이 속한 시즌. */
+  defaultSeason,
 }: {
   current: string;
+  defaultSeason?: string;
   withMatches?: string[];
   allowAll?: boolean;
 }) {
@@ -55,8 +58,8 @@ export default function SeasonSelector({
     // 예전에 공유된 링크가 자동으로 그때의 현재 시즌을 가리킨다.
     // (아직 개막 안 한 시즌은 기본값이 아니므로 쿼리가 남는다)
     // 기본값이면 쿼리를 지운다. 전체가 기본인 화면(allowAll)에서는 "전체"가,
-    // 그 외에는 오늘이 속한 시즌이 기본이다.
-    const fallback = allowAll ? ALL_SEASONS : currentSeasonId();
+    // 그 외에는 그 화면의 기본 시즌이다.
+    const fallback = allowAll ? ALL_SEASONS : (defaultSeason ?? currentSeasonId());
     if (id === fallback) next.delete("season");
     else next.set("season", id);
     const qs = next.toString();

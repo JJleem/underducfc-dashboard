@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { CSSProperties } from "react";
-import { currentSeasonId, seasonAccent } from "./lib/seasons";
+import { seasonAccent } from "./lib/seasons";
+import { getActiveSeasonId } from "./lib/matches-backend";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { SessionProvider } from "next-auth/react";
@@ -103,13 +104,14 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const rootAccent = seasonAccent(currentSeasonId());
+  const rootAccent = seasonAccent(await getActiveSeasonId());
   const session = await auth();
   const signedIn = !!session?.user;
 
   return (
     // suppressHydrationWarning은 테마 깜빡임 방지용 필수 속성입니다
-    // 팀 프라이머리(--ud-primary)의 기본값을 **현재 시즌** 색으로 깐다.
+    // 팀 프라이머리(--ud-primary)의 기본값을 **기본 시즌**(activeSeasonId) 색으로 깐다.
+    // 새 시즌 첫 경기 전까지는 지난 시즌 색이다.
     // 지난 시즌을 보는 화면은 자기 컨테이너에 .season-scope 를 달아 덮어쓴다.
     <html
       lang="ko"

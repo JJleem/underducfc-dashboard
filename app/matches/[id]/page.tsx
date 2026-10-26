@@ -3,6 +3,7 @@ import { getMatchesRows } from "../../lib/matches-backend";
 import { LineupData, MatchData } from "../../lib/match-types";
 import MatchDetailClient from "./MatchDetailClient";
 import { notFound } from "next/navigation";
+import type { CSSProperties } from "react";
 import { parseSubstitutions } from "../../lib/lineup";
 import { buildPlayerBadges, getTeamTitleData } from "../../lib/titles-cache";
 import { currentSeasonId, daysSince, seasonAccent, seasonOf } from "../../lib/seasons";
@@ -146,8 +147,13 @@ export default async function MatchDetailPage({
       : null;
   const autoReveal = reveal && age !== null && age >= 0 && age <= 3;
 
+  const accent = seasonAccent(season);
   return (
-    <>
+    // 경기 화면은 그 경기가 치러진 시즌의 색이다(앱 기본색은 기본 시즌 색).
+    <div
+      className="season-scope"
+      style={{ "--season-light": accent.light, "--season-dark": accent.dark } as CSSProperties}
+    >
       <MatchDetailClient
         match={match}
         lineups={lineups}
@@ -157,7 +163,7 @@ export default async function MatchDetailPage({
         playerTitles={playerTitles}
         reveal={reveal}
       />
-      {autoReveal && <ResultReveal data={reveal} accent={seasonAccent(season).light} />}
-    </>
+      {autoReveal && <ResultReveal data={reveal} accent={accent.light} />}
+    </div>
   );
 }

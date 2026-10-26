@@ -166,14 +166,37 @@ export function currentSeasonId(now: Date = new Date()): string {
 }
 
 /**
- * URL 쿼리(?season=)를 시즌 id 로 확정한다. 모르는 값이면 현재 시즌.
+ * 기본으로 보여 줄 시즌. 오늘이 속한 시즌에 **치른 경기**가 아직 없으면 바로 앞 시즌.
  *
- * 개막 직후 경기가 0건이어도 현재 시즌을 그대로 보여 준다(빈 상태 + 지난 시즌 안내).
- * "경기 있는 최신 시즌" 으로 몰래 넘기면 시즌이 바뀐 걸 아무도 눈치채지 못한다.
+ * 개막 직후 홈·프로필·순위가 전부 0 으로 뜨고 앱 색까지 새 시즌색으로 바뀌면, 막 끝난
+ * 시즌을 돌아볼 자리가 없어진다. 첫 경기를 치르는 순간 새 시즌으로 넘어간다.
+ * rows 는 matches 시트 레이아웃(헤더 포함, A=date G=result H=type).
+ * 예정 경기(휴식 포함)와 야유회는 "치른 경기" 가 아니다.
  */
-export function resolveSeasonId(param: string | string[] | undefined, now: Date = new Date()): string {
+export function activeSeasonId(rows: string[][], now: Date = new Date()): string {
+  const current = currentSeasonId(now);
+  const index = SEASONS.findIndex((s) => s.id === current);
+  if (index <= 0) return current;
+  const played = rows.slice(1).some(
+    (r) =>
+      seasonOf(r[0]) === current &&
+      (r[6] || "예정").trim() !== "예정" &&
+      (r[7] || "").replace(/\s+/g, "") !== "야유회",
+  );
+  return played ? current : SEASONS[index - 1].id;
+}
+
+/**
+ * URL 쿼리(?season=)를 시즌 id 로 확정한다. 모르는 값이면 fallback(기본: 현재 시즌).
+ * 화면은 fallback 에 activeSeasonId 를 넘긴다 — 새 시즌 첫 경기 전까지는 지난 시즌이 기본이다.
+ */
+export function resolveSeasonId(
+  param: string | string[] | undefined,
+  now: Date = new Date(),
+  fallback: string = currentSeasonId(now),
+): string {
   const raw = Array.isArray(param) ? param[0] : param;
-  return seasonById(raw)?.id ?? currentSeasonId(now);
+  return seasonById(raw)?.id ?? fallback;
 }
 
 /** "전체"(시즌 구분 없이 다 보기)를 뜻하는 쿼리 값. */

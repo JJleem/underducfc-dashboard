@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   SEASONS,
+  activeSeasonId,
   currentSeasonId,
   isInSeason,
   normalizeDate,
@@ -318,4 +319,23 @@ test("daysSince — 한국 날짜 기준으로 센다", () => {
   assert.equal(daysSince("2026-10-13", now), -1);
   assert.equal(daysSince("2026-9-30", now), 12); // 옛 시트식 날짜도 읽는다
   assert.equal(daysSince("", now), null);
+});
+
+test("기본 시즌은 새 시즌 첫 경기를 치를 때까지 지난 시즌이다", () => {
+  const now = new Date("2026-10-26T12:00:00+09:00");
+  const HEAD = ["date", "time", "location", "opponent", "", "", "result", "type"];
+  const row = (date, result, type = "일반 매칭") => [date, "", "", "", "", "", result, type];
+  // 새 시즌엔 휴식(예정)과 예정 경기뿐 — 치른 경기가 아니다
+  const before = [HEAD, row("2026-10-24", "패"), row("2026-10-31", "예정", "휴식"), row("2026-11-14", "예정")];
+  assert.equal(currentSeasonId(now), "2627");
+  assert.equal(activeSeasonId(before, now), "2526");
+  // 야유회도 치른 경기로 안 센다
+  assert.equal(activeSeasonId([...before, row("2026-11-15", "", "야유회")], now), "2526");
+  // 첫 경기를 치르면 바로 넘어간다
+  assert.equal(activeSeasonId([...before, row("2026-11-14", "승")], now), "2627");
+  // 첫 시즌은 앞 시즌이 없으니 그대로
+  assert.equal(activeSeasonId([HEAD], new Date("2026-01-01T12:00:00+09:00")), "2526");
+  // 쿼리가 없으면 넘겨준 기본 시즌으로
+  assert.equal(resolveSeasonId(undefined, now, "2526"), "2526");
+  assert.equal(resolveSeasonId("2627", now, "2526"), "2627");
 });

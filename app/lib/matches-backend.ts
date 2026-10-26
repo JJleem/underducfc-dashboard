@@ -9,6 +9,7 @@
 
 import { udGet, udPost, udPatch, udDelete } from "./underduck";
 import { UD_TAG, udReadOptsFor } from "./cache";
+import { activeSeasonId, currentSeasonId } from "./seasons";
 
 const matchReadOpts = udReadOptsFor(UD_TAG.matches);
 
@@ -83,6 +84,18 @@ export async function getMatchesRows(): Promise<string[][]> {
     if (!rows[i]) rows[i] = Array(HEADER.length).fill("");
   }
   return [HEADER, ...rows];
+}
+
+/**
+ * 기본으로 보여 줄 시즌(activeSeasonId). 경기 목록은 캐시돼 있어 왕복이 거의 없다.
+ * 못 읽으면 날짜만으로 정한 현재 시즌으로 떨어진다 — 레이아웃까지 같이 터지면 안 된다.
+ */
+export async function getActiveSeasonId(): Promise<string> {
+  try {
+    return activeSeasonId(await getMatchesRows());
+  } catch {
+    return currentSeasonId();
+  }
 }
 
 /** 전체 경기 목록(원본 스키마 그대로). */

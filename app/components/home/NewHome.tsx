@@ -11,7 +11,7 @@ import { Bell, MapPin } from "lucide-react";
 import { auth } from "@/auth";
 import { isAdmin } from "../../lib/admin";
 import { getLoungeStamp } from "../../lib/lounge";
-import { getMatchesRows, getMyLikedMatchIds } from "../../lib/matches-backend";
+import { getActiveSeasonId, getMatchesRows, getMyLikedMatchIds } from "../../lib/matches-backend";
 import {
   getAttendanceVoteRows,
   getFeedbackRows,
@@ -29,7 +29,6 @@ import { buildPlayerBadges, getTeamTitleData } from "../../lib/titles-cache";
 import {
   ALL_SEASONS,
   SEASONS,
-  currentSeasonId,
   daysSince,
   latestPublicWrappedSeason,
   seasonAccent,
@@ -58,7 +57,7 @@ import {
 import HomeHero, { type HeroMatch } from "./HomeHero";
 import Disclosure from "./Disclosure";
 import MatchRow from "./MatchRow";
-import { Fragment } from "react";
+import { Fragment, type CSSProperties } from "react";
 import FeedList from "./FeedList";
 import NoticeEditor from "./NoticeEditor";
 import { type MomVote as MomVoteData } from "./MomVote";
@@ -157,6 +156,8 @@ export default async function NewHome({
     }
   };
 
+  // 새 시즌 첫 경기 전까지는 지난 시즌이 홈의 "이번 시즌"이다(activeSeasonId).
+  const homeSeason = await getActiveSeasonId();
   const [rawMatches, rawVotes, rawNotices, rawLineups, rawRoster, rawFeedback, rawStats, rawMomVotes, rawFeatured, myLikedMatchIds, teamTitleData, loungeStamp] =
     await Promise.all([
       getMatchesRows(),
@@ -167,7 +168,7 @@ export default async function NewHome({
       optionalRows("피드백", getFeedbackRows()),
       // 홈이 말하는 "시즌"은 진행 중인 시즌이다. 스토리라인의 득점왕·도움왕도
       // /stats 순위(기본값 = 현재 시즌)와 같은 모집단이어야 어긋나지 않는다.
-      optionalRows("스탯", getStatsRows(currentSeasonId())),
+      optionalRows("스탯", getStatsRows(homeSeason)),
       optionalRows("MOM 투표", getMomVoteRows()),
       optionalRows("칭호", getFeaturedRows()),
       // 로그인했으면 내가 누른 좋아요를 같이 받아 온다. 실패해도 피드는 그대로 뜬다.
@@ -178,7 +179,7 @@ export default async function NewHome({
           })
         : Promise.resolve(new Set<number>()),
       // 전체 칭호 계산도 나머지 읽기와 동시에 시작해 홈의 두 번째 데이터 폭포를 없앤다.
-      getTeamTitleData(currentSeasonId()).catch(() => {
+      getTeamTitleData(homeSeason).catch(() => {
         failedSections.push("칭호 계산");
         return { allTitles: {}, posLineupCounts: {} };
       }),
@@ -283,6 +284,8 @@ export default async function NewHome({
           { id: -2, date: upcomingSaturday(7), type: "휴식" },
         ])
       : null);
+  const heroShown = state === "afterMatch" ? heroLast : state === "rest" ? null : heroNext;
+  const heroAccent = seasonAccent((heroShown && seasonOf(heroShown.date)) || homeSeason);
   const staged =
     isForced &&
     ((state === "dday" && lastMatch) ||
@@ -459,7 +462,7 @@ export default async function NewHome({
           mom={momReveal}
           myTitles={myTitles}
           me={userName}
-          accent={seasonAccent(currentSeasonId()).light}
+          accent={seasonAccent(homeSeason).light}
         />
       )}
       {/* 미리보기 전용 스위치 — 실제 홈에는 없다 */}
@@ -509,7 +512,7 @@ export default async function NewHome({
       </div>
       )}
 
-      <AppHeader newMatchRoster={admin ? rosterNames : undefined} />
+      <AppHeader seasonId={homeSeason} newMatchRoster={admin ? rosterNames : undefined} />
 
       {failedSections.length > 0 && (
         <div role="status" className="mx-4 mt-3 flex items-center gap-3 rounded-2xl border border-amber-300/60 bg-amber-50 px-3 py-2.5 text-amber-800 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-200">
@@ -530,6 +533,11 @@ export default async function NewHome({
         </p>
       )}
 
+      {/* 히어로도 보여 주는 경기의 시즌색. 휴식 주엔 경기가 없어 기본 시즌 색이다. */}
+      <div
+        className="season-scope"
+        style={{ "--season-light": heroAccent.light, "--season-dark": heroAccent.dark } as CSSProperties}
+      >
       <HomeHero
         seasonOrdinal={seasonOrdinal}
         state={state}
@@ -558,6 +566,7 @@ export default async function NewHome({
               : "idle"
         }&list=${layout}`}
       />
+      </div>
 
       {/* 공지 — 카드가 아니라 한 줄(규칙 03). 다만 이탈하지 않고 그 자리에서 펼친다.
           제목만 보고 페이지를 옮겨야 내용을 읽을 수 있으면 한 뎁스가 그냥 늘어난다. */}
@@ -673,8 +682,16 @@ export default async function NewHome({
               playerStats,
               playerTitles,
             };
-            const card =
-              layout === "feed" ? (
+            // 카드마다 그 경기가 치러진 시즌의 색을 깐다. 앱 기본색은 기본 시즌 색이라,
+            // 새 시즌 경기가 생기면 그 카드만 새 시즌색으로 보인다.
+            const cardAccent = seasonAccent(seasonOf(m.date) ?? homeSeason);
+            const card = (
+              <div
+                key={m.id}
+                className="season-scope"
+                style={{ "--season-light": cardAccent.light, "--season-dark": cardAccent.dark } as CSSProperties}
+              >
+              {layout === "feed" ? (
                 <MatchFeed
                   key={m.id}
                   {...common}
@@ -684,7 +701,9 @@ export default async function NewHome({
                 />
               ) : (
                 <MatchRow key={m.id} {...common} />
-              );
+              )}
+              </div>
+            );
 
             // 전체를 보고 있을 때만 시즌이 갈리는 자리에 이정표를 세운다.
             // 한 시즌으로 좁혔으면 경계가 없으니 필요 없다.

@@ -7,7 +7,7 @@ import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, Swords } from "lucide-react";
-import { getMatchesRows } from "../lib/matches-backend";
+import { getActiveSeasonId, getMatchesRows } from "../lib/matches-backend";
 import { getRosterRows, getStatsRows } from "../lib/backend";
 import { bestDuos, seasonSummary, type StatMatch } from "../lib/team-stats";
 import {
@@ -46,8 +46,9 @@ export default async function StatsPage({
 }: {
   searchParams: Promise<{ season?: string }>;
 }) {
-  // 모르는 ?season= 값은 조용히 현재 시즌으로 떨어진다.
-  const season = resolveSeasonId((await searchParams).season);
+  // 모르는 ?season= 값은 조용히 기본 시즌(activeSeasonId)으로 떨어진다.
+  const defaultSeason = await getActiveSeasonId();
+  const season = resolveSeasonId((await searchParams).season, undefined, defaultSeason);
 
   const [rawMatches, rawStats, rawRoster, seasonTitles] = await Promise.all([
     getMatchesRows(),
@@ -138,7 +139,7 @@ export default async function StatsPage({
     >
       <PageHeader
         label="STATS"
-        right={<SeasonSelector current={season} withMatches={seasonsPlayed} />}
+        right={<SeasonSelector current={season} defaultSeason={defaultSeason} withMatches={seasonsPlayed} />}
       />
 
       {/* 기록이 한 건도 없는 시즌이면 0경기 0% 대신 왜 비었는지를 보여 준다. */}

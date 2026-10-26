@@ -21,7 +21,7 @@ import {
 } from "../ui/dropdown-menu";
 import NewMatchButton from "./NewMatchButton";
 import { MATCHDAY_GALLERY_SEEN_KEY } from "../../lib/matchday-gallery";
-import { currentSeasonId, openingCountdown, seasonAccent, seasonLabel } from "../../lib/seasons";
+import { openingCountdown, seasonAccent, seasonLabel } from "../../lib/seasons";
 
 /**
  * 로고 옆 시즌 표기. "25-26" 에서 **뒷자리만** 그 시즌 대표색으로 칠한다
@@ -30,8 +30,7 @@ import { currentSeasonId, openingCountdown, seasonAccent, seasonLabel } from "..
  * 테마별 색은 CSS 변수로 넘긴다 — useTheme 로 고르면 서버 렌더에서 값이 없어
  * 하이드레이션이 어긋난다. [[globals.css]] 의 .season-scope 참고.
  */
-function SeasonMark() {
-  const id = currentSeasonId();
+function SeasonMark({ id }: { id: string }) {
   const accent = seasonAccent(id);
   // "25-26" → 앞 "25", 뒤 "26". 형식이 달라지면 통째로 한 색으로 칠한다.
   const [head, tail] = seasonLabel(id).split("-");
@@ -81,7 +80,14 @@ function OpeningCountdown() {
   );
 }
 
-export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[] }) {
+export default function AppHeader({
+  seasonId,
+  newMatchRoster,
+}: {
+  /** 로고 옆에 찍을 시즌. 서버의 activeSeasonId — 새 시즌 첫 경기 전엔 지난 시즌이다. */
+  seasonId: string;
+  newMatchRoster?: string[];
+}) {
   const { resolvedTheme, setTheme } = useTheme();
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -102,7 +108,7 @@ export default function AppHeader({ newMatchRoster }: { newMatchRoster?: string[
         <span className="h-1.5 w-1.5 rounded-full bg-[var(--ud-primary)]" />
         UNDERDUCK
         <span className="relative">
-          <SeasonMark />
+          <SeasonMark id={seasonId} />
           <OpeningCountdown />
         </span>
       </span>
