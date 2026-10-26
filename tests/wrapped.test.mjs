@@ -5,14 +5,14 @@ import { isWrappedPublic } from "../app/lib/seasons.ts";
 
 // ───────────────────────── 공개 게이트 ─────────────────────────
 
-test("래핑은 시즌 마지막 경기(10/31)까지 닫혀 있다", () => {
+test("래핑은 시즌 마지막 경기(10/24)까지 닫혀 있다", () => {
   // 그 전까지는 운영진만 본다(운영진 판정은 페이지에서 따로 한다).
   assert.equal(isWrappedPublic("2526", new Date("2026-09-21T12:00:00+09:00")), false);
-  assert.equal(isWrappedPublic("2526", new Date("2026-10-31T23:00:00+09:00")), false);
+  assert.equal(isWrappedPublic("2526", new Date("2026-10-24T23:00:00+09:00")), false);
 });
 
-test("시즌이 닫히는 11/1 부터 전원에게 열린다", () => {
-  assert.equal(isWrappedPublic("2526", new Date("2026-11-01T00:10:00+09:00")), true);
+test("시즌이 닫히는 10/25 부터 전원에게 열린다", () => {
+  assert.equal(isWrappedPublic("2526", new Date("2026-10-25T00:10:00+09:00")), true);
   assert.equal(isWrappedPublic("2526", new Date("2026-12-01T12:00:00+09:00")), true);
 });
 
@@ -22,8 +22,8 @@ test("wrappedFrom 이 null 인 시즌은 영영 운영진 전용", () => {
 });
 
 test("한국 날짜로 판정한다 — UTC 로 재면 공개일 아침이 전날로 밀린다", () => {
-  // 한국 11/1 08:00 = UTC 10/31 23:00. UTC 기준이면 아직 안 열렸다고 나온다.
-  assert.equal(isWrappedPublic("2526", new Date("2026-11-01T08:00:00+09:00")), true);
+  // 한국 10/25 08:00 = UTC 10/24 23:00. UTC 기준이면 아직 안 열렸다고 나온다.
+  assert.equal(isWrappedPublic("2526", new Date("2026-10-25T08:00:00+09:00")), true);
 });
 
 // ───────────────────────── 팀 내 순위 ─────────────────────────

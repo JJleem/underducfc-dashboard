@@ -27,14 +27,14 @@ test("첫 시즌은 start 가 null 이라 아무리 오래된 경기도 받아�
   // 시즌 경계 이전 경기가 어느 시즌에도 안 속해 기록에서 통째로 사라지는 게 최악이다.
   assert.equal(seasonOf("2020-01-01"), "2526");
   assert.equal(seasonOf("2025-08-10"), "2526");
-  assert.equal(seasonOf("2026-10-31"), "2526");
+  assert.equal(seasonOf("2026-10-24"), "2526");
 });
 
 test("시즌 시작일 당일부터 새 시즌이다", () => {
   const boundary = SEASONS[1].start;
-  assert.equal(boundary, "2026-11-01");
-  assert.equal(seasonOf("2026-10-31"), "2526");
-  assert.equal(seasonOf("2026-11-01"), "2627");
+  assert.equal(boundary, "2026-10-25");
+  assert.equal(seasonOf("2026-10-24"), "2526");
+  assert.equal(seasonOf("2026-10-25"), "2627");
   assert.equal(seasonOf("2027-05-05"), "2627");
 });
 
@@ -57,12 +57,12 @@ test("한 자리 월·일과 점/슬래시 구분자도 읽는다", () => {
 
 test("현재 시즌은 경기가 없어도 한국 날짜만으로 정해진다", () => {
   // Vercel(UTC)에서 로컬 날짜를 쓰면 한국 오전 9시까지 전날로 계산된다.
-  // 시즌이 바뀌는 11월 1일 새벽에 어제 시즌을 보여주면 안 된다.
-  const kstMidnightOfOpeningDay = new Date("2026-11-01T00:30:00+09:00");
-  assert.equal(todayInKst(kstMidnightOfOpeningDay), "2026-11-01");
+  // 시즌이 바뀌는 10월 25일 새벽에 어제 시즌을 보여주면 안 된다.
+  const kstMidnightOfOpeningDay = new Date("2026-10-25T00:30:00+09:00");
+  assert.equal(todayInKst(kstMidnightOfOpeningDay), "2026-10-25");
   assert.equal(currentSeasonId(kstMidnightOfOpeningDay), "2627");
 
-  const dayBefore = new Date("2026-10-31T23:30:00+09:00");
+  const dayBefore = new Date("2026-10-24T23:30:00+09:00");
   assert.equal(currentSeasonId(dayBefore), "2526");
 });
 
@@ -79,15 +79,15 @@ test("모르는 ?season= 값은 현재 시즌으로 떨어진다", () => {
 
 test("개막 직후 경기가 0건이어도 현재 시즌을 그대로 보여준다", () => {
   // "경기 있는 최신 시즌"으로 몰래 넘기면 시즌이 바뀐 걸 아무도 눈치채지 못한다.
-  const openingDay = new Date("2026-11-01T10:00:00+09:00");
+  const openingDay = new Date("2026-10-25T10:00:00+09:00");
   assert.equal(resolveSeasonId(undefined, openingDay), "2627");
 });
 
 const MATCHES = [
   ["date", "time", "location", "opponent"],
   ["2025-08-10", "", "", "A"], // matchId 0 → 2526
-  ["2026-10-31", "", "", "B"], // matchId 1 → 2526
-  ["2026-11-01", "", "", "C"], // matchId 2 → 2627
+  ["2026-10-24", "", "", "B"], // matchId 1 → 2526
+  ["2026-10-25", "", "", "C"], // matchId 2 → 2627
   ["", "", "", "미정"], //        matchId 3 → 날짜 없음
   ["2027-03-02", "", "", "D"], // matchId 4 → 2627
 ];
@@ -189,24 +189,24 @@ test("개막 전 시즌은 future — '기록 없음' 이 아니라 '개막 전'
   assert.equal(seasonStatus("2526", beforeOpening), "current");
   assert.equal(seasonStatus("2627", beforeOpening), "future");
 
-  const afterOpening = new Date("2026-11-02T12:00:00+09:00");
+  const afterOpening = new Date("2026-10-26T12:00:00+09:00");
   assert.equal(seasonStatus("2526", afterOpening), "past");
   assert.equal(seasonStatus("2627", afterOpening), "current");
 });
 
 test("개막일 당일은 future 가 아니라 current 다", () => {
-  const openingDay = new Date("2026-11-01T09:00:00+09:00");
+  const openingDay = new Date("2026-10-25T09:00:00+09:00");
   assert.equal(seasonStatus("2627", openingDay), "current");
   assert.equal(daysUntilSeason("2627", openingDay), null);
 });
 
 test("개막까지 남은 날수는 한국 날짜 기준으로 센다", () => {
-  assert.equal(daysUntilSeason("2627", new Date("2026-10-31T12:00:00+09:00")), 1);
-  assert.equal(daysUntilSeason("2627", new Date("2026-10-02T12:00:00+09:00")), 30);
+  assert.equal(daysUntilSeason("2627", new Date("2026-10-24T12:00:00+09:00")), 1);
+  assert.equal(daysUntilSeason("2627", new Date("2026-09-25T12:00:00+09:00")), 30);
   // 첫 시즌은 start 가 없으니 셀 게 없다
-  assert.equal(daysUntilSeason("2526", new Date("2026-10-31T12:00:00+09:00")), null);
+  assert.equal(daysUntilSeason("2526", new Date("2026-10-24T12:00:00+09:00")), null);
   // UTC 로 계산하면 한국 오전에 하루가 어긋난다
-  assert.equal(daysUntilSeason("2627", new Date("2026-10-31T00:30:00+09:00")), 1);
+  assert.equal(daysUntilSeason("2627", new Date("2026-10-24T00:30:00+09:00")), 1);
 });
 
 // ───────────────────────── 대표 칭호 키 ─────────────────────────
@@ -272,22 +272,22 @@ test("아는 시즌은 그 시즌으로, 모르는 값은 전체로 떨어진다
 });
 
 test("래핑 기본 시즌은 '전원 공개된 가장 최근 시즌' 이다 — 현재 시즌이 아니다", () => {
-  // 개막일(11/1)부터 현재 시즌은 26-27 인데 그 래핑은 아직 안 열렸다.
+  // 개막일(10/25)부터 현재 시즌은 26-27 인데 그 래핑은 아직 안 열렸다.
   // 기본을 현재 시즌으로 두면 막 열린 25-26 래핑 대신 404 가 뜬다.
   const kst = (d, h = 0) => new Date(`${d}T${String(h).padStart(2, "0")}:00:00+09:00`);
-  assert.equal(latestPublicWrappedSeason(kst("2026-10-31", 23)), null);
-  assert.equal(latestPublicWrappedSeason(kst("2026-11-01", 0)), "2526");
+  assert.equal(latestPublicWrappedSeason(kst("2026-10-24", 23)), null);
+  assert.equal(latestPublicWrappedSeason(kst("2026-10-25", 0)), "2526");
   assert.equal(latestPublicWrappedSeason(kst("2027-03-01", 12)), "2526");
   // 같은 순간 현재 시즌은 이미 26-27 이다.
-  assert.equal(currentSeasonId(kst("2026-11-01", 0)), "2627");
+  assert.equal(currentSeasonId(kst("2026-10-25", 0)), "2627");
 });
 
 // ───────────────────────── 26-27 전환 회귀 ─────────────────────────
-// 경계는 KST 11/1 0시 = UTC 10/31 15:00. Vercel 은 UTC 로 돈다.
+// 경계는 KST 10/25 0시 = UTC 10/24 15:00. Vercel 은 UTC 로 돈다.
 
-test("전환 경계: UTC 10/31 14:59:59 까지는 25-26, 15:00 부터 26-27", () => {
-  const before = new Date("2026-10-31T14:59:59Z");
-  const at = new Date("2026-10-31T15:00:00Z");
+test("전환 경계: UTC 10/24 14:59:59 까지는 25-26, 15:00 부터 26-27", () => {
+  const before = new Date("2026-10-24T14:59:59Z");
+  const at = new Date("2026-10-24T15:00:00Z");
   assert.equal(currentSeasonId(before), "2526");
   assert.equal(currentSeasonId(at), "2627");
   assert.equal(resolveSeasonId(undefined, at), "2627");
@@ -296,18 +296,18 @@ test("전환 경계: UTC 10/31 14:59:59 까지는 25-26, 15:00 부터 26-27", ()
 });
 
 test("전환 경계: 같은 순간 래핑 기본 시즌은 막 열린 25-26 이다", () => {
-  assert.equal(latestPublicWrappedSeason(new Date("2026-10-31T14:59:59Z")), null);
-  assert.equal(latestPublicWrappedSeason(new Date("2026-10-31T15:00:00Z")), "2526");
+  assert.equal(latestPublicWrappedSeason(new Date("2026-10-24T14:59:59Z")), null);
+  assert.equal(latestPublicWrappedSeason(new Date("2026-10-24T15:00:00Z")), "2526");
 });
 
 test("개막 D-day 는 개막 45일 전부터만 뜬다", () => {
   const kst = (d) => new Date(`${d}T09:00:00+09:00`);
-  assert.equal(openingCountdown(kst("2026-09-16")), null); // 46일 전
-  assert.deepEqual(openingCountdown(kst("2026-09-17")), { seasonId: "2627", label: "26-27", days: 45 });
-  assert.deepEqual(openingCountdown(kst("2026-09-23")), { seasonId: "2627", label: "26-27", days: 39 });
-  assert.deepEqual(openingCountdown(kst("2026-10-31")), { seasonId: "2627", label: "26-27", days: 1 });
+  assert.equal(openingCountdown(kst("2026-09-09")), null); // 46일 전
+  assert.deepEqual(openingCountdown(kst("2026-09-10")), { seasonId: "2627", label: "26-27", days: 45 });
+  assert.deepEqual(openingCountdown(kst("2026-09-16")), { seasonId: "2627", label: "26-27", days: 39 });
+  assert.deepEqual(openingCountdown(kst("2026-10-24")), { seasonId: "2627", label: "26-27", days: 1 });
   // 개막일 당일부터는 D-day 가 아니라 그냥 현재 시즌이다.
-  assert.equal(openingCountdown(kst("2026-11-01")), null);
+  assert.equal(openingCountdown(kst("2026-10-25")), null);
 });
 
 test("daysSince — 한국 날짜 기준으로 센다", () => {
