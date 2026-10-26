@@ -5,6 +5,7 @@ import { getAttendanceVoteRows } from "../../lib/backend";
 import { upsertAttendanceVote } from "../../lib/sheets-write";
 import { requireUser } from "@/app/lib/admin";
 import { isVoteClosed, voteDeadlineLabel } from "@/app/lib/vote-deadline";
+import { isRestWeek } from "@/app/lib/home-state";
 import { auth } from "@/auth";
 
 export async function GET() {
@@ -49,6 +50,9 @@ export async function POST(request: NextRequest) {
     const matchRow = rawMatches[id + 1];
     if (!matchRow) {
       return NextResponse.json({ error: "경기를 찾을 수 없습니다." }, { status: 404 });
+    }
+    if (isRestWeek(matchRow[7])) {
+      return NextResponse.json({ error: "휴식 주에는 출석 투표가 없어요." }, { status: 409 });
     }
     if ((matchRow[6] || "예정").trim() !== "예정") {
       return NextResponse.json({ error: "종료된 경기에는 투표할 수 없습니다." }, { status: 409 });

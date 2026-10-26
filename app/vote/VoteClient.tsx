@@ -33,6 +33,7 @@ import { weatherEmoji } from "../lib/weather";
 import PastVoteRow, { type PastVoteComment, type VoteTally } from "./PastVoteRow";
 import VoterChip, { asVoters } from "./VoterChip";
 import { voteDeadlineLabel } from "../lib/vote-deadline";
+import type { RestPlan } from "../lib/home-state";
 
 interface MatchInfo {
   id: number;
@@ -84,6 +85,8 @@ interface VoteClientProps {
   voteComments: VoteComment[];
   users: UserInfo[];
   weatherMap: Record<number, WeatherInfo>;
+  /** 다가오는 일정이 휴식으로 시작하면 그 일정 */
+  restPlan: RestPlan | null;
   currentUser: { kakaoId: string; name: string; image: string } | null;
   isAdmin: boolean;
 }
@@ -155,6 +158,7 @@ export default function VoteClient({
   voteComments: initialComments,
   users,
   weatherMap,
+  restPlan,
   currentUser,
   isAdmin,
 }: VoteClientProps) {
@@ -739,6 +743,15 @@ export default function VoteClient({
       {activeMatches.length > 0 ? (
         <div className="divide-y divide-gray-200 dark:divide-white/[0.08]">
           {activeMatches.map(renderActive)}
+        </div>
+      ) : restPlan ? (
+        <div className="px-4 py-16 text-center">
+          <p className="text-[13px] font-bold text-gray-400 dark:text-gray-500">
+            {restPlan.dates.map((d) => formatDate(d)).join(" · ")} 휴식이에요.
+          </p>
+          <p className="mt-1 text-[11px] font-bold text-gray-300 dark:text-gray-600">
+            {formatDate(restPlan.returnDate)} 복귀전 일정이 등록되면 투표가 열립니다.
+          </p>
         </div>
       ) : (
         <div className="px-4 py-16 text-center">

@@ -14,7 +14,7 @@ import type { EarnedTitle } from "../../lib/titles";
 import type { LineupData } from "../../lib/match-types";
 import { parseWeather, weatherEmoji } from "../../lib/weather";
 import { matchdayMessage } from "../../lib/matchday-message";
-import { getDDay, isUndecided, type HomeState } from "../../lib/home-state";
+import { getDDay, isUndecided, type HomeState, type RestPlan } from "../../lib/home-state";
 import { isCasualMatch, matchLogo, matchTitle, matchTitleVs } from "./match-result";
 import type { Storyline } from "../../lib/storylines";
 import MomVote, { type MomVote as MomVoteData } from "./MomVote";
@@ -50,6 +50,8 @@ export interface HeroMatch {
 
 export interface HomeHeroProps {
   state: HomeState;
+  /** state 가 "rest" 일 때 그릴 휴식 일정 */
+  restPlan?: RestPlan | null;
   nextMatch: HeroMatch | null;
   lastMatch: HeroMatch | null;
   votes: { attending: number; maybe: number; absent: number; total: number };
@@ -231,6 +233,7 @@ function SecondaryLink({ href, children }: { href: string; children: React.React
 
 export default function HomeHero({
   state,
+  restPlan = null,
   nextMatch,
   lastMatch,
   votes,
@@ -251,7 +254,8 @@ export default function HomeHero({
   seasonOrdinal,
 }: HomeHeroProps) {
   const lead = headline(storylines);
-  const stateMatchId = state === "afterMatch" ? lastMatch?.id : nextMatch?.id;
+  const stateMatchId =
+    state === "afterMatch" ? lastMatch?.id : state === "rest" ? restPlan?.dates[0] : nextMatch?.id;
   return (
     <section className="relative overflow-hidden px-4 pt-5 pb-1">
       <HeroBackdrop />
@@ -289,13 +293,14 @@ export default function HomeHero({
         {state === "matching" && nextMatch && (
           <Matching match={nextMatch} votes={votes} myVote={myVote} lead={lead} seasonOrdinal={seasonOrdinal} />
         )}
+        {state === "rest" && restPlan && <Rest plan={restPlan} />}
         {state === "idle" && nextMatch && (
           <Upcoming match={nextMatch} votes={votes} myVote={myVote} lead={lead} seasonOrdinal={seasonOrdinal} />
         )}
         {/* 라인업 — 올라온 순간부터 상태와 관계없이 바로 보여 준다.
             쿼터 선택과 상세 보기는 LineupViewer 안에 이미 있으므로 바깥에 별도의
             접기 버튼을 두지 않는다. */}
-        {state !== "afterMatch" && nextMatch && lineups.length > 0 && (
+        {state !== "afterMatch" && state !== "rest" && nextMatch && lineups.length > 0 && (
           <div className="mt-4">
             <LineupViewer
               match={nextMatch}
@@ -311,7 +316,7 @@ export default function HomeHero({
         )}
 
         {/* 예정 경기가 아예 없을 때. 상태 판정은 idle 로 떨어지지만 그릴 게 없다. */}
-        {!nextMatch && state !== "afterMatch" && (
+        {!nextMatch && state !== "afterMatch" && state !== "rest" && (
           <p className="py-8 text-center text-[12px] font-bold text-gray-400 dark:text-gray-600">
             다음 경기가 아직 등록되지 않았어요.
           </p>
@@ -645,6 +650,63 @@ function Matching({
         <PrimaryLink href="/vote">{myVote ? "내 투표 바꾸기" : "출석 투표하기"}</PrimaryLink>
         <SecondaryLink href={`/matches/${match.id}`}>상세</SecondaryLink>
       </div>
+    </div>
+  );
+}
+
+/**
+ * 휴식 주 — 이번 토요일엔 경기가 없다.
+ *
+ * 이어지는 휴식은 한 번에 보여 준다("2주 쉬어요"). 이번 주만 쓰면 다음 주에 경기가
+ * 있는 줄 안다. 숫자 자리에는 경기 D-day 대신 복귀까지 남은 날을 세운다.
+ */
+function Rest({ plan }: { plan: RestPlan }) {
+  const back = formatDate(plan.returnDate);
+  const backDDay = getDDay(plan.returnDate);
+  return (
+    <div className="pb-3">
+      <span className="text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-white/40">
+        REST WEEK
+      </span>
+      <div className="mt-1.5 flex items-end justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[25px] font-black leading-[1.24] tracking-[-0.04em] text-gray-900 dark:text-white">
+            {plan.dates.length > 1 ? `${plan.dates.length}주 쉬어요` : "이번 주는 쉬어요"}
+          </h2>
+          <p className="mt-2 flex items-center gap-1.5 text-[11px] font-black text-gray-700 dark:text-white/70">
+            <CalendarDays width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.base} className="shrink-0" />
+            <span>
+              {back.full} <WeekdayLabel weekday={back.weekday} /> 복귀
+            </span>
+          </p>
+        </div>
+        {backDDay !== null && backDDay > 0 && (
+          <p className={`shrink-0 text-[40px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums ${PINK}`}>
+            D-{backDDay}
+          </p>
+        )}
+      </div>
+
+      <div className="mt-3.5 flex flex-wrap gap-1.5">
+        {plan.dates.map((date) => {
+          const { full, weekday } = formatDate(date);
+          return (
+            <span
+              key={date}
+              className="rounded-full border border-gray-200 px-2 py-[3px] text-[9px] font-black text-gray-400 dark:border-white/10 dark:text-white/40"
+            >
+              {full} {weekday} 휴식
+            </span>
+          );
+        })}
+      </div>
+
+      {/* 복귀 경기가 이미 잡혔으면(마지막 휴식 날 밤 크론) 그 투표로 바로 보낸다. */}
+      {plan.returnMatchId !== null && (
+        <div className="mt-4">
+          <PrimaryLink href="/vote">복귀전 출석 투표하기</PrimaryLink>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { getAttendanceVoteRows, getVoteCommentRows, getUsersRows, getRosterRows 
 import { getMatchWeather, serializeWeather, parseWeather } from "../lib/weather";
 import { isVoteClosed, isMatchDayOver } from "../lib/vote-deadline";
 import { writeMatchWeather } from "../lib/sheets-write";
+import { buildRestPlan, isRestWeek } from "../lib/home-state";
 import VoteClient from "./VoteClient";
 
 export default async function VotePage() {
@@ -101,9 +102,12 @@ export default async function VotePage() {
   // 예정 경기 (가까운 순)
   // **투표가 마감돼도 경기 당일까지는 여기 남긴다** — 그날 아침에 명단과 시간·장소를
   // 확인하는 게 이 화면의 주 용도다. 날짜가 지나야 아래로 내려간다.
-  const upcomingMatches = matches
+  // 휴식 주는 투표할 게 없다. 목록에서 빼고 restPlan 으로 한 줄만 알린다(홈과 같은 판정).
+  const upcomingSchedule = matches
     .filter((m) => m.result === "예정" && m.type !== "야유회" && !isMatchDayOver(m.date))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const restPlan = buildRestPlan(upcomingSchedule);
+  const upcomingMatches = upcomingSchedule.filter((m) => !isRestWeek(m.type));
 
   // 지난 투표 — 위에 남아 있는 경기는 빼서 두 곳에 겹쳐 나오지 않게 한다.
   const upcomingIds = new Set(upcomingMatches.map((m) => m.id));
@@ -112,6 +116,7 @@ export default async function VotePage() {
     .filter(
       (m) =>
         !upcomingIds.has(m.id) &&
+        !isRestWeek(m.type) &&
         (m.attendanceStatus === "마감" || (m.result !== "예정" && pastVoteMatchIds.has(m.id))),
     )
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -156,6 +161,7 @@ export default async function VotePage() {
       voteComments={voteComments}
       users={users}
       weatherMap={weatherMap}
+      restPlan={restPlan}
       currentUser={currentUser}
       isAdmin={admin}
     />

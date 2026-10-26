@@ -17,7 +17,9 @@ export type HomeState =
   /** 날짜만 있고 상대가 아직 안 정해졌다 */
   | "matching"
   /** 위 어디에도 안 걸리는 평시 */
-  | "idle";
+  | "idle"
+  /** 다가오는 토요일이 휴식 주다(경기 유형 "휴식") */
+  | "rest";
 
 export const HOME_STATES: HomeState[] = [
   "dday",
@@ -25,6 +27,7 @@ export const HOME_STATES: HomeState[] = [
   "needVote",
   "matching",
   "idle",
+  "rest",
 ];
 
 /** 미리보기 상태 전환 칩에 쓰는 이름. */
@@ -34,6 +37,7 @@ export const HOME_STATE_LABEL: Record<HomeState, string> = {
   needVote: "투표 필요",
   matching: "매칭 대기",
   idle: "평시",
+  rest: "휴식",
 };
 
 export function isHomeState(value: string | undefined): value is HomeState {
@@ -71,6 +75,55 @@ export function isUndecided(value: string | undefined | null): boolean {
   return v === "" || v === "미정";
 }
 
+/**
+ * 휴식 주인가 — 경기 유형이 "휴식"인 행.
+ *
+ * 쉬는 토요일도 경기 행으로 둔다. 행이 있어야 토요일 크론(create-match)이 ±3일 안에
+ * 경기가 있다고 보고 그 주 경기 생성·"투표 열렸어요" 알림을 건너뛴다.
+ * result 는 계속 "예정"이라 출전·스탯·칭호 집계에는 원래 안 들어간다(백엔드 stats 도 같다).
+ * 대신 "예정"을 다음 경기로 잡는 자리(홈·투표·투표 알림)에서는 직접 빼야 한다.
+ */
+export function isRestWeek(type?: string | null): boolean {
+  return (type || "").replace(/\s+/g, "") === "휴식";
+}
+
+export interface RestPlan {
+  /** 이어지는 휴식 날짜들(가까운 순) */
+  dates: string[];
+  /** 복귀 날짜. 잡힌 경기가 있으면 그 날, 없으면 마지막 휴식 + 7일 */
+  returnDate: string;
+  /** 복귀 경기가 이미 등록돼 있으면 그 id */
+  returnMatchId: number | null;
+}
+
+/**
+ * 다가오는 일정이 휴식으로 시작하면 이어지는 휴식을 묶는다. 아니면 null.
+ * upcoming 은 "예정 · 야유회 아님 · 날짜 안 지남" 을 가까운 순으로 정렬한 목록이다.
+ *
+ * 묶는 이유: 2주 연속 쉬면 첫 주에 "이번 주는 쉬어요"만 보고 다음 주에 경기가 있는 줄 안다.
+ */
+export function buildRestPlan(
+  upcoming: { id: number; date: string; type?: string }[],
+): RestPlan | null {
+  const firstMatch = upcoming.findIndex((m) => !isRestWeek(m.type));
+  const rests = firstMatch === -1 ? upcoming : upcoming.slice(0, firstMatch);
+  if (rests.length === 0) return null;
+  const next = firstMatch === -1 ? null : upcoming[firstMatch];
+  return {
+    dates: rests.map((m) => m.date),
+    returnDate: next ? next.date : addDays(rests[rests.length - 1].date, 7),
+    returnMatchId: next ? next.id : null,
+  };
+}
+
+/** "YYYY-MM-DD" + n일. 못 읽으면 그대로 돌려준다. */
+function addDays(dateStr: string, n: number): string {
+  const m = dateStr.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+  if (!m) return dateStr;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]) + n));
+  return d.toISOString().slice(0, 10);
+}
+
 export interface HomeStateInput {
   /** 다가오는 경기(예정). 없으면 null */
   nextMatch: { date: string; opponent: string; type?: string; result?: string } | null;
@@ -80,15 +133,22 @@ export interface HomeStateInput {
   hasMyVote: boolean;
   /** 비로그인 상태에서는 투표를 재촉할 수 없다 */
   loggedIn: boolean;
+  /** 다가오는 일정이 휴식으로 시작하는가(buildRestPlan 이 null 이 아님) */
+  resting?: boolean;
 }
 
 /**
- * 급한 것부터 본다. 경기 임박(D-1~당일) > 새 출석 투표 > 매칭 대기 > 다음 경기 > 방금 끝난 경기.
+ * 급한 것부터 본다. 휴식 주 > 경기 임박(D-1~당일) > 새 출석 투표 > 매칭 대기 > 다음 경기 > 방금 끝난 경기.
  * 다음 경기 투표가 열린 뒤에는 로그인·투표 여부와 관계없이 다음 경기 흐름을 유지한다.
  * 그렇지 않으면 투표를 마친 직후 다시 직전 경기 종료 화면으로 돌아갈 수 있다.
  */
 export function resolveHomeState(input: HomeStateInput): HomeState {
-  const { nextMatch, lastMatch, hasMyVote, loggedIn } = input;
+  const { nextMatch, lastMatch, hasMyVote, loggedIn, resting } = input;
+
+  // 휴식 주는 다음 경기 자리를 대신한다. 복귀 경기가 미리 잡혀 있어도(토요일 밤 크론)
+  // 이번 토요일은 쉰다. 다만 경기 당일 밤의 MOM·사진 재촉은 그대로 둔다 —
+  // 휴식 행은 미리 만들어 두니, 안 그러면 휴식 직전 경기의 MOM 투표가 홈에서 사라진다.
+  if (resting) return lastMatch && needsWrapUpToday(lastMatch) ? "afterMatch" : "rest";
 
   const nextDDay = nextMatch ? getDDay(nextMatch.date) : null;
   if (nextDDay !== null && nextDDay >= 0 && nextDDay <= 1) return "dday";
@@ -104,14 +164,16 @@ export function resolveHomeState(input: HomeStateInput): HomeState {
   if (nextMatch && !hasNoExternalOpponent && isUndecided(nextMatch.opponent)) return "matching";
   if (nextMatch) return "idle";
 
-  if (lastMatch) {
-    // 경기 당일까지만. 토요일에 경기가 끝나면 그날 저녁에 다음 경기 카드가 생기므로,
-    // 다음 날부터는 "다음 경기" 쪽이 홈의 주인공이 되는 게 맞다.
-    const justPlayed = getDDay(lastMatch.date) === 0;
-    // MOM 이나 사진 중 하나라도 비어 있을 때만 재촉한다.
-    const needsWrapUp = !lastMatch.mom.trim() || !lastMatch.photos.trim();
-    if (justPlayed && needsWrapUp) return "afterMatch";
-  }
+  if (lastMatch && needsWrapUpToday(lastMatch)) return "afterMatch";
 
   return "idle";
+}
+
+function needsWrapUpToday(lastMatch: { date: string; mom: string; photos: string }): boolean {
+  // 경기 당일까지만. 토요일에 경기가 끝나면 그날 저녁에 다음 경기 카드가 생기므로,
+  // 다음 날부터는 "다음 경기" 쪽이 홈의 주인공이 되는 게 맞다.
+  const justPlayed = getDDay(lastMatch.date) === 0;
+  // MOM 이나 사진 중 하나라도 비어 있을 때만 재촉한다.
+  const needsWrapUp = !lastMatch.mom.trim() || !lastMatch.photos.trim();
+  return justPlayed && needsWrapUp;
 }

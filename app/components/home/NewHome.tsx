@@ -48,7 +48,9 @@ import type { LineupData, MatchData } from "../../lib/match-types";
 import {
   HOME_STATES,
   HOME_STATE_LABEL,
+  buildRestPlan,
   isHomeState,
+  isRestWeek,
   isUndecided,
   resolveHomeState,
   type HomeState,
@@ -64,6 +66,14 @@ import { type Feedback } from "./FeedbackThread";
 import MatchFeed from "./MatchFeed";
 import AppHeader from "./AppHeader";
 import LoungeEntry from "./LoungeEntry";
+
+/** 오늘(한국 날짜) 이후 첫 토요일 + offset 일. 휴식 미리보기에만 쓴다. */
+function upcomingSaturday(offset: number): string {
+  const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+  today.setDate(today.getDate() + ((6 - today.getDay() + 7) % 7) + offset);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+}
 
 /** 백엔드가 "08:00:00" 으로 주는 경우가 있어 홈과 같은 규칙으로 정규화한다. */
 function normalizeTime(raw: string): string {
@@ -190,10 +200,12 @@ export default async function NewHome({
   // 시간·장소를 확인한다.
   // (야유회는 결과가 안 채워져 result 가 비는데, 그걸 빼지 않으면 지난 야유회가
   //  영원히 "다음 경기"로 잡힌다.)
-  const nextMatch =
-    [...matches]
-      .filter((m) => m.result === "예정" && m.type !== "야유회" && !isMatchDayOver(m.date))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0] ?? null;
+  // 휴식 주는 경기가 아니라서 "다음 경기"에서 빼고, 대신 restPlan 으로 따로 그린다.
+  const upcomingSchedule = [...matches]
+    .filter((m) => m.result === "예정" && m.type !== "야유회" && !isMatchDayOver(m.date))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const nextMatch = upcomingSchedule.find((m) => !isRestWeek(m.type)) ?? null;
+  const detectedRest = buildRestPlan(upcomingSchedule);
 
   const played = matches.filter((m) => m.result !== "예정" && m.type !== "야유회");
   const lastMatch =
@@ -243,6 +255,7 @@ export default async function NewHome({
       : null,
     hasMyVote: !!myVote,
     loggedIn: !!kakaoId,
+    resting: !!detectedRest,
   });
   const state: HomeState = isHomeState(forced) ? forced : detected;
 
@@ -261,8 +274,20 @@ export default async function NewHome({
       : nextMatch;
   const heroLast =
     isForced && state === "afterMatch" && lastMatch ? { ...lastMatch, mom: "" } : lastMatch;
+  // 휴식 미리보기 — 실제 휴식 행이 없으면 이번 주·다음 주 토요일을 쉬는 걸로 그려 본다.
+  const restPlan =
+    detectedRest ??
+    (isForced && state === "rest"
+      ? buildRestPlan([
+          { id: -1, date: upcomingSaturday(0), type: "휴식" },
+          { id: -2, date: upcomingSaturday(7), type: "휴식" },
+        ])
+      : null);
   const staged =
-    isForced && ((state === "dday" && lastMatch) || (state === "afterMatch" && lastMatch));
+    isForced &&
+    ((state === "dday" && lastMatch) ||
+      (state === "afterMatch" && lastMatch) ||
+      (state === "rest" && !detectedRest));
 
 
   const notice = rawNotices[1];
@@ -270,7 +295,7 @@ export default async function NewHome({
   // 거기 댓글이 달렸다(8/8 경기에도 이미 한 개 달려 있다). 끝난 경기만 보여주면
   // 그 대화 자리가 통째로 사라진다. 히어로는 "지금 할 일", 이 줄은 "얘기하는 자리"다.
   const upcoming = [...matches]
-    .filter((m) => m.result === "예정" && m.type !== "야유회")
+    .filter((m) => m.result === "예정" && m.type !== "야유회" && !isRestWeek(m.type))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   // 피드는 전체를 다 흘린다. 화면에 붙이는 건 FeedList 가 스크롤에 맞춰 나눠서 한다.
   const allRecent = [
@@ -291,7 +316,7 @@ export default async function NewHome({
     const sid = seasonOf(ordinalTarget.date);
     if (!sid) return null;
     const sameSeason = matches
-      .filter((m) => m.type !== "야유회" && seasonOf(m.date) === sid)
+      .filter((m) => m.type !== "야유회" && !isRestWeek(m.type) && seasonOf(m.date) === sid)
       .sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
     const n = sameSeason.findIndex((m) => m.id === ordinalTarget.id) + 1;
     return n > 0 ? { label: labelOfSeason(sid), n } : null;
@@ -499,13 +524,16 @@ export default async function NewHome({
 
       {staged && (
         <p className="px-5 pt-2 text-[9px] font-bold text-gray-400 dark:text-white/35">
-          이 상태는 레이아웃 확인용으로 지난 경기 데이터를 빌려 왔어요.
+          {state === "rest"
+            ? "이 상태는 레이아웃 확인용으로 이번 주·다음 주를 휴식으로 그렸어요."
+            : "이 상태는 레이아웃 확인용으로 지난 경기 데이터를 빌려 왔어요."}
         </p>
       )}
 
       <HomeHero
         seasonOrdinal={seasonOrdinal}
         state={state}
+        restPlan={restPlan}
         nextMatch={heroNext}
         lastMatch={heroLast}
         votes={heroVotes}

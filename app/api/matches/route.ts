@@ -3,6 +3,7 @@ import { revalidateAppData } from "@/app/lib/cache";
 import { appendMatch } from "@/app/lib/sheets-write";
 import { sendPushToAll } from "@/app/lib/send-push";
 import { requireAdmin } from "@/app/lib/admin";
+import { isRestWeek } from "@/app/lib/home-state";
 
 export async function POST(req: NextRequest) {
   const denied = await requireAdmin();
@@ -22,14 +23,17 @@ export async function POST(req: NextRequest) {
     });
     const opponentLabel = opponent || "미정";
     const timeLabel = time || "미정";
-    try {
-      await sendPushToAll({
-        title: "📅 새 경기 일정이 등록됐어요",
-        body: `${date} ${timeLabel} vs ${opponentLabel}`,
-        url: "/",
-      });
-    } catch (e) {
-      console.error("[push] match 등록 알림 실패:", e);
+    // 휴식 주는 "새 경기 일정" 이 아니다. 공지로 이미 알렸으니 알림을 보내지 않는다.
+    if (!isRestWeek(type)) {
+      try {
+        await sendPushToAll({
+          title: "📅 새 경기 일정이 등록됐어요",
+          body: `${date} ${timeLabel} vs ${opponentLabel}`,
+          url: "/",
+        });
+      } catch (e) {
+        console.error("[push] match 등록 알림 실패:", e);
+      }
     }
     revalidateAppData();
     return NextResponse.json({ ok: true });
