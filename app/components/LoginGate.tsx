@@ -46,14 +46,14 @@ export default function LoginGate() {
         <div className="relative h-8 w-8 overflow-hidden rounded-[10px] ring-1 ring-black/[0.06] dark:ring-white/10">
           <Image src="/icons/icon-192.png" alt="" fill sizes="32px" className="object-cover" priority />
         </div>
-        <span className="text-[11px] font-black tracking-[0.18em] text-gray-500 dark:text-white/45">
+        <span className="text-[11px] font-black  text-gray-500 dark:text-white/45">
           UNDERDUCK FC
         </span>
       </div>
 
       <section className="relative my-auto py-12">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--ud-primary)]">
-          MEMBERS ONLY
+        <p className="text-[10px] font-black text-[var(--ud-primary)]">
+          회원 전용
         </p>
         <h1 className="mt-4 text-[34px] font-black leading-[1.13] tracking-[-0.05em]">
           언더덕 앱
@@ -67,7 +67,7 @@ export default function LoginGate() {
         </p>
 
         <div className="mt-8 h-px w-10 bg-[var(--ud-primary)]" />
-        <p className="mt-4 text-[11px] font-bold tracking-[0.08em] text-gray-300 dark:text-white/20">
+        <p className="mt-4 text-[11px] font-bold  text-gray-300 dark:text-white/20">
           NOT BECAUSE OF, BUT THANKS TO
         </p>
       </section>
@@ -85,7 +85,7 @@ export default function LoginGate() {
           {signingIn ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <KakaoMark />}
           {signingIn ? "카카오로 연결 중…" : "카카오로 로그인"}
         </button>
-        <p className="mt-3 text-center text-[10.5px] font-bold text-gray-400 dark:text-white/30">
+        <p className="mt-3 text-center text-[11px] font-bold text-gray-400 dark:text-white/30">
           언더덕 선수라면 카카오 계정으로 들어와 주세요.
         </p>
 
@@ -99,7 +99,7 @@ export default function LoginGate() {
           >
             <Smartphone className="h-[17px] w-[17px] shrink-0 text-[var(--ud-primary)]" />
             <span className="min-w-0 flex-1">
-              <b className="block text-[11.5px] font-black">언더덕 선수라면 앱으로 보기</b>
+              <b className="block text-[12px] font-black">언더덕 선수라면 앱으로 보기</b>
               <span className="mt-0.5 block text-[10px] font-bold text-gray-400 dark:text-white/30">
                 아이폰·안드로이드 홈 화면에 추가하기
               </span>
@@ -118,20 +118,20 @@ export default function LoginGate() {
             >
               <div className="grid gap-4 min-[390px]:grid-cols-2 min-[390px]:gap-3">
                 <div>
-                  <p className="flex items-center gap-1.5 text-[10.5px] font-black text-gray-700 dark:text-white/75">
+                  <p className="flex items-center gap-1.5 text-[11px] font-black text-gray-700 dark:text-white/75">
                     <Share className="h-3.5 w-3.5 text-blue-500" /> iPhone · Safari
                   </p>
-                  <ol className="mt-2 space-y-1.5 text-[10.5px] font-bold leading-relaxed text-gray-400 dark:text-white/35">
+                  <ol className="mt-2 space-y-1.5 text-[11px] font-bold leading-relaxed text-gray-400 dark:text-white/35">
                     <li><b className="mr-1 text-gray-600 dark:text-white/60">1.</b>Safari로 이 페이지 열기</li>
                     <li><b className="mr-1 text-gray-600 dark:text-white/60">2.</b>하단 공유 버튼 누르기</li>
                     <li><b className="mr-1 text-gray-600 dark:text-white/60">3.</b>홈 화면에 추가 → 추가</li>
                   </ol>
                 </div>
                 <div>
-                  <p className="flex items-center gap-1.5 text-[10.5px] font-black text-gray-700 dark:text-white/75">
+                  <p className="flex items-center gap-1.5 text-[11px] font-black text-gray-700 dark:text-white/75">
                     <MoreVertical className="h-3.5 w-3.5 text-emerald-500" /> Android · Chrome
                   </p>
-                  <ol className="mt-2 space-y-1.5 text-[10.5px] font-bold leading-relaxed text-gray-400 dark:text-white/35">
+                  <ol className="mt-2 space-y-1.5 text-[11px] font-bold leading-relaxed text-gray-400 dark:text-white/35">
                     <li><b className="mr-1 text-gray-600 dark:text-white/60">1.</b>Chrome으로 이 페이지 열기</li>
                     <li><b className="mr-1 text-gray-600 dark:text-white/60">2.</b>오른쪽 위 ⋮ 누르기</li>
                     <li><b className="mr-1 text-gray-600 dark:text-white/60">3.</b>앱 설치 또는 홈 화면에 추가</li>
@@ -147,8 +147,8 @@ export default function LoginGate() {
 
         <div className="mt-6 flex items-center gap-3">
           <span className="h-px flex-1 bg-gray-200 dark:bg-white/[0.07]" />
-          <span className="text-[9px] font-black tracking-[0.14em] text-gray-300 dark:text-white/20">
-            JOIN US
+          <span className="text-[11px] font-black  text-gray-300 dark:text-white/20">
+            함께 뛰어요
           </span>
           <span className="h-px flex-1 bg-gray-200 dark:bg-white/[0.07]" />
         </div>
@@ -163,12 +163,11 @@ export default function LoginGate() {
             <Instagram className="h-[18px] w-[18px] shrink-0 text-[var(--ud-primary)]" />
             <span className="min-w-0">
               <b className="block text-[12px] font-black">@underduck_fc</b>
-              <span className="mt-0.5 block truncate text-[10.5px] font-bold text-gray-400 dark:text-white/30">
+              <span className="mt-0.5 block truncate text-[11px] font-bold text-gray-400 dark:text-white/30">
                 가입 문의는 DM으로 살짝 노크해 주세요
               </span>
             </span>
           </span>
-          <span aria-hidden className="ml-2 text-[16px]">🐥</span>
         </a>
       </section>
     </main>

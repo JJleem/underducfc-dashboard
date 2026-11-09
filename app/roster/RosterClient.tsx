@@ -25,12 +25,12 @@ interface RosterClientProps {
 }
 
 // 포지션 그룹 메타 (앱 포지션 색 체계와 동일). 골키퍼 주황 / 수비 파랑 / 미드 초록 / 공격 핑크.
-const POS_META: Record<string, { label: string; en: string; color: string }> = {
-  GK: { label: "골키퍼", en: "GOALKEEPERS", color: "#F59E0B" },
-  DF: { label: "수비수", en: "DEFENDERS", color: "#3B82F6" },
-  MF: { label: "미드필더", en: "MIDFIELDERS", color: "#10B981" },
-  FW: { label: "공격수", en: "FORWARDS", color: "#FF8FA3" },
-  ETC: { label: "기타", en: "OTHERS", color: "#94A3B8" },
+const POS_META: Record<string, { label: string; color: string }> = {
+  GK: { label: "골키퍼", color: "#F59E0B" },
+  DF: { label: "수비수", color: "#3B82F6" },
+  MF: { label: "미드필더", color: "#10B981" },
+  FW: { label: "공격수", color: "#FF8FA3" },
+  ETC: { label: "기타", color: "#94A3B8" },
 };
 const POS_ORDER = ["GK", "DF", "MF", "FW", "ETC"];
 
@@ -43,7 +43,7 @@ const POS_ORDER = ["GK", "DF", "MF", "FW", "ETC"];
  * 주장과 부주장은 **똑같이 그린다.** 부주장만 흐린 유리로 낮춰 봤더니 사진 위에서
  * 칙칙하게 묻혔다. 어차피 글자가 C / VC 로 다르니 색까지 나눌 이유가 없다.
  *
- * 사진 위에 얹히므로 그림자와 안쪽 링으로 배경에서 띄운다.
+ * 사진 위에 얹히므로 그림자로 배경에서 띄운다.
  */
 function CaptainBadge({ role }: { role: "c" | "vc" }) {
   const captain = role === "c";
@@ -51,7 +51,7 @@ function CaptainBadge({ role }: { role: "c" | "vc" }) {
     <span
       aria-label={captain ? "주장" : "부주장"}
       title={captain ? "주장" : "부주장"}
-      className="shrink-0 rounded-[3px] bg-gradient-to-b from-[#FFF4CC] via-[#FFC933] to-[#EF9E0B] px-1 text-[8.5px] font-black leading-[15px] tracking-[0.03em] text-[#4A2E00] shadow-[0_1px_3px_rgba(0,0,0,0.45)] ring-1 ring-inset ring-white/55"
+      className="shrink-0 rounded-[3px] bg-[#FBBF24] px-1 text-[11px] font-black leading-[16px] text-[#4A2E00] shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
     >
       {captain ? "C" : "VC"}
     </span>
@@ -213,7 +213,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
           >
             <ArrowLeft width={18} height={18} strokeWidth={2.4} />
           </Link>
-          <span className="app-header-label">SQUAD</span>
+          <span className="app-header-label">선수단</span>
         </div>
         <div className="flex items-center gap-2">
           {isAdmin && (
@@ -258,7 +258,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
             }}
           />
           <div className="relative">
-            <p className="text-[10px] font-black tracking-[0.18em] text-[var(--ud-primary)]">
+            <p className="text-[10px] font-black  text-[var(--ud-primary)]">
               UNDERDUCK FC
             </p>
             <h1 className="mt-2 text-[25px] font-black leading-tight tracking-[-0.04em] text-gray-900 dark:text-white">
@@ -291,7 +291,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
               <Shirt width={17} height={17} strokeWidth={2.3} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[12.5px] font-black text-gray-900 dark:text-white">유니폼 · 사이즈표</span>
+              <span className="block text-[13px] font-black text-gray-900 dark:text-white">유니폼 · 사이즈표</span>
               <span className="mt-0.5 block text-[10px] font-bold text-gray-400 dark:text-white/35">
                 하계 반팔 세트 · 동계 하프집업
               </span>
@@ -311,16 +311,13 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                 {/* 그룹 헤더 */}
                 <div className="mb-3 flex items-baseline gap-2 px-4">
                   <h2
-                    className="text-[11px] font-black uppercase tracking-[0.18em]"
+                    className="text-[11px] font-black uppercase "
                     style={{ color: meta.color }}
                   >
                     {key}
                   </h2>
                   <span className="text-[11px] font-black text-gray-700 dark:text-white/75">
                     {meta.label}
-                  </span>
-                  <span className="text-[9px] font-bold tracking-[0.12em] text-gray-300 dark:text-white/20">
-                    {meta.en}
                   </span>
                   <span className="ml-auto text-[11px] font-black tabular-nums text-gray-400 dark:text-white/35">
                     {group.length}
@@ -382,7 +379,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                               {isC && <CaptainBadge role="c" />}
                               {isVC && <CaptainBadge role="vc" />}
                             </div>
-                            <div className="mt-1 flex items-center gap-1.5 text-[9px] font-black">
+                            <div className="mt-1 flex items-center gap-1.5 text-[11px] font-black">
                               <span className="tabular-nums text-white/65">
                                 {hasNo ? `No. ${rawNo}` : "No. -"}
                               </span>
@@ -400,7 +397,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                             aria-label="선수 수정"
                           >
                             <Pencil className="h-3 w-3" />
-                            <span className="text-[8px] font-black">편집</span>
+                            <span className="text-[10px] font-black">편집</span>
                           </button>
                         )}
                       </div>
@@ -428,7 +425,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-4">
             {/* 이름 */}
             <div>
-              <p className="mb-2 text-[10px] font-black tracking-[0.14em] text-gray-400 dark:text-white/35">이름 *</p>
+              <p className="mb-2 text-[10px] font-black  text-gray-400 dark:text-white/35">이름 *</p>
               <input
                 type="text"
                 value={form.name}
@@ -440,7 +437,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
 
             {/* 등번호 */}
             <div>
-              <p className="mb-2 text-[10px] font-black tracking-[0.14em] text-gray-400 dark:text-white/35">등번호 <span className="font-medium normal-case tracking-normal text-gray-300 dark:text-white/20">(미입력 시 -)</span></p>
+              <p className="mb-2 text-[10px] font-black  text-gray-400 dark:text-white/35">등번호 <span className="font-medium normal-case tracking-normal text-gray-300 dark:text-white/20">(미입력 시 -)</span></p>
               <input
                 type="number"
                 value={form.no}
@@ -454,7 +451,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
 
             {/* 포지션 */}
             <div>
-              <p className="mb-2 text-[10px] font-black tracking-[0.14em] text-gray-400 dark:text-white/35">포지션</p>
+              <p className="mb-2 text-[10px] font-black  text-gray-400 dark:text-white/35">포지션</p>
               <div className="grid grid-cols-4 gap-2">
                 {["GK", "DF", "MF", "FW"].map((p) => {
                   const styles: Record<string, string> = {
@@ -485,7 +482,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
 
             {/* 상태 */}
             <div>
-              <p className="mb-2 text-[10px] font-black tracking-[0.14em] text-gray-400 dark:text-white/35">상태</p>
+              <p className="mb-2 text-[10px] font-black  text-gray-400 dark:text-white/35">상태</p>
               <div className="flex gap-2">
                 {["활동", "부상", "비활동"].map((s) => (
                   <button
@@ -510,7 +507,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
 
             {/* 주장 역할 — 완장(FormationField)과 명단 표시가 이 값을 본다. */}
             <div>
-              <p className="mb-2 text-[10px] font-black tracking-[0.14em] text-gray-400 dark:text-white/35">주장</p>
+              <p className="mb-2 text-[10px] font-black  text-gray-400 dark:text-white/35">주장</p>
               <div className="flex gap-2">
                 {[
                   { value: "", label: "없음" },

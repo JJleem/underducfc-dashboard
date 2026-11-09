@@ -55,9 +55,11 @@
    · 움직임: 기본 전환을 150ms 선형 감속 → 220ms 부드러운 감속 곡선.
    · 회색 50: 차가운 청회색(#f9fafb)을 아주 옅게 따뜻하게. 페이지 바탕 50여 곳이 이걸 쓴다. */
 @theme {
-  --font-weight-bold: 650;
-  --font-weight-extrabold: 760;
-  --font-weight-black: 820;
+  /* unslop: 900 이 480곳이라 강약이 안 보였다. 한 단계 더 내린다(900→700, 800→650, 700→600).
+     점수·이름 같은 큰 글자는 크기로 위계가 선다. */
+  --font-weight-bold: 600;
+  --font-weight-extrabold: 650;
+  --font-weight-black: 700;
 
   --radius-lg: 0.625rem;
   --radius-xl: 0.875rem;
@@ -147,17 +149,6 @@ body {
     opacity: 1;
   }
 }
-@keyframes udk-pulse-ring {
-  0% {
-    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.5);
-  }
-  70% {
-    box-shadow: 0 0 0 7px rgba(251, 191, 36, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
-  }
-}
 
 @keyframes udk-tab {
   from {
@@ -194,9 +185,6 @@ body {
 .animate-tab {
   animation: udk-tab 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.pulse-ring {
-  animation: udk-pulse-ring 1.5s ease-out infinite;
-}
 
 /* 새 공지 배지. 계속 떠 있는 표시라 amber 펄스(1.5s, 진한 링)를 그대로 쓰면
    화면이 재촉하는 것처럼 읽힌다. 주기를 늘리고 링을 얇게 해서 "숨 쉬는" 정도로만 둔다. */
@@ -212,7 +200,8 @@ body {
   }
 }
 .pulse-new {
-  animation: udk-pulse-new 2.6s ease-out infinite;
+  /* unslop: 살아 있는 상태가 아닌 배지는 깜빡이지 않는다 */
+  animation: none;
 }
 
 /* ── 인터랙션 피드백 ─────────────────────────────
@@ -362,9 +351,8 @@ body {
 
 .app-header-label {
   color: var(--app-text-muted);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
 /* 버튼은 역할만 공유한다. 포지션·상태 선택처럼 의미색이 있는 컨트롤은 제외한다. */
@@ -391,7 +379,6 @@ body {
 .app-button-primary {
   background: var(--app-brand);
   color: white;
-  box-shadow: 0 8px 22px -12px color-mix(in srgb, var(--app-brand-strong) 70%, transparent);
 }
 .app-button-primary:active:not(:disabled) {
   background: var(--app-brand-strong);
@@ -455,7 +442,6 @@ body {
 .app-icon-action-primary {
   background: var(--app-brand);
   color: white;
-  box-shadow: 0 4px 14px -8px color-mix(in srgb, var(--app-brand-strong) 90%, transparent);
 }
 .app-icon-action-neutral {
   background: #f3f4f6;
@@ -533,8 +519,7 @@ body {
 /* 라벨과 모달은 타이포 크기·패딩을 소유하지 않고 톤만 맞춘다. */
 .app-section-label {
   color: var(--app-text-muted);
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  font-weight: 600;
 }
 .app-modal-surface {
   border-color: var(--app-border-subtle);
@@ -581,7 +566,6 @@ body {
   .animate-rise,
   .animate-fade,
   .animate-tab,
-  .pulse-ring,
   .pulse-new,
   .skeleton-shimmer {
     animation: none;

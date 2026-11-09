@@ -1,5 +1,5 @@
 // 스탯·전적처럼 홈에서 갈라져 나온 페이지의 상단 바.
-// 프로필(app/players/[name])의 상단 바와 같은 문법이다 — 뒤로가기 + 영문 라벨 하나.
+// 프로필(app/players/[name])의 상단 바와 같은 문법이다 — 뒤로가기 + 라벨 하나.
 
 import Link from "next/link";
 import type { ReactNode } from "react";

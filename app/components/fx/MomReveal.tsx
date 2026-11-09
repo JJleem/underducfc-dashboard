@@ -41,7 +41,7 @@ export default function MomReveal({
       >
         MAN OF THE MATCH
       </motion.p>
-      <p className="mt-2 text-[12.5px] font-bold text-white/50">
+      <p className="mt-2 text-[13px] font-bold text-white/50">
         vs {data.opponent}
         {m && d ? ` · ${m}월 ${d}일` : ""}
       </p>

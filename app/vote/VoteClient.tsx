@@ -404,7 +404,7 @@ export default function VoteClient({
         <div className="relative">
           <div className="flex items-end justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-white/35">
+              <p className="text-[11px] font-black  text-gray-400 dark:text-white/35">
                 {match.type}
               </p>
               <h2 className="mt-1.5 flex items-center gap-1.5 text-[21px] font-black leading-none tracking-[-0.035em] text-gray-900 dark:text-white">
@@ -500,7 +500,7 @@ export default function VoteClient({
 
           {/* 언제 닫히는지 안 보이면 갑자기 막힌 것처럼 느낀다. 버튼 바로 아래 한 줄. */}
           {!voteClosed && voteDeadlineLabel(match.date) && (
-            <p className="mt-2 text-center text-[10.5px] font-bold text-gray-400 dark:text-white/30">
+            <p className="mt-2 text-center text-[11px] font-bold text-gray-400 dark:text-white/30">
               경기 전날 23:00에 자동으로 닫혀요 · {voteDeadlineLabel(match.date)}
             </p>
           )}
@@ -579,7 +579,7 @@ export default function VoteClient({
 
           {/* 댓글 */}
           <div className="mt-4 border-t border-gray-200 pt-3.5 dark:border-white/[0.08]">
-            <p className="mb-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-gray-400 dark:text-white/35">
+            <p className="mb-2.5 text-[10px] font-black uppercase  text-gray-400 dark:text-white/35">
               댓글 <span className="tabular-nums">{matchComments.length}</span>
             </p>
             <div className="flex flex-col gap-3">
@@ -591,7 +591,7 @@ export default function VoteClient({
                       <p className="flex items-center gap-1.5">
                         <Link
                           href={`/players/${encodeURIComponent(c.nickname)}`}
-                          className="truncate text-[12.5px] font-black text-gray-900 active:opacity-60 dark:text-white"
+                          className="truncate text-[13px] font-black text-gray-900 active:opacity-60 dark:text-white"
                         >
                           {c.nickname}
                         </Link>
@@ -657,14 +657,14 @@ export default function VoteClient({
                 {commentEmoticon[match.id] && (
                   <div className="flex items-center gap-2">
                     <Emoticon id={commentEmoticon[match.id]} size={36} />
-                    <span className="flex-1 text-[10.5px] font-bold text-gray-400 dark:text-white/30">
+                    <span className="flex-1 text-[11px] font-bold text-gray-400 dark:text-white/30">
                       이 이모티콘과 함께 올라가요
                     </span>
                     <button
                       type="button"
                       onClick={() => setCommentEmoticon((prev) => ({ ...prev, [match.id]: null }))}
                       aria-label="이모티콘 빼기"
-                      className="px-1 text-[10.5px] font-black text-gray-400 active:opacity-60"
+                      className="px-1 text-[11px] font-black text-gray-400 active:opacity-60"
                     >
                       빼기
                     </button>
@@ -737,7 +737,7 @@ export default function VoteClient({
         >
           <ArrowLeft width={18} height={18} strokeWidth={2.4} />
         </Link>
-        <span className="app-header-label">VOTE</span>
+        <span className="app-header-label">투표</span>
       </div>
 
       {activeMatches.length > 0 ? (
@@ -766,7 +766,7 @@ export default function VoteClient({
 
       {closedMatches.length > 0 && (
         <section className="px-4 pb-24 pt-6">
-          <p className="mb-1 text-[10px] font-black uppercase tracking-[0.16em] text-gray-400 dark:text-white/35">
+          <p className="mb-1 text-[10px] font-black uppercase  text-gray-400 dark:text-white/35">
             지난 투표 <span className="tabular-nums">{closedMatches.length}</span>
           </p>
           <div className="divide-y divide-gray-100 dark:divide-white/[0.06]">

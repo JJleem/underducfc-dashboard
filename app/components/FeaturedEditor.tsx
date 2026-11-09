@@ -119,7 +119,7 @@ export default function FeaturedEditor({
         </p>
         <Link
           href="/titles"
-          className="flex shrink-0 items-center gap-0.5 rounded-lg bg-[var(--ud-primary)]/10 px-2 py-1.5 text-[9px] font-black text-[var(--ud-primary-strong)] active:opacity-60 dark:text-[var(--ud-primary)]"
+          className="flex shrink-0 items-center gap-0.5 rounded-lg bg-[var(--ud-primary)]/10 px-2 py-1.5 text-[11px] font-black text-[var(--ud-primary-strong)] active:opacity-60 dark:text-[var(--ud-primary)]"
         >
           칭호 상세보기
           <ChevronRight className="h-3 w-3" />
@@ -128,7 +128,7 @@ export default function FeaturedEditor({
       <div className="max-h-72 space-y-3 overflow-y-auto">
         {groups.map((g) => (
         <div key={g.key}>
-        <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-gray-400 dark:text-white/35">
+        <p className="mb-1.5 text-[11px] font-black uppercase  text-gray-400 dark:text-white/35">
           {g.label}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -136,7 +136,7 @@ export default function FeaturedEditor({
           const key = featureKey(t);
           const order = sel.indexOf(key);
           const on = order >= 0;
-          const [, highlight, base] = titleMetal(t).ramp;
+          const [, , base] = titleMetal(t).ramp;
           return (
             <button
               key={key}
@@ -144,15 +144,14 @@ export default function FeaturedEditor({
               onClick={() => toggle(key)}
               disabled={saving}
               aria-pressed={on}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-bold border transition-all disabled:cursor-wait disabled:opacity-60 ${
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-bold border transition disabled:cursor-wait disabled:opacity-60 ${
                 on
-                  ? "text-gray-900 shadow-sm dark:text-white"
+                  ? "text-gray-900 dark:text-white"
                   : "bg-gray-50 dark:bg-white/[0.04] text-gray-600 dark:text-gray-300 border-gray-200 dark:border-white/10"
               }`}
               style={on ? {
                 borderColor: base,
-                background: `linear-gradient(135deg, ${highlight}55, ${base}30)`,
-                boxShadow: `0 0 0 1px ${base}20, 0 3px 10px ${base}22`,
+                background: `${base}26`,
               } : undefined}
             >
               <TitleBadge title={t} size={16} />
@@ -160,7 +159,7 @@ export default function FeaturedEditor({
               {t.tierLabel ? ` ${t.tierLabel}` : ""}
               {on && (
                 <span
-                  className="flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black text-white"
+                  className="flex h-4 w-4 items-center justify-center rounded-full text-[11px] font-black text-white"
                   style={{ backgroundColor: base }}
                 >
                   {order + 1}
@@ -181,7 +180,7 @@ export default function FeaturedEditor({
         )}
         {success && !saving && (
           <p className="mt-2 flex items-center gap-1.5 text-[11px] font-black text-emerald-600 dark:text-emerald-400">
-            <CheckCircle2 className="h-3.5 w-3.5" /> 저장 완료! 라인업에 바로 반영됩니다.
+            <CheckCircle2 className="h-3.5 w-3.5" /> 저장 완료. 라인업에 바로 반영됩니다.
           </p>
         )}
         {err && !saving && (

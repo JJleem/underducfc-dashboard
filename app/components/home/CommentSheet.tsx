@@ -159,7 +159,7 @@ export default function CommentSheet({
                 {title}
               </DrawerTitle>
               {subtitle && (
-                <p className="text-center text-[10.5px] font-bold text-gray-400 dark:text-white/30">
+                <p className="text-center text-[11px] font-bold text-gray-400 dark:text-white/30">
                   {subtitle}
                 </p>
               )}

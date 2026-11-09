@@ -98,12 +98,15 @@ export function titleSurface(t: EarnedTitle, isLight: boolean) {
     background: isLight
       ? `linear-gradient(135deg, ${rgba(hi, 0.5)} 0%, ${rgba(base, 0.14)} 100%)`
       : `linear-gradient(135deg, ${rgba(base, 0.17)} 0%, ${rgba(dark, 0.34)} 100%)`,
-    border: isLight ? rgba(shadow, 0.34) : rgba(base, 0.42),
+    // 테두리·글자는 isLight 대신 CSS light-dark() 로 고른다. useTheme 의 resolvedTheme 은
+    // 마운트 전엔 undefined 라 라이트 화면에서도 다크용 밝은 색(hi)이 흰 바탕에 찍혀
+    // 칭호 이름이 안 읽혔다. next-themes 가 <html> 에 color-scheme 을 달아 주므로 CSS 가 고르게 둔다.
+    border: `light-dark(${rgba(shadow, 0.34)}, ${rgba(base, 0.42)})`,
     /**
      * 제목·수치 색. 라이트에서 shadow(4단계)를 쓰면 실버·골드가 4.5:1 턱걸이라
      * 최암부(dark)를 쓴다 — 색 계열은 그대로면서 대비가 9:1 이상으로 올라간다.
      */
-    fg: isLight ? dark : hi,
+    fg: `light-dark(${dark}, ${hi})`,
     glow: metal.aura ? rgba(base, isLight ? 0.22 : 0.3) : undefined,
   };
 }
@@ -202,9 +205,9 @@ function Coin({
         flex: "0 0 auto",
         filter:
           `drop-shadow(0 ${Math.max(1, size * 0.05)}px ${Math.max(1, size * 0.09)}px rgba(0,0,0,0.55))` +
-          (metal.aura ? ` drop-shadow(0 0 ${size * 0.22}px ${rgba(base, 0.5)})` : "") +
+          (metal.aura ? ` drop-shadow(0 0 ${size * 0.14}px ${rgba(base, 0.25)})` : "") +
           // 포일은 헤일로도 두 색이라 가장자리에 옅은 색수차가 생긴다
-          (metal.foil ? ` drop-shadow(0 0 ${size * 0.3}px ${rgba(metal.foil, 0.32)})` : ""),
+          (metal.foil ? ` drop-shadow(0 0 ${size * 0.18}px ${rgba(metal.foil, 0.16)})` : ""),
       }}
     >
       <defs>
@@ -423,7 +426,6 @@ function TitleChip({ title }: { title: EarnedTitle }) {
           background:
             "radial-gradient(120% 120% at 30% 20%, #241a3d, #0a0a16) padding-box, " +
             "conic-gradient(from 210deg, #FFE9A8, #B8860B, #FFD45A, #8a6508, #FFE9A8) border-box",
-          boxShadow: "0 0 8px rgba(255,196,70,0.4)",
         }}
       >
         {icon}
@@ -441,7 +443,6 @@ function TitleChip({ title }: { title: EarnedTitle }) {
         ...chipBase,
         color: hi,
         background: `linear-gradient(#11182e,#11182e) padding-box, linear-gradient(135deg, ${base}, ${shadow}) border-box`,
-        boxShadow: titleMetal(title).aura ? `0 0 7px ${rgba(base, 0.4)}` : undefined,
       }}
     >
       {icon}

@@ -194,30 +194,14 @@ export function FormationField({
           className="absolute inset-0 pointer-events-none hidden dark:block"
           style={{
             backgroundImage:
-              "radial-gradient(1.5px 1.5px at 12% 10%, rgba(255,255,255,0.7), transparent)," +
-              "radial-gradient(1px 1px at 28% 5%, rgba(255,255,255,0.5), transparent)," +
-              "radial-gradient(1.5px 1.5px at 45% 12%, rgba(255,255,255,0.6), transparent)," +
-              "radial-gradient(1px 1px at 62% 4%, rgba(255,255,255,0.5), transparent)," +
-              "radial-gradient(1.5px 1.5px at 78% 9%, rgba(255,255,255,0.7), transparent)," +
-              "radial-gradient(1px 1px at 90% 14%, rgba(255,255,255,0.4), transparent)",
+              "radial-gradient(1.5px 1.5px at 12% 10%, rgba(255,255,255,0.3), transparent)," +
+              "radial-gradient(1px 1px at 28% 5%, rgba(255,255,255,0.2), transparent)," +
+              "radial-gradient(1.5px 1.5px at 45% 12%, rgba(255,255,255,0.25), transparent)," +
+              "radial-gradient(1px 1px at 62% 4%, rgba(255,255,255,0.2), transparent)," +
+              "radial-gradient(1.5px 1.5px at 78% 9%, rgba(255,255,255,0.3), transparent)," +
+              "radial-gradient(1px 1px at 90% 14%, rgba(255,255,255,0.15), transparent)",
           }}
         />
-        {/* 스타디움 스포트라이트 */}
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            left: "-10%", top: "-8%", width: "60%", height: "70%",
-            background: "linear-gradient(125deg, color-mix(in srgb, var(--ud-primary) 14%, transparent) 0%, rgba(255,255,255,0.05) 30%, transparent 60%)",
-          }}
-        />
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            right: "-10%", top: "-8%", width: "60%", height: "70%",
-            background: "linear-gradient(-125deg, rgba(147,197,253,0.12) 0%, rgba(255,255,255,0.05) 30%, transparent 60%)",
-          }}
-        />
-
         {/* 3D 무대 */}
         <div
           className="absolute inset-0"
@@ -307,20 +291,6 @@ export function FormationField({
                 <Image src="/underducklogo.png" alt="" fill className="object-cover" />
               </div>
             </div>
-
-            {/* 라이트 스윕: 펼칠 때 광택이 한 번 쓸고 지나감 */}
-            <motion.div
-              className="absolute inset-y-0 pointer-events-none"
-              style={{
-                width: "45%",
-                background:
-                  "linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.08) 60%, transparent 100%)",
-                zIndex: 4,
-              }}
-              initial={{ x: "-160%" }}
-              animate={{ x: "380%" }}
-              transition={{ duration: 1.1, delay: 0.4, ease: "easeInOut" }}
-            />
 
             {/* 모든 화살표를 선수보다 먼저 그려 어떤 카드 정보도 덮지 않게 한다. */}
             {mode === "faceon" && showTactic && (
@@ -466,7 +436,7 @@ export function FormationField({
                                 border: `2.5px solid ${isTbd ? "#6B7280" : color.border}`,
                                 color: "#fff",
                                 boxShadow: isSel
-                                  ? `0 0 18px ${color.bg}, 0 4px 10px rgba(0,0,0,0.55)`
+                                  ? "0 0 0 2px rgba(255,255,255,0.9), 0 4px 10px rgba(0,0,0,0.55)"
                                   : "0 4px 10px rgba(0,0,0,0.55)",
                               }}
                             >
@@ -482,9 +452,9 @@ export function FormationField({
                                 borderRadius: 5,
                                 fontSize: 10,
                                 color: "#3b2300",
-                                background: "linear-gradient(135deg,#FDE68A 0%,#F59E0B 55%,#D97706 100%)",
+                                background: "#F59E0B",
                                 border: "1px solid rgba(255,255,255,0.75)",
-                                boxShadow: "0 2px 6px rgba(0,0,0,0.5), 0 0 10px rgba(245,158,11,0.55)",
+                                boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
                               }}
                             >
                               C
@@ -551,7 +521,7 @@ export function FormationField({
                                     boxShadow: "0 1px 4px rgba(0,0,0,0.45)",
                                   }}
                                 >
-                                  ⚽{goalCount > 1 ? `×${goalCount}` : ""}
+                                  G{goalCount > 1 ? `×${goalCount}` : ""}
                                 </div>
                               )}
                             </div>
@@ -720,12 +690,12 @@ export function FormationField({
                     <span className="text-[8px] font-black px-1 rounded bg-amber-400 text-amber-950">C</span>
                   )}
                   {momNames.includes(selectedName) && (
-                    <span className="text-[8px] font-black px-1 rounded bg-yellow-400/20 text-yellow-300">⭐ MOM</span>
+                    <span className="text-[8px] font-black px-1 rounded bg-yellow-400/20 text-yellow-300">MOM</span>
                   )}
                 </div>
                 <div className="text-[10px] text-white/60 font-bold mt-0.5 leading-snug">
                   {selectedStat
-                    ? `시즌 출전 ${selectedStat.apps} · 골 ${selectedStat.goals} · 도움 ${selectedStat.assists}${selectedStat.mom ? ` · ⭐${selectedStat.mom}` : ""}`
+                    ? `시즌 출전 ${selectedStat.apps} · 골 ${selectedStat.goals} · 도움 ${selectedStat.assists}${selectedStat.mom ? ` · MOM ${selectedStat.mom}` : ""}`
                     : "시즌 기록 없음 (게스트)"}
                   {(() => {
                     const g = countNames(matchInfo?.goals, selectedName);
@@ -733,7 +703,7 @@ export function FormationField({
                     if (!g && !a) return null;
                     return (
                       <span className="text-[var(--ud-primary)]">
-                        {" "}· 이번 경기 {g > 0 ? `⚽${g}` : ""}{g > 0 && a > 0 ? " " : ""}{a > 0 ? `A${a}` : ""}
+                        {" "}· 이번 경기 {g > 0 ? `G${g}` : ""}{g > 0 && a > 0 ? " " : ""}{a > 0 ? `A${a}` : ""}
                       </span>
                     );
                   })()}
@@ -763,8 +733,8 @@ export function FormationField({
         style={{ background: "var(--pitch-bar)", borderTop: "1px solid var(--pitch-bar-border)" }}
       >
         <div className="flex items-center gap-2">
-          <span className="text-[9px] font-black tracking-[0.25em] text-gray-500 dark:text-white/50">
-            STARTING XI
+          <span className="text-[9px] font-black  text-gray-500 dark:text-white/50">
+            선발 라인업
           </span>
         </div>
         <div className="flex items-center gap-3">

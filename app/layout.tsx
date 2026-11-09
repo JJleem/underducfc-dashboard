@@ -162,10 +162,10 @@ export default async function RootLayout({
             <footer className="mt-auto w-full border-t border-gray-200/60 px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-6 dark:border-white/[0.06]">
               <div className="flex items-end justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--ud-primary)]">
+                  <p className="text-[11px] font-black uppercase  text-[var(--ud-primary)]">
                     UNDERDUCK FC
                   </p>
-                  <p className="mt-1.5 text-[9.5px] font-bold tracking-[0.06em] text-gray-400 dark:text-white/30">
+                  <p className="mt-1.5 text-[11px] font-bold tracking-[0.06em] text-gray-400 dark:text-white/30">
                     NOT BECAUSE OF, BUT THANKS TO
                   </p>
                 </div>
@@ -180,7 +180,7 @@ export default async function RootLayout({
                   molt
                 </Link>
               </div>
-              <p className="mt-4 text-[9px] font-medium text-gray-300 dark:text-white/20">
+              <p className="mt-4 text-[11px] font-medium text-gray-300 dark:text-white/20">
                 © 2026 UNDERDUCK FC
               </p>
             </footer>

@@ -53,14 +53,14 @@ function Highlight({
         {showSeason && title.seasonLabel && (
           // 어느 시즌 건지 안 붙이면 "득점왕" 뱃지 두 개가 나란히 떠도 구분이 안 된다.
           <span
-            className="mb-0.5 text-[8px] font-black tabular-nums leading-none opacity-70"
+            className="mb-0.5 text-[10px] font-black tabular-nums leading-none opacity-70"
             style={{ color: s.fg }}
           >
             {title.seasonLabel}
           </span>
         )}
         <span
-          className="line-clamp-2 text-center text-[9.5px] font-black leading-[1.25] tracking-[-0.02em]"
+          className="line-clamp-2 text-center text-[11px] font-black leading-[1.25] tracking-[-0.02em]"
           style={{ color: s.fg }}
         >
           {title.name}
@@ -223,9 +223,9 @@ export default function PlayerTitleCards({
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <p className="text-[15px] font-black" style={{ color: selectedSurface.fg }}>{selected.name}</p>
-                  {selected.hidden && <span className="rounded-full bg-cyan-300/15 px-1.5 py-0.5 text-[7px] font-black text-cyan-600 dark:text-cyan-200">HIDDEN</span>}
+                  {selected.hidden && <span className="rounded-full bg-[var(--ud-primary)]/15 px-1.5 py-0.5 text-[11px] font-black text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">히든</span>}
                 </div>
-                <p className="mt-0.5 text-[9px] font-bold text-gray-500 dark:text-white/45">
+                <p className="mt-0.5 text-[11px] font-bold text-gray-500 dark:text-white/45">
                   {selected.seasonLabel ? `${selected.seasonLabel} 시즌 · ` : ""}
                   {selected.tierLabel ?? selected.category}
                 </p>
@@ -240,7 +240,7 @@ export default function PlayerTitleCards({
               <div className="relative mt-4 grid grid-cols-2 gap-2">
                 {selected.stats.map((stat) => (
                   <div key={`${stat.label}-${stat.value}`} className="rounded-xl bg-white/45 px-3 py-2.5 dark:bg-black/20">
-                    <p className="text-[8px] font-bold text-gray-500 dark:text-white/40">{stat.label}</p>
+                    <p className="text-[10px] font-bold text-gray-500 dark:text-white/40">{stat.label}</p>
                     <p className="mt-0.5 text-[13px] font-black tabular-nums" style={{ color: selectedSurface.fg }}>{stat.value}</p>
                   </div>
                 ))}
@@ -251,7 +251,7 @@ export default function PlayerTitleCards({
               <div className="relative mt-3 rounded-2xl bg-white/45 px-3.5 py-3 dark:bg-black/20">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[8px] font-bold tracking-[0.08em] text-gray-500 dark:text-white/40">
+                    <p className="text-[10px] font-bold  text-gray-500 dark:text-white/40">
                       {selected.progress.maxed ? "등급 진행" : "다음 등급"}
                     </p>
                     <p className="mt-0.5 text-[11px] font-black" style={{ color: selectedSurface.fg }}>
@@ -259,7 +259,7 @@ export default function PlayerTitleCards({
                     </p>
                   </div>
                   {!selected.progress.maxed && (
-                    <p className="shrink-0 text-[9px] font-black text-gray-500 tabular-nums dark:text-white/45">
+                    <p className="shrink-0 text-[11px] font-black text-gray-500 tabular-nums dark:text-white/45">
                       {selected.progress.remaining}{selected.progress.unit} 남음
                     </p>
                   )}
@@ -283,7 +283,7 @@ export default function PlayerTitleCards({
                   />
                 </div>
 
-                <div className="mt-1.5 flex items-center justify-between text-[8.5px] font-bold text-gray-500 tabular-nums dark:text-white/40">
+                <div className="mt-1.5 flex items-center justify-between text-[10px] font-bold text-gray-500 tabular-nums dark:text-white/40">
                   <span>{selected.progress.current}{selected.progress.unit}</span>
                   <span>{selected.progress.target}{selected.progress.unit}</span>
                 </div>

@@ -133,7 +133,7 @@ export default function PhotoUploader({
             <ImagePlus width={17} height={17} strokeWidth={2} />
           )}
         </span>
-        <span className="whitespace-nowrap text-[9px] font-bold leading-none text-gray-400 dark:text-white/35">
+        <span className="whitespace-nowrap text-[11px] font-bold leading-none text-gray-400 dark:text-white/35">
           사진 추가
         </span>
       </button>

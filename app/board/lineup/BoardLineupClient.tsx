@@ -236,16 +236,16 @@ export default function BoardLineupClient({
         <Link href="/board" aria-label="전술 게시판으로" className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300">
           <ArrowLeft className="h-[18px] w-[18px]" />
         </Link>
-        <span className="app-header-label mr-auto">TACTICS</span>
+        <span className="app-header-label mr-auto">전술</span>
         <button
           onClick={submit}
           disabled={submitting || done}
-          className={`-my-2 flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-[12px] font-black transition-all ${
+          className={`-my-2 flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-[12px] font-black transition ${
             done ? "bg-green-500 text-white" : "bg-[var(--ud-primary)] text-black hover:bg-[var(--ud-primary)]"
           } disabled:opacity-70`}
         >
           {done ? <Check className="h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
-          {done ? "올렸어요" : submitting ? "올리는 중..." : existing ? "수정" : "올리기"}
+          {done ? "올렸어요" : submitting ? "올리는 중…" : existing ? "수정" : "올리기"}
         </button>
       </header>
 
@@ -286,7 +286,7 @@ export default function BoardLineupClient({
                   setSwapFrom(null);
                   setLiveShape(null);
                 }}
-                className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl px-3 text-[11px] font-black transition-all ${
+                className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl px-3 text-[11px] font-black transition ${
                   active === i
                     ? "bg-[var(--ud-primary)] text-white"
                     : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
@@ -342,7 +342,7 @@ export default function BoardLineupClient({
               <button
                 key={f}
                 onClick={() => handleFormationChange(f)}
-                className={`min-h-9 flex-shrink-0 rounded-lg px-2.5 text-[10px] font-black transition-all ${
+                className={`min-h-9 flex-shrink-0 rounded-lg px-2.5 text-[10px] font-black transition ${
                   matchesPreset(f)
                     ? "bg-gray-900 text-white dark:bg-white dark:text-black"
                     : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
@@ -363,7 +363,7 @@ export default function BoardLineupClient({
                 key={t.id}
                 onClick={() => setTactic(tactic === t.id ? "" : t.id)}
                 title={t.desc}
-                className={`min-h-9 flex-shrink-0 rounded-lg px-2.5 text-[10px] font-black transition-all ${
+                className={`min-h-9 flex-shrink-0 rounded-lg px-2.5 text-[10px] font-black transition ${
                   tactic === t.id
                     ? "bg-[var(--ud-primary)] text-white"
                     : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
@@ -377,7 +377,7 @@ export default function BoardLineupClient({
 
         <div>
           <div className="mb-2 flex items-center justify-between px-1">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+            <span className="text-[10px] font-black uppercase text-gray-400">
               {swapFrom !== null
                 ? "바꿀 상대 슬롯을 탭하세요"
                 : selected !== null
@@ -426,7 +426,7 @@ export default function BoardLineupClient({
         {/* 선수 풀 — 활동 중인 전원 */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+            <p className="text-[10px] font-black uppercase text-gray-400">
               선수 ({pool.length}명)
             </p>
             {selected !== null && assignments[selected] && (
@@ -450,7 +450,7 @@ export default function BoardLineupClient({
                     <button
                       onClick={() => placePlayer(name)}
                       disabled={selected === null}
-                      className={`min-h-9 rounded-xl px-3 text-[11px] font-black transition-all ${
+                      className={`min-h-9 rounded-xl px-3 text-[11px] font-black transition ${
                         used
                           ? "border border-[var(--ud-primary)]/30 bg-[var(--ud-primary)]/20 text-[var(--ud-primary)]"
                           : selected !== null

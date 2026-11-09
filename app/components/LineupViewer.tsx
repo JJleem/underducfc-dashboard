@@ -328,7 +328,7 @@ export default function LineupViewer({
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: "언더덕 STARTING XI",
+          title: "언더덕 선발 라인업",
         });
       } else {
         const url = URL.createObjectURL(blob);
@@ -395,7 +395,7 @@ export default function LineupViewer({
             disabled={savingCard}
             className="flex h-7 shrink-0 items-center gap-1 rounded-lg border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/10 px-2 text-[9px] font-black text-[var(--ud-primary-strong)] transition-opacity disabled:opacity-60 dark:text-[var(--ud-primary)]"
           >
-            <Download className={`h-3 w-3 ${savingCard ? "animate-bounce" : ""}`} />
+            <Download className={`h-3 w-3 ${savingCard ? "" : ""}`} />
             {savingCard ? "만드는 중" : "저장"}
           </button>
         </div>
@@ -437,7 +437,7 @@ export default function LineupViewer({
             </div>
             <span className="flex items-center gap-1.5 text-[10px] font-black text-[var(--ud-primary)]">
               라인업 보기
-              <Maximize2 className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
+              <Maximize2 className="h-3.5 w-3.5 transition-transform " />
             </span>
           </button>
         </DialogTrigger>
@@ -456,8 +456,8 @@ export default function LineupViewer({
           className="min-h-full bg-gray-50 text-gray-900 dark:bg-[#070b18] dark:text-white"
         >
         <div className="border-b border-gray-200 bg-gray-50/90 px-4 pb-3 pt-4 dark:border-white/10 dark:bg-[#070b18]/90">
-          <p className="pr-12 text-[9px] font-black tracking-[0.18em] text-[var(--ud-primary)]">
-            MATCH LINEUP
+          <p className="pr-12 text-[9px] font-black  text-[var(--ud-primary)]">
+            라인업
           </p>
           <div className="mt-1 flex items-end justify-between gap-3 pr-10">
             <div className="min-w-0">
@@ -473,7 +473,7 @@ export default function LineupViewer({
                 disabled={sharing}
                 className="flex h-8 items-center gap-1 rounded-xl bg-black/5 px-2.5 text-[9px] font-black text-gray-600 dark:bg-white/10 dark:text-white/80"
               >
-                {sharing ? <Download className="h-3 w-3 animate-bounce" /> : <Share2 className="h-3 w-3" />}
+                {sharing ? <Download className="h-3 w-3" /> : <Share2 className="h-3 w-3" />}
                 공유
               </button>
               {editHref && (
@@ -547,7 +547,7 @@ export default function LineupViewer({
 
           {lineup.subs.length > 0 && (
             <section className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.04]">
-              <p className="mb-2 text-[9px] font-black tracking-[0.16em] text-gray-400 dark:text-white/35">
+              <p className="mb-2 text-[9px] font-black  text-gray-400 dark:text-white/35">
                 대기 선수
               </p>
               <div className="grid grid-cols-2 gap-2">
@@ -579,7 +579,7 @@ export default function LineupViewer({
 
           {lineup.substitutions.length > 0 && (
             <section className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.04]">
-              <p className="mb-2 text-[9px] font-black tracking-[0.16em] text-gray-400 dark:text-white/35">
+              <p className="mb-2 text-[9px] font-black  text-gray-400 dark:text-white/35">
                 교체 기록
               </p>
               <SubstitutionEvents events={lineup.substitutions} />

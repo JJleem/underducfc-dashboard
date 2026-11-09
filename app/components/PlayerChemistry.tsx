@@ -10,7 +10,7 @@ function ResultDots({ results }: { results: ChemistryPartner["record"]["recent"]
       {results.map((result, index) => (
         <span
           key={`${result}-${index}`}
-          className={`flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-black ${
+          className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-black ${
             result === "승"
               ? "bg-[var(--ud-primary)]/15 text-[var(--ud-primary-strong)] dark:bg-[var(--ud-primary)]/15 dark:text-[var(--ud-primary)]"
               : result === "무"
@@ -28,9 +28,9 @@ function ResultDots({ results }: { results: ChemistryPartner["record"]["recent"]
 function Metric({ label, value, note }: { label: string; value: string; note: string }) {
   return (
     <div className="min-w-0 border-l border-gray-200/80 pl-3 first:border-l-0 first:pl-0 dark:border-white/[0.08]">
-      <p className="text-[9px] font-bold tracking-wide text-gray-400 dark:text-white/35">{label}</p>
+      <p className="text-[11px] font-bold text-gray-400 dark:text-white/35">{label}</p>
       <p className="mt-1 text-[18px] font-black leading-none tabular-nums text-gray-900 dark:text-white">{value}</p>
-      <p className="mt-1.5 truncate text-[9px] font-medium text-gray-400 dark:text-white/30">{note}</p>
+      <p className="mt-1.5 truncate text-[11px] font-medium text-gray-400 dark:text-white/30">{note}</p>
     </div>
   );
 }
@@ -44,11 +44,10 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
   return (
     <div className="space-y-7 pb-3">
       <section className="px-4">
-        <div className="relative overflow-hidden rounded-[22px] border border-gray-200/80 bg-white px-4 pb-4 pt-4 shadow-[0_16px_45px_-32px_rgba(17,24,39,0.45)] dark:border-white/[0.08] dark:bg-white/[0.035]">
-          <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[var(--ud-primary)]/60 to-transparent" />
+        <div className="relative overflow-hidden rounded-[22px] border border-gray-200/80 bg-white px-4 pb-4 pt-4 dark:border-white/[0.07] dark:bg-white/[0.04]">
           <div className="flex items-center justify-between">
-            <p className="text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-white/35">SIGNATURE PARTNER</p>
-            <span className="rounded-full bg-gray-100 px-2 py-1 text-[9px] font-black text-gray-500 dark:bg-white/[0.07] dark:text-white/45">
+            <p className="text-[11px] font-black  text-gray-400 dark:text-white/35">단짝</p>
+            <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-black text-gray-500 dark:bg-white/[0.07] dark:text-white/45">
               {featured.strength}
             </span>
           </div>
@@ -81,7 +80,7 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
       <section>
         <div className="mb-2 flex items-end justify-between px-4">
           <div>
-            <p className="text-[10px] font-black tracking-[0.16em] text-gray-500 dark:text-gray-400">PARTNER INDEX</p>
+            <p className="text-[10px] font-black  text-gray-500 dark:text-gray-400">파트너</p>
             <p className="mt-1 text-[10px] font-medium text-gray-400 dark:text-white/30">같은 쿼터에 선 조합 기준</p>
           </div>
           <span className="text-[10px] font-bold tabular-nums text-gray-400">{report.partners.length}명</span>
@@ -96,7 +95,7 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="truncate text-[13px] font-black text-gray-900 dark:text-white">{partner.name}</span>
-                    <span className="truncate text-[9px] font-bold text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">{partner.label}</span>
+                    <span className="truncate text-[11px] font-bold text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">{partner.label}</span>
                   </div>
                   <p className="mt-0.5 text-[10px] font-medium text-gray-400 dark:text-white/30">
                     {partner.sharedQuarters}쿼터 · {partner.sharedMatches}경기 · 합작 {partner.combinedGoals}
@@ -108,18 +107,18 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
               <div className="mx-4 mb-4 ml-[4.25rem] border-l border-gray-200 pl-3 dark:border-white/[0.08]">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   <div>
-                    <p className="text-[9px] font-bold text-gray-400">동반 밀도</p>
+                    <p className="text-[11px] font-bold text-gray-400">동반 밀도</p>
                     <p className="mt-0.5 text-[12px] font-black tabular-nums text-gray-800 dark:text-white/80">{partner.affinity}%</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-bold text-gray-400">골 연결</p>
+                    <p className="text-[11px] font-bold text-gray-400">골 연결</p>
                     <p className="mt-0.5 text-[12px] font-black tabular-nums text-gray-800 dark:text-white/80">
                       {playerName}→{partner.name} {partner.supplied} · 반대 {partner.received}
                     </p>
                   </div>
                   <div className="col-span-2 flex items-center justify-between">
                     <div>
-                      <p className="text-[9px] font-bold text-gray-400">최근 동반 전적</p>
+                      <p className="text-[11px] font-bold text-gray-400">최근 동반 전적</p>
                       <div className="mt-1"><ResultDots results={partner.record.recent} /></div>
                     </div>
                     <Link
@@ -134,7 +133,7 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
             </details>
           ))}
         </div>
-        <p className="px-4 pt-2.5 text-[9px] leading-relaxed text-gray-400 dark:text-white/25">
+        <p className="px-4 pt-2.5 text-[11px] leading-relaxed text-gray-400 dark:text-white/25">
           동반 전적은 두 선수가 같은 쿼터에 출전한 경기 결과이며, 개인 기여도를 뜻하지 않아요.
         </p>
       </section>

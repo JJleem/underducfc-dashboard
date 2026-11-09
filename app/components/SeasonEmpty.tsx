@@ -8,7 +8,7 @@
 // 보여 주면 "내 기록 어디 갔냐" 가 되기 때문이다.
 
 import Link from "next/link";
-import { CalendarClock, ChevronRight, Sparkles } from "lucide-react";
+import { CalendarClock, CalendarX, ChevronRight } from "lucide-react";
 import { SEASONS, daysUntilSeason, seasonById, seasonLabel, seasonStatus } from "../lib/seasons";
 
 export default function SeasonEmpty({
@@ -48,14 +48,14 @@ export default function SeasonEmpty({
         className="mx-auto flex h-12 w-12 items-center justify-center rounded-full"
         style={{ background: `color-mix(in srgb, ${accent} 10%, transparent)`, color: accent }}
       >
-        {upcoming ? (
-          <CalendarClock width={20} height={20} strokeWidth={2.2} />
+        {status === "past" ? (
+          <CalendarX width={20} height={20} strokeWidth={2.2} />
         ) : (
-          <Sparkles width={20} height={20} strokeWidth={2.2} />
+          <CalendarClock width={20} height={20} strokeWidth={2.2} />
         )}
       </span>
       <p className="mt-3.5 text-[14px] font-black text-gray-900 dark:text-white">{title}</p>
-      <p className="mt-1.5 text-[11.5px] font-bold text-gray-400 dark:text-white/40">{detail}</p>
+      <p className="mt-1.5 text-[12px] font-bold text-gray-400 dark:text-white/40">{detail}</p>
 
       {fallback && (
         <Link

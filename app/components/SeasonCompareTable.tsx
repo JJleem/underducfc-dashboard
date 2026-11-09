@@ -22,9 +22,9 @@ export default function SeasonCompareTable({ compare }: { compare: SeasonCompare
   return (
     <section className="px-4">
       <div className="mb-2.5 flex items-end justify-between">
-        <p className="text-[10px] font-black tracking-[0.14em] text-gray-500 dark:text-gray-400">SEASON VS SEASON</p>
+        <p className="text-[10px] font-black  text-gray-500 dark:text-gray-400">SEASON VS SEASON</p>
         {trendless && (
-          <p className="text-[9px] font-bold text-gray-400">새 시즌 {TREND_MIN_APPS}경기부터 증감 표시</p>
+          <p className="text-[11px] font-bold text-gray-400">새 시즌 {TREND_MIN_APPS}경기부터 증감 표시</p>
         )}
       </div>
 

@@ -470,7 +470,7 @@ export default async function NewHome({
       {preview && (
       <div className="sticky top-0 z-30 border-b border-gray-200/70 bg-white px-3 safe-header-py-3 dark:border-white/[0.06] dark:bg-background">
         <div className="flex items-center gap-1.5 overflow-x-auto">
-          <span className="shrink-0 pr-1 text-[9px] font-black tracking-[0.14em] text-gray-400">
+          <span className="shrink-0 pr-1 text-[11px] font-black  text-gray-400">
             PREVIEW
           </span>
           {HOME_STATES.map((s) => {
@@ -493,7 +493,7 @@ export default async function NewHome({
         </div>
         {/* 경기 목록 레이아웃 — 두 방향을 나란히 비교하기 위한 스위치 */}
         <div className="mt-1.5 flex items-center gap-1.5">
-          <span className="shrink-0 pr-1 text-[9px] font-black tracking-[0.14em] text-gray-400">
+          <span className="shrink-0 pr-1 text-[11px] font-black  text-gray-400">
             LIST
           </span>
           {(["list", "feed"] as const).map((l) => (
@@ -517,7 +517,7 @@ export default async function NewHome({
 
       {failedSections.length > 0 && (
         <div role="status" className="mx-4 mt-3 flex items-center gap-3 rounded-2xl border border-amber-300/60 bg-amber-50 px-3 py-2.5 text-amber-800 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-200">
-          <p className="min-w-0 flex-1 text-[10.5px] font-bold leading-relaxed">
+          <p className="min-w-0 flex-1 text-[11px] font-bold leading-relaxed">
             {failedSections.join(" · ")} 정보를 잠시 불러오지 못했어요.
           </p>
           <Link href="/" replace className="shrink-0 rounded-lg bg-amber-400/20 px-2.5 py-1.5 text-[10px] font-black">
@@ -527,7 +527,7 @@ export default async function NewHome({
       )}
 
       {staged && (
-        <p className="px-5 pt-2 text-[9px] font-bold text-gray-400 dark:text-white/35">
+        <p className="px-5 pt-2 text-[11px] font-bold text-gray-400 dark:text-white/35">
           {state === "rest"
             ? "이 상태는 레이아웃 확인용으로 이번 주·다음 주를 휴식으로 그렸어요."
             : "이 상태는 레이아웃 확인용으로 지난 경기 데이터를 빌려 왔어요."}
@@ -583,8 +583,8 @@ export default async function NewHome({
             summary={
               <span className="flex min-w-0 flex-1 items-center gap-2">
                 <Bell width={14} height={14} strokeWidth={2.2} className="shrink-0 text-gray-400" />
-                <span className="truncate text-[11.5px] font-black">{notice[1] || "공지"}</span>
-                <span className="shrink-0 text-[9px] font-bold text-gray-400">{notice[0]}</span>
+                <span className="truncate text-[12px] font-black">{notice[1] || "공지"}</span>
+                <span className="shrink-0 text-[11px] font-bold text-gray-400">{notice[0]}</span>
               </span>
             }
           >
@@ -605,14 +605,14 @@ export default async function NewHome({
                 />
                 <div className="flex items-center gap-2 bg-white px-3 py-2.5 dark:bg-[#141416]">
                   <MapPin width={14} height={14} strokeWidth={2.2} className="shrink-0 text-[var(--ud-primary)]" />
-                  <span className="flex-1 truncate text-[11.5px] font-bold text-gray-700 dark:text-gray-300">
+                  <span className="flex-1 truncate text-[12px] font-bold text-gray-700 dark:text-gray-300">
                     {notice[4]}
                   </span>
                   <a
                     href={`https://map.kakao.com/link/search/${encodeURIComponent(notice[4])}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-lg bg-gray-100 px-2.5 py-1 text-[10.5px] font-black text-gray-500 dark:bg-white/10 dark:text-gray-400"
+                    className="rounded-lg bg-gray-100 px-2.5 py-1 text-[11px] font-black text-gray-500 dark:bg-white/10 dark:text-gray-400"
                   >
                     길찾기
                   </a>
@@ -650,7 +650,7 @@ export default async function NewHome({
             늘 드롭다운이 있는데 홈만 없는 것도 앞뒤가 안 맞는다. */}
         {SEASONS.length > 1 && (
           <div className="mb-1 flex items-center justify-between px-4 pb-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-400 dark:text-white/35">
+            <p className="text-[10px] font-black uppercase  text-gray-400 dark:text-white/35">
               경기
             </p>
             <SeasonSelector current={feedSeason ?? ALL_SEASONS} withMatches={feedSeasons} allowAll />
@@ -718,7 +718,7 @@ export default async function NewHome({
               <Fragment key={m.id}>
                 <div className="flex items-center gap-3 px-4 py-3">
                   <span className="h-px flex-1 bg-gray-200 dark:bg-white/10" />
-                  <span className="shrink-0 text-[10px] font-black tracking-[0.14em] text-gray-400 dark:text-white/35">
+                  <span className="shrink-0 text-[10px] font-black  text-gray-400 dark:text-white/35">
                     {seasonLabel(seasonOf(m.date)!)} 시즌
                   </span>
                   <span className="h-px flex-1 bg-gray-200 dark:bg-white/10" />

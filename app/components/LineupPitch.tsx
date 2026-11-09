@@ -313,10 +313,7 @@ export default function LineupPitch({
               {isSwapSource && (
                 <span
                   className="pointer-events-none absolute left-1/2 top-[-18px] z-20 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[8px] font-black text-white"
-                  style={{
-                    background: "#E11D48",
-                    boxShadow: "0 2px 8px rgba(225,29,72,0.55)",
-                  }}
+                  style={{ background: "#E11D48" }}
                 >
                   교체 선택
                 </span>
@@ -331,7 +328,7 @@ export default function LineupPitch({
                 )}
               </span>
               <div
-                className={`relative z-10 flex items-center justify-center rounded-full font-black transition-all ${isActive || isSwapSource ? "pulse-ring" : ""}`}
+                className="relative z-10 flex items-center justify-center rounded-full font-black transition"
                 style={{
                   width: 36, height: 36,
                   fontSize: hasPlayer ? (displayLabel.length > 2 ? 9 : 13) : 11,
@@ -364,7 +361,7 @@ export default function LineupPitch({
               {hasPlayer && instructions[i].map((id) => instructionShort(id) && (
                 <div
                   key={id}
-                  className="relative z-10 mt-px rounded-sm px-0.5 text-[6px] font-black leading-[1.5] text-white whitespace-nowrap"
+                  className="relative z-10 mt-px rounded-sm px-0.5 text-[7px] font-black leading-[1.5] text-white whitespace-nowrap"
                   style={{ background: "color-mix(in srgb, var(--ud-primary) 90%, transparent)", boxShadow: "0 1px 2px rgba(0,0,0,0.6)" }}
                 >
                   {instructionShort(id)}
@@ -440,7 +437,7 @@ export default function LineupPitch({
                             })
                           )
                         }
-                        className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-black transition-all ${
+                        className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-black transition ${
                           on
                             ? "bg-[var(--ud-primary)] text-white"
                             : full
@@ -458,7 +455,7 @@ export default function LineupPitch({
                     onClick={() => onSwapRequest(slot)}
                     aria-label="자리 바꾸기"
                     aria-pressed={swapSlot === slot}
-                    className={`flex h-6 shrink-0 items-center gap-1 rounded-lg px-1.5 transition-all ${
+                    className={`flex h-6 shrink-0 items-center gap-1 rounded-lg px-1.5 transition ${
                       swapSlot === slot
                         ? "bg-[var(--ud-primary)] text-white ring-2 ring-[var(--ud-primary)]/45"
                         : "bg-white/10 text-white/70"

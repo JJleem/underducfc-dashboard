@@ -127,7 +127,7 @@ function NavBar({ active }: { active: NavKey | null }) {
             x: `${Math.max(0, selectedIndex) * 100}%`,
             opacity: selectedIndex < 0 ? 0 : 1,
           }}
-          transition={{ type: "spring", stiffness: 430, damping: 34, mass: 0.72 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
         >
           <div className="mx-auto mt-1 h-8 w-11 rounded-[14px] bg-[var(--ud-primary)]/11 ring-1 ring-[var(--ud-primary)]/10 dark:bg-[var(--ud-primary)]/10 dark:ring-[var(--ud-primary)]/10" />
         </motion.div>
@@ -147,8 +147,8 @@ function NavBar({ active }: { active: NavKey | null }) {
             >
               <motion.span
                 className="rounded-xl p-1.5"
-                animate={{ scale: selected ? 1.07 : 1, y: selected ? -1 : 0 }}
-                transition={{ type: "spring", stiffness: 500, damping: 28 }}
+                animate={{ y: selected ? -1 : 0 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
               >
                 <Icon className="h-[19px] w-[19px]" strokeWidth={selected ? 2.6 : 2} />
               </motion.span>
@@ -169,8 +169,8 @@ function NavBar({ active }: { active: NavKey | null }) {
           >
             <motion.span
               className="rounded-xl p-1.5"
-              animate={{ scale: active === "my" ? 1.07 : 1, y: active === "my" ? -1 : 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 28 }}
+              animate={{ y: active === "my" ? -1 : 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
             >
               <UserRound className="h-[19px] w-[19px]" strokeWidth={active === "my" ? 2.6 : 2} />
             </motion.span>

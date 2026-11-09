@@ -50,7 +50,7 @@ export default function LineupReveal({
       >
         STARTING XI
       </motion.p>
-      <p className="mt-1.5 text-[12.5px] font-bold text-white/55">
+      <p className="mt-1.5 text-[13px] font-bold text-white/55">
         vs {data.opponent}
         {m && d ? ` · ${m}월 ${d}일` : ""} · 1쿼터 선발
       </p>
@@ -133,14 +133,14 @@ export default function LineupReveal({
                 </span>
                 {isCaptain && (
                   <span
-                    className="absolute -right-1.5 -top-1 rounded-[3px] px-1 text-[8px] font-black leading-[13px] text-[#4A2E00]"
+                    className="absolute -right-1.5 -top-1 rounded-[3px] px-1 text-[10px] font-black leading-[13px] text-[#4A2E00]"
                     style={{ background: `linear-gradient(180deg, #FFF4CC, ${GOLD})` }}
                   >
                     C
                   </span>
                 )}
               </span>
-              <span className="mt-1 max-w-full truncate rounded bg-black/55 px-1 text-[9.5px] font-black text-white">
+              <span className="mt-1 max-w-full truncate rounded bg-black/55 px-1 text-[11px] font-black text-white">
                 {name}
               </span>
             </motion.div>

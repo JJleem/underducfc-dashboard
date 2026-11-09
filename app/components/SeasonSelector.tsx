@@ -123,7 +123,7 @@ export default function SeasonSelector({
               />
               <span className="flex-1 tabular-nums">{s.label}</span>
               {note && (
-                <span className="text-[9px] font-bold text-gray-400 dark:text-white/30">{note}</span>
+                <span className="text-[11px] font-bold text-gray-400 dark:text-white/30">{note}</span>
               )}
               {selected && <Check width={13} height={13} strokeWidth={3} style={{ color: accentOf(s.id) }} />}
             </DropdownMenuItem>

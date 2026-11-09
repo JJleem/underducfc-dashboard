@@ -105,7 +105,7 @@ export default function LoungeClient({
           >
             <ArrowLeft width={18} height={18} strokeWidth={2.4} />
           </Link>
-          <span className="app-header-label">LOUNGE</span>
+          <span className="app-header-label">라운지</span>
           <button
             onClick={() => setComposing(true)}
             aria-label="글쓰기"
@@ -187,7 +187,7 @@ export default function LoungeClient({
                       )}
                     </div>
                     <p className="mt-2 truncate text-[14px] font-black leading-snug">{post.title}</p>
-                    <p className="mt-1.5 text-[10.5px] font-bold text-gray-400 dark:text-white/30">
+                    <p className="mt-1.5 text-[11px] font-bold text-gray-400 dark:text-white/30">
                       {post.authorLabel} · {relativeTime(post.createdAt)}
                       {post.adminReply && (
                         <span className="ml-1.5 text-emerald-600 dark:text-emerald-400">
@@ -197,7 +197,7 @@ export default function LoungeClient({
                     </p>
                   </div>
                   {(post.likeCount > 0 || post.commentCount > 0) && (
-                    <span className="mt-1 flex shrink-0 items-center gap-2 text-[10.5px] font-black text-gray-400 dark:text-white/30">
+                    <span className="mt-1 flex shrink-0 items-center gap-2 text-[11px] font-black text-gray-400 dark:text-white/30">
                       {post.likeCount > 0 && (
                         <span
                           className={`flex items-center gap-1 ${
@@ -332,7 +332,7 @@ export default function LoungeClient({
               />
 
               {/* 숨기면 안 쓰고, 완전 익명인 줄 알면 막 쓴다. 그대로 보여준다. */}
-              <p className="!mt-3 rounded-xl bg-gray-50 px-3 py-2.5 text-[10.5px] font-bold leading-relaxed text-gray-500 dark:bg-white/[0.04] dark:text-white/40">
+              <p className="!mt-3 rounded-xl bg-gray-50 px-3 py-2.5 text-[11px] font-bold leading-relaxed text-gray-500 dark:bg-white/[0.04] dark:text-white/40">
                 작성자 이름은 화면에 공개되지 않습니다.
                 <br />
                 다만 운영진은 누가 썼는지 확인할 수 있어요.

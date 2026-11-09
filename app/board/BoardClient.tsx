@@ -125,7 +125,7 @@ export default function BoardClient({
           >
             <ArrowLeft width={18} height={18} strokeWidth={2.4} />
           </Link>
-          <span className="app-header-label">BOARD</span>
+          <span className="app-header-label">게시판</span>
           <button
             onClick={() => (currentUser ? setComposer("choose") : signIn("kakao"))}
             aria-label="글쓰기"

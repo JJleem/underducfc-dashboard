@@ -43,7 +43,7 @@ function NeighborLinks({ prev, next }: { prev: NeighborPost | null; next: Neighb
               className="shrink-0 text-gray-300 dark:text-white/25"
             />
             <span className="min-w-0 flex-1">
-              <span className="block text-[10px] font-black tracking-[0.14em] text-gray-400 dark:text-white/35">
+              <span className="block text-[10px] font-black  text-gray-400 dark:text-white/35">
                 {label}
               </span>
               <span className="mt-0.5 block truncate text-[13px] font-black text-gray-900 dark:text-white">
@@ -246,7 +246,7 @@ export default function BoardDetailClient({
         <Link href="/board" aria-label="목록으로" className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 active:opacity-60 dark:text-gray-300">
           <ChevronLeft className="h-5 w-5" />
         </Link>
-        <h1 className="app-header-label truncate">BOARD</h1>
+        <h1 className="app-header-label truncate">게시판</h1>
         <div className="ml-auto flex items-center">
           {admin && (
             <button onClick={togglePin} disabled={pinBusy} className={`-my-2.5 flex h-11 w-11 items-center justify-center rounded-full active:opacity-60 ${pinned ? "text-[var(--ud-primary)]" : "text-gray-400"}`} aria-label={pinned ? "고정 해제" : "글 고정"}>
@@ -402,7 +402,7 @@ export default function BoardDetailClient({
               <li key={c.id} className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-1.5">
-                    <Link href={`/players/${encodeURIComponent(c.author)}`} className="truncate text-[12.5px] font-black text-gray-900 active:opacity-60 dark:text-white">
+                    <Link href={`/players/${encodeURIComponent(c.author)}`} className="truncate text-[13px] font-black text-gray-900 active:opacity-60 dark:text-white">
                       {c.author}
                     </Link>
                     <span className="shrink-0 text-[10px] font-bold text-gray-300 tabular-nums dark:text-white/25">{fmt(c.createdAt)}</span>

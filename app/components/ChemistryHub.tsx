@@ -12,7 +12,7 @@ const pairId = (a: string, b: string) => [a, b].sort((x, y) => x.localeCompare(y
 
 function PairSummary({ pair }: { pair: TeamChemistryPair }) {
   return (
-    <div className="mx-4 mt-4 rounded-2xl border border-gray-200/80 bg-white p-4 shadow-[0_14px_35px_-30px_rgba(17,24,39,0.5)] dark:border-white/[0.08] dark:bg-white/[0.035]">
+    <div className="mx-4 mt-4 rounded-2xl border border-gray-200/80 bg-white p-4 dark:border-white/[0.07] dark:bg-white/[0.04]">
       <div className="flex items-center gap-3">
         <div className="flex -space-x-2.5">
           {pair.names.map((name) => <PlayerFace key={name} name={name} size={38} />)}
@@ -30,7 +30,7 @@ function PairSummary({ pair }: { pair: TeamChemistryPair }) {
           ["승률", pair.record.played ? `${pair.record.winRate}%` : "—"],
         ].map(([label, value]) => (
           <div key={label} className="text-center">
-            <p className="text-[9px] font-bold text-gray-400">{label}</p>
+            <p className="text-[11px] font-bold text-gray-400">{label}</p>
             <p className="mt-1 text-[14px] font-black tabular-nums text-gray-900 dark:text-white">{value}</p>
           </div>
         ))}
@@ -58,12 +58,12 @@ function TeamMap({ report, playerName }: { report: TeamChemistry; playerName: st
     <div className="pb-3">
       <div className="flex items-end justify-between px-4">
         <div>
-          <p className="text-[10px] font-black tracking-[0.16em] text-gray-500 dark:text-gray-400">TEAM CONNECTION MAP</p>
+          <p className="text-[10px] font-black  text-gray-500 dark:text-gray-400">팀 케미 맵</p>
           <p className="mt-1 text-[10px] text-gray-400 dark:text-white/30">셀을 누르면 조합 기록을 볼 수 있어요</p>
         </div>
         <div className="flex rounded-full bg-gray-100 p-0.5 dark:bg-white/[0.06]">
           {([['affinity', '호흡'], ['combinedGoals', '합작'], ['winRate', '승률']] as const).map(([key, label]) => (
-            <button key={key} type="button" onClick={() => setMetric(key)} className={`rounded-full px-2.5 py-1.5 text-[9px] font-black ${metric === key ? "bg-white text-gray-900 shadow-sm dark:bg-white/10 dark:text-white" : "text-gray-400"}`}>{label}</button>
+            <button key={key} type="button" onClick={() => setMetric(key)} className={`rounded-full px-2.5 py-1.5 text-[11px] font-black ${metric === key ? "bg-white text-gray-900 shadow-sm dark:bg-white/10 dark:text-white" : "text-gray-400"}`}>{label}</button>
           ))}
         </div>
       </div>
@@ -74,14 +74,14 @@ function TeamMap({ report, playerName }: { report: TeamChemistry; playerName: st
             <div className="sticky left-0 z-20 border-r border-white/70 bg-gray-50/75 shadow-[8px_0_18px_-14px_rgba(17,24,39,0.45)] backdrop-blur-md dark:border-white/[0.07] dark:bg-background/70" />
             {orderedPlayers.map((name) => (
               <div key={name} className={`relative h-16 ${name === playerName ? "bg-[var(--ud-primary)]/10 text-[var(--ud-primary-strong)] dark:bg-[var(--ud-primary)]/[0.08] dark:text-[var(--ud-primary)]" : "text-gray-400 dark:text-white/30"}`}>
-                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black leading-none [writing-mode:vertical-rl]">
+                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[11px] font-black leading-none [writing-mode:vertical-rl]">
                   {name}
                 </span>
               </div>
             ))}
             {orderedPlayers.map((rowName) => (
               <div key={`row-${rowName}`} className="contents">
-                <div className={`sticky left-0 z-10 flex h-10 items-center truncate border-r border-t px-2 text-[9px] font-black shadow-[8px_0_18px_-14px_rgba(17,24,39,0.45)] backdrop-blur-md ${rowName === playerName ? "border-r-white/70 border-t-[var(--ud-primary)]/20 bg-[var(--ud-primary)]/20 text-[var(--ud-primary-strong)] dark:border-r-white/[0.07] dark:border-t-[var(--ud-primary)]/15 dark:bg-[#351D24]/70 dark:text-[var(--ud-primary)]" : "border-r-white/70 border-t-gray-100 bg-gray-50/75 text-gray-500 dark:border-r-white/[0.07] dark:border-t-white/[0.04] dark:bg-background/70 dark:text-white/35"}`}>{rowName}</div>
+                <div className={`sticky left-0 z-10 flex h-10 items-center truncate border-r border-t px-2 text-[11px] font-black shadow-[8px_0_18px_-14px_rgba(17,24,39,0.45)] backdrop-blur-md ${rowName === playerName ? "border-r-white/70 border-t-[var(--ud-primary)]/20 bg-[var(--ud-primary)]/20 text-[var(--ud-primary-strong)] dark:border-r-white/[0.07] dark:border-t-[var(--ud-primary)]/15 dark:bg-[#351D24]/70 dark:text-[var(--ud-primary)]" : "border-r-white/70 border-t-gray-100 bg-gray-50/75 text-gray-500 dark:border-r-white/[0.07] dark:border-t-white/[0.04] dark:bg-background/70 dark:text-white/35"}`}>{rowName}</div>
                 {orderedPlayers.map((colName) => {
                   const pair = rowName === colName ? null : pairs.get(pairId(rowName, colName));
                   const value = pair ? valueOf(pair) : 0;
@@ -96,7 +96,7 @@ function TeamMap({ report, playerName }: { report: TeamChemistry; playerName: st
                       disabled={!pair}
                       aria-label={pair ? `${rowName}, ${colName}: ${value}${suffix}` : `${rowName}, ${colName}: 기록 없음`}
                       onClick={() => pair && setSelected(pair)}
-                      className={`m-1 flex h-8 items-center justify-center rounded-md text-[8px] font-black tabular-nums text-gray-800 disabled:opacity-20 dark:text-white ${isMine ? "ring-1 ring-inset ring-[var(--ud-primary)]/35" : ""}`}
+                      className={`m-1 flex h-8 items-center justify-center rounded-md text-[10px] font-black tabular-nums text-gray-800 disabled:opacity-20 dark:text-white ${isMine ? "ring-1 ring-inset ring-[var(--ud-primary)]/35" : ""}`}
                       style={pair ? { backgroundColor: `color-mix(in srgb, var(--ud-primary) ${(isMine ? Math.max(alpha, 0.18) : alpha) * 100}%, transparent)` } : isMine ? { backgroundColor: "color-mix(in srgb, var(--ud-primary) 8%, transparent)" } : undefined}
                     >
                       {pair && value > 0 ? `${value}${suffix}` : ""}
@@ -109,7 +109,7 @@ function TeamMap({ report, playerName }: { report: TeamChemistry; playerName: st
         </div>
       </div>
       {selected ? <PairSummary pair={selected} /> : (
-        <p className="px-4 pt-3 text-[9px] leading-relaxed text-gray-400 dark:text-white/25">호흡은 두 선수의 전체 출전 쿼터 대비 함께 선 비율이에요.</p>
+        <p className="px-4 pt-3 text-[11px] leading-relaxed text-gray-400 dark:text-white/25">호흡은 두 선수의 전체 출전 쿼터 대비 함께 선 비율이에요.</p>
       )}
     </div>
   );
@@ -120,7 +120,7 @@ function TrioList({ report }: { report: TeamChemistry }) {
   return (
     <div className="pb-3">
       <div className="px-4">
-        <p className="text-[10px] font-black tracking-[0.16em] text-gray-500 dark:text-gray-400">TRIO INDEX</p>
+        <p className="text-[10px] font-black  text-gray-500 dark:text-gray-400">트리오</p>
         <p className="mt-1 text-[10px] text-gray-400 dark:text-white/30">같은 쿼터를 가장 많이 책임진 세 선수</p>
       </div>
       <div className="mt-3 border-y border-gray-200/70 dark:border-white/[0.07]">
@@ -140,12 +140,12 @@ function TrioList({ report }: { report: TeamChemistry }) {
                 ["동반 밀도", `${trio.cohesion}%`],
                 ["내부 합작", `${trio.combinedGoals}`],
                 ["동반 승률", trio.record.played ? `${trio.record.winRate}%` : "—"],
-              ].map(([label, value]) => <div key={label}><p className="text-[9px] text-gray-400">{label}</p><p className="mt-1 text-[11px] font-black text-gray-800 dark:text-white/80">{value}</p></div>)}
+              ].map(([label, value]) => <div key={label}><p className="text-[11px] text-gray-400">{label}</p><p className="mt-1 text-[11px] font-black text-gray-800 dark:text-white/80">{value}</p></div>)}
             </div>
           </details>
         ))}
       </div>
-      <p className="px-4 pt-2.5 text-[9px] leading-relaxed text-gray-400 dark:text-white/25">최소 2쿼터 이상 함께 뛴 조합 중 상위 12개만 보여줘요.</p>
+      <p className="px-4 pt-2.5 text-[11px] leading-relaxed text-gray-400 dark:text-white/25">최소 2쿼터 이상 함께 뛴 조합 중 상위 12개만 보여줘요.</p>
     </div>
   );
 }

@@ -105,7 +105,7 @@ export default async function RecordPage({
       style={{ "--season-light": accent.light, "--season-dark": accent.dark } as CSSProperties}
     >
       <PageHeader
-        label="RECORD"
+        label="기록"
         // 스탯에서 넘어왔을 때 보던 시즌을 그대로 들고 돌아간다
         back={`/stats?season=${season}`}
         right={<SeasonSelector current={season} withMatches={seasonsPlayed} />}

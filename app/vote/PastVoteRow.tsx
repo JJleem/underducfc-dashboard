@@ -200,7 +200,7 @@ export default function PastVoteRow({
 
           {comments.length > 0 && (
             <section>
-              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-400 dark:text-white/35">
+              <p className="mb-2 text-[10px] font-black uppercase  text-gray-400 dark:text-white/35">
                 댓글 <span className="tabular-nums">{comments.length}</span>
               </p>
               <div className="flex flex-col gap-2.5">

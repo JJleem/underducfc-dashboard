@@ -60,7 +60,7 @@ function OpeningCountdown() {
   const accent = seasonAccent(next.seasonId);
   return (
     <span
-      className="season-scope absolute -right-1 -top-3 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[7.5px] font-black normal-case leading-none tracking-wide tabular-nums text-white shadow-sm"
+      className="season-scope absolute -right-1 -top-3 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-black normal-case leading-none tabular-nums text-white shadow-sm"
       style={
         {
           "--season-light": accent.light,
@@ -128,7 +128,7 @@ export default function AppHeader({
         >
           <Images className="h-4 w-4" />
           {showGalleryNew && (
-            <span className="absolute -right-2 -top-2 rounded-full bg-[#FF5F7E] px-1.5 py-0.5 text-[7px] font-black leading-none tracking-wide text-white shadow-sm">
+            <span className="absolute -right-2 -top-2 rounded-full bg-[#FF5F7E] px-1.5 py-0.5 text-[10px] font-black leading-none text-white shadow-sm">
               NEW
             </span>
           )}
@@ -139,7 +139,7 @@ export default function AppHeader({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className={`flex h-8 items-center gap-1.5 rounded-full pl-1 pr-2 outline-none transition-all ${
+                className={`flex h-8 items-center gap-1.5 rounded-full pl-1 pr-2 outline-none transition ${
                   menuOpen
                     ? "bg-gray-200 ring-2 ring-[var(--ud-primary)]/20 dark:bg-white/15"
                     : "bg-gray-100 dark:bg-white/10"

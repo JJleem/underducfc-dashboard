@@ -53,7 +53,7 @@ function ResultMark({ match }: { match: RecordMatch }) {
   return (
     <span
       title={`${formatDate(match.date)} ${match.ourScore}:${match.theirScore} ${result}`}
-      className={`flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[9px] font-black tabular-nums ${style}`}
+      className={`flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[11px] font-black tabular-nums ${style}`}
     >
       {result}
     </span>
@@ -78,7 +78,7 @@ function MatchHistory({ group, view }: { group: RecordGroup; view: View }) {
               </p>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[12.5px] font-black text-gray-900 dark:text-white">
+              <p className="truncate text-[13px] font-black text-gray-900 dark:text-white">
                 {view === "opponents" ? context || "장소 미정" : `vs ${context || "상대 미정"}`}
               </p>
               <p className="mt-0.5 text-[10px] font-bold text-gray-400 dark:text-white/30">
@@ -144,7 +144,7 @@ function GroupRow({ group, view }: { group: RecordGroup; view: View }) {
             <p className="truncate text-[14px] font-black tracking-[-0.015em] text-gray-900 dark:text-white">
               {group.key}
             </p>
-            <p className="mt-1 text-[10.5px] font-bold text-gray-400 dark:text-white/35">
+            <p className="mt-1 text-[11px] font-bold text-gray-400 dark:text-white/35">
               <span className="tabular-nums">{group.played}</span>경기 ·{" "}
               <span className="tabular-nums">{group.wins}</span>승{" "}
               <span className="tabular-nums">{group.draws}</span>무{" "}
@@ -186,7 +186,7 @@ export default function RecordArchive({
             type="button"
             onClick={() => setView("opponents")}
             aria-pressed={view === "opponents"}
-            className={`flex h-9 items-center justify-center gap-1.5 rounded-lg text-[11.5px] font-black transition-colors ${
+            className={`flex h-9 items-center justify-center gap-1.5 rounded-lg text-[12px] font-black transition-colors ${
               view === "opponents"
                 ? "bg-white text-gray-900 shadow-sm dark:bg-white/10 dark:text-white"
                 : "text-gray-400 dark:text-white/35"
@@ -199,7 +199,7 @@ export default function RecordArchive({
             type="button"
             onClick={() => setView("venues")}
             aria-pressed={view === "venues"}
-            className={`flex h-9 items-center justify-center gap-1.5 rounded-lg text-[11.5px] font-black transition-colors ${
+            className={`flex h-9 items-center justify-center gap-1.5 rounded-lg text-[12px] font-black transition-colors ${
               view === "venues"
                 ? "bg-white text-gray-900 shadow-sm dark:bg-white/10 dark:text-white"
                 : "text-gray-400 dark:text-white/35"
@@ -214,8 +214,8 @@ export default function RecordArchive({
       <section className="px-4 pb-24 pt-5">
         <div className="mb-2 flex items-end justify-between gap-3">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-gray-400 dark:text-white/30">
-              {view === "opponents" ? "Head to head" : "Match grounds"}
+            <p className="text-[11px] font-black text-gray-400 dark:text-white/30">
+              {view === "opponents" ? "상대 전적" : "경기장"}
             </p>
             <h1 className="mt-1 text-[21px] font-black tracking-[-0.04em] text-gray-900 dark:text-white">
               {view === "opponents" ? "우리의 맞대결" : "우리가 뛴 곳"}

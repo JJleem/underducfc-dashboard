@@ -23,10 +23,6 @@ export default function Loading() {
       <main aria-hidden>
         {/* 시즌 요약 — 히어로 */}
         <section className="relative overflow-hidden px-4 pt-5">
-          <div
-            className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[var(--ud-primary)]"
-            style={{ opacity: 0.12, filter: "blur(46px)" }}
-          />
           <div className="relative">
             <div className="h-2.5 w-16 rounded bg-[var(--ud-primary)]/15 skeleton-shimmer" />
             <div className="mt-2.5 flex items-end justify-between gap-3">

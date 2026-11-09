@@ -337,7 +337,7 @@ export default async function PlayerPage({
         {/* 상단 바 */}
         <div className="app-page-header safe-header-py-3">
           <PlayerProfileBackButton />
-          <span className="app-header-label">PLAYER</span>
+          <span className="app-header-label">선수</span>
           <span className="ml-auto flex items-center">
             <SeasonSelector current={season} withMatches={seasonsPlayed} />
           </span>
@@ -347,11 +347,6 @@ export default async function PlayerPage({
             [원형 프로필 사진 | 이름 + 스탯] → 정보 줄(등번호·포지션·선호) → 액션 → 하이라이트.
             카드로 감싸지 않고 페이지 배경 위에 그대로 올려야 그 구조가 산다. */}
         <section className="relative px-4 pt-5">
-          {/* 포지션 컬러 글로우 */}
-          <div
-            className="pointer-events-none absolute -top-8 right-0 h-40 w-40 rounded-full"
-            style={{ background: accent, opacity: 0.16, filter: "blur(48px)" }}
-          />
           {/* 로고 워터마크. underducklogo.png 는 알파 없는 RGB(네이비 배경) 1024² 2.1MB라
               투명도만 낮춰 깔면 마크가 아니라 '네모난 네이비 덩어리'가 깔렸다.
               밝기를 알파로 바꾼 underduck-mark.png(16KB)를 마스크로 써서 모양만 남긴다. */}
@@ -380,22 +375,19 @@ export default async function PlayerPage({
                   {name}
                 </h1>
                 {isManager && (
-                  <span
-                    className="rounded-md px-1.5 py-0.5 text-[9px] font-black text-amber-950"
-                    style={{ background: "linear-gradient(135deg,#FFE9A8,#D4A017)" }}
-                  >
+                  <span className="rounded-md bg-amber-300 px-1.5 py-0.5 text-[11px] font-black text-amber-950">
                     감독
                   </span>
                 )}
                 {role && (role === "C" || role === "VC") && (
-                  <span className="rounded bg-gradient-to-br from-amber-200 to-amber-500 px-1.5 py-0.5 text-[9px] font-black text-amber-950">
+                  <span className="rounded bg-amber-300 px-1.5 py-0.5 text-[11px] font-black text-amber-950">
                     {role}
                   </span>
                 )}
                 {no && no !== "-" && (
                   <span
                     className="rounded-md px-1.5 py-0.5 text-[11px] font-black leading-none text-white"
-                    style={{ background: accent, boxShadow: `0 2px 6px ${accent}55` }}
+                    style={{ background: accent }}
                   >
                     #{no}
                   </span>
@@ -405,7 +397,7 @@ export default async function PlayerPage({
                   return (
                     <span
                       key={position}
-                      className="rounded-full px-2 py-0.5 text-[9px] font-black uppercase leading-none tracking-[0.14em]"
+                      className="rounded-full px-2 py-0.5 text-[11px] font-black uppercase leading-none "
                       style={{ color, background: `${color}1f`, border: `1px solid ${color}55` }}
                     >
                       {position}
@@ -425,7 +417,7 @@ export default async function PlayerPage({
                     <p className="text-[17px] font-black leading-none tabular-nums text-gray-900 dark:text-white">
                       {s.value}
                     </p>
-                    <p className="mt-1 text-[9.5px] font-bold text-gray-400 dark:text-white/45">{s.label}</p>
+                    <p className="mt-1 text-[11px] font-bold text-gray-400 dark:text-white/45">{s.label}</p>
                   </div>
                 ))}
               </div>
@@ -453,7 +445,7 @@ export default async function PlayerPage({
             대표 칭호(featured)는 통산에서만 고른다 — 시즌이 넘어가도 대표가 안 사라진다. */}
         {showSeasonTitles && (
           <section className="px-4 mt-4">
-            <p className="mb-2 text-[9.5px] font-black uppercase tracking-[0.16em] season-accent">
+            <p className="mb-2 text-[11px] font-black uppercase  season-accent">
               {seasonLabel(season)} 시즌
             </p>
             <PlayerTitleCards titles={seasonEarned} />
@@ -464,7 +456,7 @@ export default async function PlayerPage({
             두 섹션으로 갈릴 때는 통산만(careerEarned) 보여 준다 — 리더는 위 시즌 줄에 있다. */}
         <section className="px-4 mt-4">
           {showSeasonTitles && (
-            <p className="mb-2 text-[9.5px] font-black uppercase tracking-[0.16em] text-gray-400 dark:text-white/35">
+            <p className="mb-2 text-[11px] font-black uppercase  text-gray-400 dark:text-white/35">
               통산
             </p>
           )}
@@ -493,7 +485,7 @@ export default async function PlayerPage({
               <Sparkles width={16} height={16} strokeWidth={2.4} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[12.5px] font-black text-gray-900 dark:text-white">
+              <span className="block text-[13px] font-black text-gray-900 dark:text-white">
                 {seasonLabel(wrappedSeason ?? season)} 시즌 돌아보기
               </span>
               <span className="mt-0.5 block text-[10px] font-bold text-gray-400 dark:text-white/35">

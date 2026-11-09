@@ -54,7 +54,7 @@ function SourceBadge({ kind }: { kind: "youtube" | "instagram" | "lineup" }) {
   } as const;
   const { Icon, label } = map[kind];
   return (
-    <span className="flex items-center gap-0.5 rounded bg-black/55 px-1.5 py-0.5 text-[9px] font-black text-white backdrop-blur-[2px]">
+    <span className="flex items-center gap-0.5 rounded bg-black/55 px-1.5 py-0.5 text-[11px] font-black text-white backdrop-blur-[2px]">
       <Icon width={9} height={9} strokeWidth={2.6} />
       {label}
     </span>
@@ -110,7 +110,7 @@ function Cell({ post }: { post: BoardPost }) {
       <div className="absolute left-1.5 top-1.5 flex items-center gap-1">
         <SourceBadge kind={kind} />
         {post.lineup && post.lineup.quarters.length > 1 && (
-          <span className="rounded bg-black/55 px-1 py-0.5 text-[9px] font-black text-white backdrop-blur-[2px]">
+          <span className="rounded bg-black/55 px-1 py-0.5 text-[11px] font-black text-white backdrop-blur-[2px]">
             {post.lineup.quarters.length}Q
           </span>
         )}
@@ -125,22 +125,22 @@ function Cell({ post }: { post: BoardPost }) {
 
       {/* NEW · 수정 — 고정 핀이 있으면 아래로 밀어준다 */}
       {fresh ? (
-        <span className={`absolute right-1.5 ${post.pinned ? "top-8" : "top-1.5"} rounded bg-[var(--ud-primary)] px-1.5 py-0.5 text-[9px] font-black tracking-wide text-white`}>
+        <span className={`absolute right-1.5 ${post.pinned ? "top-8" : "top-1.5"} rounded bg-[var(--ud-primary)] px-1.5 py-0.5 text-[11px] font-black text-white`}>
           NEW
         </span>
       ) : edited ? (
-        <span className={`absolute right-1.5 ${post.pinned ? "top-8" : "top-1.5"} rounded bg-black/55 px-1.5 py-0.5 text-[9px] font-black tracking-wide text-white backdrop-blur-[2px]`}>
+        <span className={`absolute right-1.5 ${post.pinned ? "top-8" : "top-1.5"} rounded bg-black/55 px-1.5 py-0.5 text-[11px] font-black text-white backdrop-blur-[2px]`}>
           수정
         </span>
       ) : null}
 
       {/* 하단 그라디언트 위에 제목과 반응. 릴스 탭이 조회수를 놓는 자리다. */}
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-1.5 pb-1.5 pt-7">
-        <p className="line-clamp-2 text-[10.5px] font-black leading-[1.3] text-white">
+        <p className="line-clamp-2 text-[11px] font-black leading-[1.3] text-white">
           {post.title}
         </p>
         {/* 작성자 + 시각 — 누가 언제 올렸는지. 칸이 좁아 한 줄에 붙인다. */}
-        <p className="mt-0.5 truncate text-[9.5px] font-bold text-white/55">
+        <p className="mt-0.5 truncate text-[11px] font-bold text-white/55">
           {post.author}
           {stamp && (
             <>
@@ -149,7 +149,7 @@ function Cell({ post }: { post: BoardPost }) {
             </>
           )}
         </p>
-        <p className="mt-1 flex items-center gap-2 text-[9.5px] font-bold text-white/70">
+        <p className="mt-1 flex items-center gap-2 text-[11px] font-bold text-white/70">
           {post.likeCount > 0 && (
             <span className="flex items-center gap-0.5">
               <Heart

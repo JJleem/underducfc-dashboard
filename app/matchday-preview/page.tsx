@@ -78,7 +78,7 @@ function PreviewCard({
             8월 8일 · 매치데이 후보
           </p>
         </div>
-        <span className="max-w-28 truncate rounded-full bg-gray-100 px-2 py-1 text-[9px] font-black text-gray-400 dark:bg-white/[0.07] dark:text-white/35">
+        <span className="max-w-28 truncate rounded-full bg-gray-100 px-2 py-1 text-[11px] font-black text-gray-400 dark:bg-white/[0.07] dark:text-white/35">
           {file}
         </span>
       </header>
@@ -107,7 +107,7 @@ function PreviewCard({
 
         <div className="relative z-10 flex flex-col items-center">
           <p
-            className={`text-[13px] font-black tracking-[0.24em] ${
+            className={`text-[13px] font-black  ${
               light ? "text-[#0f1729]/60" : "text-white/70"
             }`}
           >
@@ -142,7 +142,7 @@ function PreviewCard({
         ].map(([Icon, label]) => (
           <span key={label as string} className="flex w-11 flex-col items-center gap-1">
             <Icon width={17} height={17} strokeWidth={2} />
-            <span className="whitespace-nowrap text-[9px] font-bold leading-none text-gray-400 dark:text-white/35">
+            <span className="whitespace-nowrap text-[11px] font-bold leading-none text-gray-400 dark:text-white/35">
               {label as string}
             </span>
           </span>
@@ -170,7 +170,7 @@ export default async function MatchdayPreviewPage({
     <main className="min-h-dvh bg-[#f6f6f7] pb-16 text-gray-900 dark:bg-background dark:text-white">
       <div className="sticky top-0 z-20 border-b border-black/[0.06] bg-[#f6f6f7] px-4 pb-3 pt-[calc(max(14px,env(safe-area-inset-top))+var(--safe-header-extra))] dark:border-white/[0.08] dark:bg-background">
         <div className="mx-auto max-w-[430px]">
-          <p className="text-[9px] font-black tracking-[0.18em] text-[var(--ud-primary)]">
+          <p className="text-[11px] font-black  text-[var(--ud-primary)]">
             MATCHDAY LAB
           </p>
           <h1 className="mt-1 text-[18px] font-black tracking-[-0.04em]">피드 이미지 미리보기</h1>
@@ -183,7 +183,7 @@ export default async function MatchdayPreviewPage({
               <Link
                 key={value}
                 href={href(value, countdown)}
-                className={`rounded-full px-2.5 py-1.5 text-[9px] font-black ${
+                className={`rounded-full px-2.5 py-1.5 text-[11px] font-black ${
                   overlay === value
                     ? "bg-gray-900 text-white dark:bg-white dark:text-gray-950"
                     : "bg-white text-gray-400 dark:bg-white/[0.07] dark:text-white/40"
@@ -197,7 +197,7 @@ export default async function MatchdayPreviewPage({
               <Link
                 key={value}
                 href={href(overlay, value)}
-                className={`rounded-full px-2.5 py-1.5 text-[9px] font-black ${
+                className={`rounded-full px-2.5 py-1.5 text-[11px] font-black ${
                   countdown === value
                     ? "bg-[var(--ud-primary)] text-white"
                     : "bg-white text-gray-400 dark:bg-white/[0.07] dark:text-white/40"

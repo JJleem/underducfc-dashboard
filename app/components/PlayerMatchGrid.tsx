@@ -252,7 +252,7 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
                     )}
                   </span>
                   <span
-                    className={`relative max-w-full truncate text-[8.5px] font-bold ${
+                    className={`relative max-w-full truncate text-[10px] font-bold ${
                       art ? "text-white/70" : "text-gray-400 dark:text-gray-500"
                     }`}
                   >
@@ -274,7 +274,7 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
 
               {hasFoot && (
                 <span
-                  className={`absolute inset-x-0 bottom-0 flex items-end justify-between gap-1 px-1.5 pb-1 pt-4 text-[8px] font-bold ${
+                  className={`absolute inset-x-0 bottom-0 flex items-end justify-between gap-1 px-1.5 pb-1 pt-4 text-[10px] font-bold ${
                     cover
                       ? "bg-gradient-to-t from-black/75 to-transparent text-white/90"
                       : "text-gray-400 dark:text-gray-500"
@@ -401,7 +401,7 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
                     )}
 
                     <div className="relative flex flex-col items-center px-6">
-                      <p className="text-[9px] font-black tracking-[0.28em] text-white/40">
+                      <p className="text-[11px] font-black  text-white/40">
                         MATCH RESULT
                       </p>
                       <p className="mt-4 grid w-full grid-cols-2 gap-8 text-[11px] font-black text-white/60">
@@ -436,7 +436,7 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
                   {current.photos.map((p, i) => (
                     <span
                       key={`${p}-${i}`}
-                      className={`h-1.5 rounded-full transition-all ${
+                      className={`h-1.5 rounded-full transition ${
                         i === photoIdx ? "w-4 bg-white" : "w-1.5 bg-white/30"
                       }`}
                     />
@@ -465,7 +465,7 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
                 <span className="flex shrink-0 items-center gap-2 text-[12px] text-white">
                   <Pips goals={current.goals} assists={current.assists} size={13} />
                   {current.isMom && (
-                    <span className="inline-flex items-center gap-0.5 rounded bg-gradient-to-br from-amber-200 to-amber-500 px-1.5 py-0.5 text-[9px] font-black text-amber-950">
+                    <span className="inline-flex items-center gap-0.5 rounded bg-gradient-to-br from-amber-200 to-amber-500 px-1.5 py-0.5 text-[11px] font-black text-amber-950">
                       <Crown width={10} height={10} strokeWidth={2.8} /> MOM
                     </span>
                   )}

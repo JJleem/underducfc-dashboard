@@ -91,7 +91,7 @@ export interface HomeHeroProps {
 function SeasonOrdinal({ info }: { info?: { label: string; n: number } | null }) {
   if (!info) return null;
   return (
-    <span className="truncate text-[9px] font-bold tabular-nums text-gray-400 dark:text-white/30">
+    <span className="truncate text-[11px] font-bold tabular-nums text-gray-400 dark:text-white/30">
       {info.label} 시즌 {info.n}번째 경기
     </span>
   );
@@ -148,10 +148,6 @@ function Headline({ lead }: { lead: Storyline }) {
 function HeroBackdrop() {
   return (
     <>
-      <div
-        className="pointer-events-none absolute -top-12 -right-8 h-40 w-40 rounded-full bg-[var(--ud-primary)]"
-        style={{ opacity: 0.17, filter: "blur(46px)" }}
-      />
       {/* 로고를 그대로 깔면 알파 없는 네이비 사각형이 깔린다. 밝기를 알파로 바꾼
           underduck-mark.png 를 마스크로 써서 모양만 남긴다(프로필 히어로와 동일). */}
       <div
@@ -194,13 +190,13 @@ function AttendanceBar({
         {votes.absent > 0 && <div className="bg-gray-400 dark:bg-white/25" style={{ width: pct(votes.absent) }} />}
       </div>
       <div className="mt-2 flex items-center justify-between">
-        <div className="flex gap-2.5 text-[9.5px] font-black">
+        <div className="flex gap-2.5 text-[11px] font-black">
           <span className={PINK}>참석 <span className="tabular-nums">{votes.attending}</span></span>
           <span className="text-amber-500 dark:text-amber-400">미정 <span className="tabular-nums">{votes.maybe}</span></span>
           <span className="text-gray-400 dark:text-white/40">불참 <span className="tabular-nums">{votes.absent}</span></span>
         </div>
         {myVote && (
-          <span className="flex items-center gap-1 text-[9px] font-black text-gray-400 dark:text-white/40">
+          <span className="flex items-center gap-1 text-[11px] font-black text-gray-400 dark:text-white/40">
             나는 {myVote} <Check width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.bold} />
           </span>
         )}
@@ -353,7 +349,7 @@ function NeedVote({
     <div className="relative pb-3">
       <div className="flex items-center justify-between gap-3">
         <p className="flex min-w-0 shrink items-baseline gap-2">
-          <span className={`shrink-0 text-[10px] font-black tracking-[0.18em] tabular-nums ${PINK}`}>
+          <span className={`shrink-0 text-[10px] font-black  tabular-nums ${PINK}`}>
             {/* 날짜를 못 읽으면 null 이라 그냥 두면 "D-null" 이 찍힌다. 그때는 D 표기를 뺀다. */}
             {dDay !== null && (
               <>
@@ -376,7 +372,7 @@ function NeedVote({
         <p className="truncate text-[13px] font-black text-gray-800 dark:text-white/80">
           {matchTitleVs(match)}
         </p>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px] font-bold text-gray-500 dark:text-white/50">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-bold text-gray-500 dark:text-white/50">
           <span className="flex items-center gap-1">
             <Clock width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.base} />
             {isUndecided(match.time) ? "시간 미정" : match.time}
@@ -437,7 +433,7 @@ function DDay({
     <div className="relative pb-3">
       <div className="flex items-center justify-between gap-3">
         <p className="flex min-w-0 shrink items-baseline gap-2">
-          <span className={`shrink-0 text-[10px] font-black tracking-[0.2em] ${PINK}`}>
+          <span className={`shrink-0 text-[10px] font-black  ${PINK}`}>
             {dDay === 1 ? "내일 경기 · D-1" : "오늘 경기 · D-DAY"}
           </span>
           <SeasonOrdinal info={seasonOrdinal} />
@@ -468,8 +464,8 @@ function DDay({
           <h2 className="mt-0.5 text-[29px] font-black leading-none tracking-[-0.045em] text-gray-900 tabular-nums dark:text-white">
             {isUndecided(match.time) ? "시간 미정" : match.time}
             {!isUndecided(match.time) && (
-              <span className="ml-1.5 text-[10px] tracking-[0.12em] text-[var(--ud-primary)]">
-                KICKOFF
+              <span className="ml-1.5 text-[10px]  text-[var(--ud-primary)]">
+                킥오프
               </span>
             )}
           </h2>
@@ -528,7 +524,7 @@ function AfterMatch({
           : match.result || "경기 종료";
   return (
     <div className="pb-3">
-      <p className="text-center text-[9.5px] font-black tracking-[0.18em] text-gray-400 dark:text-white/40">
+      <p className="text-center text-[11px] font-black  text-gray-400 dark:text-white/40">
         {full} · {matchTitle(match)}
       </p>
       {/* 자체전은 스코어가 없다. 그냥 두면 이 자리에 44px 짜리 ":" 하나만 남는다.
@@ -596,8 +592,8 @@ function Matching({
     <div className="pb-3">
       <div className="flex items-center justify-between gap-3">
         <p className="flex min-w-0 shrink items-baseline gap-2">
-          <span className="shrink-0 text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-white/40">
-            NEXT MATCH
+          <span className="shrink-0 text-[11px] font-black  text-gray-400 dark:text-white/40">
+            다음 경기
           </span>
           <SeasonOrdinal info={seasonOrdinal} />
         </p>
@@ -624,23 +620,23 @@ function Matching({
       </div>
 
       <div className="mt-3.5 flex flex-wrap gap-1.5">
-        <span className="rounded-full border border-gray-200 px-2 py-[3px] text-[9px] font-black text-gray-400 dark:border-white/10 dark:text-white/40">
+        <span className="rounded-full border border-gray-200 px-2 py-[3px] text-[11px] font-black text-gray-400 dark:border-white/10 dark:text-white/40">
           상대 확정 대기
         </span>
         {isUndecided(match.location) && (
-          <span className="rounded-full border border-gray-200 px-2 py-[3px] text-[9px] font-black text-gray-400 dark:border-white/10 dark:text-white/40">
+          <span className="rounded-full border border-gray-200 px-2 py-[3px] text-[11px] font-black text-gray-400 dark:border-white/10 dark:text-white/40">
             장소 미정
           </span>
         )}
         {isUndecided(match.time) && (
-          <span className="rounded-full border border-gray-200 px-2 py-[3px] text-[9px] font-black text-gray-400 dark:border-white/10 dark:text-white/40">
+          <span className="rounded-full border border-gray-200 px-2 py-[3px] text-[11px] font-black text-gray-400 dark:border-white/10 dark:text-white/40">
             시간 미정
           </span>
         )}
       </div>
 
       <div className="mt-4">
-        <p className="mb-2 text-[9.5px] font-black tracking-[0.14em] text-gray-400 dark:text-white/40">
+        <p className="mb-2 text-[11px] font-black  text-gray-400 dark:text-white/40">
           참석 현황
         </p>
         <AttendanceBar votes={votes} myVote={myVote} />
@@ -665,8 +661,8 @@ function Rest({ plan }: { plan: RestPlan }) {
   const backDDay = getDDay(plan.returnDate);
   return (
     <div className="pb-3">
-      <span className="text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-white/40">
-        REST WEEK
+      <span className="text-[11px] font-black  text-gray-400 dark:text-white/40">
+        쉬는 주
       </span>
       <div className="mt-1.5 flex items-end justify-between gap-3">
         <div className="min-w-0 flex-1">
@@ -693,7 +689,7 @@ function Rest({ plan }: { plan: RestPlan }) {
           return (
             <span
               key={date}
-              className="rounded-full border border-gray-200 px-2 py-[3px] text-[9px] font-black text-gray-400 dark:border-white/10 dark:text-white/40"
+              className="rounded-full border border-gray-200 px-2 py-[3px] text-[11px] font-black text-gray-400 dark:border-white/10 dark:text-white/40"
             >
               {full} {weekday} 휴식
             </span>
@@ -733,8 +729,8 @@ function Upcoming({
     <div className="pb-3">
       <div className="flex items-center justify-between gap-3">
         <p className="flex min-w-0 shrink items-baseline gap-2">
-          <span className="shrink-0 text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-white/40">
-            NEXT MATCH
+          <span className="shrink-0 text-[11px] font-black  text-gray-400 dark:text-white/40">
+            다음 경기
           </span>
           <SeasonOrdinal info={seasonOrdinal} />
         </p>
@@ -749,7 +745,7 @@ function Upcoming({
             )}
             <span className="truncate">{matchTitle(match)}</span>
           </h2>
-          <p className="mt-2 flex items-center gap-1.5 text-[10.5px] font-bold text-gray-500 dark:text-white/50">
+          <p className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-white/50">
             <CalendarDays width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.base} className="shrink-0" />
             <span>
               {full} <WeekdayLabel weekday={weekday} /> {!isUndecided(match.time) && `· ${match.time}`}

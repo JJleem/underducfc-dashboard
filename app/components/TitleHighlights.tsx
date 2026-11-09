@@ -53,7 +53,7 @@ export default function TitleHighlights({
               <span className="flex h-[59px] w-[59px] items-center justify-center rounded-full border-[1.5px] border-dashed border-gray-300 text-gray-400 dark:border-white/20 dark:text-white/40">
                 <Plus width={22} height={22} strokeWidth={2.2} />
               </span>
-              <span className="text-center text-[9.5px] font-black leading-[1.25] tracking-[-0.02em] text-gray-400 dark:text-white/40">
+              <span className="text-center text-[11px] font-black leading-[1.25] tracking-[-0.02em] text-gray-400 dark:text-white/40">
                 대표
               </span>
             </button>

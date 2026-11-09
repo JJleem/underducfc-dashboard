@@ -24,8 +24,8 @@ export interface SeasonLeader {
 function Plate({ title }: { title: EarnedTitle }) {
   return (
     <span
-      className="relative inline-flex h-[20px] w-[20px] items-center justify-center rounded-full text-white shadow-[0_2px_6px_rgba(0,0,0,0.3)]"
-      style={{ background: "linear-gradient(180deg, var(--ud-primary) 0%, var(--ud-primary-strong) 100%)" }}
+      className="relative inline-flex h-[20px] w-[20px] items-center justify-center rounded-full text-white"
+      style={{ background: "var(--ud-primary)" }}
     >
       <TitleIcon name={title.icon} width={11} height={11} strokeWidth={2.6} />
     </span>
@@ -36,7 +36,7 @@ function Names({ holders, className }: { holders: string[]; className: string })
   return (
     <>
       {holders.length > 1 && (
-        <span className="relative mt-1 text-[9px] font-black tracking-wide" style={{ color: "var(--season)" }}>
+        <span className="relative mt-1 text-[11px] font-black" style={{ color: "var(--season)" }}>
           공동 1위
         </span>
       )}
@@ -54,31 +54,7 @@ export default function SeasonLeaders({ leaders, final }: { leaders: SeasonLeade
 
   return (
     <section className="relative overflow-hidden px-4 pt-5">
-      {/* 배경 — 은은한 시즌색 구름 몇 덩이. 움직이지 않는다. */}
-      <span aria-hidden className="pointer-events-none absolute inset-0">
-        {[
-          { left: "-8%", top: "10%", size: 190, opacity: 0.2 },
-          { left: "32%", top: "-18%", size: 230, opacity: 0.16 },
-          { left: "68%", top: "18%", size: 200, opacity: 0.18 },
-          { left: "20%", top: "55%", size: 170, opacity: 0.1 },
-        ].map((c, i) => (
-          <span
-            key={i}
-            className="absolute rounded-full"
-            style={{
-              left: c.left,
-              top: c.top,
-              width: c.size,
-              height: c.size * 0.7,
-              background: "radial-gradient(closest-side, var(--season), transparent)",
-              opacity: c.opacity,
-              filter: "blur(24px)",
-            }}
-          />
-        ))}
-      </span>
-
-      <p className="relative text-[10px] font-black uppercase tracking-[0.16em] text-gray-400 dark:text-white/35">
+      <p className="relative text-[10px] font-black uppercase  text-gray-400 dark:text-white/35">
         시즌 리더{final && <span className="ml-1.5 normal-case tracking-normal">· 최종</span>}
       </p>
 
@@ -117,14 +93,14 @@ export default function SeasonLeaders({ leaders, final }: { leaders: SeasonLeade
             <span className="relative -mt-2.5">
               <Plate title={l.title} />
             </span>
-            <span className="relative mt-1 w-full truncate text-center text-[9.5px] font-black" style={{ color: "var(--season)" }}>
+            <span className="relative mt-1 w-full truncate text-center text-[11px] font-black" style={{ color: "var(--season)" }}>
               {l.title.name}
             </span>
             <span className="relative mt-1 text-[20px] font-black leading-none tracking-[-0.05em] tabular-nums text-gray-900 dark:text-white">
               {l.value}
-              <span className="ml-0.5 text-[9px] font-bold tracking-normal text-gray-400 dark:text-white/40">{l.unit}</span>
+              <span className="ml-0.5 text-[11px] font-bold tracking-normal text-gray-400 dark:text-white/40">{l.unit}</span>
             </span>
-            <Names holders={l.holders} className="relative mt-1 text-[12px] leading-tight tracking-[-0.02em]" />
+            <Names holders={l.holders} className="relative mt-1 text-[12px] leading-tight" />
           </Link>
         ))}
       </div>

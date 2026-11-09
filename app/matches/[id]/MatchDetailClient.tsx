@@ -71,7 +71,7 @@ function Cleats({ className = "" }: { className?: string }) {
 }
 
 const sectionLabel =
-  "text-[10px] font-black uppercase tracking-[0.16em] text-gray-400 dark:text-white/35";
+  "text-[10px] font-black text-gray-400 dark:text-white/35";
 
 export default function MatchDetailClient({
   match,
@@ -114,7 +114,7 @@ export default function MatchDetailClient({
         >
           <ArrowLeft width={18} height={18} strokeWidth={2.4} />
         </Link>
-        <span className="app-header-label">MATCH</span>
+        <span className="app-header-label">경기</span>
         <button
           type="button"
           onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
@@ -181,7 +181,7 @@ export default function MatchDetailClient({
 
           <div className="min-w-[104px] text-center">
             {upcoming || !scored ? (
-              <span className="text-[25px] font-black tracking-[0.08em] text-gray-300 dark:text-white/20">
+              <span className="text-[25px] font-black  text-gray-300 dark:text-white/20">
                 VS
               </span>
             ) : (
@@ -202,7 +202,7 @@ export default function MatchDetailClient({
                   </span>
                 </span>
                 {reveal && (
-                  <span className="mt-1.5 inline-flex items-center gap-0.5 text-[9.5px] font-black text-gray-400 dark:text-white/35">
+                  <span className="mt-1.5 inline-flex items-center gap-0.5 text-[11px] font-black text-gray-400 dark:text-white/35">
                     <Play className="h-2.5 w-2.5 fill-current" /> 다시 보기
                   </span>
                 )}
@@ -220,7 +220,7 @@ export default function MatchDetailClient({
         )}
 
         {weather.available && (
-          <p className="mt-5 text-center text-[10.5px] font-bold text-gray-400 dark:text-white/35">
+          <p className="mt-5 text-center text-[11px] font-bold text-gray-400 dark:text-white/35">
             {weatherEmoji(weather.icon)} {weather.temp}°C · {weather.description}
             <span className="ml-2 text-blue-400">강수 {weather.pop}%</span>
           </p>
@@ -240,7 +240,7 @@ export default function MatchDetailClient({
                       <b className="truncate text-[13px] font-black">{scorer}</b>
                     </span>
                     {assists[index] && (
-                      <span className="flex shrink-0 items-center gap-1 text-[10.5px] font-bold text-gray-400 dark:text-white/35">
+                      <span className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-gray-400 dark:text-white/35">
                         <Cleats className="h-3.5 w-3.5" />
                         <b className="font-black text-gray-600 dark:text-white/60">{assists[index]}</b> 도움
                       </span>
@@ -260,7 +260,7 @@ export default function MatchDetailClient({
               className="press-control flex w-full items-center gap-3 py-4 text-left disabled:cursor-default"
             >
               <Crown className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400" />
-              <span className="text-[11px] font-black tracking-[0.1em] text-gray-400 dark:text-white/35">MOM</span>
+              <span className="text-[11px] font-black  text-gray-400 dark:text-white/35">MOM</span>
               <span className="min-w-0 flex-1 truncate text-right text-[13px] font-black">{match.mom}</span>
               {!casual && <Play className="h-3 w-3 shrink-0 fill-current text-gray-300 dark:text-white/25" />}
             </button>

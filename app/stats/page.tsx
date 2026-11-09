@@ -137,7 +137,7 @@ export default async function StatsPage({
       style={{ "--season-light": accent.light, "--season-dark": accent.dark } as CSSProperties}
     >
       <PageHeader
-        label="STATS"
+        label="스탯"
         right={<SeasonSelector current={season} withMatches={seasonsPlayed} />}
       />
 
@@ -155,14 +155,9 @@ export default async function StatsPage({
 
       {/* 시즌 요약 — 카드로 감싸지 않는다. 프로필 히어로와 같은 문법. */}
       <section className="relative overflow-hidden px-4 pt-5">
-        {/* 글로우는 시즌 대표색. 지금 어느 시즌을 보는지 라벨을 안 읽어도 알게 된다. */}
-        <div
-          className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full"
-          style={{ background: "var(--season)", opacity: 0.15, filter: "blur(46px)" }}
-        />
         <div className="relative">
-          <p className="text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-white/35">
-            SEASON
+          <p className="text-[11px] font-black  text-gray-400 dark:text-white/35">
+            시즌
           </p>
           <div className="mt-2 flex items-end justify-between gap-3">
             <p className="text-[21px] font-black leading-none tracking-[-0.035em] text-gray-900 dark:text-white">
@@ -205,7 +200,7 @@ export default async function StatsPage({
                 <p className="text-[17px] font-black leading-none tabular-nums text-gray-900 dark:text-white">
                   {s.value}
                 </p>
-                <p className="mt-1 truncate text-[9.5px] font-bold text-gray-400 dark:text-white/35">
+                <p className="mt-1 truncate text-[11px] font-bold text-gray-400 dark:text-white/35">
                   {s.label}
                 </p>
               </div>
@@ -227,7 +222,7 @@ export default async function StatsPage({
           <Swords width={16} height={16} strokeWidth={2.4} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[12.5px] font-black text-gray-900 dark:text-white">
+          <span className="block text-[13px] font-black text-gray-900 dark:text-white">
             상대팀 · 경기장 전적
           </span>
           <span className="mt-0.5 block text-[10px] font-bold text-gray-400 dark:text-white/30">
@@ -239,7 +234,7 @@ export default async function StatsPage({
 
       {duos.length > 0 && (
         <section className="px-4 pt-5">
-          <p className="mb-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-gray-400 dark:text-white/35">
+          <p className="mb-2.5 text-[10px] font-black uppercase  text-gray-400 dark:text-white/35">
             최고의 듀오
           </p>
           <div className="divide-y divide-gray-100 dark:divide-white/[0.06]">

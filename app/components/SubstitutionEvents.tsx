@@ -36,7 +36,7 @@ export default function SubstitutionEvents({
           className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/80 px-3 py-2.5 dark:border-white/[0.06] dark:bg-white/[0.03]"
         >
           <div className="min-w-0">
-            <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-red-400">
+            <span className="flex items-center gap-1 text-[11px] font-black uppercase text-red-400">
               <LogOut className="h-3 w-3" /> OUT
             </span>
             <p className="mt-0.5 truncate text-[12px] font-black text-gray-700 dark:text-gray-200">
@@ -45,14 +45,14 @@ export default function SubstitutionEvents({
           </div>
           <div className="flex flex-col items-center gap-0.5">
             {event.time && (
-              <span className="rounded-full bg-gray-200 px-2 py-0.5 text-[9px] font-black text-gray-500 dark:bg-white/10 dark:text-gray-400">
+              <span className="rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-black text-gray-500 dark:bg-white/10 dark:text-gray-400">
                 {event.time}
               </span>
             )}
             <ArrowRight className="h-4 w-4 text-gray-300 dark:text-gray-600" />
           </div>
           <div className="min-w-0 text-right">
-            <span className="flex items-center justify-end gap-1 text-[9px] font-black uppercase tracking-wider text-emerald-500">
+            <span className="flex items-center justify-end gap-1 text-[11px] font-black uppercase text-emerald-500">
               IN <LogIn className="h-3 w-3" />
             </span>
             <p className="mt-0.5 truncate text-[12px] font-black text-gray-700 dark:text-gray-200">

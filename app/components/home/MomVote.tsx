@@ -64,7 +64,7 @@ function VoteBar({
       </span>
       <div className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--ud-primary)]/10">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${
+          className={`h-full rounded-full transition duration-500 ${
             leader ? "bg-[var(--ud-primary)]" : "bg-[var(--ud-primary)]/35"
           }`}
           style={{ width: count > 0 ? `${Math.round((count / max) * 100)}%` : "0%" }}
@@ -109,7 +109,7 @@ function CandidateBallot({
           {title}
         </p>
         <span
-          className={`text-[10.5px] font-bold ${
+          className={`text-[11px] font-bold ${
             selected ? "text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]" : "text-gray-400 dark:text-white/35"
           }`}
         >
@@ -140,7 +140,7 @@ function CandidateBallot({
               <PlayerFace name={name} size={32} />
               <span className="min-w-0 flex-1">
                 <span
-                  className={`block truncate text-[12.5px] font-black ${
+                  className={`block truncate text-[13px] font-black ${
                     active
                       ? "text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]"
                       : "text-gray-800 dark:text-white/75"
@@ -148,7 +148,7 @@ function CandidateBallot({
                 >
                   {name}
                 </span>
-                <span className="mt-0.5 block text-[9.5px] font-bold uppercase tracking-[0.08em] text-gray-400 dark:text-white/30">
+                <span className="mt-0.5 block text-[11px] font-bold uppercase  text-gray-400 dark:text-white/30">
                   {positions[name] || "포지션 미정"}
                 </span>
               </span>
@@ -474,7 +474,7 @@ export default function MomVote({
               </span>
               <span>
                 MOM 투표
-                <span className="mt-0.5 block text-[10.5px] font-bold text-gray-400 dark:text-white/35">
+                <span className="mt-0.5 block text-[11px] font-bold text-gray-400 dark:text-white/35">
                   공격과 수비에서 한 명씩 선택해 주세요
                 </span>
               </span>
@@ -482,7 +482,7 @@ export default function MomVote({
           </DrawerHeader>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
-              <div className="flex items-center justify-between border-y border-[var(--ud-primary)]/20 py-2.5 text-[10.5px] font-bold dark:border-[var(--ud-primary)]/15">
+              <div className="flex items-center justify-between border-y border-[var(--ud-primary)]/20 py-2.5 text-[11px] font-bold dark:border-[var(--ud-primary)]/15">
                 <span className="text-gray-500 dark:text-white/50">
                   <b className="font-black text-gray-800 dark:text-white/80">{userName}</b> 님으로 투표
                   <span className="ml-1 text-gray-300 dark:text-white/25">· 본인 제외</span>
@@ -499,7 +499,7 @@ export default function MomVote({
                 <section className="mt-5">
                   <div className="mb-3 flex items-center justify-between">
                     <p className="text-[13px] font-black text-gray-900 dark:text-white">현재 득표</p>
-                    <span className="text-[10.5px] font-bold tabular-nums text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
+                    <span className="text-[11px] font-bold tabular-nums text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
                       {total}표
                     </span>
                   </div>
@@ -579,7 +579,7 @@ export default function MomVote({
                   type="button"
                   onClick={submit}
                   disabled={(!atk && !def) || saving}
-                  className="app-action-primary flex flex-1 items-center justify-center gap-1.5 rounded-xl py-3 text-[12px] font-black shadow-[0_6px_18px_color-mix(in_srgb,var(--ud-primary)_24%,transparent)] disabled:bg-[var(--ud-primary)]/20 disabled:text-white disabled:shadow-none dark:disabled:bg-[var(--ud-primary)]/15 dark:disabled:text-white/30"
+                  className="app-action-primary flex flex-1 items-center justify-center gap-1.5 rounded-xl py-3 text-[12px] font-black disabled:bg-[var(--ud-primary)]/20 disabled:text-white dark:disabled:bg-[var(--ud-primary)]/15 dark:disabled:text-white/30"
                 >
                   {saving && <Loader2 width={14} height={14} className="animate-spin" />}
                   {selectedCount > 0 ? `${selectedCount}명 선택 · 투표하기` : "선수를 선택해 주세요"}

@@ -54,7 +54,7 @@ const ICON = { meta: 13, action: 15, logo: 22, thumb: 52 } as const;
 const STROKE = { base: 2.2, bold: 2.6 } as const;
 
 // 라벨은 전부 같은 모양이어야 여섯 섹션이 한 규칙으로 읽힌다.
-const LABEL = "text-[10px] font-black uppercase tracking-[0.16em] text-gray-400 dark:text-white/35";
+const LABEL = "text-[10px] font-black uppercase  text-gray-400 dark:text-white/35";
 
 const thumb = (url: string, size: number) => cldThumb(url, size);
 

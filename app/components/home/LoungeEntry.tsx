@@ -35,10 +35,10 @@ export default function LoungeEntry({
       />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="text-[11.5px] font-black">언더덕 사랑방</span>
+          <span className="text-[12px] font-black">언더덕 사랑방</span>
           {unseen && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF5F7E]" />}
         </span>
-        <span className="mt-0.5 block text-[9.5px] font-bold text-gray-400 dark:text-white/30">
+        <span className="mt-0.5 block text-[11px] font-bold text-gray-400 dark:text-white/30">
           하고 싶은 말 남기기 · 이름은 공개되지 않아요
         </span>
       </span>

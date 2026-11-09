@@ -236,7 +236,7 @@ export default function LoungeDetailClient({
           >
             <ArrowLeft width={18} height={18} strokeWidth={2.4} />
           </Link>
-          <span className="app-header-label">LOUNGE</span>
+          <span className="app-header-label">라운지</span>
           {(post.mine || admin) && (
             <button
               onClick={() => setConfirm({ kind: "post" })}
@@ -318,7 +318,7 @@ export default function LoungeDetailClient({
             {replyAuthor && <span className="opacity-70">· {replyAuthor}</span>}
             <span className="opacity-70">· {relativeTime(replyAt)}</span>
           </p>
-          <p className="mt-2.5 whitespace-pre-wrap break-words text-[13.5px] leading-[1.8] text-gray-700 dark:text-white/70">
+          <p className="mt-2.5 whitespace-pre-wrap break-words text-[14px] leading-[1.8] text-gray-700 dark:text-white/70">
             {savedReply}
           </p>
         </section>
@@ -327,7 +327,7 @@ export default function LoungeDetailClient({
       {/* 운영진 조작 */}
       {admin && post.category === "suggestion" && (
         <section className="mx-5 mt-6 rounded-2xl border border-gray-200 p-4 dark:border-white/10">
-          <p className="text-[10px] font-black tracking-[0.12em] text-gray-400">운영진</p>
+          <p className="text-[10px] font-black  text-gray-400">운영진</p>
 
           <div className="mt-3 grid grid-cols-4 gap-1.5">
             {STATUS_ORDER.map((s: LoungeStatus) => (
@@ -336,7 +336,7 @@ export default function LoungeDetailClient({
                 disabled={adminBusy}
                 onClick={() => patch({ status: s }, "상태를 바꿨어요")}
                 aria-pressed={status === s}
-                className={`min-h-10 rounded-lg text-[11.5px] font-black transition-colors disabled:opacity-40 ${
+                className={`min-h-10 rounded-lg text-[12px] font-black transition-colors disabled:opacity-40 ${
                   status === s
                     ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
                     : "border border-gray-200 text-gray-400 dark:border-white/10 dark:text-white/35"
@@ -366,12 +366,12 @@ export default function LoungeDetailClient({
 
       {/* 댓글 */}
       <section className="mt-8 border-t border-gray-100 px-5 pt-5 dark:border-white/[0.06]">
-        <p className="text-[11px] font-black tracking-[0.1em] text-gray-400">
+        <p className="text-[11px] font-black  text-gray-400">
           댓글 {comments.length}
         </p>
 
         {comments.length === 0 ? (
-          <p className="py-10 text-center text-[12.5px] font-bold text-gray-400 dark:text-white/30">
+          <p className="py-10 text-center text-[13px] font-bold text-gray-400 dark:text-white/30">
             첫 댓글을 남겨 보세요.
           </p>
         ) : (
@@ -532,7 +532,7 @@ function CommentRow({
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
           {/* 이름은 백엔드가 글 단위로 매긴다 — 글이 달라지면 이름도 새로 매겨진다. */}
-          <span className="text-[12.5px] font-black text-gray-900 dark:text-white">
+          <span className="text-[13px] font-black text-gray-900 dark:text-white">
             {c.authorLabel}
           </span>
           <span className="text-[10px] font-bold text-gray-300 dark:text-white/25">
@@ -557,7 +557,7 @@ function CommentRow({
         {!pending && (
           <button
             onClick={onReply}
-            className="mt-1.5 text-[10.5px] font-black text-gray-400 active:opacity-60 dark:text-white/30"
+            className="mt-1.5 text-[11px] font-black text-gray-400 active:opacity-60 dark:text-white/30"
           >
             답글
           </button>

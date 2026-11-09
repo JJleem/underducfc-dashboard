@@ -175,7 +175,7 @@ export default function FeedbackThread({
             <div className="flex items-center gap-1.5">
               <Link
                 href={`/players/${encodeURIComponent(fb.name)}`}
-                className="truncate text-[12.5px] font-black text-gray-900 active:opacity-60 dark:text-white"
+                className="truncate text-[13px] font-black text-gray-900 active:opacity-60 dark:text-white"
               >
                 {fb.name}
               </Link>
@@ -235,14 +235,14 @@ export default function FeedbackThread({
         {emoticon && (
           <div className="mb-2 flex items-center gap-2" data-vaul-no-drag={sheetLayout ? "" : undefined}>
             <Emoticon id={emoticon} size={36} />
-            <span className="flex-1 text-[10.5px] font-bold text-gray-400 dark:text-white/30">
+            <span className="flex-1 text-[11px] font-bold text-gray-400 dark:text-white/30">
               이 이모티콘과 함께 올라가요
             </span>
             <button
               type="button"
               onClick={() => setEmoticon(null)}
               aria-label="이모티콘 빼기"
-              className="px-1 text-[10.5px] font-black text-gray-400 active:opacity-60"
+              className="px-1 text-[11px] font-black text-gray-400 active:opacity-60"
             >
               빼기
             </button>

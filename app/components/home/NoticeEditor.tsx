@@ -54,7 +54,7 @@ export default function NoticeEditor({
         className="flex w-9 shrink-0 flex-col items-center gap-0.5 py-0.5 text-gray-400 active:opacity-60 dark:text-white/40"
       >
         <Pencil width={17} height={17} strokeWidth={2.2} />
-        <span className="text-[8px] font-black leading-none">편집</span>
+        <span className="text-[10px] font-black leading-none">편집</span>
       </button>
 
       <Drawer open={open} onOpenChange={setOpen} repositionInputs={false}>

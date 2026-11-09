@@ -68,7 +68,7 @@ export default function VoterChip({
       {held && (
         <span
           role="status"
-          className="animate-fade pointer-events-none absolute -top-7 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10.5px] font-black tabular-nums text-white shadow-lg dark:bg-white dark:text-gray-900"
+          className="animate-fade pointer-events-none absolute -top-7 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[11px] font-black tabular-nums text-white shadow-lg dark:bg-white dark:text-gray-900"
         >
           {at}
         </span>

@@ -98,10 +98,10 @@ export default function Storylines({
             <div
               className={`flex items-center justify-between border-b pb-2 ${group.dividerTone}`}
             >
-              <p className={`text-[10px] font-black tracking-[0.15em] ${group.labelTone}`}>
+              <p className={`text-[10px] font-black  ${group.labelTone}`}>
                 {group.label}
               </p>
-              <span className="text-[9.5px] font-bold tabular-nums text-gray-400 dark:text-white/35">
+              <span className="text-[11px] font-bold tabular-nums text-gray-400 dark:text-white/35">
                 {group.items.length}개
               </span>
             </div>

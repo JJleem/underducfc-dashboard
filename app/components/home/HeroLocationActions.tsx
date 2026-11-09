@@ -60,7 +60,7 @@ export default function HeroLocationActions({
 
   return (
     <div className={`flex min-w-0 items-center justify-between gap-2 ${className}`}>
-      <div className="flex min-w-0 items-center gap-1.5 text-[10.5px] font-bold text-gray-500 dark:text-white/50">
+      <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-white/50">
         <MapPin width={12} height={12} strokeWidth={2.2} className="shrink-0" />
         <span className="truncate">{unknown ? "장소 미정" : location}</span>
         {!unknown && (
@@ -69,7 +69,7 @@ export default function HeroLocationActions({
               type="button"
               onClick={handleCopy}
               aria-label={`${location} 복사`}
-              className={`press-cta flex h-6 w-14 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border px-1.5 text-[9.5px] font-black transition-colors ${
+              className={`press-cta flex h-6 w-14 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border px-1.5 text-[11px] font-black transition-colors ${
                 copyState === "copied"
                   ? "border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/12 text-[var(--ud-primary-strong)] dark:border-[var(--ud-primary)]/25 dark:bg-[var(--ud-primary)]/12 dark:text-[var(--ud-primary)]"
                   : copyState === "failed"
@@ -91,7 +91,7 @@ export default function HeroLocationActions({
               href={`https://map.kakao.com/link/search/${encodeURIComponent(location)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="press-cta flex h-6 w-14 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/[0.07] px-1.5 text-[9.5px] font-black text-[var(--ud-primary-strong)] dark:border-[var(--ud-primary)]/25 dark:bg-[var(--ud-primary)]/[0.08] dark:text-[var(--ud-primary)]"
+              className="press-cta flex h-6 w-14 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/[0.07] px-1.5 text-[11px] font-black text-[var(--ud-primary-strong)] dark:border-[var(--ud-primary)]/25 dark:bg-[var(--ud-primary)]/[0.08] dark:text-[var(--ud-primary)]"
             >
               <Navigation width={11} height={11} strokeWidth={2.3} />
               길찾기

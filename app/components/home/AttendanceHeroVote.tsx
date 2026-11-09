@@ -98,15 +98,15 @@ export default function AttendanceHeroVote({
             className="absolute -inset-x-4 -bottom-1 -top-5 z-20 flex flex-col items-center justify-center bg-gray-50 text-center dark:bg-background"
           >
             <motion.span
-              initial={reduceMotion ? false : { scale: 0.72, rotate: -7 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.4, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: reduceMotion ? 0 : 0.2, delay: 0.06, ease: "easeOut" }}
               className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--ud-primary)]/12 text-[var(--ud-primary-strong)] dark:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)]"
             >
               <Check width={24} height={24} strokeWidth={3} />
             </motion.span>
             <p className="mt-3 text-[22px] font-black tracking-[-0.035em] text-gray-900 dark:text-white">
-              투표 감사합니다!
+              투표 감사합니다
             </p>
             <p className="mt-1 text-[11px] font-bold text-gray-500 dark:text-white/50">
               {saved}으로 답했어요

@@ -155,7 +155,7 @@ export function ResultRevealView({
             initial={from({ opacity: 0, y: 10 })}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: SLAM + 1.0 }}
-            className="mx-auto mt-7 max-w-[300px] space-y-1.5 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-[12.5px] font-bold text-white/70"
+            className="mx-auto mt-7 max-w-[300px] space-y-1.5 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-[13px] font-bold text-white/70"
           >
             {scorers && (
               <p>
