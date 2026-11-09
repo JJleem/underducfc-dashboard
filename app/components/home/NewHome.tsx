@@ -468,7 +468,7 @@ export default async function NewHome({
       )}
       {/* 미리보기 전용 스위치 — 실제 홈에는 없다 */}
       {preview && (
-      <div className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/85 px-3 safe-header-py-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-background/85">
+      <div className="sticky top-0 z-30 border-b border-gray-200/70 bg-white px-3 safe-header-py-3 dark:border-white/[0.06] dark:bg-background">
         <div className="flex items-center gap-1.5 overflow-x-auto">
           <span className="shrink-0 pr-1 text-[9px] font-black tracking-[0.14em] text-gray-400">
             PREVIEW

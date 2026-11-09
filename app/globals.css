@@ -9,7 +9,7 @@
   --app-brand: #ff8fa3;
   --app-brand-strong: #f56f88;
   --app-surface: #f9fafb;
-  --app-surface-raised: rgba(255, 255, 255, 0.86);
+  --app-surface-raised: #ffffff;
   --app-border-subtle: rgba(17, 24, 39, 0.08);
   --app-text-muted: #9ca3af;
   --app-page-gutter: 1rem;
@@ -30,7 +30,7 @@
   --app-brand: #ffb6c1;
   --app-brand-strong: #ff8fa3;
   --app-surface: #0f0f13;
-  --app-surface-raised: rgba(9, 9, 11, 0.86);
+  --app-surface-raised: #09090b;
   --app-border-subtle: rgba(255, 255, 255, 0.065);
   --app-text-muted: rgba(255, 255, 255, 0.38);
   /* 라인업 피치: 다크(야간 경기장) */
@@ -335,16 +335,12 @@ body {
   padding-inline: var(--app-page-gutter);
   border-bottom: 1px solid var(--app-border-subtle);
   background: var(--app-surface-raised);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
 }
 
 /* 검색·필터처럼 두 줄 구조인 헤더는 레이아웃을 유지하고 표면만 공유한다. */
 .app-header-surface {
   border-bottom: 1px solid var(--app-border-subtle);
   background: var(--app-surface-raised);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
 }
 
 .app-workspace-header {
@@ -357,8 +353,6 @@ body {
   padding-inline: var(--app-page-gutter);
   border-bottom: 1px solid var(--app-border-subtle);
   background: var(--app-surface-raised);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
 }
 
 /* 라인업 편집처럼 원래 20px 여백을 쓰던 집중 작업 화면은 기존 치수를 보존한다. */

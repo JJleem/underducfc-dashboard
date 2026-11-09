@@ -94,7 +94,7 @@ export default function Loading() {
       aria-busy="true"
     >
       {/* 앱 헤더는 실제 높이를 그대로 유지한다. */}
-      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white/70 px-5 safe-header-py-35 backdrop-blur-xl dark:border-white/[0.06] dark:bg-background/70">
+      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white px-5 safe-header-py-35 dark:border-white/[0.06] dark:bg-background">
         <span className="flex items-center gap-2 text-[15px] font-extrabold uppercase tracking-tight text-gray-900 dark:text-white">
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--ud-primary)]" />
           UNDERDUCK
