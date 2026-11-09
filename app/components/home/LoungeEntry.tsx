@@ -28,21 +28,21 @@ export default function LoungeEntry({
       }`}
     >
       <MessageSquareHeart
-        width={14}
-        height={14}
-        strokeWidth={2.2}
+        width={16}
+        height={16}
+        strokeWidth={2}
         className="shrink-0 text-[var(--ud-primary)]"
       />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="text-[12px] font-black">언더덕 사랑방</span>
+          <span className="whitespace-nowrap text-[12px] font-black">언더덕 사랑방</span>
           {unseen && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF5F7E]" />}
         </span>
-        <span className="mt-0.5 block text-[11px] font-bold text-gray-400 dark:text-white/30">
+        <span className="mt-0.5 block truncate text-[11px] font-bold text-gray-400 dark:text-white/50">
           하고 싶은 말 남기기 · 이름은 공개되지 않아요
         </span>
       </span>
-      <ChevronRight width={14} height={14} strokeWidth={2.4} className="shrink-0 text-gray-300 dark:text-white/20" />
+      <ChevronRight width={16} height={16} strokeWidth={2} className="shrink-0 text-gray-400 dark:text-white/40" />
     </Link>
   );
 }

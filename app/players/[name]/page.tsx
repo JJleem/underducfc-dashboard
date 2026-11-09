@@ -371,22 +371,22 @@ export default async function PlayerPage({
             <div className="min-w-0 flex-1">
               {/* 이름 줄에 등번호·포지션까지 함께 (인스타의 이름 + 카테고리 자리) */}
               <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-                <h1 className="text-[19px] font-black leading-none tracking-tight text-gray-900 dark:text-white">
+                <h1 className="min-w-0 max-w-full truncate text-[20px] font-black leading-none tracking-tight text-gray-900 dark:text-white">
                   {name}
                 </h1>
                 {isManager && (
-                  <span className="rounded-md bg-amber-300 px-1.5 py-0.5 text-[11px] font-black text-amber-950">
+                  <span className="shrink-0 whitespace-nowrap rounded-md bg-amber-300 px-1.5 py-0.5 text-[11px] font-black text-amber-950">
                     감독
                   </span>
                 )}
                 {role && (role === "C" || role === "VC") && (
-                  <span className="rounded bg-amber-300 px-1.5 py-0.5 text-[11px] font-black text-amber-950">
+                  <span className="shrink-0 whitespace-nowrap rounded bg-amber-300 px-1.5 py-0.5 text-[11px] font-black text-amber-950">
                     {role}
                   </span>
                 )}
                 {no && no !== "-" && (
                   <span
-                    className="rounded-md px-1.5 py-0.5 text-[11px] font-black leading-none text-white"
+                    className="shrink-0 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[11px] font-black leading-none text-white"
                     style={{ background: accent }}
                   >
                     #{no}
@@ -397,7 +397,7 @@ export default async function PlayerPage({
                   return (
                     <span
                       key={position}
-                      className="rounded-full px-2 py-0.5 text-[11px] font-black uppercase leading-none "
+                      className="shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-black uppercase leading-none"
                       style={{ color, background: `${color}1f`, border: `1px solid ${color}55` }}
                     >
                       {position}
@@ -414,10 +414,10 @@ export default async function PlayerPage({
                   { label: "MOM", value: mom },
                 ].map((s) => (
                   <div key={s.label} className="min-w-0">
-                    <p className="text-[17px] font-black leading-none tabular-nums text-gray-900 dark:text-white">
+                    <p className="whitespace-nowrap text-[17px] font-black leading-none tabular-nums text-gray-900 dark:text-white">
                       {s.value}
                     </p>
-                    <p className="mt-1 text-[11px] font-bold text-gray-400 dark:text-white/45">{s.label}</p>
+                    <p className="mt-1 truncate text-[11px] font-bold text-gray-400 dark:text-white/45">{s.label}</p>
                   </div>
                 ))}
               </div>
@@ -428,7 +428,7 @@ export default async function PlayerPage({
               라벨과 칩의 세로 패딩·글자 크기를 맞춰야 높낮이가 어긋나지 않는다. */}
           {rosterRow && (
             <div className="relative mt-3.5 flex items-start gap-1.5">
-              <span className="shrink-0 py-1 text-[11px] font-bold text-gray-400 dark:text-white/40">선호</span>
+              <span className="shrink-0 py-1 text-[11px] font-bold text-gray-400 dark:text-white/55">선호</span>
               {/* 편집을 열면 카드가 펼쳐지므로 남는 폭을 다 쓰게 둔다 */}
               <div className="min-w-0 flex-1">
                 <PrefPosEditor initial={prefPos} canEdit={canEdit} />
@@ -445,7 +445,7 @@ export default async function PlayerPage({
             대표 칭호(featured)는 통산에서만 고른다 — 시즌이 넘어가도 대표가 안 사라진다. */}
         {showSeasonTitles && (
           <section className="px-4 mt-4">
-            <p className="mb-2 text-[11px] font-black uppercase  season-accent">
+            <p className="mb-2 whitespace-nowrap text-[11px] font-semibold season-accent">
               {seasonLabel(season)} 시즌
             </p>
             <PlayerTitleCards titles={seasonEarned} />
@@ -456,7 +456,7 @@ export default async function PlayerPage({
             두 섹션으로 갈릴 때는 통산만(careerEarned) 보여 준다 — 리더는 위 시즌 줄에 있다. */}
         <section className="px-4 mt-4">
           {showSeasonTitles && (
-            <p className="mb-2 text-[11px] font-black uppercase  text-gray-400 dark:text-white/35">
+            <p className="app-section-label mb-2 text-[11px]">
               통산
             </p>
           )}
@@ -472,7 +472,7 @@ export default async function PlayerPage({
         {showWrapped && (
           <a
             href={`/wrapped?season=${wrappedSeason}${canEdit ? "" : `&player=${encodeURIComponent(name)}`}`}
-            className="mx-4 mt-4 flex items-center gap-3 rounded-2xl px-3.5 py-3 active:opacity-70"
+            className="app-row mx-4 mt-4 rounded-2xl px-3.5 py-3 active:opacity-70"
             style={{
               background: "color-mix(in srgb, var(--season) 10%, transparent)",
               border: "1px solid color-mix(in srgb, var(--season) 26%, transparent)",
@@ -482,19 +482,19 @@ export default async function PlayerPage({
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
               style={{ background: "color-mix(in srgb, var(--season) 18%, transparent)", color: "var(--season)" }}
             >
-              <Sparkles width={16} height={16} strokeWidth={2.4} />
+              <Sparkles width={16} height={16} strokeWidth={2.2} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[13px] font-black text-gray-900 dark:text-white">
+              <span className="block truncate text-[13px] font-black text-gray-900 dark:text-white">
                 {seasonLabel(wrappedSeason ?? season)} 시즌 돌아보기
               </span>
-              <span className="mt-0.5 block text-[10px] font-bold text-gray-400 dark:text-white/35">
+              <span className="mt-0.5 block truncate text-[11px] font-bold text-gray-400 dark:text-white/50">
                 {wrappedPublic
                   ? "한 장씩 넘겨 보는 나의 시즌 · 선수카드"
                   : "공개 전 · 운영진만 보입니다"}
               </span>
             </span>
-            <ChevronRight width={15} height={15} strokeWidth={2.4} className="shrink-0 text-gray-300 dark:text-white/25" />
+            <ChevronRight width={16} height={16} strokeWidth={2.2} className="shrink-0 text-gray-400 dark:text-white/40" />
           </a>
         )}
 
@@ -504,7 +504,7 @@ export default async function PlayerPage({
             myMatches.length > 0 ? (
               <PlayerMatchGrid matches={myMatches} />
             ) : (
-              <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-gray-600">
+              <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-white/50">
                 아직 출전한 경기가 없어요.
               </p>
             )
@@ -532,7 +532,7 @@ export default async function PlayerPage({
               )}
               </>
             ) : (
-              <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-gray-600">
+              <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-white/50">
                 아직 쌓인 기록이 없어요.
               </p>
             )
@@ -541,7 +541,7 @@ export default async function PlayerPage({
             hasChemTab ? (
               <ChemistryHub playerName={name} personal={chemistry} team={teamChemistry} />
             ) : (
-              <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-gray-600">
+              <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-white/50">
                 아직 함께 뛴 기록이 부족해요.
               </p>
             )

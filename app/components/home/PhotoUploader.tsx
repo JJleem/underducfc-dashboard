@@ -126,14 +126,14 @@ export default function PhotoUploader({
         title={count > 0 ? "사진 더 올리기" : "사진 올리기"}
         className="flex w-11 flex-col items-center gap-1 text-gray-700 active:opacity-60 disabled:opacity-40 dark:text-white/70"
       >
-        <span className="flex h-[18px] items-center">
+        <span className="flex h-5 items-center">
           {busy ? (
-            <Loader2 width={17} height={17} className="animate-spin" />
+            <Loader2 width={20} height={20} strokeWidth={2} className="animate-spin" />
           ) : (
-            <ImagePlus width={17} height={17} strokeWidth={2} />
+            <ImagePlus width={20} height={20} strokeWidth={2} />
           )}
         </span>
-        <span className="whitespace-nowrap text-[11px] font-bold leading-none text-gray-400 dark:text-white/35">
+        <span className="whitespace-nowrap text-[11px] font-bold leading-none text-gray-400 dark:text-white/50">
           사진 추가
         </span>
       </button>

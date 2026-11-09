@@ -70,8 +70,7 @@ function Cleats({ className = "" }: { className?: string }) {
   );
 }
 
-const sectionLabel =
-  "text-[10px] font-black text-gray-400 dark:text-white/35";
+const sectionLabel = "app-section-label text-[12px]";
 
 export default function MatchDetailClient({
   match,
@@ -112,7 +111,7 @@ export default function MatchDetailClient({
           aria-label="홈으로"
           className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300"
         >
-          <ArrowLeft width={18} height={18} strokeWidth={2.4} />
+          <ArrowLeft width={20} height={20} strokeWidth={2.2} />
         </Link>
         <span className="app-header-label">경기</span>
         <button
@@ -121,8 +120,8 @@ export default function MatchDetailClient({
           aria-label="테마 전환"
           className="press-icon -my-2 ml-auto flex h-11 w-11 items-center justify-center rounded-full text-gray-500 active:bg-gray-100 dark:text-gray-400 dark:active:bg-white/10"
         >
-          <Moon className="h-[17px] w-[17px] dark:hidden" />
-          <Sun className="hidden h-[17px] w-[17px] text-[var(--ud-primary)] dark:block" />
+          <Moon className="h-5 w-5 dark:hidden" strokeWidth={2.2} />
+          <Sun className="hidden h-5 w-5 text-[var(--ud-primary)] dark:block" strokeWidth={2.2} />
         </button>
       </header>
 
@@ -130,24 +129,24 @@ export default function MatchDetailClient({
       <section className="border-b border-gray-200/70 px-4 pb-5 pt-4 dark:border-white/[0.07]">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[12px] font-black tabular-nums text-gray-900 dark:text-white">
+            <p className="whitespace-nowrap text-[12px] font-black tabular-nums text-gray-900 dark:text-white">
               {match.date}
               {match.time && match.time !== "미정" ? ` · ${match.time}` : ""}
             </p>
-            <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-bold text-gray-400 dark:text-white/35">
+            <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-bold text-gray-500 dark:text-white/50">
               <span className="flex min-w-0 items-center gap-1">
                 <MapPin className="h-3 w-3 shrink-0 text-[var(--ud-primary)]" />
                 <span className="truncate">{match.location}</span>
               </span>
               {match.type && (
-                <span className="flex items-center gap-1">
-                  <Target className="h-3 w-3 text-gray-300 dark:text-white/25" />
+                <span className="flex shrink-0 items-center gap-1 whitespace-nowrap">
+                  <Target className="h-3 w-3 text-gray-400 dark:text-white/40" />
                   {match.type}
                 </span>
               )}
             </div>
           </div>
-          <span className={`shrink-0 pt-0.5 text-[12px] font-black ${resultTextTone(match.result)}`}>
+          <span className={`shrink-0 whitespace-nowrap pt-0.5 text-[12px] font-black ${resultTextTone(match.result)}`}>
             {resultWord(match.result)}
           </span>
         </div>
@@ -159,11 +158,11 @@ export default function MatchDetailClient({
             <div className="relative h-14 w-14 overflow-hidden rounded-full bg-white ring-1 ring-black/[0.06] dark:bg-black dark:ring-white/10">
               <Image src="/icons/icon-192.png" alt="언더덕" fill sizes="56px" className="object-cover" />
             </div>
-            <span className="mt-2.5 text-[22px] font-black leading-none tracking-[-0.04em] text-violet-500 dark:text-violet-300">
+            <span className="mt-2.5 text-[20px] font-black leading-none tracking-[-0.04em] text-violet-500 dark:text-violet-300">
               {kind.ko}
             </span>
             {attendees.length > 0 && (
-              <span className="mt-2 text-[12px] font-bold text-gray-400 dark:text-white/40">
+              <span className="mt-2 text-[12px] font-bold text-gray-400 dark:text-white/55">
                 {attendees.length}명이 함께 뛰었어요
               </span>
             )}
@@ -181,7 +180,7 @@ export default function MatchDetailClient({
 
           <div className="min-w-[104px] text-center">
             {upcoming || !scored ? (
-              <span className="text-[25px] font-black  text-gray-300 dark:text-white/20">
+              <span className="text-[24px] font-black  text-gray-400 dark:text-white/40">
                 VS
               </span>
             ) : (
@@ -196,13 +195,13 @@ export default function MatchDetailClient({
                   <span className="text-[40px] leading-none tracking-[-0.05em] text-[var(--ud-primary)]">
                     {match.ourScore}
                   </span>
-                  <span className="text-[16px] text-gray-300 dark:text-white/20">:</span>
+                  <span className="text-[17px] text-gray-400 dark:text-white/40">:</span>
                   <span className="text-[40px] leading-none tracking-[-0.05em] text-gray-700 dark:text-white/75">
                     {match.theirScore}
                   </span>
                 </span>
                 {reveal && (
-                  <span className="mt-1.5 inline-flex items-center gap-0.5 text-[11px] font-black text-gray-400 dark:text-white/35">
+                  <span className="mt-1.5 inline-flex items-center gap-0.5 whitespace-nowrap text-[11px] font-black text-gray-500 dark:text-white/50">
                     <Play className="h-2.5 w-2.5 fill-current" /> 다시 보기
                   </span>
                 )}
@@ -220,9 +219,9 @@ export default function MatchDetailClient({
         )}
 
         {weather.available && (
-          <p className="mt-5 text-center text-[11px] font-bold text-gray-400 dark:text-white/35">
+          <p className="mt-5 text-center text-[12px] font-bold text-gray-500 dark:text-white/50">
             {weatherEmoji(weather.icon)} {weather.temp}°C · {weather.description}
-            <span className="ml-2 text-blue-400">강수 {weather.pop}%</span>
+            <span className="ml-2 whitespace-nowrap text-blue-500 dark:text-blue-400">강수 {weather.pop}%</span>
           </p>
         )}
       </section>
@@ -240,7 +239,7 @@ export default function MatchDetailClient({
                       <b className="truncate text-[13px] font-black">{scorer}</b>
                     </span>
                     {assists[index] && (
-                      <span className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-gray-400 dark:text-white/35">
+                      <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[12px] font-bold text-gray-500 dark:text-white/50">
                         <Cleats className="h-3.5 w-3.5" />
                         <b className="font-black text-gray-600 dark:text-white/60">{assists[index]}</b> 도움
                       </span>
@@ -260,16 +259,16 @@ export default function MatchDetailClient({
               className="press-control flex w-full items-center gap-3 py-4 text-left disabled:cursor-default"
             >
               <Crown className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400" />
-              <span className="text-[11px] font-black  text-gray-400 dark:text-white/35">MOM</span>
+              <span className="app-section-label shrink-0 text-[12px]">MOM</span>
               <span className="min-w-0 flex-1 truncate text-right text-[13px] font-black">{match.mom}</span>
-              {!casual && <Play className="h-3 w-3 shrink-0 fill-current text-gray-300 dark:text-white/25" />}
+              {!casual && <Play className="h-3 w-3 shrink-0 fill-current text-gray-400 dark:text-white/40" />}
             </button>
           )}
 
           {attendees.length > 0 && (
             <div className="py-4">
               <div className="flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5 text-gray-300 dark:text-white/25" />
+                <Users className="h-3.5 w-3.5 text-gray-400 dark:text-white/40" />
                 <p className={sectionLabel}>참석 {attendees.length}명</p>
               </div>
               <p className="mt-2.5 flex flex-wrap gap-x-2.5 gap-y-1.5">
@@ -277,7 +276,7 @@ export default function MatchDetailClient({
                   <Link
                     key={name}
                     href={`/players/${encodeURIComponent(name)}`}
-                    className="text-[12px] font-bold text-gray-600 active:text-[var(--ud-primary)] dark:text-white/60 dark:active:text-[var(--ud-primary)]"
+                    className="whitespace-nowrap text-[13px] font-bold text-gray-600 active:text-[var(--ud-primary)] dark:text-white/60 dark:active:text-[var(--ud-primary)]"
                   >
                     {name}
                   </Link>
@@ -291,7 +290,7 @@ export default function MatchDetailClient({
       {photos.length > 0 && (
         <section className="border-b border-gray-200/70 py-4 dark:border-white/[0.07]">
           <div className="mb-3 flex items-center gap-1.5 px-4">
-            <Camera className="h-3.5 w-3.5 text-gray-300 dark:text-white/25" />
+            <Camera className="h-3.5 w-3.5 text-gray-400 dark:text-white/40" />
             <p className={sectionLabel}>사진 {photos.length}</p>
           </div>
           <div className="grid grid-cols-3 gap-px bg-gray-100 dark:bg-white/[0.06]">
@@ -308,6 +307,7 @@ export default function MatchDetailClient({
                   src={cldThumb(url, 360)}
                   alt=""
                   loading="lazy"
+                  decoding="async"
                   className="h-full w-full object-cover transition-opacity active:opacity-75"
                 />
               </button>
@@ -326,13 +326,14 @@ export default function MatchDetailClient({
           </div>
           <Link
             href={`/matches/${match.id}/edit`}
-            className="flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-[11px] font-black text-[var(--ud-primary)] active:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)] dark:active:bg-[var(--ud-primary)]/10"
+            className="flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[12px] font-black text-[var(--ud-primary)] active:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)] dark:active:bg-[var(--ud-primary)]/10"
           >
-            <Pencil className="h-3.5 w-3.5" /> {lineups.length > 0 ? "편집" : "추가"}
+            <Pencil className="h-4 w-4" strokeWidth={2.2} /> {lineups.length > 0 ? "편집" : "추가"}
           </Link>
         </div>
 
         {lineups.length > 0 ? (
+          <div className="px-4">
           <LineupViewer
             match={match}
             lineups={lineups}
@@ -342,9 +343,10 @@ export default function MatchDetailClient({
             playerTitles={playerTitles}
             editHref={`/matches/${match.id}/edit`}
           />
+          </div>
         ) : (
           <div className="mx-4 border-y border-gray-100 py-8 text-center dark:border-white/[0.06]">
-            <p className="text-[12px] font-bold text-gray-400 dark:text-white/30">
+            <p className="text-[12px] font-bold text-gray-400 dark:text-white/50">
               라인업을 추가하면 쿼터별 배치를 여기서 볼 수 있어요.
             </p>
           </div>

@@ -54,8 +54,8 @@ function SourceBadge({ kind }: { kind: "youtube" | "instagram" | "lineup" }) {
   } as const;
   const { Icon, label } = map[kind];
   return (
-    <span className="flex items-center gap-0.5 rounded bg-black/55 px-1.5 py-0.5 text-[11px] font-black text-white backdrop-blur-[2px]">
-      <Icon width={9} height={9} strokeWidth={2.6} />
+    <span className="flex items-center gap-0.5 whitespace-nowrap rounded bg-black/55 px-1.5 py-0.5 text-[11px] font-black text-white backdrop-blur-[2px]">
+      <Icon width={12} height={12} strokeWidth={2.2} />
       {label}
     </span>
   );
@@ -102,7 +102,7 @@ function Cell({ post }: { post: BoardPost }) {
           className="h-full w-full object-cover"
         />
       ) : (
-        <span className="flex h-full items-center justify-center text-gray-300 dark:text-white/20">
+        <span className="flex h-full items-center justify-center text-gray-400 dark:text-white/40">
           <Play width={22} height={22} strokeWidth={2} />
         </span>
       )}
@@ -110,7 +110,7 @@ function Cell({ post }: { post: BoardPost }) {
       <div className="absolute left-1.5 top-1.5 flex items-center gap-1">
         <SourceBadge kind={kind} />
         {post.lineup && post.lineup.quarters.length > 1 && (
-          <span className="rounded bg-black/55 px-1 py-0.5 text-[11px] font-black text-white backdrop-blur-[2px]">
+          <span className="whitespace-nowrap rounded bg-black/55 px-1 py-0.5 text-[11px] font-black text-white backdrop-blur-[2px]">
             {post.lineup.quarters.length}Q
           </span>
         )}
@@ -119,43 +119,43 @@ function Cell({ post }: { post: BoardPost }) {
       {/* 고정 핀 — 오른쪽 위 */}
       {post.pinned && (
         <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--ud-primary)] text-white">
-          <Pin width={10} height={10} strokeWidth={2.6} className="fill-current" />
+          <Pin width={12} height={12} strokeWidth={2.2} className="fill-current" />
         </span>
       )}
 
       {/* NEW · 수정 — 고정 핀이 있으면 아래로 밀어준다 */}
       {fresh ? (
-        <span className={`absolute right-1.5 ${post.pinned ? "top-8" : "top-1.5"} rounded bg-[var(--ud-primary)] px-1.5 py-0.5 text-[11px] font-black text-white`}>
+        <span className={`absolute right-1.5 ${post.pinned ? "top-8" : "top-1.5"} whitespace-nowrap rounded bg-[var(--ud-primary)] px-1.5 py-0.5 text-[11px] font-black text-white`}>
           NEW
         </span>
       ) : edited ? (
-        <span className={`absolute right-1.5 ${post.pinned ? "top-8" : "top-1.5"} rounded bg-black/55 px-1.5 py-0.5 text-[11px] font-black text-white backdrop-blur-[2px]`}>
+        <span className={`absolute right-1.5 ${post.pinned ? "top-8" : "top-1.5"} whitespace-nowrap rounded bg-black/55 px-1.5 py-0.5 text-[11px] font-black text-white backdrop-blur-[2px]`}>
           수정
         </span>
       ) : null}
 
       {/* 하단 그라디언트 위에 제목과 반응. 릴스 탭이 조회수를 놓는 자리다. */}
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-1.5 pb-1.5 pt-7">
-        <p className="line-clamp-2 text-[11px] font-black leading-[1.3] text-white">
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent px-1.5 pb-1.5 pt-8">
+        <p className="line-clamp-2 text-[12px] font-black leading-[1.3] text-white">
           {post.title}
         </p>
         {/* 작성자 + 시각 — 누가 언제 올렸는지. 칸이 좁아 한 줄에 붙인다. */}
-        <p className="mt-0.5 truncate text-[11px] font-bold text-white/55">
+        <p className="mt-0.5 truncate text-[11px] font-bold text-white/75">
           {post.author}
           {stamp && (
             <>
-              <span className="text-white/25"> · </span>
+              <span className="text-white/50"> · </span>
               {relativeTime(stamp)}
             </>
           )}
         </p>
-        <p className="mt-1 flex items-center gap-2 text-[11px] font-bold text-white/70">
+        <p className="mt-1 flex items-center gap-2 whitespace-nowrap text-[11px] font-bold text-white/85">
           {post.likeCount > 0 && (
             <span className="flex items-center gap-0.5">
               <Heart
-                width={9}
-                height={9}
-                strokeWidth={2.6}
+                width={12}
+                height={12}
+                strokeWidth={2.2}
                 className={post.likedByMe ? "fill-current text-[var(--ud-primary)]" : ""}
               />
               <span className="tabular-nums">{post.likeCount}</span>
@@ -163,12 +163,12 @@ function Cell({ post }: { post: BoardPost }) {
           )}
           {post.commentCount > 0 && (
             <span className="flex items-center gap-0.5">
-              <MessageCircle width={9} height={9} strokeWidth={2.6} />
+              <MessageCircle width={12} height={12} strokeWidth={2.2} />
               <span className="tabular-nums">{post.commentCount}</span>
             </span>
           )}
           <span className="flex items-center gap-0.5">
-            <Eye width={9} height={9} strokeWidth={2.6} />
+            <Eye width={12} height={12} strokeWidth={2.2} />
             <span className="tabular-nums">{post.viewCount}</span>
           </span>
         </p>

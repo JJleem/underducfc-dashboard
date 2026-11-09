@@ -67,7 +67,7 @@ export default function SeasonSelector({
   if (SEASONS.length < 2) {
     return (
       <span
-        className="rounded-full px-2.5 py-1 text-[10px] font-black tabular-nums"
+        className="shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-black tabular-nums"
         style={{ color: accent, background: `${accent}1f`, border: `1px solid ${accent}40` }}
       >
         {currentLabel}
@@ -81,7 +81,7 @@ export default function SeasonSelector({
         <button
           type="button"
           aria-label={`시즌 선택 — 현재 ${currentLabel}`}
-          className="press-icon flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black tabular-nums"
+          className="press-icon flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-black tabular-nums"
           style={{ color: accent, background: `${accent}1f`, border: `1px solid ${accent}40` }}
         >
           {currentLabel}
@@ -100,7 +100,7 @@ export default function SeasonSelector({
           >
             <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full bg-gray-300 dark:bg-white/25" />
             <span className="flex-1">전체</span>
-            {isAll && <Check width={13} height={13} strokeWidth={3} style={{ color: accent }} />}
+            {isAll && <Check width={16} height={16} strokeWidth={2.2} style={{ color: accent }} />}
           </DropdownMenuItem>
         )}
         {/* 최신 시즌이 위로 오게 뒤집는다 */}
@@ -123,9 +123,9 @@ export default function SeasonSelector({
               />
               <span className="flex-1 tabular-nums">{s.label}</span>
               {note && (
-                <span className="text-[11px] font-bold text-gray-400 dark:text-white/30">{note}</span>
+                <span className="whitespace-nowrap text-[11px] font-bold text-gray-400 dark:text-white/50">{note}</span>
               )}
-              {selected && <Check width={13} height={13} strokeWidth={3} style={{ color: accentOf(s.id) }} />}
+              {selected && <Check width={16} height={16} strokeWidth={2.2} style={{ color: accentOf(s.id) }} />}
             </DropdownMenuItem>
           );
         })}

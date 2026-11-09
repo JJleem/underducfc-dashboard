@@ -6,7 +6,7 @@ export default function Loading() {
     <div className="mx-auto min-h-dvh max-w-md bg-gray-50 dark:bg-background">
       <header className="app-workspace-header safe-header-py-3">
         <div className="flex items-center gap-2">
-          <div className={`h-[18px] w-[18px] rounded ${SHIMMER}`} />
+          <div className={`h-[16px] w-[16px] rounded ${SHIMMER}`} />
           <div className={`h-3 w-14 rounded ${SOFT}`} />
         </div>
         <div className={`h-8 w-8 rounded-full ${SHIMMER}`} />

@@ -61,26 +61,26 @@ export default function HeroLocationActions({
   return (
     <div className={`flex min-w-0 items-center justify-between gap-2 ${className}`}>
       <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-white/50">
-        <MapPin width={12} height={12} strokeWidth={2.2} className="shrink-0" />
-        <span className="truncate">{unknown ? "장소 미정" : location}</span>
+        <MapPin width={16} height={16} strokeWidth={2} className="shrink-0" />
+        <span className="min-w-0 truncate">{unknown ? "장소 미정" : location}</span>
         {!unknown && (
           <>
             <button
               type="button"
               onClick={handleCopy}
               aria-label={`${location} 복사`}
-              className={`press-cta flex h-6 w-14 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border px-1.5 text-[11px] font-black transition-colors ${
+              className={`press-cta flex h-7 w-15 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border px-1 text-[11px] font-black transition-colors ${
                 copyState === "copied"
                   ? "border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/12 text-[var(--ud-primary-strong)] dark:border-[var(--ud-primary)]/25 dark:bg-[var(--ud-primary)]/12 dark:text-[var(--ud-primary)]"
                   : copyState === "failed"
                     ? "border-red-500/25 bg-red-500/10 text-red-500"
-                    : "border-gray-200 bg-black/[0.04] text-gray-400 active:border-[var(--ud-primary)]/30 active:bg-[var(--ud-primary)]/10 active:text-[var(--ud-primary-strong)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white/40"
+                    : "border-gray-200 bg-black/[0.04] text-gray-400 active:border-[var(--ud-primary)]/30 active:bg-[var(--ud-primary)]/10 active:text-[var(--ud-primary-strong)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white/55"
               }`}
             >
               {copyState === "copied" ? (
-                <Check width={11} height={11} strokeWidth={2.7} />
+                <Check width={12} height={12} strokeWidth={2} className="shrink-0" />
               ) : (
-                <Copy width={11} height={11} strokeWidth={2.2} />
+                <Copy width={12} height={12} strokeWidth={2} className="shrink-0" />
               )}
               <span aria-live="polite">
                 {copyState === "copied" ? "복사됨" : copyState === "failed" ? "실패" : "복사"}
@@ -91,9 +91,9 @@ export default function HeroLocationActions({
               href={`https://map.kakao.com/link/search/${encodeURIComponent(location)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="press-cta flex h-6 w-14 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/[0.07] px-1.5 text-[11px] font-black text-[var(--ud-primary-strong)] dark:border-[var(--ud-primary)]/25 dark:bg-[var(--ud-primary)]/[0.08] dark:text-[var(--ud-primary)]"
+              className="press-cta flex h-7 w-15 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/[0.07] px-1.5 text-[11px] font-black text-[var(--ud-primary-strong)] dark:border-[var(--ud-primary)]/25 dark:bg-[var(--ud-primary)]/[0.08] dark:text-[var(--ud-primary)]"
             >
-              <Navigation width={11} height={11} strokeWidth={2.3} />
+              <Navigation width={12} height={12} strokeWidth={2} className="shrink-0" />
               길찾기
             </a>
           </>
@@ -103,7 +103,7 @@ export default function HeroLocationActions({
       {unknown && (
         <Link
           href={`/matches/${matchId}`}
-          className="press-cta shrink-0 rounded-lg bg-gray-100 px-2.5 py-1.5 text-[10px] font-black text-gray-600 dark:bg-white/[0.08] dark:text-white/65"
+          className="press-cta shrink-0 whitespace-nowrap rounded-lg bg-gray-100 px-2.5 py-1.5 text-[11px] font-black text-gray-600 dark:bg-white/[0.08] dark:text-white/65"
         >
           장소 확인
         </Link>

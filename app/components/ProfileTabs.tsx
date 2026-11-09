@@ -52,7 +52,7 @@ export default function ProfileTabs({
               className={`relative flex min-h-14 flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-black transition-colors ${
                 on
                   ? "text-[var(--ud-primary)]"
-                  : "text-gray-300 dark:text-white/25"
+                  : "text-gray-400 dark:text-white/40"
               }`}
             >
               <Icon width={19} height={19} strokeWidth={on ? 2.4 : 2} />

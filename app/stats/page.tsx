@@ -156,25 +156,25 @@ export default async function StatsPage({
       {/* 시즌 요약 — 카드로 감싸지 않는다. 프로필 히어로와 같은 문법. */}
       <section className="relative overflow-hidden px-4 pt-5">
         <div className="relative">
-          <p className="text-[11px] font-black  text-gray-400 dark:text-white/35">
+          <p className="app-section-label text-[11px]">
             시즌
           </p>
           <div className="mt-2 flex items-end justify-between gap-3">
-            <p className="text-[21px] font-black leading-none tracking-[-0.035em] text-gray-900 dark:text-white">
+            <p className="min-w-0 text-[20px] font-black leading-none tracking-[-0.035em] text-gray-900 dark:text-white">
               <span className="tabular-nums">{summary.played}</span>경기{" "}
               <span className="season-accent tabular-nums">{summary.wins}</span>
-              <span className="text-gray-400 dark:text-white/35">승 </span>
+              <span className="text-gray-400 dark:text-white/50">승 </span>
               <span className="tabular-nums">{summary.draws}</span>
-              <span className="text-gray-400 dark:text-white/35">무 </span>
+              <span className="text-gray-400 dark:text-white/50">무 </span>
               <span className="tabular-nums">{summary.losses}</span>
-              <span className="text-gray-400 dark:text-white/35">패</span>
+              <span className="text-gray-400 dark:text-white/50">패</span>
             </p>
             <p className="season-accent shrink-0 text-[34px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums">
               {summary.winRate}%
             </p>
           </div>
 
-          <div className="mt-3.5 flex h-[7px] overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
+          <div className="mt-3.5 flex h-[8px] overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
             {summary.wins > 0 && (
               <div style={{ background: "var(--season)", width: `${(summary.wins / total) * 100}%` }} />
             )}
@@ -197,10 +197,10 @@ export default async function StatsPage({
               { label: "경기당 실점", value: summary.avgAgainst },
             ].map((s) => (
               <div key={s.label} className="min-w-0">
-                <p className="text-[17px] font-black leading-none tabular-nums text-gray-900 dark:text-white">
+                <p className="whitespace-nowrap text-[17px] font-black leading-none tabular-nums text-gray-900 dark:text-white">
                   {s.value}
                 </p>
-                <p className="mt-1 truncate text-[11px] font-bold text-gray-400 dark:text-white/35">
+                <p className="mt-1 truncate text-[11px] font-bold text-gray-400 dark:text-white/50">
                   {s.label}
                 </p>
               </div>
@@ -213,36 +213,36 @@ export default async function StatsPage({
       {/* 전적으로 넘어갈 때 보던 시즌을 그대로 들고 간다 */}
       <Link
         href={`/record?season=${season}`}
-        className="mx-4 mt-5 flex items-center gap-3 border-y border-gray-200 py-3.5 active:opacity-60 dark:border-white/[0.08]"
+        className="app-row mx-4 mt-5 border-y border-gray-200 py-3.5 active:opacity-60 dark:border-white/[0.08]"
       >
         <span
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
           style={{ background: "color-mix(in srgb, var(--season) 10%, transparent)", color: "var(--season)" }}
         >
-          <Swords width={16} height={16} strokeWidth={2.4} />
+          <Swords width={16} height={16} strokeWidth={2.2} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[13px] font-black text-gray-900 dark:text-white">
+          <span className="block truncate text-[13px] font-black text-gray-900 dark:text-white">
             상대팀 · 경기장 전적
           </span>
-          <span className="mt-0.5 block text-[10px] font-bold text-gray-400 dark:text-white/30">
+          <span className="mt-0.5 block truncate text-[11px] font-bold text-gray-400 dark:text-white/50">
             맞대결과 장소별 경기 모아보기
           </span>
         </span>
-        <ChevronRight width={15} height={15} strokeWidth={2.4} className="text-gray-300 dark:text-white/25" />
+        <ChevronRight width={16} height={16} strokeWidth={2.2} className="shrink-0 text-gray-400 dark:text-white/40" />
       </Link>
 
       {duos.length > 0 && (
         <section className="px-4 pt-5">
-          <p className="mb-2.5 text-[10px] font-black uppercase  text-gray-400 dark:text-white/35">
+          <p className="app-section-label mb-2.5 text-[11px]">
             최고의 듀오
           </p>
           <div className="divide-y divide-gray-100 dark:divide-white/[0.06]">
             {duos.map((d, i) => (
-              <div key={`${d.a}-${d.b}`} className="flex items-center gap-3 py-2.5">
+              <div key={`${d.a}-${d.b}`} className="app-row py-1">
                 <span
                   className={`w-5 shrink-0 text-center text-[13px] font-black tabular-nums ${
-                    i === 0 ? "text-gray-900 dark:text-white" : "text-gray-300 dark:text-white/25"
+                    i === 0 ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-white/40"
                   }`}
                 >
                   {i + 1}
@@ -253,12 +253,12 @@ export default async function StatsPage({
                 </span>
                 <span className="min-w-0 flex-1 truncate text-[13px] font-black text-gray-900 dark:text-white">
                   <Link href={`/players/${encodeURIComponent(d.a)}`}>{d.a}</Link>
-                  <span className="text-gray-300 dark:text-white/20"> · </span>
+                  <span className="text-gray-400 dark:text-white/40"> · </span>
                   <Link href={`/players/${encodeURIComponent(d.b)}`}>{d.b}</Link>
                 </span>
-                <span className="shrink-0 text-[13px] font-black tabular-nums text-gray-900 dark:text-white">
+                <span className="shrink-0 whitespace-nowrap text-[13px] font-black tabular-nums text-gray-900 dark:text-white">
                   {d.count}
-                  <span className="ml-0.5 text-[10px] font-bold text-gray-400">골</span>
+                  <span className="ml-0.5 text-[11px] font-bold text-gray-400">골</span>
                 </span>
               </div>
             ))}

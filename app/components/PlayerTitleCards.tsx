@@ -4,7 +4,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Play, X } from "lucide-react";
-import { useTheme } from "next-themes";
 import { EarnedTitle, featureKey, pickBadges } from "../lib/titles";
 import { TitleBadge, titleSurface } from "./TitleBadges";
 import ModalPortal from "./ModalPortal";
@@ -19,19 +18,17 @@ import { pageAccent } from "./fx/effects";
 
 function Highlight({
   title,
-  isLight,
   width,
   onClick,
   showSeason,
 }: {
   title: EarnedTitle;
-  isLight: boolean;
   width: number;
   onClick: () => void;
   /** 시즌 칭호 위에 "25-26" 을 붙인다. 시즌이 섞여 보이는 줄에서만 켠다. */
   showSeason?: boolean;
 }) {
-  const s = titleSurface(title, isLight);
+  const s = titleSurface(title);
   return (
     <button
       type="button"
@@ -41,7 +38,7 @@ function Highlight({
     >
       {/* inline-flex 가 없으면 span 높이가 줄 높이로 잡혀 원이 타원으로 찌그러진다 */}
       <span
-        className="inline-flex rounded-full p-[3px]"
+        className="inline-flex rounded-full p-[4px]"
         style={{
           border: `1.5px solid ${s.border}`,
           boxShadow: s.glow ? `0 0 8px ${s.glow}` : undefined,
@@ -53,7 +50,7 @@ function Highlight({
         {showSeason && title.seasonLabel && (
           // 어느 시즌 건지 안 붙이면 "득점왕" 뱃지 두 개가 나란히 떠도 구분이 안 된다.
           <span
-            className="mb-0.5 text-[10px] font-black tabular-nums leading-none opacity-70"
+            className="mb-0.5 whitespace-nowrap text-[11px] font-black tabular-nums leading-none opacity-70"
             style={{ color: s.fg }}
           >
             {title.seasonLabel}
@@ -90,8 +87,6 @@ export default function PlayerTitleCards({
   const dismissSelected = useAppOverlay(!!selected, () => setSelected(null));
   // 칭호 획득 화면 다시 보기 — 상세 카드 맨 아래 버튼으로 연다.
   const [replayTitle, setReplayTitle] = useState<EarnedTitle | null>(null);
-  const { resolvedTheme } = useTheme();
-  const isLight = resolvedTheme === "light";
 
   // 항목 폭을 고정하면(예전 64px) 화면 폭에 따라 마지막 항목이 가장자리에 딱 떨어져
   // "더 있다"가 안 읽힌다. 그래서 폭을 화면에 맞춰 계산한다 —
@@ -146,7 +141,7 @@ export default function PlayerTitleCards({
 
   // 대표 칭호를 고른 순서대로 앞에, 나머지는 희귀도순 — 라인업 뱃지와 같은 규칙.
   const ordered = pickBadges(titles, featuredIds, titles.length);
-  const selectedSurface = selected ? titleSurface(selected, isLight) : null;
+  const selectedSurface = selected ? titleSurface(selected) : null;
   const progressPct = selected?.progress
     ? selected.progress.maxed
       ? 100
@@ -174,7 +169,6 @@ export default function PlayerTitleCards({
               // 같은 칭호가 시즌판·통산판으로 둘 다 올 수 있어 id 만으로는 키가 겹친다.
               key={featureKey(t)}
               title={t}
-              isLight={isLight}
               width={itemW}
               onClick={() => setSelected(t)}
               showSeason={showSeason}
@@ -194,10 +188,10 @@ export default function PlayerTitleCards({
             role="dialog"
             aria-modal="true"
             aria-label={`${selected.name} 상세 정보`}
-            className="animate-rise relative w-full max-w-sm overflow-hidden rounded-[26px] p-5 shadow-2xl"
+            className="animate-rise relative w-full max-w-sm overflow-hidden rounded-3xl p-5 shadow-2xl"
             style={{
               // 반투명 금속 틴트를 불투명 판 위에 얹는다 (마지막 레이어가 바탕색)
-              background: `${selectedSurface.background}, ${isLight ? "#F7F9FC" : "#0C1220"}`,
+              background: `${selectedSurface.background}, light-dark(#F7F9FC, #0C1220)`,
               border: `1px solid ${selectedSurface.border}`,
               boxShadow: selectedSurface.glow ? `0 18px 60px ${selectedSurface.glow}` : undefined,
             }}
@@ -220,10 +214,10 @@ export default function PlayerTitleCards({
 
             <div className="relative flex items-center gap-3">
               <TitleBadge title={selected} size={52} />
-              <div className="min-w-0">
+              <div className="min-w-0 pr-8">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-[15px] font-black" style={{ color: selectedSurface.fg }}>{selected.name}</p>
-                  {selected.hidden && <span className="rounded-full bg-[var(--ud-primary)]/15 px-1.5 py-0.5 text-[11px] font-black text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">히든</span>}
+                  <p className="min-w-0 truncate text-[15px] font-black" style={{ color: selectedSurface.fg }}>{selected.name}</p>
+                  {selected.hidden && <span className="shrink-0 whitespace-nowrap rounded-full bg-[var(--ud-primary)]/15 px-1.5 py-0.5 text-[11px] font-black text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">히든</span>}
                 </div>
                 <p className="mt-0.5 text-[11px] font-bold text-gray-500 dark:text-white/45">
                   {selected.seasonLabel ? `${selected.seasonLabel} 시즌 · ` : ""}
@@ -240,7 +234,7 @@ export default function PlayerTitleCards({
               <div className="relative mt-4 grid grid-cols-2 gap-2">
                 {selected.stats.map((stat) => (
                   <div key={`${stat.label}-${stat.value}`} className="rounded-xl bg-white/45 px-3 py-2.5 dark:bg-black/20">
-                    <p className="text-[10px] font-bold text-gray-500 dark:text-white/40">{stat.label}</p>
+                    <p className="text-[11px] font-bold text-gray-500 dark:text-white/55">{stat.label}</p>
                     <p className="mt-0.5 text-[13px] font-black tabular-nums" style={{ color: selectedSurface.fg }}>{stat.value}</p>
                   </div>
                 ))}
@@ -251,7 +245,7 @@ export default function PlayerTitleCards({
               <div className="relative mt-3 rounded-2xl bg-white/45 px-3.5 py-3 dark:bg-black/20">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-bold  text-gray-500 dark:text-white/40">
+                    <p className="text-[11px] font-bold  text-gray-500 dark:text-white/55">
                       {selected.progress.maxed ? "등급 진행" : "다음 등급"}
                     </p>
                     <p className="mt-0.5 text-[11px] font-black" style={{ color: selectedSurface.fg }}>
@@ -259,7 +253,7 @@ export default function PlayerTitleCards({
                     </p>
                   </div>
                   {!selected.progress.maxed && (
-                    <p className="shrink-0 text-[11px] font-black text-gray-500 tabular-nums dark:text-white/45">
+                    <p className="shrink-0 whitespace-nowrap text-[11px] font-black text-gray-500 tabular-nums dark:text-white/45">
                       {selected.progress.remaining}{selected.progress.unit} 남음
                     </p>
                   )}
@@ -283,7 +277,7 @@ export default function PlayerTitleCards({
                   />
                 </div>
 
-                <div className="mt-1.5 flex items-center justify-between text-[10px] font-bold text-gray-500 tabular-nums dark:text-white/40">
+                <div className="mt-1.5 flex items-center justify-between text-[11px] font-bold text-gray-500 tabular-nums dark:text-white/55">
                   <span>{selected.progress.current}{selected.progress.unit}</span>
                   <span>{selected.progress.target}{selected.progress.unit}</span>
                 </div>

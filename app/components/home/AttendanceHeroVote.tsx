@@ -79,8 +79,8 @@ export default function AttendanceHeroVote({
   };
 
   const statusIcon = (response: AttendanceResponse) => {
-    if (submitting === response) return <Loader2 width={14} height={14} className="animate-spin" />;
-    if (saved === response || current === response) return <Check width={14} height={14} strokeWidth={3} />;
+    if (submitting === response) return <Loader2 width={16} height={16} strokeWidth={2} className="animate-spin" />;
+    if (saved === response || current === response) return <Check width={16} height={16} strokeWidth={2.5} />;
     return null;
   };
 
@@ -94,7 +94,7 @@ export default function AttendanceHeroVote({
             initial={reduceMotion ? false : { opacity: 0, scale: 0.985 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.99 }}
-            transition={{ duration: reduceMotion ? 0 : 0.32, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: reduceMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
             className="absolute -inset-x-4 -bottom-1 -top-5 z-20 flex flex-col items-center justify-center bg-gray-50 text-center dark:bg-background"
           >
             <motion.span
@@ -105,7 +105,7 @@ export default function AttendanceHeroVote({
             >
               <Check width={24} height={24} strokeWidth={3} />
             </motion.span>
-            <p className="mt-3 text-[22px] font-black tracking-[-0.035em] text-gray-900 dark:text-white">
+            <p className="mt-3 text-[20px] font-black tracking-[-0.035em] text-gray-900 dark:text-white">
               투표 감사합니다
             </p>
             <p className="mt-1 text-[11px] font-bold text-gray-500 dark:text-white/50">
@@ -119,7 +119,7 @@ export default function AttendanceHeroVote({
         type="button"
         onClick={() => submit("참석")}
         disabled={!!submitting || !!saved}
-        className={`press-cta flex w-full items-center justify-center gap-1.5 rounded-2xl py-3.5 text-[13px] font-black transition-colors disabled:cursor-wait ${
+        className={`press-cta flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-2xl py-3.5 text-[15px] font-black transition-colors disabled:cursor-wait ${
           current === "참석"
             ? "bg-[var(--ud-primary-strong)] text-white"
             : "bg-[var(--ud-primary)] text-white active:bg-[#F97E95]"
@@ -134,7 +134,7 @@ export default function AttendanceHeroVote({
           type="button"
           onClick={() => submit("미정")}
           disabled={!!submitting || !!saved}
-          className={`press-cta flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[11px] font-black transition-colors disabled:cursor-wait ${
+          className={`press-cta flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border text-[13px] font-black transition-colors disabled:cursor-wait ${
             current === "미정"
               ? "border-amber-400 bg-amber-400 text-white"
               : "border-amber-300/70 bg-white text-amber-500 active:bg-amber-50 dark:border-amber-300/35 dark:bg-transparent dark:text-amber-300 dark:active:bg-amber-300/10"
@@ -147,7 +147,7 @@ export default function AttendanceHeroVote({
           type="button"
           onClick={() => submit("불참")}
           disabled={!!submitting || !!saved}
-          className={`press-cta flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[11px] font-black transition-colors disabled:cursor-wait ${
+          className={`press-cta flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border text-[13px] font-black transition-colors disabled:cursor-wait ${
             current === "불참"
               ? "border-gray-700 bg-gray-700 text-white dark:border-white/70 dark:bg-white/70 dark:text-gray-900"
               : "border-gray-200 bg-white text-gray-500 active:bg-gray-50 dark:border-white/10 dark:bg-transparent dark:text-white/50 dark:active:bg-white/5"
@@ -158,7 +158,7 @@ export default function AttendanceHeroVote({
         </button>
       </div>
 
-      <p aria-live="polite" className={`mt-2 min-h-4 text-center text-[10px] font-bold ${error ? "text-red-500" : "text-gray-400 dark:text-white/35"}`}>
+      <p aria-live="polite" className={`mt-2 min-h-4 text-center text-[11px] font-bold ${error ? "text-red-500" : "text-gray-400 dark:text-white/50"}`}>
         {error ||
           (saved
             ? preview

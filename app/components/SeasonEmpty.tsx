@@ -55,12 +55,12 @@ export default function SeasonEmpty({
         )}
       </span>
       <p className="mt-3.5 text-[14px] font-black text-gray-900 dark:text-white">{title}</p>
-      <p className="mt-1.5 text-[12px] font-bold text-gray-400 dark:text-white/40">{detail}</p>
+      <p className="mt-1.5 text-[12px] font-bold text-gray-400 dark:text-white/55">{detail}</p>
 
       {fallback && (
         <Link
           href={`${basePath}?season=${fallback.id}`}
-          className="mt-5 inline-flex items-center gap-1 rounded-full px-3.5 py-2 text-[11px] font-black active:opacity-60"
+          className="mt-5 inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-black active:opacity-60"
           style={{
             background: `color-mix(in srgb, ${accent} 10%, transparent)`,
             color: accent,
@@ -68,7 +68,7 @@ export default function SeasonEmpty({
           }}
         >
           {fallback.label} 기록 보기
-          <ChevronRight width={13} height={13} strokeWidth={2.8} />
+          <ChevronRight width={16} height={16} strokeWidth={2.2} />
         </Link>
       )}
     </section>

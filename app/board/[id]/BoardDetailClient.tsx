@@ -37,20 +37,20 @@ function NeighborLinks({ prev, next }: { prev: NeighborPost | null; next: Neighb
             className="flex items-center gap-3 border-b border-gray-100 py-3.5 active:opacity-60 dark:border-white/[0.06]"
           >
             <Icon
-              width={15}
-              height={15}
-              strokeWidth={2.4}
-              className="shrink-0 text-gray-300 dark:text-white/25"
+              width={16}
+              height={16}
+              strokeWidth={2.2}
+              className="shrink-0 text-gray-400 dark:text-white/40"
             />
             <span className="min-w-0 flex-1">
-              <span className="block text-[10px] font-black  text-gray-400 dark:text-white/35">
+              <span className="app-section-label block text-[11px]">
                 {label}
               </span>
               <span className="mt-0.5 block truncate text-[13px] font-black text-gray-900 dark:text-white">
                 {post.title}
               </span>
             </span>
-            <span className="shrink-0 text-[11px] font-bold text-gray-400 dark:text-white/35">
+            <span className="max-w-[30%] shrink-0 truncate text-[12px] font-bold text-gray-500 dark:text-white/50">
               {post.author}
             </span>
           </Link>
@@ -244,18 +244,18 @@ export default function BoardDetailClient({
       <SwipeNav prevId={prev?.id ?? null} nextId={next?.id ?? null} />
       <header className="app-page-header safe-header-py-3">
         <Link href="/board" aria-label="목록으로" className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 active:opacity-60 dark:text-gray-300">
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-5 w-5" strokeWidth={2.2} />
         </Link>
         <h1 className="app-header-label truncate">게시판</h1>
         <div className="ml-auto flex items-center">
           {admin && (
             <button onClick={togglePin} disabled={pinBusy} className={`-my-2.5 flex h-11 w-11 items-center justify-center rounded-full active:opacity-60 ${pinned ? "text-[var(--ud-primary)]" : "text-gray-400"}`} aria-label={pinned ? "고정 해제" : "글 고정"}>
-              <Pin className={`h-4 w-4 ${pinned ? "fill-current" : ""}`} />
+              <Pin className={`h-5 w-5 ${pinned ? "fill-current" : ""}`} strokeWidth={2.2} />
             </button>
           )}
           {canDeletePost && (
             <button onClick={() => setDeleteTarget({ kind: "post" })} className="-my-2.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 active:bg-red-50 active:text-red-500 dark:active:bg-red-500/10" aria-label="글 삭제">
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-5 w-5" strokeWidth={2.2} />
             </button>
           )}
         </div>
@@ -267,12 +267,12 @@ export default function BoardDetailClient({
           <div className="-mx-4 space-y-2">
             {/* 쿼터가 2개 이상이면 탭으로 전환 */}
             {post.lineup.quarters.length > 1 && (
-              <div className="flex gap-1.5 overflow-x-auto px-4 pb-0.5">
+              <div className="scrollbar-none flex gap-1.5 overflow-x-auto px-4">
                 {post.lineup.quarters.map((q, i) => (
                   <button
                     key={q.quarter}
                     onClick={() => setQuarterIdx(i)}
-                    className={`min-h-9 shrink-0 rounded-xl px-3 text-[11px] font-black transition-colors ${
+                    className={`min-h-9 shrink-0 whitespace-nowrap rounded-xl px-3 text-[12px] font-black transition-colors ${
                       quarterIdx === i
                         ? "bg-[var(--ud-primary)] text-white dark:bg-[var(--ud-primary)] dark:text-black"
                         : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
@@ -331,7 +331,7 @@ export default function BoardDetailClient({
                 rel="noreferrer"
                 className="flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 py-2 text-[12px] font-black text-gray-500 active:opacity-70 dark:border-white/10 dark:text-gray-400"
               >
-                <Instagram className="h-3.5 w-3.5" /> 인스타그램에서 보기
+                <Instagram className="h-4 w-4" strokeWidth={2.2} /> 인스타그램에서 보기
               </a>
             </div>
           ) : (
@@ -351,26 +351,26 @@ export default function BoardDetailClient({
         {/* 제목/작성자/본문 */}
         {pinned && (
           <div className="mt-3 flex items-center gap-1 text-[11px] font-black text-[var(--ud-primary)]">
-            <Pin className="h-3 w-3 fill-current" />
+            <Pin className="h-3.5 w-3.5 fill-current" strokeWidth={2.2} />
             고정된 게시글
           </div>
         )}
-        <h2 className={`${pinned ? "mt-1" : "mt-3"} text-lg font-black leading-snug`}>{post.title}</h2>
+        <h2 className={`${pinned ? "mt-1" : "mt-3"} text-lg font-black leading-snug [overflow-wrap:anywhere]`}>{post.title}</h2>
         <p className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-gray-500 dark:text-gray-400">
-          <span>{post.author} · {fmt(post.createdAt)}</span>
+          <span className="whitespace-nowrap">{post.author} · {fmt(post.createdAt)}</span>
           {post.updatedAt && (
-            <span className="font-bold text-[var(--ud-primary)]">
+            <span className="whitespace-nowrap font-bold text-[var(--ud-primary)]">
               · {fmt(post.updatedAt)} 수정됨
             </span>
           )}
           {isMyLineup && (
-            <Link href="/board/lineup" className="ml-auto flex min-h-9 items-center gap-1 rounded-lg bg-gray-100 px-3 font-black text-gray-600 dark:bg-white/10 dark:text-gray-200">
-              <Pencil className="h-3 w-3" /> 수정
+            <Link href="/board/lineup" className="ml-auto flex min-h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg bg-gray-100 px-3 font-black text-gray-600 dark:bg-white/10 dark:text-gray-200">
+              <Pencil className="h-4 w-4" strokeWidth={2.2} /> 수정
             </Link>
           )}
         </p>
         {post.body && (
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-300">{post.body}</p>
+          <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-700 [overflow-wrap:anywhere] dark:text-gray-300">{post.body}</p>
         )}
 
         {/* 좋아요 / 댓글 수 */}
@@ -383,13 +383,13 @@ export default function BoardDetailClient({
                 : "bg-gray-100 text-gray-500 active:opacity-70 dark:bg-white/5 dark:text-gray-400"
             }`}
           >
-            <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} /> {likeCount}
+            <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} strokeWidth={2.2} /> {likeCount}
           </button>
-          <span className="flex items-center gap-1.5 px-1 text-[13px] font-bold text-gray-400">
-            <MessageCircle className="h-4 w-4" /> {comments.length}
+          <span className="flex items-center gap-1.5 px-1 text-[13px] font-bold tabular-nums text-gray-500 dark:text-white/50">
+            <MessageCircle className="h-4 w-4" strokeWidth={2.2} /> {comments.length}
           </span>
-          <span className="flex items-center gap-1.5 px-1 text-[13px] font-bold text-gray-400">
-            <Eye className="h-4 w-4" /> {viewCount}
+          <span className="flex items-center gap-1.5 px-1 text-[13px] font-bold tabular-nums text-gray-500 dark:text-white/50">
+            <Eye className="h-4 w-4" strokeWidth={2.2} /> {viewCount}
           </span>
         </div>
 
@@ -402,23 +402,23 @@ export default function BoardDetailClient({
               <li key={c.id} className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-1.5">
-                    <Link href={`/players/${encodeURIComponent(c.author)}`} className="truncate text-[13px] font-black text-gray-900 active:opacity-60 dark:text-white">
+                    <Link href={`/players/${encodeURIComponent(c.author)}`} className="min-w-0 truncate text-[13px] font-black text-gray-900 active:opacity-60 dark:text-white">
                       {c.author}
                     </Link>
-                    <span className="shrink-0 text-[10px] font-bold text-gray-300 tabular-nums dark:text-white/25">{fmt(c.createdAt)}</span>
+                    <span className="shrink-0 text-[11px] font-bold text-gray-400 tabular-nums dark:text-white/40">{fmt(c.createdAt)}</span>
                   </div>
                   <p className="mt-1 whitespace-pre-wrap break-words text-[13px] leading-[1.55] text-gray-700 [overflow-wrap:anywhere] dark:text-white/70">{c.message}</p>
                 </div>
                 {canDeleteComment(c) && (
-                  <button onClick={() => setDeleteTarget({ kind: "comment", id: c.id, message: c.message })} className="-my-2 -mr-2 flex h-11 w-11 shrink-0 items-center justify-center text-gray-300 active:text-red-500 dark:text-white/25" aria-label="댓글 삭제">
-                    <Trash2 className="h-3.5 w-3.5" />
+                  <button onClick={() => setDeleteTarget({ kind: "comment", id: c.id, message: c.message })} className="-my-2 -mr-2 flex h-11 w-11 shrink-0 items-center justify-center text-gray-400 active:text-red-500 dark:text-white/40" aria-label="댓글 삭제">
+                    <Trash2 className="h-4 w-4" strokeWidth={2.2} />
                   </button>
                 )}
               </li>
               );
             })}
             {comments.length === 0 && (
-              <li className="py-4 text-center text-xs text-gray-400">첫 댓글을 남겨보세요</li>
+              <li className="py-4 text-center text-xs text-gray-500 dark:text-white/50">첫 댓글을 남겨보세요</li>
             )}
           </ul>
 
@@ -437,8 +437,9 @@ export default function BoardDetailClient({
                   }
                 }}
                 enterKeyHint="send"
+                autoComplete="off"
                 placeholder="댓글 달기…"
-                className="app-field-surface app-control-md flex-1 rounded-full border border-gray-200 px-4 py-2.5 dark:border-white/10"
+                className="app-field-surface app-control-md min-w-0 flex-1 rounded-full border border-gray-200 px-4 py-2.5 dark:border-white/10"
               />
               <button
                 onClick={addComment}
@@ -446,7 +447,7 @@ export default function BoardDetailClient({
                 className="app-action-primary flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:opacity-80 disabled:opacity-40"
                 aria-label="댓글 등록"
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-5 w-5" strokeWidth={2.2} />
               </button>
             </div>
           ) : (

@@ -33,7 +33,7 @@ export default function EmoticonPicker({
             }`}
           >
             <Emoticon id={e.id} size={40} />
-            <span className="text-[11px] font-black text-gray-400 dark:text-white/30">
+            <span className="text-[11px] font-black text-gray-400 dark:text-white/50">
               {e.label}
             </span>
           </button>
@@ -43,7 +43,7 @@ export default function EmoticonPicker({
         <button
           type="button"
           onClick={onClear}
-          className="mt-1 w-full rounded-xl py-2 text-[11px] font-black text-gray-400 active:bg-gray-200/70 dark:text-white/30 dark:active:bg-white/10"
+          className="mt-1 w-full rounded-xl py-2 text-[11px] font-black text-gray-400 active:bg-gray-200/70 dark:text-white/50 dark:active:bg-white/10"
         >
           아이콘 빼기
         </button>

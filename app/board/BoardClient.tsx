@@ -123,7 +123,7 @@ export default function BoardClient({
             aria-label="뒤로"
             className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300"
           >
-            <ArrowLeft width={18} height={18} strokeWidth={2.4} />
+            <ArrowLeft width={20} height={20} strokeWidth={2.2} />
           </Link>
           <span className="app-header-label">게시판</span>
           <button
@@ -132,14 +132,20 @@ export default function BoardClient({
             className="press-icon -my-1.5 ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:opacity-80"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--ud-primary)] text-white">
-              <Plus width={14} height={14} strokeWidth={2.6} />
+              <Plus width={16} height={16} strokeWidth={2.2} />
             </span>
           </button>
         </div>
 
         <div className="relative mt-2.5">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2.2} />
           <input
+            type="search"
+            enterKeyHint="search"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="제목·작성자·내용 검색"
@@ -153,10 +159,10 @@ export default function BoardClient({
               key={s.key}
               onClick={() => setSort(s.key)}
               aria-pressed={sort === s.key}
-              className={`min-h-9 shrink-0 rounded-full px-3 text-[11px] font-black transition-colors ${
+              className={`min-h-9 shrink-0 whitespace-nowrap rounded-full px-3 text-[12px] font-black transition-colors ${
                 sort === s.key
                   ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
-                  : "text-gray-400 active:opacity-70 dark:text-white/35"
+                  : "text-gray-500 active:opacity-70 dark:text-white/55"
               }`}
             >
               {s.label}
@@ -206,9 +212,9 @@ export default function BoardClient({
                 <Youtube className="h-6 w-6" />
                 <Instagram className="h-5 w-5" />
               </div>
-              <span>
+              <span className="min-w-0">
                 <span className="block text-sm font-black">영상 공유</span>
-                <span className="block text-[11px] text-gray-400">유튜브 · 인스타그램 릴스</span>
+                <span className="block text-[12px] text-gray-500 dark:text-white/50">유튜브 · 인스타그램 릴스</span>
               </span>
             </button>
             <Link
@@ -216,9 +222,9 @@ export default function BoardClient({
               className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 p-3.5 text-left active:opacity-70 dark:border-white/10"
             >
               <ClipboardList className="h-6 w-6 shrink-0 text-[var(--ud-primary)]" />
-              <span>
+              <span className="min-w-0">
                 <span className="block text-sm font-black">전술 짜기</span>
-                <span className="block text-[11px] text-gray-400">
+                <span className="block text-[12px] text-gray-500 dark:text-white/50">
                   {myLineupPost ? "이미 올린 전술을 수정합니다" : "선발 11명·포메이션·개인 전술"}
                 </span>
               </span>
@@ -246,11 +252,20 @@ export default function BoardClient({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="제목"
+              enterKeyHint="next"
+              autoComplete="off"
               className="app-field-surface app-control-md w-full rounded-xl border border-gray-200 px-3 py-2.5 dark:border-white/10"
             />
             <input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              type="url"
+              inputMode="url"
+              enterKeyHint="next"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               placeholder="유튜브 또는 인스타그램 릴스 링크"
               className="app-field-surface app-control-md w-full rounded-xl border border-gray-200 px-3 py-2.5 dark:border-white/10"
             />

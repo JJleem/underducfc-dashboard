@@ -91,23 +91,22 @@ export function titleMetal(t: EarnedTitle): Metal {
  * 칭호 카드·모달이 쓸 표면 색. 뱃지와 같은 금속에서 파생시켜
  * 한 화면에 두 개의 색 체계가 생기지 않게 한다.
  */
-export function titleSurface(t: EarnedTitle, isLight: boolean) {
+export function titleSurface(t: EarnedTitle) {
   const metal = titleMetal(t);
   const [, hi, base, shadow, dark] = metal.ramp;
   return {
-    background: isLight
-      ? `linear-gradient(135deg, ${rgba(hi, 0.5)} 0%, ${rgba(base, 0.14)} 100%)`
-      : `linear-gradient(135deg, ${rgba(base, 0.17)} 0%, ${rgba(dark, 0.34)} 100%)`,
-    // 테두리·글자는 isLight 대신 CSS light-dark() 로 고른다. useTheme 의 resolvedTheme 은
-    // 마운트 전엔 undefined 라 라이트 화면에서도 다크용 밝은 색(hi)이 흰 바탕에 찍혀
-    // 칭호 이름이 안 읽혔다. next-themes 가 <html> 에 color-scheme 을 달아 주므로 CSS 가 고르게 둔다.
+    // 배경·글로우까지 전부 CSS light-dark() 로 고른다(그래디언트는 색 지점마다). useTheme 의
+    // resolvedTheme 은 서버·첫 렌더에선 undefined 라, 그걸로 인라인 스타일을 가르면
+    // 하이드레이션이 어긋나고 라이트 화면에 다크용 색이 찍힌다.
+    // next-themes 가 <html> 에 color-scheme 을 달아 주므로 CSS 가 고르게 둔다.
+    background: `linear-gradient(135deg, light-dark(${rgba(hi, 0.5)}, ${rgba(base, 0.17)}) 0%, light-dark(${rgba(base, 0.14)}, ${rgba(dark, 0.34)}) 100%)`,
     border: `light-dark(${rgba(shadow, 0.34)}, ${rgba(base, 0.42)})`,
     /**
      * 제목·수치 색. 라이트에서 shadow(4단계)를 쓰면 실버·골드가 4.5:1 턱걸이라
      * 최암부(dark)를 쓴다 — 색 계열은 그대로면서 대비가 9:1 이상으로 올라간다.
      */
     fg: `light-dark(${dark}, ${hi})`,
-    glow: metal.aura ? rgba(base, isLight ? 0.22 : 0.3) : undefined,
+    glow: metal.aura ? `light-dark(${rgba(base, 0.22)}, ${rgba(base, 0.3)})` : undefined,
   };
 }
 

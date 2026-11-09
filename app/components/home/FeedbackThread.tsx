@@ -158,7 +158,7 @@ export default function FeedbackThread({
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="self-start text-[13px] font-bold text-gray-400 active:opacity-60 dark:text-white/35"
+          className="self-start text-[13px] font-bold text-gray-400 active:opacity-60 dark:text-white/50"
         >
           댓글 {items.length}개 모두 보기
         </button>
@@ -175,11 +175,11 @@ export default function FeedbackThread({
             <div className="flex items-center gap-1.5">
               <Link
                 href={`/players/${encodeURIComponent(fb.name)}`}
-                className="truncate text-[13px] font-black text-gray-900 active:opacity-60 dark:text-white"
+                className="min-w-0 truncate text-[13px] font-black text-gray-900 active:opacity-60 dark:text-white"
               >
                 {fb.name}
               </Link>
-              <span className="shrink-0 text-[10px] font-bold text-gray-300 dark:text-white/25">
+              <span className="shrink-0 whitespace-nowrap text-[11px] font-bold text-gray-400 dark:text-white/40">
                 {feedbackTimestamp(fb.timestamp)}
               </span>
             </div>
@@ -199,9 +199,9 @@ export default function FeedbackThread({
               type="button"
               onClick={() => setDeleteTarget(fb)}
               aria-label="댓글 삭제"
-              className="shrink-0 p-1 text-gray-300 active:opacity-60 dark:text-white/25"
+              className="shrink-0 p-1 text-gray-400 active:opacity-60 dark:text-white/40"
             >
-              <Trash2 width={14} height={14} strokeWidth={2.2} />
+              <Trash2 width={16} height={16} strokeWidth={2} />
             </button>
           )}
         </div>
@@ -210,7 +210,7 @@ export default function FeedbackThread({
       {error && <p className="text-[12px] font-bold text-red-500">{error}</p>}
 
       {shown.length === 0 && (
-        <p className="py-8 text-center text-[12px] font-bold text-gray-400 dark:text-white/30">
+        <p className="py-8 text-center text-[12px] font-bold text-gray-400 dark:text-white/50">
           아직 댓글이 없어요.
         </p>
       )}
@@ -235,7 +235,7 @@ export default function FeedbackThread({
         {emoticon && (
           <div className="mb-2 flex items-center gap-2" data-vaul-no-drag={sheetLayout ? "" : undefined}>
             <Emoticon id={emoticon} size={36} />
-            <span className="flex-1 text-[11px] font-bold text-gray-400 dark:text-white/30">
+            <span className="flex-1 text-[11px] font-bold text-gray-400 dark:text-white/50">
               이 이모티콘과 함께 올라가요
             </span>
             <button
@@ -262,10 +262,10 @@ export default function FeedbackThread({
             aria-label="이모티콘"
             aria-expanded={pickerOpen}
             className={`shrink-0 transition-colors ${
-              pickerOpen ? "text-[var(--ud-primary)]" : "text-gray-400 dark:text-white/30"
+              pickerOpen ? "text-[var(--ud-primary)]" : "text-gray-400 dark:text-white/50"
             }`}
           >
-            <Smile width={17} height={17} strokeWidth={2.1} />
+            <Smile width={20} height={20} strokeWidth={2} />
           </button>
           <input
             value={text}
@@ -281,8 +281,11 @@ export default function FeedbackThread({
             }}
             placeholder="댓글 달기…"
             maxLength={300}
-            className={`min-w-0 flex-1 bg-transparent text-gray-900 outline-none placeholder:text-gray-300 dark:text-white dark:placeholder:text-white/25 ${
-              sheetLayout ? "text-[16px]" : "text-[13px]"
+            inputMode="text"
+            enterKeyHint="send"
+            autoComplete="off"
+            className={`min-w-0 flex-1 bg-transparent text-gray-900 outline-none placeholder:text-gray-300 dark:text-white dark:placeholder:text-white/40 ${
+              sheetLayout ? "text-[17px]" : "text-[13px]"
             }`}
           />
           <button
@@ -293,15 +296,15 @@ export default function FeedbackThread({
             className="shrink-0 text-[var(--ud-primary)] disabled:opacity-30 dark:text-[var(--ud-primary)]"
           >
             {sending ? (
-              <Loader2 width={16} height={16} className="animate-spin" />
+              <Loader2 width={20} height={20} strokeWidth={2} className="animate-spin" />
             ) : (
-              <Send width={16} height={16} strokeWidth={2.2} />
+              <Send width={20} height={20} strokeWidth={2} />
             )}
           </button>
         </div>
         </>
       ) : (
-        <p className="mt-1 text-[12px] font-bold text-gray-300 dark:text-white/25">
+        <p className="mt-1 text-[12px] font-bold text-gray-400 dark:text-white/40">
           로그인하면 댓글을 달 수 있어요.
         </p>
       )}

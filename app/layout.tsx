@@ -165,14 +165,14 @@ export default async function RootLayout({
                   <p className="text-[11px] font-black uppercase  text-[var(--ud-primary)]">
                     UNDERDUCK FC
                   </p>
-                  <p className="mt-1.5 text-[11px] font-bold tracking-[0.06em] text-gray-400 dark:text-white/30">
+                  <p className="mt-1.5 text-[11px] font-bold tracking-[0.06em] text-gray-400 dark:text-white/50">
                     NOT BECAUSE OF, BUT THANKS TO
                   </p>
                 </div>
                 <Link
                   href="https://github.com/JJleem"
                   aria-label="molt GitHub"
-                  className="flex min-h-10 shrink-0 items-center gap-1.5 text-[10px] font-black text-gray-400 active:text-[var(--ud-primary)] dark:text-white/35 dark:active:text-[var(--ud-primary)]"
+                  className="flex min-h-10 shrink-0 items-center gap-1.5 text-[11px] font-black text-gray-400 active:text-[var(--ud-primary)] dark:text-white/50 dark:active:text-[var(--ud-primary)]"
                 >
                   <span className="relative h-4 w-4 overflow-hidden rounded-sm opacity-65">
                     <Image src="/molt.png" alt="" fill sizes="16px" className="object-contain" />
@@ -180,7 +180,7 @@ export default async function RootLayout({
                   molt
                 </Link>
               </div>
-              <p className="mt-4 text-[11px] font-medium text-gray-300 dark:text-white/20">
+              <p className="mt-4 text-[11px] font-medium text-gray-400 dark:text-white/40">
                 © 2026 UNDERDUCK FC
               </p>
             </footer>

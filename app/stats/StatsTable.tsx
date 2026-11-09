@@ -48,7 +48,7 @@ export default function StatsTable({ players }: { players: PlayerStat[] }) {
   return (
     <section className="px-4 pb-24 pt-4">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="text-[10px] font-black uppercase  text-gray-400 dark:text-white/35">
+        <p className="app-section-label min-w-0 truncate text-[11px]">
           선수 기록
         </p>
         {/* 필터 버튼이 곧 컬럼 헤더다 — 숫자 열과 같은 그리드 폭으로 맞춰 둔다 */}
@@ -61,10 +61,10 @@ export default function StatsTable({ players }: { players: PlayerStat[] }) {
                 type="button"
                 onClick={() => setFilter((current) => (current === key ? null : key))}
                 aria-pressed={active}
-                className={`min-h-9 rounded-full text-[11px] font-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ud-primary)]/50 ${
+                className={`min-h-9 whitespace-nowrap rounded-full text-[11px] font-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ud-primary)]/50 ${
                   active
                     ? "bg-gray-900 text-white shadow-sm dark:bg-white dark:text-gray-950"
-                    : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-white/35 dark:hover:bg-white/[0.06] dark:hover:text-white/60"
+                    : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-white/50 dark:hover:bg-white/[0.06] dark:hover:text-white/60"
                 }`}
               >
                 {label}
@@ -86,29 +86,29 @@ export default function StatsTable({ players }: { players: PlayerStat[] }) {
             >
               <Link
                 href={`/players/${encodeURIComponent(p.name)}`}
-                className={`flex items-center gap-2.5 py-3 transition-opacity active:opacity-60 ${
+                className={`app-row py-2 transition-opacity active:opacity-60 ${
                   inactive ? "opacity-40 grayscale" : ""
                 }`}
               >
                 <PlayerFace name={p.name} size={32} />
                 <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-1.5">
-                  <span className="truncate text-[14px] font-black text-gray-900 dark:text-white">
+                  <span className="min-w-0 truncate text-[14px] font-black text-gray-900 dark:text-white">
                     {p.name}
                   </span>
                   <span
-                    className="shrink-0 rounded px-1 py-px text-[11px] font-black uppercase"
+                    className="shrink-0 whitespace-nowrap rounded px-1 py-px text-[11px] font-black uppercase"
                     style={{ color, background: `${color}1f` }}
                   >
                     {p.pos || "-"}
                   </span>
                   {inactive && (
-                    <span className="shrink-0 rounded bg-gray-200 px-1.5 py-px text-[10px] font-black text-gray-500 dark:bg-white/10 dark:text-white/45">
+                    <span className="shrink-0 whitespace-nowrap rounded bg-gray-200 px-1.5 py-px text-[11px] font-black text-gray-500 dark:bg-white/10 dark:text-white/45">
                       비활동
                     </span>
                   )}
                 </p>
-                <p className="mt-0.5 text-[10px] font-bold text-gray-400 dark:text-white/30">
+                <p className="mt-0.5 whitespace-nowrap text-[11px] font-bold text-gray-400 dark:text-white/50">
                   No. {p.no || "-"}
                 </p>
                 </div>
@@ -120,7 +120,7 @@ export default function StatsTable({ players }: { players: PlayerStat[] }) {
                       filter === key
                         ? "text-gray-950 dark:text-white"
                         : filter
-                          ? "text-gray-300 dark:text-white/20"
+                          ? "text-gray-400 dark:text-white/40"
                           : "text-gray-800 dark:text-white/85"
                     }
                   >

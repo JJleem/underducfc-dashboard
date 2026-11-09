@@ -70,15 +70,15 @@ function PreviewCard({
           alt=""
           width={34}
           height={34}
-          className="h-[34px] w-[34px] rounded-full bg-white object-cover ring-1 ring-black/[0.06] dark:ring-white/10"
+          className="h-[32px] w-[32px] rounded-full bg-white object-cover ring-1 ring-black/[0.06] dark:ring-white/10"
         />
         <div className="min-w-0 flex-1">
           <p className="truncate text-[14px] font-black text-gray-900 dark:text-white">언더덕 FC</p>
-          <p className="mt-0.5 truncate text-[11px] font-bold text-gray-400 dark:text-white/35">
+          <p className="mt-0.5 truncate text-[11px] font-bold text-gray-400 dark:text-white/50">
             8월 8일 · 매치데이 후보
           </p>
         </div>
-        <span className="max-w-28 truncate rounded-full bg-gray-100 px-2 py-1 text-[11px] font-black text-gray-400 dark:bg-white/[0.07] dark:text-white/35">
+        <span className="max-w-28 truncate rounded-full bg-gray-100 px-2 py-1 text-[11px] font-black text-gray-400 dark:bg-white/[0.07] dark:text-white/50">
           {file}
         </span>
       </header>
@@ -142,7 +142,7 @@ function PreviewCard({
         ].map(([Icon, label]) => (
           <span key={label as string} className="flex w-11 flex-col items-center gap-1">
             <Icon width={17} height={17} strokeWidth={2} />
-            <span className="whitespace-nowrap text-[11px] font-bold leading-none text-gray-400 dark:text-white/35">
+            <span className="whitespace-nowrap text-[11px] font-bold leading-none text-gray-400 dark:text-white/50">
               {label as string}
             </span>
           </span>
@@ -169,12 +169,12 @@ export default async function MatchdayPreviewPage({
   return (
     <main className="min-h-dvh bg-[#f6f6f7] pb-16 text-gray-900 dark:bg-background dark:text-white">
       <div className="sticky top-0 z-20 border-b border-black/[0.06] bg-[#f6f6f7] px-4 pb-3 pt-[calc(max(14px,env(safe-area-inset-top))+var(--safe-header-extra))] dark:border-white/[0.08] dark:bg-background">
-        <div className="mx-auto max-w-[430px]">
+        <div className="mx-auto max-w-[432px]">
           <p className="text-[11px] font-black  text-[var(--ud-primary)]">
             MATCHDAY LAB
           </p>
-          <h1 className="mt-1 text-[18px] font-black tracking-[-0.04em]">피드 이미지 미리보기</h1>
-          <p className="mt-1 text-[10px] font-bold text-gray-400 dark:text-white/35">
+          <h1 className="mt-1 text-[17px] font-black tracking-[-0.04em]">피드 이미지 미리보기</h1>
+          <p className="mt-1 text-[11px] font-bold text-gray-400 dark:text-white/50">
             선택한 후보 이미지를 실제 피드 크롭으로 확인합니다.
           </p>
 
@@ -186,7 +186,7 @@ export default async function MatchdayPreviewPage({
                 className={`rounded-full px-2.5 py-1.5 text-[11px] font-black ${
                   overlay === value
                     ? "bg-gray-900 text-white dark:bg-white dark:text-gray-950"
-                    : "bg-white text-gray-400 dark:bg-white/[0.07] dark:text-white/40"
+                    : "bg-white text-gray-400 dark:bg-white/[0.07] dark:text-white/55"
                 }`}
               >
                 {value === "standard" ? "기본 막" : value === "soft" ? "소프트 막" : "밝은 이미지"}
@@ -200,7 +200,7 @@ export default async function MatchdayPreviewPage({
                 className={`rounded-full px-2.5 py-1.5 text-[11px] font-black ${
                   countdown === value
                     ? "bg-[var(--ud-primary)] text-white"
-                    : "bg-white text-gray-400 dark:bg-white/[0.07] dark:text-white/40"
+                    : "bg-white text-gray-400 dark:bg-white/[0.07] dark:text-white/55"
                 }`}
               >
                 {value === "0" ? "D-DAY" : `D-${value}`}
@@ -210,7 +210,7 @@ export default async function MatchdayPreviewPage({
         </div>
       </div>
 
-      <div className="mx-auto max-w-[430px] space-y-4 pt-4">
+      <div className="mx-auto max-w-[432px] space-y-4 pt-4">
         {files.length ? (
           files.map((file) => (
             <PreviewCard key={file} file={file} overlay={overlay} countdown={countdown} />
@@ -218,7 +218,7 @@ export default async function MatchdayPreviewPage({
         ) : (
           <div className="mx-4 rounded-2xl border border-dashed border-gray-300 px-5 py-12 text-center dark:border-white/15">
             <p className="text-[12px] font-black">후보 이미지가 없어요</p>
-            <p className="mt-1.5 text-[10px] font-bold leading-relaxed text-gray-400 dark:text-white/35">
+            <p className="mt-1.5 text-[11px] font-bold leading-relaxed text-gray-400 dark:text-white/50">
               public/matchday에 test.png, test-2.webp 또는 candidate-1.jpg처럼 넣어주세요.
             </p>
           </div>

@@ -36,7 +36,7 @@ function Names({ holders, className }: { holders: string[]; className: string })
   return (
     <>
       {holders.length > 1 && (
-        <span className="relative mt-1 text-[11px] font-black" style={{ color: "var(--season)" }}>
+        <span className="relative mt-1 whitespace-nowrap text-[11px] font-black" style={{ color: "var(--season)" }}>
           공동 1위
         </span>
       )}
@@ -54,21 +54,22 @@ export default function SeasonLeaders({ leaders, final }: { leaders: SeasonLeade
 
   return (
     <section className="relative overflow-hidden px-4 pt-5">
-      <p className="relative text-[10px] font-black uppercase  text-gray-400 dark:text-white/35">
+      <p className="app-section-label relative text-[11px]">
         시즌 리더{final && <span className="ml-1.5 normal-case tracking-normal">· 최종</span>}
       </p>
 
-      {/* 다섯 부문 모두 같은 크기, 한 줄. */}
-      <div className="relative mt-4 grid grid-cols-5 gap-0.5">
+      {/* 다섯 부문 모두 같은 크기, 한 줄. 390 미만에선 다섯 칸이 비좁아 가로로 넘긴다 —
+          다음 칸이 반쯤 보이게 칸 폭을 고정한다. */}
+      <div className="relative -mx-4 mt-4 flex snap-x snap-mandatory scroll-px-4 gap-1 overflow-x-auto overflow-y-hidden px-4 pt-1 min-[390px]:mx-0 min-[390px]:grid min-[390px]:grid-cols-5 min-[390px]:gap-0.5 min-[390px]:overflow-visible min-[390px]:px-0">
         {leaders.map((l) => (
           <Link
             key={l.id}
             href={`/players/${encodeURIComponent(l.holders[0])}`}
-            className="flex min-w-0 flex-col items-center transition-transform active:scale-[0.95]"
+            className="flex w-[76px] min-w-0 shrink-0 snap-start flex-col items-center transition-transform active:scale-[0.95] min-[390px]:w-auto"
           >
             {/* 공동 1위면 메달을 대각선으로 엇갈려 겹친다 — 둘 다 얼굴이 보여야 한다.
                 앞사람(가나다순 첫째)이 왼쪽 아래·위층. 셋 이상은 같은 간격으로 이어 붙인다. */}
-            <span className="relative flex h-[66px] w-full justify-center">
+            <span className="relative flex h-[64px] w-full justify-center">
               {l.holders.length === 1 ? (
                 <TitleBadge title={l.title} size={66} photo={playerFaceOnSrc(l.holders[0])} />
               ) : (
@@ -96,9 +97,9 @@ export default function SeasonLeaders({ leaders, final }: { leaders: SeasonLeade
             <span className="relative mt-1 w-full truncate text-center text-[11px] font-black" style={{ color: "var(--season)" }}>
               {l.title.name}
             </span>
-            <span className="relative mt-1 text-[20px] font-black leading-none tracking-[-0.05em] tabular-nums text-gray-900 dark:text-white">
+            <span className="relative mt-1 whitespace-nowrap text-[20px] font-black leading-none tracking-[-0.05em] tabular-nums text-gray-900 dark:text-white">
               {l.value}
-              <span className="ml-0.5 text-[11px] font-bold tracking-normal text-gray-400 dark:text-white/40">{l.unit}</span>
+              <span className="ml-0.5 text-[11px] font-bold tracking-normal text-gray-400 dark:text-white/55">{l.unit}</span>
             </span>
             <Names holders={l.holders} className="relative mt-1 text-[12px] leading-tight" />
           </Link>

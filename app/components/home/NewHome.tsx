@@ -479,7 +479,7 @@ export default async function NewHome({
               <Link
                 key={s}
                 href={`/home-preview?state=${s}&list=${layout}`}
-                className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black transition-colors ${
+                className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black transition-colors ${
                   on
                     ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
                     : "border border-gray-200 text-gray-400 dark:border-white/10 dark:text-gray-500"
@@ -500,7 +500,7 @@ export default async function NewHome({
             <Link
               key={l}
               href={`/home-preview?state=${state}&list=${l}`}
-              className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black transition-colors ${
+              className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black transition-colors ${
                 layout === l
                   ? "bg-[var(--ud-primary)] text-white"
                   : "border border-gray-200 text-gray-400 dark:border-white/10 dark:text-gray-500"
@@ -520,14 +520,14 @@ export default async function NewHome({
           <p className="min-w-0 flex-1 text-[11px] font-bold leading-relaxed">
             {failedSections.join(" · ")} 정보를 잠시 불러오지 못했어요.
           </p>
-          <Link href="/" replace className="shrink-0 rounded-lg bg-amber-400/20 px-2.5 py-1.5 text-[10px] font-black">
+          <Link href="/" replace className="shrink-0 whitespace-nowrap rounded-lg bg-amber-400/20 px-2.5 py-1.5 text-[11px] font-black">
             다시 시도
           </Link>
         </div>
       )}
 
       {staged && (
-        <p className="px-5 pt-2 text-[11px] font-bold text-gray-400 dark:text-white/35">
+        <p className="px-5 pt-2 text-[11px] font-bold text-gray-400 dark:text-white/50">
           {state === "rest"
             ? "이 상태는 레이아웃 확인용으로 이번 주·다음 주를 휴식으로 그렸어요."
             : "이 상태는 레이아웃 확인용으로 지난 경기 데이터를 빌려 왔어요."}
@@ -582,9 +582,9 @@ export default async function NewHome({
             seenStamp={`${notice[0] || ""}|${notice[1] || ""}|${notice[2] || ""}`}
             summary={
               <span className="flex min-w-0 flex-1 items-center gap-2">
-                <Bell width={14} height={14} strokeWidth={2.2} className="shrink-0 text-gray-400" />
-                <span className="truncate text-[12px] font-black">{notice[1] || "공지"}</span>
-                <span className="shrink-0 text-[11px] font-bold text-gray-400">{notice[0]}</span>
+                <Bell width={16} height={16} strokeWidth={2} className="shrink-0 text-gray-400" />
+                <span className="min-w-0 truncate text-[12px] font-black">{notice[1] || "공지"}</span>
+                <span className="shrink-0 whitespace-nowrap text-[11px] font-bold text-gray-400">{notice[0]}</span>
               </span>
             }
           >
@@ -604,15 +604,15 @@ export default async function NewHome({
                   referrerPolicy="no-referrer-when-downgrade"
                 />
                 <div className="flex items-center gap-2 bg-white px-3 py-2.5 dark:bg-[#141416]">
-                  <MapPin width={14} height={14} strokeWidth={2.2} className="shrink-0 text-[var(--ud-primary)]" />
-                  <span className="flex-1 truncate text-[12px] font-bold text-gray-700 dark:text-gray-300">
+                  <MapPin width={16} height={16} strokeWidth={2} className="shrink-0 text-[var(--ud-primary)]" />
+                  <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-gray-700 dark:text-gray-300">
                     {notice[4]}
                   </span>
                   <a
                     href={`https://map.kakao.com/link/search/${encodeURIComponent(notice[4])}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-lg bg-gray-100 px-2.5 py-1 text-[11px] font-black text-gray-500 dark:bg-white/10 dark:text-gray-400"
+                    className="shrink-0 whitespace-nowrap rounded-lg bg-gray-100 px-2.5 py-1 text-[11px] font-black text-gray-500 dark:bg-white/10 dark:text-gray-400"
                   >
                     길찾기
                   </a>
@@ -650,7 +650,7 @@ export default async function NewHome({
             늘 드롭다운이 있는데 홈만 없는 것도 앞뒤가 안 맞는다. */}
         {SEASONS.length > 1 && (
           <div className="mb-1 flex items-center justify-between px-4 pb-1">
-            <p className="text-[10px] font-black uppercase  text-gray-400 dark:text-white/35">
+            <p className="app-section-label text-[11px]">
               경기
             </p>
             <SeasonSelector current={feedSeason ?? ALL_SEASONS} withMatches={feedSeasons} allowAll />
@@ -718,7 +718,7 @@ export default async function NewHome({
               <Fragment key={m.id}>
                 <div className="flex items-center gap-3 px-4 py-3">
                   <span className="h-px flex-1 bg-gray-200 dark:bg-white/10" />
-                  <span className="shrink-0 text-[10px] font-black  text-gray-400 dark:text-white/35">
+                  <span className="shrink-0 whitespace-nowrap text-[11px] font-black text-gray-400 dark:text-white/50">
                     {seasonLabel(seasonOf(m.date)!)} 시즌
                   </span>
                   <span className="h-px flex-1 bg-gray-200 dark:bg-white/10" />

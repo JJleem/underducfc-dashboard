@@ -601,8 +601,8 @@ export default function LineupEditor({
           aria-label="이전 화면으로"
           className="-my-2.5 -ml-2.5 flex h-11 items-center gap-2 px-2.5 text-gray-600 dark:text-gray-400"
         >
-          <ArrowLeft className="h-4 w-4" />
-          <span className="font-extrabold text-sm uppercase tracking-tight">라인업 편집</span>
+          <ArrowLeft className="h-5 w-5" strokeWidth={2.2} />
+          <span className="whitespace-nowrap font-extrabold text-sm uppercase tracking-tight">라인업 편집</span>
         </button>
         <div className="flex items-center gap-2">
           <button
@@ -616,7 +616,7 @@ export default function LineupEditor({
           <button
             onClick={handleSave}
             disabled={saving || saved}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-black transition ${
+            className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl text-[13px] font-black transition ${
               saved
                 ? "bg-green-500 text-white"
                 : dirtyQuarters.length === 0
@@ -624,10 +624,10 @@ export default function LineupEditor({
                 : "bg-[var(--ud-primary)] text-black hover:bg-[var(--ud-primary)]"
             }`}
           >
-            {saved ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+            {saved ? <Check className="w-4 h-4" strokeWidth={2.2} /> : <Save className="w-4 h-4" strokeWidth={2.2} />}
             {saved ? "저장됨" : saving ? "저장 중…" : "저장"}
             {!saved && !saving && dirtyQuarters.length > 0 && (
-              <span className="rounded-full bg-black/15 px-1.5 text-[10px] leading-[1.6]">
+              <span className="rounded-full bg-black/15 px-1.5 text-[11px] leading-[1.5] tabular-nums">
                 {dirtyQuarters.length}
               </span>
             )}
@@ -638,8 +638,8 @@ export default function LineupEditor({
       <main className="p-4 space-y-4 pb-10 animate-fade">
         {/* 경기 정보 */}
         <div className="text-center py-2">
-          <p className="text-[11px] font-bold text-gray-400">{match.date} · {match.location}</p>
-          <p className="text-[15px] font-black text-gray-800 dark:text-white mt-0.5">
+          <p className="truncate text-[12px] font-bold text-gray-500 dark:text-white/50">{match.date} · {match.location}</p>
+          <p className="truncate text-[15px] font-black text-gray-800 dark:text-white mt-0.5">
             언더덕 vs {match.opponent}
           </p>
         </div>
@@ -655,7 +655,7 @@ export default function LineupEditor({
               <button
                 key={q}
                 onClick={() => setQuarter(q)}
-                className={`flex-shrink-0 text-[11px] font-black px-4 py-2 rounded-xl transition ${
+                className={`flex-shrink-0 whitespace-nowrap text-[12px] font-black px-4 py-2 rounded-xl transition ${
                   quarter === q
                     ? "bg-[var(--ud-primary)] text-black"
                     : "bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10"
@@ -680,7 +680,7 @@ export default function LineupEditor({
                 onClick={() => setMoveTarget("")}
                 className="flex items-center gap-1.5 text-[11px] font-black text-gray-500 dark:text-gray-400 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 transition"
               >
-                <ArrowRightLeft className="w-3.5 h-3.5" />
+                <ArrowRightLeft className="h-4 w-4" />
                 {quarter} → 다른 쿼터로 이동
               </button>
             ) : (
@@ -702,7 +702,7 @@ export default function LineupEditor({
                 >
                   취소
                 </button>
-                {moving && <span className="text-[10px] text-gray-400">이동 중…</span>}
+                {moving && <span className="text-[12px] text-gray-400">이동 중…</span>}
               </div>
             )}
           </div>
@@ -720,13 +720,13 @@ export default function LineupEditor({
                 }}
                 className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-[11px] font-black text-gray-500 transition hover:bg-gray-100 dark:border-white/10 dark:text-gray-400 dark:hover:bg-white/5"
               >
-                <ClipboardList className="h-3.5 w-3.5" />
+                <ClipboardList className="h-4 w-4" />
                 게시판에서 불러오기 ({groupedBoardLineups.length})
               </button>
             ) : (
               <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-300">
+                  <p className="text-[12px] font-black uppercase text-gray-500 dark:text-gray-300">
                     불러올 전술
                   </p>
                   <button
@@ -747,11 +747,11 @@ export default function LineupEditor({
                       <p className="truncate text-[12px] font-black">
                         {pendingImport.author}님의 {pendingImport.quarter.quarter}
                       </p>
-                      <p className="truncate text-[10px] text-gray-400">
+                      <p className="truncate text-[12px] text-gray-400">
                         {pendingImport.quarter.formation} · {pendingImport.title}
                       </p>
                     </div>
-                    <p className="text-[10px] font-semibold text-gray-400">어느 쿼터로 가져올까요?</p>
+                    <p className="text-[12px] font-semibold text-gray-400">어느 쿼터로 가져올까요?</p>
                     <div className="flex flex-wrap gap-1.5">
                       {QUARTERS.map((q) => {
                         const hasData = lineups.some((l) => l.quarter === q);
@@ -766,7 +766,7 @@ export default function LineupEditor({
                             }`}
                           >
                             {q}
-                            {hasData && <span className="ml-1 text-[8px] opacity-70">덮어씀</span>}
+                            {hasData && <span className="ml-1 text-[11px] opacity-70">덮어씀</span>}
                           </button>
                         );
                       })}
@@ -792,18 +792,18 @@ export default function LineupEditor({
                               <p className="truncate text-[12px] font-black text-[#d94e6c] dark:text-[var(--ud-primary)]">
                                 {selectedPost.author}님의 전술
                               </p>
-                              <p className="truncate text-[10px] text-gray-400">
+                              <p className="truncate text-[12px] text-gray-400">
                                 {selectedPost.title}
                               </p>
                             </div>
                             <button
                               onClick={() => setSelectedImportPostId(null)}
-                              className="shrink-0 rounded-lg px-2 py-1 text-[10px] font-black text-gray-400"
+                              className="shrink-0 rounded-lg px-2 py-1 text-[12px] font-black text-gray-400"
                             >
                               다른 전술
                             </button>
                           </div>
-                          <p className="text-[10px] font-semibold text-gray-400">
+                          <p className="text-[12px] font-semibold text-gray-400">
                             불러올 원본 쿼터를 선택하세요
                           </p>
                           <div className="grid grid-cols-2 gap-1.5">
@@ -820,7 +820,7 @@ export default function LineupEditor({
                                   <span className="block text-[12px] font-black">
                                     {option.quarter.quarter}
                                   </span>
-                                  <span className="mt-0.5 block text-[10px] text-gray-400">
+                                  <span className="mt-0.5 block text-[12px] text-gray-400">
                                     {option.quarter.formation} · 참석 {usable}/11
                                   </span>
                                 </button>
@@ -833,7 +833,7 @@ export default function LineupEditor({
                   </div>
                 ) : (
                 <>
-                <p className="mb-2 text-[10px] font-semibold leading-relaxed text-gray-400">
+                <p className="mb-2 text-[12px] font-semibold leading-relaxed text-gray-400">
                   배치·전술·개인 전술을 가져옵니다. 이 경기에 참석하지 않는 선수 자리는 비워둡니다.
                 </p>
                 <div className="space-y-1.5">
@@ -856,11 +856,11 @@ export default function LineupEditor({
                           <span className="block truncate text-[12px] font-black">
                             {group.author}님의 전술
                           </span>
-                          <span className="block truncate text-[10px] text-gray-400">
+                          <span className="block truncate text-[12px] text-gray-400">
                             {group.title}
                           </span>
                         </span>
-                        <span className="shrink-0 rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-black text-gray-500 dark:bg-white/10 dark:text-gray-300">
+                        <span className="shrink-0 rounded-lg bg-gray-100 px-2 py-1 text-[12px] font-black text-gray-500 dark:bg-white/10 dark:text-gray-300">
                           최대 {bestUsable}/11
                         </span>
                       </button>
@@ -882,12 +882,12 @@ export default function LineupEditor({
         {/* 포메이션 — 이름은 실제 배치에서 계산되므로 드래그하면 같이 바뀐다 */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-black text-gray-500 dark:text-gray-400 shrink-0">포메이션</span>
+            <span className="app-section-label shrink-0 text-[12px]">포메이션</span>
             <span className="rounded-lg bg-gray-900 px-2 py-1 text-[13px] font-black leading-none text-white dark:bg-white dark:text-black">
               {shapeName}
             </span>
             {isCustom && (
-              <span className="text-[10px] font-black text-[var(--ud-primary)]">커스텀 배치</span>
+              <span className="whitespace-nowrap text-[12px] font-black text-[var(--ud-primary)]">커스텀 배치</span>
             )}
           </div>
           <div className="flex gap-1.5 overflow-x-auto pb-1">
@@ -895,7 +895,7 @@ export default function LineupEditor({
               <button
                 key={f}
                 onClick={() => handleFormationChange(f)}
-                className={`flex-shrink-0 text-[10px] font-black px-2.5 py-1 rounded-lg transition ${
+                className={`flex-shrink-0 whitespace-nowrap text-[12px] font-black px-2.5 py-1 rounded-lg transition ${
                   matchesPreset(f)
                     ? "bg-gray-900 dark:bg-white text-white dark:text-black"
                     : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400"
@@ -909,14 +909,14 @@ export default function LineupEditor({
 
         {/* 전술 선택 */}
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-black text-gray-500 dark:text-gray-400 shrink-0">전술</span>
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
+          <span className="app-section-label shrink-0 text-[12px]">전술</span>
+          <div className="scrollbar-none flex min-w-0 gap-1.5 overflow-x-auto">
             {TACTICS.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTactic(tactic === t.id ? "" : t.id)}
                 title={t.desc}
-                className={`flex-shrink-0 text-[10px] font-black px-2.5 py-1 rounded-lg transition ${
+                className={`flex-shrink-0 whitespace-nowrap text-[12px] font-black px-2.5 py-1 rounded-lg transition ${
                   tactic === t.id
                     ? "bg-[var(--ud-primary)] text-white"
                     : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400"
@@ -930,8 +930,8 @@ export default function LineupEditor({
 
         {/* 포메이션 필드 (탭으로 배치, 드래그로 위치 조정) */}
         <div>
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="text-[10px] font-black text-gray-400 uppercase">
+          <div className="flex items-center justify-between gap-2 mb-2 px-1">
+            <span className="app-section-label min-w-0 text-[12px]">
               {swapFrom
                 ? "바꿀 상대 슬롯을 탭하세요"
                 : pickedPlayer
@@ -944,28 +944,28 @@ export default function LineupEditor({
                 ? `대기 슬롯 ${activeSlot.index + 1} 선택됨 → 선수 목록에서 탭`
                 : "탭 = 선수 선택·개인 전술 · 끌면 위치 이동"}
             </span>
-            <div className="flex items-center gap-2.5">
+            <div className="flex shrink-0 items-center gap-2.5">
               {swapFrom && (
                 <button
                   onClick={() => setSwapFrom(null)}
-                  className="flex items-center gap-1 text-[10px] font-black text-gray-500 hover:text-gray-700 dark:text-gray-300"
+                  className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[12px] font-black text-gray-500 hover:text-gray-700 dark:text-gray-300"
                 >
-                  <X className="w-3 h-3" /> 바꾸기 취소
+                  <X className="h-3.5 w-3.5" /> 바꾸기 취소
                 </button>
               )}
               {isCustom && (
                 <button
                   onClick={resetPositions}
-                  className="flex items-center gap-1 text-[10px] font-bold text-[var(--ud-primary)] hover:opacity-75"
+                  className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[12px] font-bold text-[var(--ud-primary)] hover:opacity-75"
                 >
-                  <Move className="w-3 h-3" /> 배치 복귀
+                  <Move className="h-3.5 w-3.5" /> 배치 복귀
                 </button>
               )}
               <button
                 onClick={() => { setAssignments(Array(11).fill(null)); setSubs(Array(MAX_SUBS).fill(null)); setActiveSlot(null); setPickedPlayer(null); }}
-                className="flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[12px] font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >
-                <RotateCcw className="w-3 h-3" /> 초기화
+                <RotateCcw className="h-3.5 w-3.5" /> 초기화
               </button>
             </div>
           </div>
@@ -991,20 +991,20 @@ export default function LineupEditor({
         {/* 대기 선수 슬롯 */}
         <div>
           <div className="mb-2 flex items-center gap-2">
-            <p className="text-[10px] font-black text-gray-400 uppercase">대기 선수</p>
+            <p className="app-section-label text-[12px]">대기 선수</p>
             {activeSlot?.type === "sub" && subs[activeSlot.index] && !swapFrom && (
               <>
                 <button
                   onClick={() => setSwapFrom({ type: "sub", index: activeSlot.index })}
-                  className="flex items-center gap-1 rounded-lg bg-gray-900 px-2 py-1 text-[10px] font-black text-white dark:bg-white dark:text-black"
+                  className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[12px] font-black text-white dark:bg-white dark:text-black"
                 >
-                  <ArrowRightLeft className="h-3 w-3" /> 자리 바꾸기
+                  <ArrowRightLeft className="h-3.5 w-3.5" /> 자리 바꾸기
                 </button>
                 <button
                   onClick={() => clearSlot({ type: "sub", index: activeSlot.index })}
-                  className="flex items-center gap-1 rounded-lg border border-gray-300 px-2 py-1 text-[10px] font-black text-gray-500 dark:border-white/20 dark:text-gray-300"
+                  className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-gray-300 px-2 py-1 text-[12px] font-black text-gray-500 dark:border-white/20 dark:text-gray-300"
                 >
-                  <UserMinus className="h-3 w-3" /> 빼기
+                  <UserMinus className="h-3.5 w-3.5" /> 빼기
                 </button>
               </>
             )}
@@ -1037,14 +1037,14 @@ export default function LineupEditor({
 
         {/* 선수 풀 */}
         <div className="space-y-3">
-          <p className="text-[10px] font-black text-gray-400 uppercase">
+          <p className="app-section-label text-[12px]">
             참석 선수 ({allPlayers.length}명)
           </p>
 
           {/* 게스트 추가 입력 */}
           <div className="flex gap-2">
             <div className="flex items-center gap-1.5 flex-1 px-3 py-2 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10">
-              <UserPlus className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              <UserPlus className="h-4 w-4 text-gray-400 shrink-0" />
               <input
                 type="text"
                 value={guestInput}
@@ -1053,7 +1053,12 @@ export default function LineupEditor({
                   if (e.key === "Enter" && !e.nativeEvent.isComposing) addGuest();
                 }}
                 placeholder="게스트 이름 입력"
-                className="flex-1 bg-transparent text-[12px] font-bold text-gray-800 outline-none placeholder-gray-400 focus-visible:ring-2 focus-visible:ring-[var(--ud-primary)]/30 dark:text-gray-100"
+                enterKeyHint="done"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                className="min-w-0 flex-1 bg-transparent text-[12px] font-bold text-gray-800 outline-none placeholder-gray-400 focus-visible:ring-2 focus-visible:ring-[var(--ud-primary)]/30 dark:text-gray-100"
               />
             </div>
             <button
@@ -1095,7 +1100,7 @@ export default function LineupEditor({
                   <div className="relative flex items-center">
                     <button
                       onClick={() => handlePlayerClick(name)}
-                      className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition cursor-pointer ${
+                      className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-[12px] font-black transition cursor-pointer ${
                         isPicked
                           ? "bg-[var(--ud-primary)] text-white border border-[var(--ud-primary)] ring-2 ring-[var(--ud-primary)]/40"
                           : isGuest
@@ -1107,16 +1112,17 @@ export default function LineupEditor({
                           : "bg-white dark:bg-white/10 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-white/20"
                       }`}
                     >
-                      {isGuest && <span className="mr-1 text-[8px] text-gray-400">G</span>}
-                      {used && !isGuest && <Check className="mr-1 w-2.5 h-2.5 inline-block align-middle" />}
+                      {isGuest && <span className="mr-1 text-[11px] text-gray-500">G</span>}
+                      {used && !isGuest && <Check className="mr-1 h-3 w-3 inline-block align-middle" strokeWidth={2.2} />}
                       {name}
                     </button>
                     {isGuest && (
                       <button
                         onClick={() => removeGuest(name)}
-                        className="ml-1 w-4 h-4 flex items-center justify-center rounded-full bg-gray-200 dark:bg-white/10 text-gray-500 hover:bg-red-100 hover:text-red-500 transition-colors"
+                        aria-label={`${name} 게스트 빼기`}
+                        className="ml-1 w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 dark:bg-white/10 text-gray-500 hover:bg-red-100 hover:text-red-500 transition-colors"
                       >
-                        <X className="w-2.5 h-2.5" />
+                        <X className="h-3.5 w-3.5" strokeWidth={2.2} />
                       </button>
                     )}
                   </div>
@@ -1129,7 +1135,7 @@ export default function LineupEditor({
                             onClick={() => setToastHint(`${name} · 경기당 평균 ${avgQ}Q`)}
                             aria-label={`${name} 경기당 평균 출전 쿼터 ${avgQ}`}
                             title="경기당 평균 출전 쿼터 (프로필과 같은 값)"
-                            className="rounded bg-gray-100 px-1 text-[8px] font-black leading-[1.5] tabular-nums text-gray-500 dark:bg-white/10 dark:text-gray-400"
+                            className="rounded bg-gray-100 px-1 text-[11px] font-black leading-[1.4] tabular-nums text-gray-500 dark:bg-white/10 dark:text-gray-400"
                           >
                             {avgQ}Q
                           </button>
@@ -1137,7 +1143,7 @@ export default function LineupEditor({
                         {pref.map((p) => (
                           <span
                             key={p}
-                            className="rounded px-1 text-[8px] font-black leading-[1.5]"
+                            className="rounded px-1 text-[11px] font-black leading-[1.4]"
                             style={{ color: PREF_POS_COLOR[p] ?? "#94A3B8", backgroundColor: `${PREF_POS_COLOR[p] ?? "#94A3B8"}1f` }}
                           >
                             {p}
@@ -1156,18 +1162,18 @@ export default function LineupEditor({
         <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
           <div className="mb-3 flex items-center justify-between">
             <div>
-              <p className="flex items-center gap-1.5 text-[10px] font-black uppercase text-gray-500 dark:text-gray-300">
-                <ArrowRightLeft className="h-3.5 w-3.5 text-[var(--ud-primary)]" />
+              <p className="flex items-center gap-1.5 text-[12px] font-black uppercase text-gray-500 dark:text-gray-300">
+                <ArrowRightLeft className="h-4 w-4 text-[var(--ud-primary)]" />
                 교체 기록
               </p>
-              <p className="mt-1 text-[10px] font-semibold text-gray-400">경기 중 나간 선수와 들어온 선수를 기록합니다</p>
+              <p className="mt-1 text-[12px] font-semibold text-gray-400">경기 중 나간 선수와 들어온 선수를 기록합니다</p>
             </div>
             <button
               type="button"
               onClick={() => setSubstitutions((events) => [...events, { out: "", in: "", time: "" }])}
-              className="flex items-center gap-1 rounded-xl bg-gray-900 px-2.5 py-2 text-[10px] font-black text-white dark:bg-white dark:text-black"
+              className="flex items-center gap-1 rounded-xl bg-gray-900 px-2.5 py-2 text-[12px] font-black text-white dark:bg-white dark:text-black"
             >
-              <Plus className="h-3 w-3" /> 추가
+              <Plus className="h-3.5 w-3.5" /> 추가
             </button>
           </div>
 
@@ -1213,7 +1219,7 @@ export default function LineupEditor({
                         ))}
                       </SelectContent>
                     </Select>
-                    <ArrowRightLeft className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600" />
+                    <ArrowRightLeft className="h-4 w-4 text-gray-400 dark:text-gray-600" />
                     <Select
                       value={event.in || undefined}
                       onValueChange={(value) =>
@@ -1250,7 +1256,9 @@ export default function LineupEditor({
                         )
                       }
                       placeholder="시점 (예: 12분)"
-                      className="app-field-surface h-8 flex-1 rounded-lg border border-gray-200 px-2.5 text-[11px] font-bold dark:border-white/10"
+                      enterKeyHint="done"
+                      autoComplete="off"
+                      className="app-field-surface h-8 min-w-0 flex-1 rounded-lg border border-gray-200 px-2.5 text-[12px] font-bold dark:border-white/10"
                     />
                     <button
                       type="button"
@@ -1258,7 +1266,7 @@ export default function LineupEditor({
                       onClick={() => setSubstitutions((events) => events.filter((_, i) => i !== index))}
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -1267,7 +1275,7 @@ export default function LineupEditor({
           )}
 
           <div className="mt-3 border-t border-gray-100 pt-3 dark:border-white/[0.06]">
-            <p className="text-[10px] font-semibold leading-relaxed text-gray-400">
+            <p className="text-[12px] font-semibold leading-relaxed text-gray-400">
               교체 기록은 현재 쿼터의 포메이션·선발·대기 선수와 함께 저장됩니다.
             </p>
           </div>

@@ -27,9 +27,9 @@ const PINK = "text-[var(--ud-primary)]";
 // ── 디자인 스케일 ───────────────────────────────────────────
 // MatchRow·Disclosure 와 같은 값을 쓴다. 화면마다 아이콘 크기가 다르면
 // 같은 뜻의 아이콘이 다른 무게로 읽힌다.
-//   12 메타(본문 옆 보조 아이콘) · 14 조작(버튼·화살표) · 30/38 얼굴
-const ICON = { meta: 12, action: 14 } as const;
-const STROKE = { base: 2.2, bold: 2.6 } as const;
+//   16 글자 옆 아이콘 · 20 단독 아이콘 — 앱 전체 공통. 굵기는 2 하나.
+const ICON = { meta: 16, action: 20 } as const;
+const STROKE = { base: 2, bold: 2 } as const;
 
 export interface HeroMatch {
   id: number;
@@ -91,7 +91,7 @@ export interface HomeHeroProps {
 function SeasonOrdinal({ info }: { info?: { label: string; n: number } | null }) {
   if (!info) return null;
   return (
-    <span className="truncate text-[11px] font-bold tabular-nums text-gray-400 dark:text-white/30">
+    <span className="min-w-0 truncate text-[11px] font-bold tabular-nums text-gray-400 dark:text-white/50">
       {info.label} 시즌 {info.n}번째 경기
     </span>
   );
@@ -124,7 +124,7 @@ function WeekdayLabel({ weekday }: { weekday: string }) {
 function HeroWeather({ weather }: { weather: ReturnType<typeof parseWeather> }) {
   if (!weather.available) return null;
   return (
-    <p className="min-w-0 truncate text-right text-[10px] font-bold text-gray-500 dark:text-white/50">
+    <p className="min-w-0 truncate text-right text-[11px] font-bold text-gray-500 dark:text-white/50">
       {weatherEmoji(weather.icon)} {weather.temp}° {weather.description}
       {weather.pop >= 40 && ` · 강수 ${weather.pop}%`}
     </p>
@@ -139,7 +139,7 @@ function Headline({ lead }: { lead: Storyline }) {
   return (
     <p className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-white/50">
       <Flame width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.bold} className="shrink-0 text-[var(--ud-primary)]" />
-      <span className="truncate">{lead.text}</span>
+      <span className="min-w-0 truncate">{lead.text}</span>
     </p>
   );
 }
@@ -176,7 +176,7 @@ function AttendanceBar({
 }) {
   if (votes.total === 0) {
     return (
-      <p className="text-[10px] font-bold text-gray-400 dark:text-white/40">
+      <p className="text-[11px] font-bold text-gray-400 dark:text-white/55">
         아직 등록된 투표가 없어요.
       </p>
     );
@@ -184,19 +184,19 @@ function AttendanceBar({
   const pct = (n: number) => `${(n / votes.total) * 100}%`;
   return (
     <>
-      <div className="flex h-[7px] overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
+      <div className="flex h-[8px] overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
         {votes.attending > 0 && <div className="bg-[var(--ud-primary)]" style={{ width: pct(votes.attending) }} />}
         {votes.maybe > 0 && <div className="bg-amber-400" style={{ width: pct(votes.maybe) }} />}
         {votes.absent > 0 && <div className="bg-gray-400 dark:bg-white/25" style={{ width: pct(votes.absent) }} />}
       </div>
-      <div className="mt-2 flex items-center justify-between">
-        <div className="flex gap-2.5 text-[11px] font-black">
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div className="flex gap-2.5 whitespace-nowrap text-[11px] font-black">
           <span className={PINK}>참석 <span className="tabular-nums">{votes.attending}</span></span>
           <span className="text-amber-500 dark:text-amber-400">미정 <span className="tabular-nums">{votes.maybe}</span></span>
-          <span className="text-gray-400 dark:text-white/40">불참 <span className="tabular-nums">{votes.absent}</span></span>
+          <span className="text-gray-400 dark:text-white/55">불참 <span className="tabular-nums">{votes.absent}</span></span>
         </div>
         {myVote && (
-          <span className="flex items-center gap-1 text-[11px] font-black text-gray-400 dark:text-white/40">
+          <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] font-black text-gray-400 dark:text-white/55">
             나는 {myVote} <Check width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.bold} />
           </span>
         )}
@@ -209,7 +209,7 @@ function PrimaryLink({ href, children }: { href: string; children: React.ReactNo
   return (
     <Link
       href={href}
-      className="app-action-primary press-cta flex items-center justify-center rounded-xl py-2.5 text-[11px] font-black shadow-sm"
+      className="app-action-primary press-cta flex min-h-11 items-center justify-center whitespace-nowrap rounded-xl px-3 text-[13px] font-black shadow-sm"
     >
       {children}
     </Link>
@@ -220,7 +220,7 @@ function SecondaryLink({ href, children }: { href: string; children: React.React
   return (
     <Link
       href={href}
-      className="press-cta flex items-center justify-center rounded-xl bg-gray-100 py-2.5 text-[11px] font-black text-gray-700 dark:bg-white/10 dark:text-white/85"
+      className="press-cta flex min-h-11 items-center justify-center whitespace-nowrap rounded-xl bg-gray-100 px-3 text-[13px] font-black text-gray-700 dark:bg-white/10 dark:text-white/85"
     >
       {children}
     </Link>
@@ -349,7 +349,7 @@ function NeedVote({
     <div className="relative pb-3">
       <div className="flex items-center justify-between gap-3">
         <p className="flex min-w-0 shrink items-baseline gap-2">
-          <span className={`shrink-0 text-[10px] font-black  tabular-nums ${PINK}`}>
+          <span className={`shrink-0 whitespace-nowrap text-[11px] font-black tabular-nums ${PINK}`}>
             {/* 날짜를 못 읽으면 null 이라 그냥 두면 "D-null" 이 찍힌다. 그때는 D 표기를 뺀다. */}
             {dDay !== null && (
               <>
@@ -362,7 +362,7 @@ function NeedVote({
         </p>
         <HeroWeather weather={weather} />
       </div>
-      <h2 className="mt-2.5 text-[25px] font-black leading-[1.24] tracking-[-0.04em] text-gray-900 dark:text-white">
+      <h2 className="mt-2.5 text-[24px] font-black leading-[1.24] tracking-[-0.04em] text-gray-900 dark:text-white">
         {userName ? `${userName}님,` : "이번 주,"}
         <br />
         이번 주 나오시나요?
@@ -373,13 +373,13 @@ function NeedVote({
           {matchTitleVs(match)}
         </p>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-bold text-gray-500 dark:text-white/50">
-          <span className="flex items-center gap-1">
-            <Clock width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.base} />
+          <span className="flex shrink-0 items-center gap-1 whitespace-nowrap">
+            <Clock width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.base} className="shrink-0" />
             {isUndecided(match.time) ? "시간 미정" : match.time}
           </span>
           <span className="flex min-w-0 items-center gap-1">
             <MapPin width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.base} className="shrink-0" />
-            <span className="truncate">
+            <span className="min-w-0 truncate">
               {isUndecided(match.location) ? "장소 미정" : match.location}
             </span>
           </span>
@@ -433,7 +433,7 @@ function DDay({
     <div className="relative pb-3">
       <div className="flex items-center justify-between gap-3">
         <p className="flex min-w-0 shrink items-baseline gap-2">
-          <span className={`shrink-0 text-[10px] font-black  ${PINK}`}>
+          <span className={`shrink-0 whitespace-nowrap text-[11px] font-black ${PINK}`}>
             {dDay === 1 ? "내일 경기 · D-1" : "오늘 경기 · D-DAY"}
           </span>
           <SeasonOrdinal info={seasonOrdinal} />
@@ -450,10 +450,10 @@ function DDay({
             alt=""
             width={42}
             height={42}
-            className="h-[42px] w-[42px] shrink-0 rounded-full bg-white object-cover ring-1 ring-black/[0.07] shadow-sm dark:ring-white/10"
+            className="h-[40px] w-[40px] shrink-0 rounded-full bg-white object-cover ring-1 ring-black/[0.07] shadow-sm dark:ring-white/10"
           />
         ) : (
-          <span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-gray-100 text-[15px] font-black text-gray-400 ring-1 ring-black/[0.05] dark:bg-white/10 dark:text-white/45 dark:ring-white/10">
+          <span className="flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-full bg-gray-100 text-[15px] font-black text-gray-400 ring-1 ring-black/[0.05] dark:bg-white/10 dark:text-white/45 dark:ring-white/10">
             {match.opponent.trim().charAt(0) || "?"}
           </span>
         )}
@@ -461,10 +461,10 @@ function DDay({
           <p className="truncate text-[13px] font-black text-gray-600 dark:text-white/60">
             {matchTitleVs(match)}
           </p>
-          <h2 className="mt-0.5 text-[29px] font-black leading-none tracking-[-0.045em] text-gray-900 tabular-nums dark:text-white">
+          <h2 className="mt-0.5 whitespace-nowrap text-[28px] font-black leading-none tracking-[-0.045em] text-gray-900 tabular-nums dark:text-white">
             {isUndecided(match.time) ? "시간 미정" : match.time}
             {!isUndecided(match.time) && (
-              <span className="ml-1.5 text-[10px]  text-[var(--ud-primary)]">
+              <span className="ml-1.5 text-[11px] text-[var(--ud-primary)]">
                 킥오프
               </span>
             )}
@@ -524,31 +524,31 @@ function AfterMatch({
           : match.result || "경기 종료";
   return (
     <div className="pb-3">
-      <p className="text-center text-[11px] font-black  text-gray-400 dark:text-white/40">
+      <p className="truncate text-center text-[11px] font-black text-gray-400 dark:text-white/55">
         {full} · {matchTitle(match)}
       </p>
       {/* 자체전은 스코어가 없다. 그냥 두면 이 자리에 44px 짜리 ":" 하나만 남는다.
           기록으로 남는 게 인원뿐이라 스코어 자리에 참석 인원을 세운다. */}
-      <p className="mt-1.5 text-center text-[44px] font-black leading-none tracking-[-0.05em] tabular-nums text-gray-900 dark:text-white">
+      <p className="mt-1.5 whitespace-nowrap text-center text-[44px] font-black leading-none tracking-[-0.05em] tabular-nums text-gray-900 dark:text-white">
         {casual ? (
           <>
             {attendees.length}
-            <span className="ml-1 text-[20px] text-gray-400 dark:text-white/40">명</span>
+            <span className="ml-1 text-[20px] text-gray-400 dark:text-white/55">명</span>
           </>
         ) : (
           <ResultReplay match={match}>
-            <span className="text-gray-400 dark:text-white/40">{match.ourScore}</span>
-            <span className="mx-1.5 text-gray-300 dark:text-white/20">:</span>
+            <span className="text-gray-400 dark:text-white/55">{match.ourScore}</span>
+            <span className="mx-1.5 text-gray-400 dark:text-white/40">:</span>
             {match.theirScore}
           </ResultReplay>
         )}
       </p>
-      <p className="mt-1.5 text-center text-[11px] font-black text-gray-400 dark:text-white/40">
+      <p className="mt-1.5 text-center text-[11px] font-black text-gray-400 dark:text-white/55">
         {/* 제목이 이미 "우리끼리 자체전" 이라 결과 라벨을 또 쓰면 같은 말이 두 번이다. */}
         {!casual && (
           <>
             {resultLabel}
-            <span className="mx-1.5 text-gray-300 dark:text-white/20">·</span>
+            <span className="mx-1.5 text-gray-400 dark:text-white/40">·</span>
           </>
         )}
         모두 고생하셨습니다
@@ -592,7 +592,7 @@ function Matching({
     <div className="pb-3">
       <div className="flex items-center justify-between gap-3">
         <p className="flex min-w-0 shrink items-baseline gap-2">
-          <span className="shrink-0 text-[11px] font-black  text-gray-400 dark:text-white/40">
+          <span className="shrink-0 whitespace-nowrap text-[11px] font-black text-gray-400 dark:text-white/55">
             다음 경기
           </span>
           <SeasonOrdinal info={seasonOrdinal} />
@@ -601,9 +601,9 @@ function Matching({
       </div>
       <div className="mt-1.5 flex items-end justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h2 className="text-[21px] font-black leading-[1.15] tracking-[-0.035em] text-gray-900 dark:text-white">
+          <h2 className="text-[20px] font-black leading-[1.15] tracking-[-0.035em] text-gray-900 dark:text-white">
             {full}{" "}
-            <span className="text-gray-400 dark:text-white/40">
+            <span className="text-gray-400 dark:text-white/55">
               <WeekdayLabel weekday={weekday} />
             </span>
           </h2>
@@ -613,30 +613,30 @@ function Matching({
           {lead && <Headline lead={lead} />}
         </div>
         {dDay !== null && (
-          <p className={`shrink-0 text-[40px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums ${PINK}`}>
+          <p className={`shrink-0 whitespace-nowrap text-[40px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums ${PINK}`}>
             D-{dDay}
           </p>
         )}
       </div>
 
       <div className="mt-3.5 flex flex-wrap gap-1.5">
-        <span className="rounded-full border border-gray-200 px-2 py-[3px] text-[11px] font-black text-gray-400 dark:border-white/10 dark:text-white/40">
+        <span className="app-chip border border-gray-200 text-gray-500 dark:border-white/10 dark:text-white/55">
           상대 확정 대기
         </span>
         {isUndecided(match.location) && (
-          <span className="rounded-full border border-gray-200 px-2 py-[3px] text-[11px] font-black text-gray-400 dark:border-white/10 dark:text-white/40">
+          <span className="app-chip border border-gray-200 text-gray-500 dark:border-white/10 dark:text-white/55">
             장소 미정
           </span>
         )}
         {isUndecided(match.time) && (
-          <span className="rounded-full border border-gray-200 px-2 py-[3px] text-[11px] font-black text-gray-400 dark:border-white/10 dark:text-white/40">
+          <span className="app-chip border border-gray-200 text-gray-500 dark:border-white/10 dark:text-white/55">
             시간 미정
           </span>
         )}
       </div>
 
       <div className="mt-4">
-        <p className="mb-2 text-[11px] font-black  text-gray-400 dark:text-white/40">
+        <p className="app-section-label mb-2 text-[11px]">
           참석 현황
         </p>
         <AttendanceBar votes={votes} myVote={myVote} />
@@ -661,23 +661,23 @@ function Rest({ plan }: { plan: RestPlan }) {
   const backDDay = getDDay(plan.returnDate);
   return (
     <div className="pb-3">
-      <span className="text-[11px] font-black  text-gray-400 dark:text-white/40">
+      <span className="whitespace-nowrap text-[11px] font-black text-gray-400 dark:text-white/55">
         쉬는 주
       </span>
       <div className="mt-1.5 flex items-end justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h2 className="text-[25px] font-black leading-[1.24] tracking-[-0.04em] text-gray-900 dark:text-white">
+          <h2 className="text-[24px] font-black leading-[1.24] tracking-[-0.04em] text-gray-900 dark:text-white">
             {plan.dates.length > 1 ? `${plan.dates.length}주 쉬어요` : "이번 주는 쉬어요"}
           </h2>
           <p className="mt-2 flex items-center gap-1.5 text-[11px] font-black text-gray-700 dark:text-white/70">
             <CalendarDays width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.base} className="shrink-0" />
-            <span>
+            <span className="whitespace-nowrap">
               {back.full} <WeekdayLabel weekday={back.weekday} /> 복귀
             </span>
           </p>
         </div>
         {backDDay !== null && backDDay > 0 && (
-          <p className={`shrink-0 text-[40px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums ${PINK}`}>
+          <p className={`shrink-0 whitespace-nowrap text-[40px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums ${PINK}`}>
             D-{backDDay}
           </p>
         )}
@@ -689,7 +689,7 @@ function Rest({ plan }: { plan: RestPlan }) {
           return (
             <span
               key={date}
-              className="rounded-full border border-gray-200 px-2 py-[3px] text-[11px] font-black text-gray-400 dark:border-white/10 dark:text-white/40"
+              className="app-chip border border-gray-200 text-gray-500 dark:border-white/10 dark:text-white/55"
             >
               {full} {weekday} 휴식
             </span>
@@ -729,7 +729,7 @@ function Upcoming({
     <div className="pb-3">
       <div className="flex items-center justify-between gap-3">
         <p className="flex min-w-0 shrink items-baseline gap-2">
-          <span className="shrink-0 text-[11px] font-black  text-gray-400 dark:text-white/40">
+          <span className="shrink-0 whitespace-nowrap text-[11px] font-black text-gray-400 dark:text-white/55">
             다음 경기
           </span>
           <SeasonOrdinal info={seasonOrdinal} />
@@ -738,16 +738,16 @@ function Upcoming({
       </div>
       <div className="mt-1.5 flex items-end justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h2 className="flex items-center gap-1.5 text-[21px] font-black leading-none tracking-[-0.035em] text-gray-900 dark:text-white">
+          <h2 className="flex items-center gap-1.5 text-[20px] font-black leading-none tracking-[-0.035em] text-gray-900 dark:text-white">
             {logo && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logo} alt="" className="h-5 w-5 shrink-0 rounded-full bg-white object-contain ring-1 ring-black/5" />
             )}
-            <span className="truncate">{matchTitle(match)}</span>
+            <span className="min-w-0 truncate">{matchTitle(match)}</span>
           </h2>
           <p className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-white/50">
             <CalendarDays width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.base} className="shrink-0" />
-            <span>
+            <span className="whitespace-nowrap">
               {full} <WeekdayLabel weekday={weekday} /> {!isUndecided(match.time) && `· ${match.time}`}
             </span>
           </p>
@@ -756,7 +756,7 @@ function Upcoming({
         </div>
         <div className="shrink-0 text-right">
           {dDay !== null && (
-            <p className={`text-[40px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums ${PINK}`}>
+            <p className={`whitespace-nowrap text-[40px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums ${PINK}`}>
               {dDay === 0 ? "D-DAY" : dDay < 0 ? `D+${Math.abs(dDay)}` : `D-${dDay}`}
             </p>
           )}

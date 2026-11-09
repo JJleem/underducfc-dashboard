@@ -15,8 +15,8 @@ export default function Loading() {
 
       <article className="px-5 pt-5" aria-hidden>
         <div className="flex items-center gap-1.5">
-          <div className={`h-[22px] w-10 rounded-md ${SOFT}`} />
-          <div className={`h-[22px] w-14 rounded-md ${SOFT}`} />
+          <div className={`h-[24px] w-10 rounded-md ${SOFT}`} />
+          <div className={`h-[24px] w-14 rounded-md ${SOFT}`} />
         </div>
         {/* 제목 — 두 줄까지 */}
         <div className={`mt-3 h-5 w-4/5 rounded ${SHIMMER}`} />

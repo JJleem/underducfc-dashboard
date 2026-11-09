@@ -8,7 +8,7 @@ export default function Loading() {
         <div className="ml-auto h-5 w-16 rounded-full bg-gray-100 dark:bg-white/5" />
       </header>
       <div className="animate-pulse space-y-6 px-4 pb-10 pt-4">
-        <section className="rounded-[22px] border border-gray-200/70 bg-white p-4 dark:border-white/[0.07] dark:bg-white/[0.04]">
+        <section className="rounded-2xl border border-gray-200/70 bg-white p-4 dark:border-white/[0.07] dark:bg-white/[0.04]">
           <div className="h-5 w-56 rounded bg-gray-200 dark:bg-white/10" />
           <div className="mt-3 space-y-1.5">
             <div className="h-2.5 w-full rounded bg-gray-100 dark:bg-white/5" />

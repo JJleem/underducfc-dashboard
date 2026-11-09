@@ -102,9 +102,9 @@ export default function FeaturedEditor({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex shrink-0 items-center gap-1 text-[10px] font-bold text-gray-400 active:opacity-60 dark:text-white/40"
+        className="inline-flex min-h-9 shrink-0 items-center gap-1 whitespace-nowrap text-[12px] font-bold text-gray-500 active:opacity-60 dark:text-white/55"
       >
-        <Pencil className="h-3 w-3" />
+        <Pencil className="h-4 w-4" strokeWidth={2.2} />
         대표 고르기
       </button>
     );
@@ -113,22 +113,22 @@ export default function FeaturedEditor({
   return (
     <div className="mb-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-3">
       <div className="mb-2.5 flex items-center justify-between gap-3">
-        <p className="text-[11px] font-black text-gray-700 dark:text-gray-200">
+        <p className="min-w-0 text-[12px] font-black text-gray-700 dark:text-gray-200">
           라인업에 보일 대표 칭호 <span className="text-[var(--ud-primary)]">{sel.length}/3</span>
-          <span className="ml-1 font-bold text-gray-400">· 고른 순서대로 표시</span>
+          <span className="ml-1 font-bold text-gray-500 dark:text-white/50">· 고른 순서대로 표시</span>
         </p>
         <Link
           href="/titles"
-          className="flex shrink-0 items-center gap-0.5 rounded-lg bg-[var(--ud-primary)]/10 px-2 py-1.5 text-[11px] font-black text-[var(--ud-primary-strong)] active:opacity-60 dark:text-[var(--ud-primary)]"
+          className="flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-lg bg-[var(--ud-primary)]/10 px-2 py-1.5 text-[12px] font-black text-[var(--ud-primary-strong)] active:opacity-60 dark:text-[var(--ud-primary)]"
         >
           칭호 상세보기
-          <ChevronRight className="h-3 w-3" />
+          <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
         </Link>
       </div>
       <div className="max-h-72 space-y-3 overflow-y-auto">
         {groups.map((g) => (
         <div key={g.key}>
-        <p className="mb-1.5 text-[11px] font-black uppercase  text-gray-400 dark:text-white/35">
+        <p className="app-section-label mb-1.5 text-[12px]">
           {g.label}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -144,7 +144,7 @@ export default function FeaturedEditor({
               onClick={() => toggle(key)}
               disabled={saving}
               aria-pressed={on}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-bold border transition disabled:cursor-wait disabled:opacity-60 ${
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 rounded-full text-[12px] font-bold border transition disabled:cursor-wait disabled:opacity-60 ${
                 on
                   ? "text-gray-900 dark:text-white"
                   : "bg-gray-50 dark:bg-white/[0.04] text-gray-600 dark:text-gray-300 border-gray-200 dark:border-white/10"
@@ -174,18 +174,18 @@ export default function FeaturedEditor({
       </div>
       <div aria-live="polite" className="min-h-6">
         {saving && (
-          <p className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-gray-300">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> 대표 칭호를 저장하고 있습니다…
+          <p className="mt-2 flex items-center gap-1.5 text-[12px] font-bold text-gray-500 dark:text-gray-300">
+            <Loader2 className="h-4 w-4 animate-spin" /> 대표 칭호를 저장하고 있습니다…
           </p>
         )}
         {success && !saving && (
-          <p className="mt-2 flex items-center gap-1.5 text-[11px] font-black text-emerald-600 dark:text-emerald-400">
-            <CheckCircle2 className="h-3.5 w-3.5" /> 저장 완료. 라인업에 바로 반영됩니다.
+          <p className="mt-2 flex items-center gap-1.5 text-[12px] font-black text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 className="h-4 w-4" strokeWidth={2.2} /> 저장 완료. 라인업에 바로 반영됩니다.
           </p>
         )}
         {err && !saving && (
-          <p className="mt-2 flex items-start gap-1.5 text-[11px] font-bold text-red-500">
-            <AlertCircle className="mt-px h-3.5 w-3.5 shrink-0" />
+          <p className="mt-2 flex items-start gap-1.5 text-[12px] font-bold text-red-500">
+            <AlertCircle className="mt-px h-4 w-4 shrink-0" strokeWidth={2.2} />
             <span>저장하지 못했습니다. {err}</span>
           </p>
         )}
@@ -200,7 +200,7 @@ export default function FeaturedEditor({
             setSuccess(false);
           }}
           disabled={saving}
-          className="flex-1 py-2 rounded-xl text-[12px] font-black bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300"
+          className="flex-1 min-h-10 whitespace-nowrap rounded-xl text-[13px] font-black bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300"
         >
           취소
         </button>
@@ -208,12 +208,12 @@ export default function FeaturedEditor({
           type="button"
           onClick={save}
           disabled={saving || success}
-          className="app-action-primary flex flex-1 items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-black disabled:opacity-60"
+          className="app-action-primary flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl text-[13px] font-black disabled:opacity-60"
         >
           {saving ? (
-            <><Loader2 className="h-3.5 w-3.5 animate-spin" /> 저장 중…</>
+            <><Loader2 className="h-4 w-4 animate-spin" /> 저장 중…</>
           ) : success ? (
-            <><CheckCircle2 className="h-3.5 w-3.5" /> 저장 완료</>
+            <><CheckCircle2 className="h-4 w-4" strokeWidth={2.2} /> 저장 완료</>
           ) : err ? "다시 시도" : "저장"
           }
         </button>

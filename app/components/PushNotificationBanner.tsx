@@ -79,24 +79,24 @@ export default function PushNotificationBanner() {
     <div className="fixed top-[calc(1rem+env(safe-area-inset-top))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm z-[60] animate-rise">
       <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl p-4 flex items-start gap-3">
         <div className="w-9 h-9 rounded-xl bg-[var(--ud-primary)]/15 flex items-center justify-center shrink-0 mt-0.5">
-          <Bell className="w-4 h-4 text-[var(--ud-primary)]" />
+          <Bell className="w-5 h-5 text-[var(--ud-primary)]" strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-black text-gray-900 dark:text-white">경기 알림 받기</p>
-          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
+          <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
             새 경기 일정·결과가 등록되면 알려드릴게요.
           </p>
           <div className="flex gap-2 mt-3">
             <button
               onClick={handleDismiss}
-              className="flex-1 py-2 rounded-xl bg-gray-100 dark:bg-white/10 text-[12px] font-black text-gray-500 dark:text-gray-400"
+              className="flex-1 min-h-10 whitespace-nowrap rounded-xl bg-gray-100 dark:bg-white/10 text-[13px] font-black text-gray-500 dark:text-gray-400"
             >
               나중에
             </button>
             <button
               onClick={handleAllow}
               disabled={loading}
-              className="flex-1 py-2 rounded-xl bg-[var(--ud-primary)] text-[12px] font-black text-white dark:text-black disabled:opacity-50"
+              className="flex-1 min-h-10 whitespace-nowrap rounded-xl bg-[var(--ud-primary)] text-[13px] font-black text-white dark:text-black disabled:opacity-50"
             >
               {loading ? "처리 중…" : "알림 허용"}
             </button>
@@ -104,9 +104,10 @@ export default function PushNotificationBanner() {
         </div>
         <button
           onClick={handleDismiss}
-          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 mt-0.5"
+          aria-label="닫기"
+          className="-m-2 flex h-9 w-9 shrink-0 items-center justify-center text-gray-500 dark:text-white/55"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" strokeWidth={2.2} />
         </button>
       </div>
     </div>

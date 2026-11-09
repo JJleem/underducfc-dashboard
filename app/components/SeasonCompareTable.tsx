@@ -10,7 +10,7 @@ import { TREND_MIN_APPS } from "../lib/season-compare";
 function TrendMark({ trend }: { trend: Trend }) {
   if (trend === "up") return <ArrowUpRight className="h-3 w-3 text-emerald-500" strokeWidth={3} aria-label="상승" />;
   if (trend === "down") return <ArrowDownRight className="h-3 w-3 text-gray-400" strokeWidth={3} aria-label="하락" />;
-  if (trend === "same") return <Minus className="h-3 w-3 text-gray-300 dark:text-white/25" strokeWidth={3} aria-label="같음" />;
+  if (trend === "same") return <Minus className="h-3 w-3 text-gray-400 dark:text-white/40" strokeWidth={3} aria-label="같음" />;
   return <span className="w-3" />;
 }
 
@@ -22,7 +22,7 @@ export default function SeasonCompareTable({ compare }: { compare: SeasonCompare
   return (
     <section className="px-4">
       <div className="mb-2.5 flex items-end justify-between">
-        <p className="text-[10px] font-black  text-gray-500 dark:text-gray-400">SEASON VS SEASON</p>
+        <p className="text-[11px] font-black  text-gray-500 dark:text-gray-400">SEASON VS SEASON</p>
         {trendless && (
           <p className="text-[11px] font-bold text-gray-400">새 시즌 {TREND_MIN_APPS}경기부터 증감 표시</p>
         )}
@@ -37,7 +37,7 @@ export default function SeasonCompareTable({ compare }: { compare: SeasonCompare
             return (
               <span key={s.id} className="flex justify-end">
                 <span
-                  className="season-scope rounded-full px-2 py-0.5 text-[10px] font-black tabular-nums"
+                  className="season-scope rounded-full px-2 py-0.5 text-[11px] font-black tabular-nums"
                   style={
                     {
                       "--season-light": a.light,
@@ -70,7 +70,7 @@ export default function SeasonCompareTable({ compare }: { compare: SeasonCompare
                 <span
                   key={j}
                   className={`flex items-center justify-end gap-0.5 text-[13px] font-black tabular-nums ${
-                    last ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-white/40"
+                    last ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-white/55"
                   }`}
                 >
                   {v}

@@ -14,7 +14,7 @@ import {
 
 function KakaoMark() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="h-[18px] w-[18px]">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="h-[16px] w-[16px]">
       <path d="M12 3C6.48 3 2 6.55 2 10.93c0 2.82 1.86 5.29 4.65 6.7l-.95 3.5c-.08.3.26.54.52.37l4.14-2.74c.53.07 1.08.1 1.64.1 5.52 0 10-3.55 10-7.93S17.52 3 12 3Z" />
     </svg>
   );
@@ -43,7 +43,7 @@ export default function LoginGate() {
       />
 
       <div className="relative flex items-center gap-2 pt-[max(1.25rem,env(safe-area-inset-top))]">
-        <div className="relative h-8 w-8 overflow-hidden rounded-[10px] ring-1 ring-black/[0.06] dark:ring-white/10">
+        <div className="relative h-8 w-8 overflow-hidden rounded-lg ring-1 ring-black/[0.06] dark:ring-white/10">
           <Image src="/icons/icon-192.png" alt="" fill sizes="32px" className="object-cover" priority />
         </div>
         <span className="text-[11px] font-black  text-gray-500 dark:text-white/45">
@@ -52,13 +52,13 @@ export default function LoginGate() {
       </div>
 
       <section className="relative my-auto py-12">
-        <p className="text-[10px] font-black text-[var(--ud-primary)]">
+        <p className="text-[11px] font-black text-[var(--ud-primary)]">
           회원 전용
         </p>
         <h1 className="mt-4 text-[34px] font-black leading-[1.13] tracking-[-0.05em]">
           언더덕 앱
         </h1>
-        <p className="mt-6 max-w-[310px] text-[14px] font-semibold leading-[1.8] text-gray-500 dark:text-white/50">
+        <p className="mt-6 max-w-[312px] text-[14px] font-semibold leading-[1.8] text-gray-500 dark:text-white/50">
           언더덕 FC는 <span className="text-gray-800 dark:text-white/80">&apos;때문에&apos;</span>란 말보다
           <br />
           <span className="font-black text-[var(--ud-primary)]">&apos;덕분에&apos;</span>란 말을 추구하며,
@@ -67,7 +67,7 @@ export default function LoginGate() {
         </p>
 
         <div className="mt-8 h-px w-10 bg-[var(--ud-primary)]" />
-        <p className="mt-4 text-[11px] font-bold  text-gray-300 dark:text-white/20">
+        <p className="mt-4 text-[11px] font-bold text-gray-500 dark:text-white/50">
           NOT BECAUSE OF, BUT THANKS TO
         </p>
       </section>
@@ -82,10 +82,10 @@ export default function LoginGate() {
           disabled={signingIn}
           className="press-cta flex min-h-12 w-full items-center justify-center gap-2.5 rounded-2xl bg-[#FEE500] px-4 text-[13px] font-black text-[#191919] shadow-[0_8px_24px_rgba(45,40,0,0.12)] disabled:opacity-60"
         >
-          {signingIn ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <KakaoMark />}
+          {signingIn ? <Loader2 className="h-[16px] w-[16px] animate-spin" /> : <KakaoMark />}
           {signingIn ? "카카오로 연결 중…" : "카카오로 로그인"}
         </button>
-        <p className="mt-3 text-center text-[11px] font-bold text-gray-400 dark:text-white/30">
+        <p className="mt-3 text-center text-[12px] font-bold text-gray-500 dark:text-white/50">
           언더덕 선수라면 카카오 계정으로 들어와 주세요.
         </p>
 
@@ -97,15 +97,15 @@ export default function LoginGate() {
             aria-controls="pwa-install-guide"
             className="flex min-h-12 w-full items-center gap-3 px-4 text-left active:bg-white dark:active:bg-white/5"
           >
-            <Smartphone className="h-[17px] w-[17px] shrink-0 text-[var(--ud-primary)]" />
+            <Smartphone className="h-[16px] w-[16px] shrink-0 text-[var(--ud-primary)]" />
             <span className="min-w-0 flex-1">
-              <b className="block text-[12px] font-black">언더덕 선수라면 앱으로 보기</b>
-              <span className="mt-0.5 block text-[10px] font-bold text-gray-400 dark:text-white/30">
+              <b className="block text-[13px] font-black">언더덕 선수라면 앱으로 보기</b>
+              <span className="mt-0.5 block text-[12px] font-bold text-gray-500 dark:text-white/50">
                 아이폰·안드로이드 홈 화면에 추가하기
               </span>
             </span>
             <ChevronDown
-              className={`h-4 w-4 shrink-0 text-gray-300 transition-transform duration-200 dark:text-white/20 ${
+              className={`h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 dark:text-white/40 ${
                 installOpen ? "rotate-180" : ""
               }`}
             />
@@ -118,27 +118,27 @@ export default function LoginGate() {
             >
               <div className="grid gap-4 min-[390px]:grid-cols-2 min-[390px]:gap-3">
                 <div>
-                  <p className="flex items-center gap-1.5 text-[11px] font-black text-gray-700 dark:text-white/75">
-                    <Share className="h-3.5 w-3.5 text-blue-500" /> iPhone · Safari
+                  <p className="flex items-center gap-1.5 whitespace-nowrap text-[12px] font-black text-gray-700 dark:text-white/75">
+                    <Share className="h-4 w-4 text-blue-500" strokeWidth={2.2} /> iPhone · Safari
                   </p>
-                  <ol className="mt-2 space-y-1.5 text-[11px] font-bold leading-relaxed text-gray-400 dark:text-white/35">
+                  <ol className="mt-2 space-y-1.5 text-[12px] font-bold leading-relaxed text-gray-500 dark:text-white/50">
                     <li><b className="mr-1 text-gray-600 dark:text-white/60">1.</b>Safari로 이 페이지 열기</li>
                     <li><b className="mr-1 text-gray-600 dark:text-white/60">2.</b>하단 공유 버튼 누르기</li>
                     <li><b className="mr-1 text-gray-600 dark:text-white/60">3.</b>홈 화면에 추가 → 추가</li>
                   </ol>
                 </div>
                 <div>
-                  <p className="flex items-center gap-1.5 text-[11px] font-black text-gray-700 dark:text-white/75">
-                    <MoreVertical className="h-3.5 w-3.5 text-emerald-500" /> Android · Chrome
+                  <p className="flex items-center gap-1.5 whitespace-nowrap text-[12px] font-black text-gray-700 dark:text-white/75">
+                    <MoreVertical className="h-4 w-4 text-emerald-500" strokeWidth={2.2} /> Android · Chrome
                   </p>
-                  <ol className="mt-2 space-y-1.5 text-[11px] font-bold leading-relaxed text-gray-400 dark:text-white/35">
+                  <ol className="mt-2 space-y-1.5 text-[12px] font-bold leading-relaxed text-gray-500 dark:text-white/50">
                     <li><b className="mr-1 text-gray-600 dark:text-white/60">1.</b>Chrome으로 이 페이지 열기</li>
                     <li><b className="mr-1 text-gray-600 dark:text-white/60">2.</b>오른쪽 위 ⋮ 누르기</li>
                     <li><b className="mr-1 text-gray-600 dark:text-white/60">3.</b>앱 설치 또는 홈 화면에 추가</li>
                   </ol>
                 </div>
               </div>
-              <p className="mt-3 border-t border-gray-100 pt-3 text-center text-[10px] font-bold text-[var(--ud-primary-strong)] dark:border-white/[0.06] dark:text-[var(--ud-primary)]">
+              <p className="mt-3 border-t border-gray-100 pt-3 text-center text-[11px] font-bold text-[var(--ud-primary-strong)] dark:border-white/[0.06] dark:text-[var(--ud-primary)]">
                 이제 홈 화면의 언더덕 로고로 바로 들어오면 돼요.
               </p>
             </div>
@@ -147,7 +147,7 @@ export default function LoginGate() {
 
         <div className="mt-6 flex items-center gap-3">
           <span className="h-px flex-1 bg-gray-200 dark:bg-white/[0.07]" />
-          <span className="text-[11px] font-black  text-gray-300 dark:text-white/20">
+          <span className="text-[11px] font-black text-gray-500 dark:text-white/50">
             함께 뛰어요
           </span>
           <span className="h-px flex-1 bg-gray-200 dark:bg-white/[0.07]" />
@@ -160,10 +160,10 @@ export default function LoginGate() {
           className="mt-4 flex min-h-12 items-center justify-between rounded-2xl border border-gray-200 px-4 active:bg-white dark:border-white/10 dark:active:bg-white/5"
         >
           <span className="flex min-w-0 items-center gap-3">
-            <Instagram className="h-[18px] w-[18px] shrink-0 text-[var(--ud-primary)]" />
+            <Instagram className="h-[16px] w-[16px] shrink-0 text-[var(--ud-primary)]" />
             <span className="min-w-0">
-              <b className="block text-[12px] font-black">@underduck_fc</b>
-              <span className="mt-0.5 block truncate text-[11px] font-bold text-gray-400 dark:text-white/30">
+              <b className="block text-[13px] font-black">@underduck_fc</b>
+              <span className="mt-0.5 block truncate text-[12px] font-bold text-gray-500 dark:text-white/50">
                 가입 문의는 DM으로 살짝 노크해 주세요
               </span>
             </span>

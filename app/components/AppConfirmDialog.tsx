@@ -52,7 +52,7 @@ export default function AppConfirmDialog({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
           onClick={(event) => event.stopPropagation()}
-          className="w-full max-w-xs rounded-[26px] bg-white p-5 shadow-2xl dark:bg-[#161618]"
+          className="w-full max-w-xs rounded-3xl bg-white p-5 shadow-2xl dark:bg-[#161618]"
         >
           <h2 id="app-confirm-title" className="text-[15px] font-black text-gray-900 dark:text-white">
             {title}

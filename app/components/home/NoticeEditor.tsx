@@ -42,7 +42,7 @@ export default function NoticeEditor({
   };
 
   const field = "app-field-surface app-control-md w-full rounded-xl px-3.5 py-2.5 font-medium";
-  const label = "app-section-label mb-1.5 block text-[10px]";
+  const label = "app-section-label mb-1.5 block text-[11px]";
 
   return (
     <>
@@ -51,10 +51,10 @@ export default function NoticeEditor({
         onClick={() => setOpen(true)}
         aria-label="공지 수정"
         title="공지 수정"
-        className="flex w-9 shrink-0 flex-col items-center gap-0.5 py-0.5 text-gray-400 active:opacity-60 dark:text-white/40"
+        className="flex w-10 shrink-0 flex-col items-center gap-0.5 whitespace-nowrap py-0.5 text-gray-400 active:opacity-60 dark:text-white/55"
       >
-        <Pencil width={17} height={17} strokeWidth={2.2} />
-        <span className="text-[10px] font-black leading-none">편집</span>
+        <Pencil width={20} height={20} strokeWidth={2} />
+        <span className="text-[11px] font-black leading-none">편집</span>
       </button>
 
       <Drawer open={open} onOpenChange={setOpen} repositionInputs={false}>
@@ -82,6 +82,8 @@ export default function NoticeEditor({
                     value={form.title}
                     onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
                     placeholder="공지 제목"
+                    enterKeyHint="next"
+                    autoComplete="off"
                     className={field}
                   />
                 </div>
@@ -92,13 +94,14 @@ export default function NoticeEditor({
                     onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
                     rows={5}
                     placeholder="공지 내용"
+                    autoComplete="off"
                     className={`${field} resize-none leading-[1.7]`}
                   />
                 </div>
                 <div>
                   <span className={label}>
                     장소{" "}
-                    <span className="font-medium normal-case tracking-normal text-gray-300 dark:text-gray-600">
+                    <span className="font-medium normal-case tracking-normal text-gray-400 dark:text-gray-600">
                       (선택 — 구장 안내 시 지도 표시)
                     </span>
                   </span>
@@ -106,6 +109,8 @@ export default function NoticeEditor({
                     value={form.location}
                     onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))}
                     placeholder="예: 서울 월드컵 풋살파크"
+                    enterKeyHint="done"
+                    autoComplete="off"
                     className={field}
                   />
                 </div>

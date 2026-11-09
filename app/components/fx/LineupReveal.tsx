@@ -55,7 +55,7 @@ export default function LineupReveal({
         {m && d ? ` · ${m}월 ${d}일` : ""} · 1쿼터 선발
       </p>
 
-      <div className="relative mx-auto mt-5 aspect-[3/4] w-full max-w-[330px] overflow-hidden rounded-2xl">
+      <div className="relative mx-auto mt-5 aspect-[3/4] w-full max-w-[328px] overflow-hidden rounded-2xl">
         {/* 잔디 — 줄무늬 + 시즌색 조명 */}
         <motion.div
           className="absolute inset-0"
@@ -133,7 +133,7 @@ export default function LineupReveal({
                 </span>
                 {isCaptain && (
                   <span
-                    className="absolute -right-1.5 -top-1 rounded-[3px] px-1 text-[10px] font-black leading-[13px] text-[#4A2E00]"
+                    className="absolute -right-1.5 -top-1 rounded-md px-1 text-[11px] font-black leading-[13px] text-[#4A2E00]"
                     style={{ background: `linear-gradient(180deg, #FFF4CC, ${GOLD})` }}
                   >
                     C

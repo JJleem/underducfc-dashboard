@@ -252,7 +252,7 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
                     )}
                   </span>
                   <span
-                    className={`relative max-w-full truncate text-[10px] font-bold ${
+                    className={`relative max-w-full truncate text-[11px] font-bold ${
                       art ? "text-white/70" : "text-gray-400 dark:text-gray-500"
                     }`}
                   >
@@ -274,7 +274,7 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
 
               {hasFoot && (
                 <span
-                  className={`absolute inset-x-0 bottom-0 flex items-end justify-between gap-1 px-1.5 pb-1 pt-4 text-[10px] font-bold ${
+                  className={`absolute inset-x-0 bottom-0 flex items-end justify-between gap-1 px-1.5 pb-1 pt-4 text-[11px] font-bold ${
                     cover
                       ? "bg-gradient-to-t from-black/75 to-transparent text-white/90"
                       : "text-gray-400 dark:text-gray-500"
@@ -326,7 +326,7 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
             >
               <div className="min-w-0">
                 <p className="truncate text-[14px] font-black text-white">vs {current.opponent}</p>
-                <p className="truncate text-[10px] font-bold text-white/45">{current.date}</p>
+                <p className="truncate text-[11px] font-bold text-white/45">{current.date}</p>
               </div>
               <button
                 type="button"
@@ -401,7 +401,7 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
                     )}
 
                     <div className="relative flex flex-col items-center px-6">
-                      <p className="text-[11px] font-black  text-white/40">
+                      <p className="text-[11px] font-black  text-white/55">
                         MATCH RESULT
                       </p>
                       <p className="mt-4 grid w-full grid-cols-2 gap-8 text-[11px] font-black text-white/60">
@@ -422,7 +422,7 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
                           {current.result}
                         </span>
                       )}
-                      <p className="mt-4 text-[10px] font-bold text-white/45">
+                      <p className="mt-4 text-[11px] font-bold text-white/45">
                         {current.date}
                         {current.location ? ` · ${current.location}` : ""}
                       </p>
@@ -456,7 +456,7 @@ export default function PlayerMatchGrid({ matches }: { matches: GridMatch[] }) {
                   </span>
                   <span className="text-[11px] font-black text-white/50">{current.result}</span>
                   {current.location && (
-                    <span className="flex min-w-0 items-center gap-0.5 text-[10px] font-bold text-white/40">
+                    <span className="flex min-w-0 items-center gap-0.5 text-[11px] font-bold text-white/55">
                       <MapPin width={10} height={10} strokeWidth={2.4} className="shrink-0" />
                       <span className="truncate">{current.location}</span>
                     </span>

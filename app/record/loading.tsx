@@ -15,7 +15,7 @@ export default function Loading() {
     >
       {/* 상단 바 */}
       <div className="app-page-header safe-header-py-3">
-        <div className={`h-[18px] w-[18px] rounded ${SHIMMER}`} />
+        <div className={`h-[16px] w-[16px] rounded ${SHIMMER}`} />
         <div className={`h-3 w-14 rounded ${SOFT}`} />
       </div>
 
@@ -41,7 +41,7 @@ export default function Loading() {
           <div className="divide-y divide-gray-200/70 dark:divide-white/[0.07]">
             {Array.from({ length: 7 }, (_, i) => (
               <div key={i} className="flex items-center gap-3 py-4">
-                <div className={`h-[38px] w-[38px] shrink-0 rounded-full ${SHIMMER}`} />
+                <div className={`h-[40px] w-[40px] shrink-0 rounded-full ${SHIMMER}`} />
                 <div className="min-w-0 flex-1">
                   <div className={`h-3.5 w-28 rounded ${SHIMMER}`} />
                   <div className={`mt-1.5 h-2.5 w-44 rounded ${SOFT}`} />

@@ -18,10 +18,10 @@ export default function PageHeader({
   return (
     <div className="app-page-header safe-header-py-3">
       <Link href={back} aria-label="뒤로" className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300">
-        <ArrowLeft width={18} height={18} strokeWidth={2.4} />
+        <ArrowLeft width={20} height={20} strokeWidth={2.2} />
       </Link>
-      <span className="app-header-label">{label}</span>
-      {right && <span className="ml-auto flex items-center">{right}</span>}
+      <span className="app-header-label min-w-0 truncate">{label}</span>
+      {right && <span className="ml-auto flex shrink-0 items-center">{right}</span>}
     </div>
   );
 }

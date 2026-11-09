@@ -47,14 +47,14 @@ const GROUPS = [
   {
     key: "absent",
     label: "불참",
-    labelTone: "text-gray-400 dark:text-white/35",
-    chipTone: "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-white/45",
+    labelTone: "text-gray-500 dark:text-white/60",
+    chipTone: "bg-gray-200/70 text-gray-600 dark:bg-white/10 dark:text-white/65",
   },
   {
     key: "noReply",
     label: "미투표",
-    labelTone: "text-gray-300 dark:text-white/25",
-    chipTone: "bg-gray-50 text-gray-300 dark:bg-white/5 dark:text-white/25",
+    labelTone: "text-gray-500 dark:text-white/55",
+    chipTone: "bg-gray-100 text-gray-500 dark:bg-white/[0.06] dark:text-white/55",
   },
 ] as const;
 
@@ -110,25 +110,27 @@ export default function PastVoteRow({
                 alt=""
                 width={20}
                 height={20}
+                loading="lazy"
+                decoding="async"
                 className="shrink-0 rounded-full bg-white object-cover ring-1 ring-black/[0.06] dark:ring-white/10"
               />
             )}
-            <span className="truncate text-[14px] font-black tracking-[-0.02em] text-gray-900 dark:text-white">
+            <span className="min-w-0 truncate text-[14px] font-black tracking-[-0.02em] text-gray-900 dark:text-white">
               {opponentLabel}
             </span>
             {closed && (
-              <span className="shrink-0 text-[10px] font-black text-gray-300 dark:text-white/25">
+              <span className="shrink-0 whitespace-nowrap text-[11px] font-black text-gray-500 dark:text-white/50">
                 마감
               </span>
             )}
           </div>
-          <p className="mt-1 truncate text-[11px] font-bold text-gray-400 dark:text-white/35">
+          <p className="mt-1 truncate text-[12px] font-bold text-gray-500 dark:text-white/50">
             {shortDate(date)} · {location}
           </p>
 
           {total > 0 ? (
             <>
-              <div className="mt-2 flex h-[5px] overflow-hidden rounded-full bg-gray-100 dark:bg-white/5">
+              <div className="mt-2 flex h-[4px] overflow-hidden rounded-full bg-gray-100 dark:bg-white/5">
                 {tally.attending.length > 0 && (
                   <div className="bg-[var(--ud-primary)]" style={{ width: pct(tally.attending.length) }} />
                 )}
@@ -142,37 +144,37 @@ export default function PastVoteRow({
                   />
                 )}
               </div>
-              <p className="mt-1.5 flex gap-2.5 text-[11px] font-bold">
+              <p className="mt-1.5 flex gap-2.5 whitespace-nowrap text-[12px] font-bold">
                 <span className="text-[var(--ud-primary)]">
                   참석 <span className="tabular-nums">{tally.attending.length}</span>
                 </span>
                 <span className="text-amber-500 dark:text-amber-400">
                   미정 <span className="tabular-nums">{tally.maybe.length}</span>
                 </span>
-                <span className="text-gray-400 dark:text-white/35">
+                <span className="text-gray-500 dark:text-white/60">
                   불참 <span className="tabular-nums">{tally.absent.length}</span>
                 </span>
                 {comments.length > 0 && (
-                  <span className="text-gray-300 dark:text-white/25">
+                  <span className="text-gray-500 dark:text-white/50">
                     댓글 <span className="tabular-nums">{comments.length}</span>
                   </span>
                 )}
               </p>
             </>
           ) : (
-            <p className="mt-2 text-[11px] font-bold text-gray-300 dark:text-white/25">
+            <p className="mt-2 text-[11px] font-bold text-gray-400 dark:text-white/40">
               투표 기록이 없어요.
             </p>
           )}
         </div>
 
         <ChevronDown
-          width={15}
-          height={15}
-          strokeWidth={2.4}
+          width={16}
+          height={16}
+          strokeWidth={2.2}
           aria-hidden="true"
           className={`shrink-0 transition-transform duration-200 ${
-            open ? "rotate-180 text-gray-500 dark:text-white/50" : "text-gray-300 dark:text-white/25"
+            open ? "rotate-180 text-gray-500 dark:text-white/50" : "text-gray-400 dark:text-white/40"
           }`}
         />
       </button>
@@ -185,10 +187,10 @@ export default function PastVoteRow({
               if (names.length === 0) return null;
               return (
                 <div key={key} className="flex items-start gap-2">
-                  <span className={`w-11 shrink-0 pt-0.5 text-[12px] font-black ${labelTone}`}>
+                  <span className={`w-11 shrink-0 whitespace-nowrap pt-1.5 text-[12px] font-black ${labelTone}`}>
                     {label}
                   </span>
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
                     {asVoters(names).map((v) => (
                       <VoterChip key={v.name} voter={v} chipTone={chipTone} />
                     ))}
@@ -200,7 +202,7 @@ export default function PastVoteRow({
 
           {comments.length > 0 && (
             <section>
-              <p className="mb-2 text-[10px] font-black uppercase  text-gray-400 dark:text-white/35">
+              <p className="app-section-label mb-2 text-[12px]">
                 댓글 <span className="tabular-nums">{comments.length}</span>
               </p>
               <div className="flex flex-col gap-2.5">

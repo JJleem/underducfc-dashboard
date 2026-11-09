@@ -98,7 +98,7 @@ export default function Celebration({
       {confetti && !reduce && <Confetti colors={[color, "#fff", GOLD]} />}
       <div className="relative w-full max-w-sm text-center">{children}</div>
       <motion.p
-        className="absolute inset-x-0 bottom-[max(28px,env(safe-area-inset-bottom))] text-center text-[11px] font-bold text-white/35"
+        className="absolute inset-x-0 bottom-[max(28px,env(safe-area-inset-bottom))] text-center text-[11px] font-bold text-white/50"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2.2 }}

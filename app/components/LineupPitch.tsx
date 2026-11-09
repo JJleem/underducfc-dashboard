@@ -199,7 +199,7 @@ export default function LineupPitch({
         {swapSlot !== null && (
           <div className="pointer-events-none absolute left-1/2 top-2 z-40 -translate-x-1/2">
             <div
-              className="rounded-full px-3 py-1.5 text-[10px] font-black text-white"
+              className="whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-black text-white"
               style={{
                 background: "rgba(225,29,72,0.96)",
                 border: "1px solid rgba(255,255,255,0.7)",
@@ -399,12 +399,12 @@ export default function LineupPitch({
                 }}
               >
                 <span
-                  className="shrink-0 rounded px-1 text-[9px] font-black text-white"
+                  className="shrink-0 rounded px-1 text-[11px] font-black text-white"
                   style={{ background: roleColor(role) }}
                 >
                   {role}
                 </span>
-                <div className="flex flex-1 gap-1 overflow-x-auto scrollbar-none">
+                <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto scrollbar-none">
                   {retained.map((id) => (
                     <button
                       key={id}
@@ -415,7 +415,7 @@ export default function LineupPitch({
                           )
                         )
                       }
-                      className="shrink-0 rounded-lg bg-amber-500/25 px-2 py-1 text-[10px] font-black text-amber-200 ring-1 ring-amber-300/35"
+                      className="shrink-0 whitespace-nowrap rounded-lg bg-amber-500/25 px-2 py-1 text-[12px] font-black text-amber-200 ring-1 ring-amber-300/35"
                       title="이전 포지션에서 설정한 개인 전술"
                     >
                       {instructionShort(id)} · 유지
@@ -437,11 +437,11 @@ export default function LineupPitch({
                             })
                           )
                         }
-                        className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-black transition ${
+                        className={`shrink-0 whitespace-nowrap rounded-lg px-2 py-1 text-[12px] font-black transition ${
                           on
                             ? "bg-[var(--ud-primary)] text-white"
                             : full
-                            ? "bg-white/5 text-white/25"
+                            ? "bg-white/5 text-white/40"
                             : "bg-white/10 text-white/80"
                         }`}
                       >
@@ -455,15 +455,15 @@ export default function LineupPitch({
                     onClick={() => onSwapRequest(slot)}
                     aria-label="자리 바꾸기"
                     aria-pressed={swapSlot === slot}
-                    className={`flex h-6 shrink-0 items-center gap-1 rounded-lg px-1.5 transition ${
+                    className={`flex h-7 shrink-0 items-center gap-1 rounded-lg px-2 transition ${
                       swapSlot === slot
                         ? "bg-[var(--ud-primary)] text-white ring-2 ring-[var(--ud-primary)]/45"
                         : "bg-white/10 text-white/70"
                     }`}
                   >
-                    <ArrowRightLeft className="h-3 w-3" />
+                    <ArrowRightLeft className="h-4 w-4" strokeWidth={2.2} />
                     {swapSlot === slot && (
-                      <span className="text-[9px] font-black">상대 탭</span>
+                      <span className="whitespace-nowrap text-[11px] font-black">상대 탭</span>
                     )}
                   </button>
                 )}
@@ -471,18 +471,18 @@ export default function LineupPitch({
                   <button
                     onClick={() => onClearSlot(slot)}
                     aria-label="이 자리 비우기"
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white/70"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white/70"
                   >
-                    <UserMinus className="h-3 w-3" />
+                    <UserMinus className="h-4 w-4" strokeWidth={2.2} />
                   </button>
                 )}
                 {onCloseSlot && (
                   <button
                     onClick={onCloseSlot}
                     aria-label="닫기"
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white/50"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white/70"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-4 w-4" strokeWidth={2.2} />
                   </button>
                 )}
               </div>

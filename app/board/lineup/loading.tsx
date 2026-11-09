@@ -13,7 +13,7 @@ export default function Loading() {
             <div key={i} className="h-8 w-16 shrink-0 rounded-full bg-gray-100 dark:bg-white/5" />
           ))}
         </div>
-        <div className="aspect-[3/4] w-full rounded-[22px] bg-gray-100 dark:bg-white/5" />
+        <div className="aspect-[3/4] w-full rounded-2xl bg-gray-100 dark:bg-white/5" />
         <div className="h-16 w-full rounded-2xl border border-gray-200 bg-white dark:border-white/10 dark:bg-[#161618]" />
       </main>
     </div>

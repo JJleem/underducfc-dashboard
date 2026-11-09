@@ -68,9 +68,9 @@ import AppToast from "../AppToast";
 
 // ── 디자인 스케일 (피드) ─────────────────────────────────────
 // 목록보다 한 단계씩 크다. 여백으로 읽히는 화면이라 작은 글씨를 쓸 이유가 없다.
-//   아이콘  17 액션 · 32 팀 로고
+//   아이콘  20 액션(앱 공통 단독 아이콘) · 32 팀 로고
 //   글자    11 보조 · 13 본문 · 15 강조 · 34 스코어
-const ICON = { action: 17, logo: 32 } as const;
+const ICON = { action: 20, logo: 32 } as const;
 
 const full = (url: string) => cldSquare(url);
 
@@ -286,6 +286,7 @@ export default function MatchFeed({
             alt=""
             aria-hidden
             loading="lazy"
+            decoding="async"
             draggable={false}
             className="absolute inset-0 h-full w-full object-cover"
           />
@@ -295,7 +296,7 @@ export default function MatchFeed({
 
       <div className="relative z-10 flex h-full flex-col px-6 py-[clamp(18px,5vw,28px)]">
         <div>
-          <p className="text-[10px] font-black  text-white/35">경기 기록</p>
+          <p className="text-[11px] font-black  text-white/50">경기 기록</p>
           <p className="mt-1.5 text-[12px] font-black  text-[var(--ud-primary)]">
             UNDERDUCK FC
           </p>
@@ -317,7 +318,7 @@ export default function MatchFeed({
                   </span>
                 ))}
                 {attendees.length > CASUAL_FACES && (
-                  <span className="flex h-[30px] min-w-[30px] items-center justify-center rounded-full bg-white/[0.09] px-1.5 text-[10px] font-black text-white/55">
+                  <span className="flex h-[32px] min-w-[32px] items-center justify-center rounded-full bg-white/[0.09] px-1.5 text-[11px] font-black text-white/55">
                     +{attendees.length - CASUAL_FACES}
                   </span>
                 )}
@@ -330,7 +331,7 @@ export default function MatchFeed({
           )}
         </div>
 
-        <p className="min-h-9 text-[10px] font-bold text-white/25">
+        <p className="min-h-9 text-[11px] font-bold text-white/40">
           {[shortDate(match.date), match.location !== "미정" ? match.location : ""]
             .filter(Boolean)
             .join(" · ")}
@@ -359,6 +360,7 @@ export default function MatchFeed({
                 alt=""
                 aria-hidden
                 loading="lazy"
+                decoding="async"
                 draggable={false}
                 className="absolute inset-0 h-full w-full object-cover"
               />
@@ -390,7 +392,7 @@ export default function MatchFeed({
 
           <div className="relative z-10 flex h-full flex-col px-6 py-[clamp(18px,5vw,28px)]">
             <div>
-              <p className="text-[10px] font-black  text-white/35">
+              <p className="text-[11px] font-black  text-white/50">
                 경기 결과
               </p>
               <p className="mt-1.5 text-[12px] font-black  text-[var(--ud-primary)]">
@@ -410,7 +412,7 @@ export default function MatchFeed({
                   className="mt-2 grid w-full grid-cols-[1fr_auto_1fr] items-center text-[clamp(52px,17vw,72px)] font-black leading-none tracking-[-0.055em] tabular-nums"
                 >
                   <span className="text-[var(--ud-primary)]">{match.ourScore}</span>
-                  <span className="px-3 text-[0.58em] text-white/20">:</span>
+                  <span className="px-3 text-[0.58em] text-white/40">:</span>
                   <span className="text-white/85">{match.theirScore}</span>
                 </ResultReplay>
               ) : (
@@ -431,7 +433,7 @@ export default function MatchFeed({
 
               {goals.length > 0 && (
                 <div className="mx-auto mt-3 w-full max-w-[280px] rounded-xl border border-white/[0.09] bg-white/[0.045] px-3 py-2.5 backdrop-blur-[2px]">
-                  <p className="mb-1.5 text-[10px] font-black  text-white/35">
+                  <p className="mb-1.5 text-[11px] font-black  text-white/50">
                     득점
                   </p>
                   <div className="space-y-1 text-center">
@@ -441,12 +443,12 @@ export default function MatchFeed({
                         className="flex min-w-0 items-center justify-center gap-1.5"
                       >
                         <SportsSoccerIcon className="h-3 w-3 shrink-0 text-[var(--ud-primary)]" />
-                        <b className="truncate text-[11px] font-black text-white/85">
+                        <b className="min-w-0 truncate text-[11px] font-black text-white/85">
                           {scorer}
                         </b>
                         {assists[i] && (
-                          <span className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-[var(--ud-primary)]">
-                            <span className="text-white/20">·</span>
+                          <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] font-bold text-[var(--ud-primary)]">
+                            <span className="text-white/40">·</span>
                             <b className="font-black">A</b>
                             {assists[i]}
                           </span>
@@ -455,7 +457,7 @@ export default function MatchFeed({
                     ))}
                   </div>
                   {goals.length > 3 && (
-                    <p className="mt-1 text-center text-[11px] font-black text-white/30">
+                    <p className="mt-1 text-center text-[11px] font-black text-white/50">
                       외 {goals.length - 3}골
                     </p>
                   )}
@@ -465,8 +467,8 @@ export default function MatchFeed({
 
             {moms.length > 0 ? (
               <div className="flex min-h-9 items-center justify-center gap-2.5 text-left">
-                <span className="flex shrink-0 items-center gap-1 text-[11px] font-black  text-amber-300">
-                  <Crown width={12} height={12} fill="currentColor" strokeWidth={2} />
+                <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] font-black text-amber-300">
+                  <Crown width={16} height={16} fill="currentColor" strokeWidth={2} />
                   MOM
                 </span>
                 <span className="h-4 w-px bg-white/10" />
@@ -482,12 +484,12 @@ export default function MatchFeed({
                     </span>
                   ))}
                   {moms.length > 2 && (
-                    <span className="text-[11px] font-black text-white/35">+{moms.length - 2}</span>
+                    <span className="text-[11px] font-black text-white/50">+{moms.length - 2}</span>
                   )}
                 </span>
               </div>
             ) : (
-              <p className="min-h-9 text-[10px] font-bold text-white/25">
+              <p className="min-h-9 text-[11px] font-bold text-white/40">
                 {shortDate(match.date)}
               </p>
             )}
@@ -508,6 +510,8 @@ export default function MatchFeed({
             alt=""
             width={ICON.logo}
             height={ICON.logo}
+            loading={firstInFeed ? undefined : "lazy"}
+            decoding="async"
             className="shrink-0 rounded-full bg-white object-cover ring-1 ring-black/[0.06] dark:ring-white/10"
           />
         ) : (
@@ -525,7 +529,7 @@ export default function MatchFeed({
           <p className="truncate text-[14px] font-black tracking-[-0.01em] text-gray-900 dark:text-white">
             {casual ? "언더덕 FC" : `vs ${match.opponent}`}
           </p>
-          <p className="mt-0.5 truncate text-[11px] font-bold text-gray-400 dark:text-white/35">
+          <p className="mt-0.5 truncate text-[11px] font-bold text-gray-400 dark:text-white/50">
             {shortDate(match.date)} · {match.location}
           </p>
         </div>
@@ -535,20 +539,20 @@ export default function MatchFeed({
               href={`/matches/${match.id}/edit`}
               aria-label="라인업 설정"
               title="라인업 설정"
-              className="flex w-9 flex-col items-center gap-0.5 py-0.5 text-[var(--ud-primary)] active:opacity-60 dark:text-[var(--ud-primary)]"
+              className="flex w-10 flex-col items-center gap-0.5 whitespace-nowrap py-0.5 text-[var(--ud-primary)] active:opacity-60 dark:text-[var(--ud-primary)]"
             >
-              <ClipboardList width={17} height={17} strokeWidth={2.2} />
-              <span className="text-[10px] font-black leading-none">라인업</span>
+              <ClipboardList width={ICON.action} height={ICON.action} strokeWidth={2} />
+              <span className="text-[11px] font-black leading-none">라인업</span>
             </Link>
             <button
               type="button"
               onClick={() => setEditing(true)}
               aria-label="경기 수정"
               title="경기 수정"
-              className="flex w-9 flex-col items-center gap-0.5 py-0.5 text-gray-400 active:opacity-60 dark:text-white/40"
+              className="flex w-10 flex-col items-center gap-0.5 whitespace-nowrap py-0.5 text-gray-400 active:opacity-60 dark:text-white/55"
             >
-              <Pencil width={17} height={17} strokeWidth={2.2} />
-              <span className="text-[10px] font-black leading-none">편집</span>
+              <Pencil width={ICON.action} height={ICON.action} strokeWidth={2} />
+              <span className="text-[11px] font-black leading-none">편집</span>
             </button>
           </div>
         )}
@@ -584,7 +588,7 @@ export default function MatchFeed({
           {slideCount > 1 && (
             <>
               {/* 오른쪽 위 장수 — 인스타가 쓰는 방식 */}
-              <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-black tabular-nums text-white backdrop-blur-sm">
+              <span className="pointer-events-none absolute right-3 top-3 whitespace-nowrap rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-black tabular-nums text-white backdrop-blur-sm">
                 {slide + 1}/{slideCount}
               </span>
               {/* 아래 점 — 몇 장인지 한눈에 */}
@@ -648,7 +652,7 @@ export default function MatchFeed({
               {awaitingResult ? "결과 대기" : "다음 경기"}
             </p>
             <p
-              className={`mt-3 font-black leading-none tracking-[-0.05em] tabular-nums ${
+              className={`mt-3 whitespace-nowrap font-black leading-none tracking-[-0.05em] tabular-nums ${
                 awaitingResult ? "text-[40px]" : "text-[64px]"
               } ${
                 art?.light
@@ -659,7 +663,7 @@ export default function MatchFeed({
               {awaitingResult ? "경기 종료" : dDay === 0 ? "D-DAY" : `D-${dDay}`}
             </p>
             <p
-              className={`mt-4 text-[13px] font-bold ${
+              className={`mt-4 whitespace-nowrap text-[13px] font-bold ${
                 art?.light ? "text-[#0f1729]/70" : "text-white/80"
               }`}
             >
@@ -678,13 +682,13 @@ export default function MatchFeed({
         {/* 하트는 누르는 자리, 숫자는 누가 눌렀는지 보는 자리. 역할이 달라 버튼을 나눈다
             (버튼 안에 버튼은 넣을 수 없기도 하다). */}
         <div className="flex w-11 flex-col items-center gap-1 text-gray-700 dark:text-white/70">
-          <span className="flex h-[18px] items-center gap-1">
+          <span className="flex h-5 items-center gap-1">
             <button
               type="button"
               onClick={toggleLike}
               aria-pressed={liked}
               aria-label={liked ? "좋아요 취소" : "좋아요"}
-              className="press-icon active:opacity-60"
+              className="press-icon touch-target active:opacity-60"
             >
               <Heart
                 width={ICON.action}
@@ -706,7 +710,7 @@ export default function MatchFeed({
                 trigger={likes}
               >
                 {likersFailed ? (
-                  <p className="py-6 text-center text-[12px] font-bold text-gray-400 dark:text-white/30">
+                  <p className="py-6 text-center text-[12px] font-bold text-gray-400 dark:text-white/50">
                     목록을 불러오지 못했어요.
                   </p>
                 ) : likers === null ? (
@@ -726,7 +730,7 @@ export default function MatchFeed({
                       name === "알 수 없음" ? (
                         <span
                           key={`unknown-${i}`}
-                          className="rounded-full bg-gray-100 px-3 py-1.5 text-[12px] font-bold text-gray-400 dark:bg-white/[0.07] dark:text-white/30"
+                          className="whitespace-nowrap rounded-full bg-gray-100 px-3 py-1.5 text-[12px] font-bold text-gray-400 dark:bg-white/[0.07] dark:text-white/50"
                         >
                           {name}
                         </span>
@@ -734,7 +738,7 @@ export default function MatchFeed({
                         <Link
                           key={`${name}-${i}`}
                           href={`/players/${encodeURIComponent(name)}`}
-                          className="flex items-center gap-1.5 rounded-full bg-gray-100 py-1 pl-1 pr-3 text-[12px] font-bold text-gray-700 active:opacity-60 dark:bg-white/[0.07] dark:text-white/70"
+                          className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gray-100 py-1 pl-1 pr-3 text-[12px] font-bold text-gray-700 active:opacity-60 dark:bg-white/[0.07] dark:text-white/70"
                         >
                           <PlayerFace name={name} size={22} />
                           {name}
@@ -746,7 +750,7 @@ export default function MatchFeed({
               </DetailSheet>
             )}
           </span>
-          <span className="text-[11px] font-bold leading-none text-gray-400 dark:text-white/35">
+          <span className="text-[11px] font-bold leading-none text-gray-400 dark:text-white/50">
             좋아요
           </span>
         </div>
@@ -761,13 +765,13 @@ export default function MatchFeed({
           isAdmin={isAdmin}
           trigger={
             <>
-              <span className="flex h-[18px] items-center gap-1">
+              <span className="flex h-5 items-center gap-1">
                 <MessageCircle width={ICON.action} height={ICON.action} strokeWidth={2} />
                 {feedbacks.length > 0 && (
                   <span className="text-[11px] font-black tabular-nums">{feedbacks.length}</span>
                 )}
               </span>
-              <span className="text-[11px] font-bold leading-none text-gray-400 dark:text-white/35">
+              <span className="text-[11px] font-bold leading-none text-gray-400 dark:text-white/50">
                 댓글
               </span>
             </>
@@ -781,11 +785,11 @@ export default function MatchFeed({
             className="flex w-11 flex-col items-center gap-1 text-gray-700 active:opacity-60 dark:text-white/70"
             trigger={
               <>
-                <span className="flex h-[18px] items-center gap-1">
+                <span className="flex h-5 items-center gap-1">
                   <Users width={ICON.action} height={ICON.action} strokeWidth={2} />
                   <span className="text-[11px] font-black tabular-nums">{attendees.length}</span>
                 </span>
-                <span className="text-[11px] font-bold leading-none text-gray-400 dark:text-white/35">
+                <span className="text-[11px] font-bold leading-none text-gray-400 dark:text-white/50">
                   명단
                 </span>
               </>
@@ -796,7 +800,7 @@ export default function MatchFeed({
                 <Link
                   key={name}
                   href={`/players/${encodeURIComponent(name)}`}
-                  className="flex items-center gap-1.5 rounded-full bg-gray-100 py-1 pl-1 pr-3 text-[12px] font-bold text-gray-700 active:opacity-60 dark:bg-white/[0.07] dark:text-white/70"
+                  className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gray-100 py-1 pl-1 pr-3 text-[12px] font-bold text-gray-700 active:opacity-60 dark:bg-white/[0.07] dark:text-white/70"
                 >
                   <PlayerFace name={name} size={22} />
                   {name}
@@ -814,14 +818,14 @@ export default function MatchFeed({
             contentClassName="h-auto max-h-[92dvh] data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-[92dvh]"
             trigger={
               <>
-                <span className="flex h-[18px] items-center gap-1">
+                <span className="flex h-5 items-center gap-1">
                   <span className="relative">
                     <ClipboardList width={ICON.action} height={ICON.action} strokeWidth={2} />
                     <span className="absolute -right-1 -top-0.5 h-1.5 w-1.5 rounded-full bg-[var(--ud-primary)] ring-2 ring-white dark:bg-[var(--ud-primary)] dark:ring-[#161618]" />
                   </span>
                   <span className="text-[11px] font-black tabular-nums">{lineups.length}</span>
                 </span>
-                <span className="text-[11px] font-bold leading-none text-gray-400 dark:text-white/35">
+                <span className="text-[11px] font-bold leading-none text-gray-400 dark:text-white/50">
                   라인업
                 </span>
               </>
@@ -868,14 +872,14 @@ export default function MatchFeed({
           aria-label="인스타에 결과 공유"
           className="ml-auto flex w-11 flex-col items-center gap-1 text-gray-700 active:opacity-60 disabled:opacity-40 dark:text-white/70"
         >
-          <span className="flex h-[18px] items-center">
+          <span className="flex h-5 items-center">
             {sharing ? (
-              <Loader2 width={ICON.action} height={ICON.action} className="animate-spin" />
+              <Loader2 width={ICON.action} height={ICON.action} strokeWidth={2} className="animate-spin" />
             ) : (
               <Sparkles width={ICON.action} height={ICON.action} strokeWidth={2} />
             )}
           </span>
-          <span className="text-[11px] font-bold leading-none text-gray-400 dark:text-white/35">
+          <span className="text-[11px] font-bold leading-none text-gray-400 dark:text-white/50">
             공유
           </span>
         </button>
@@ -891,15 +895,15 @@ export default function MatchFeed({
             aria-label={`${match.opponent} 경기 출석 투표하기`}
             className={`${FEED_SUMMARY_ROW} text-[13px] font-bold text-gray-700 dark:text-white/70`}
           >
-            <span className="flex min-w-0 flex-1 items-center">
+            <span className="flex min-w-0 flex-1 items-center whitespace-nowrap">
               <span className="font-black text-[var(--ud-primary)]">
                 참석 {votes.attending}
               </span>
-              <span className="mx-2 text-gray-300 dark:text-white/20">·</span>
+              <span className="mx-2 text-gray-400 dark:text-white/40">·</span>
               <span className="font-black text-amber-500 dark:text-amber-400">
                 미정 {votes.maybe}
               </span>
-              <span className="mx-2 text-gray-300 dark:text-white/20">·</span>
+              <span className="mx-2 text-gray-400 dark:text-white/40">·</span>
               <span className="text-gray-500 dark:text-white/50">불참 {votes.absent}</span>
             </span>
             <FeedSummaryEnd />
@@ -916,23 +920,23 @@ export default function MatchFeed({
               {scored ? (
                 <ResultReplay
                   match={match}
-                  className="flex min-w-0 flex-1 items-center text-left text-[15px] font-black tabular-nums text-gray-900 dark:text-white"
+                  className="flex min-w-0 flex-1 items-center whitespace-nowrap text-left text-[15px] font-black tabular-nums text-gray-900 dark:text-white"
                 >
                   <span className="text-[var(--ud-primary)]">
                     {match.ourScore}
                   </span>
-                  <span className="mx-1.5 text-gray-300 dark:text-white/25">:</span>
+                  <span className="mx-1.5 text-gray-400 dark:text-white/40">:</span>
                   {match.theirScore}
                   {resultRevealData(match) && (
-                    <Play className="ml-1.5 h-2.5 w-2.5 fill-current text-gray-300 dark:text-white/25" />
+                    <Play className="ml-1.5 h-2.5 w-2.5 fill-current text-gray-400 dark:text-white/40" />
                   )}
                 </ResultReplay>
               ) : (
-                <span className="min-w-0 flex-1 text-[12px] font-bold text-gray-400 dark:text-white/35">
+                <span className="min-w-0 flex-1 text-[12px] font-bold text-gray-400 dark:text-white/50">
                   스코어 기록 없음
                 </span>
               )}
-              <span className={`shrink-0 text-[12px] font-black ${resultTextTone(match.result)}`}>
+              <span className={`shrink-0 whitespace-nowrap text-[12px] font-black ${resultTextTone(match.result)}`}>
                 {resultWord(match.result)}
               </span>
             </div>
@@ -954,7 +958,7 @@ export default function MatchFeed({
                         </span>
                       </span>
                       {assists[i] && (
-                        <span className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-gray-400 dark:text-white/35">
+                        <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] font-bold text-gray-400 dark:text-white/50">
                           <ShoeCleatsIcon className="h-3.5 w-3.5 shrink-0" />
                           <b className="font-black text-gray-600 dark:text-white/55">{assists[i]}</b> 도움
                         </span>
@@ -1026,7 +1030,7 @@ export default function MatchFeed({
             isAdmin={isAdmin}
             trigger={
               <>
-                <span className="block text-[13px] font-bold text-gray-400 dark:text-white/35">
+                <span className="block text-[13px] font-bold text-gray-400 dark:text-white/50">
                   {feedbacks.length > 2
                     ? `댓글 ${feedbacks.length}개 모두 보기`
                     : "댓글 작성하기"}
@@ -1041,10 +1045,10 @@ export default function MatchFeed({
                     >
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-1.5">
-                          <b className="truncate text-[13px] font-black text-gray-900 dark:text-white">
+                          <b className="min-w-0 truncate text-[13px] font-black text-gray-900 dark:text-white">
                             {feedback.name}
                           </b>
-                          <span className="shrink-0 text-[10px] font-bold text-gray-300 dark:text-white/25">
+                          <span className="shrink-0 whitespace-nowrap text-[11px] font-bold text-gray-400 dark:text-white/40">
                             {feedbackTimestamp(feedback.timestamp)}
                           </span>
                         </span>

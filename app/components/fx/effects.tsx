@@ -80,7 +80,7 @@ export function Confetti({ colors }: { colors: string[] }) {
         return (
           <motion.span
             key={i}
-            className="absolute top-0 block rounded-[1px]"
+            className="absolute top-0 block rounded-md"
             style={{ left: `${rnd(i, 22) * 100}%`, width: w, height: w * 1.8, background: colors[i % colors.length] }}
             initial={{ y: "-10vh", rotate: 0, x: 0, opacity: 0.9 }}
             animate={{ y: "110vh", rotate: 360 * (rnd(i, 23) > 0.5 ? 2 : -2), x: [0, (rnd(i, 24) - 0.5) * 80, 0] }}

@@ -52,7 +52,7 @@ export default function MomReveal({
         {data.names.map((n, i) => (
           <motion.div
             key={n}
-            className="relative rounded-full p-[3px]"
+            className="relative rounded-full p-[4px]"
             style={{ background: `linear-gradient(135deg, ${GOLD}, #fff, ${GOLD})`, boxShadow: `0 0 40px ${GOLD}88` }}
             initial={from({ opacity: 0, scale: 2.6, filter: "blur(14px)" })}
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}

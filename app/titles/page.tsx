@@ -55,14 +55,14 @@ function TitleCard({ title }: { title: TitleDef }) {
       )}
       <div className="flex items-start gap-2.5 pr-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600 dark:bg-white/[0.06] dark:text-gray-300">
-          <TitleIcon name={title.icon} className="h-[18px] w-[18px]" strokeWidth={2.3} />
+          <TitleIcon name={title.icon} className="h-[16px] w-[16px]" strokeWidth={2.3} />
         </div>
         <div className="min-w-0">
           <h2 className="truncate text-[12px] font-black text-gray-900 dark:text-white">
             {title.name}
           </h2>
           <span
-            className={`mt-1 inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-black ${
+            className={`mt-1 inline-flex whitespace-nowrap rounded-full px-1.5 py-0.5 text-[11px] font-black ${
               title.state === "live"
                 ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-300"
                 : "bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-300"
@@ -84,7 +84,7 @@ function TitleCard({ title }: { title: TitleDef }) {
             return (
               <div key={requirement} className="flex items-center gap-1">
                 <TitleBadge title={earnedOf(title, tier)} size={16} />
-                <span className="whitespace-nowrap text-[10px] font-bold text-gray-500 dark:text-gray-400">
+                <span className="whitespace-nowrap text-[11px] font-bold text-gray-500 dark:text-gray-400">
                   {title.tierLabels?.[tier] ?? TIER_NAMES[tier]} {requirement}
                   {title.unit ?? ""}
                 </span>
@@ -95,7 +95,7 @@ function TitleCard({ title }: { title: TitleDef }) {
       ) : (
         <div className="mt-2 flex items-center gap-1.5">
           <TitleBadge title={earnedOf(title, null)} size={17} />
-          <span className="text-[10px] font-bold text-gray-400">조건 달성 시 획득</span>
+          <span className="whitespace-nowrap text-[11px] font-bold text-gray-400">조건 달성 시 획득</span>
         </div>
       )}
 
@@ -111,24 +111,24 @@ function SeasonRule({ title }: { title: TitleDef }) {
   const rule = seasonRuleOf(title.id);
 
   const body = rule.excluded ? (
-    <span className="text-[10px] font-bold text-gray-400 dark:text-white/30">
+    <span className="text-[11px] font-bold text-gray-400 dark:text-white/50">
       통산 전용 — 시즌 칭호 없음
     </span>
   ) : rule.tiers?.length ? (
-    <span className="text-[10px] font-bold tabular-nums text-gray-500 dark:text-gray-400">
+    <span className="min-w-0 text-[11px] font-bold tabular-nums text-gray-500 dark:text-gray-400">
       {rule.tiers
         .map((n, i) => `${rule.tierLabels?.[i] ?? TIER_NAMES[i as TierIndex]} ${n}${title.unit ?? ""}`)
         .join(" · ")}
     </span>
   ) : (
-    <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400">
+    <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400">
       {rule.desc ?? title.desc ?? "조건 달성 시 획득"}
     </span>
   );
 
   return (
     <div className="mt-2 flex items-start gap-1.5 border-t border-gray-100 pt-2 dark:border-white/[0.06]">
-      <span className="shrink-0 rounded px-1 py-0.5 text-[10px] font-black uppercase  text-[var(--ud-primary)] ring-1 ring-[var(--ud-primary)]/30 dark:text-[var(--ud-primary)] dark:ring-[var(--ud-primary)]/25">
+      <span className="shrink-0 whitespace-nowrap rounded px-1 py-0.5 text-[11px] font-black text-[var(--ud-primary)] ring-1 ring-[var(--ud-primary)]/30 dark:text-[var(--ud-primary)] dark:ring-[var(--ud-primary)]/25">
         시즌
       </span>
       {body}
@@ -149,18 +149,18 @@ export default function TitlesPage() {
           aria-label="홈으로"
           className="press-icon touch-target flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-white"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
         </Link>
-        <h1 className="text-[15px] font-black leading-none">칭호 도감</h1>
-        <span className="ml-auto rounded-full bg-gray-100 px-2 py-1 text-[10px] font-black text-gray-500 dark:bg-white/[0.07] dark:text-gray-400">
+        <h1 className="min-w-0 truncate text-[15px] font-black leading-none">칭호 도감</h1>
+        <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-gray-100 px-2 py-1 text-[11px] font-black text-gray-500 dark:bg-white/[0.07] dark:text-gray-400">
           칭호 {TITLES.filter((t) => !t.hidden).length + LEADER_TITLES.length + 1}개
         </span>
       </header>
 
       <div className="space-y-6 px-4 pb-10 pt-4">
-        <section className="relative overflow-hidden rounded-[22px] border border-gray-200/70 bg-white p-4 text-gray-900 dark:border-white/[0.07] dark:bg-white/[0.04] dark:text-white">
-          <h2 className="text-[21px] font-black tracking-[-0.04em]">기록이 쌓이면, 칭호가 된다.</h2>
-          <p className="mt-2 max-w-[310px] text-[10px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
+        <section className="relative overflow-hidden rounded-2xl border border-gray-200/70 bg-white p-4 text-gray-900 dark:border-white/[0.07] dark:bg-white/[0.04] dark:text-white">
+          <h2 className="text-[20px] font-black tracking-[-0.04em]">기록이 쌓이면, 칭호가 된다.</h2>
+          <p className="mt-2 max-w-[312px] text-[11px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
             경기 기록과 활동에 따라 자동으로 획득하는 언더덕 FC의 칭호와 달성 조건입니다.
             조건이 공개되지 않는 <span className="font-black text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">히든 칭호</span>도 존재합니다.
           </p>
@@ -169,20 +169,20 @@ export default function TitlesPage() {
           <div className="mt-3 grid grid-cols-2 gap-2">
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-2.5 dark:border-white/10 dark:bg-white/[0.06]">
               <p className="text-[11px] font-black text-gray-700 dark:text-white">통산 · 원형</p>
-              <p className="mt-1 text-[10px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
+              <p className="mt-1 text-[11px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
                 입단 이후 전 기간 누적. 한 번 딴 등급은 사라지지 않습니다.
               </p>
             </div>
             <div className="rounded-xl border border-[var(--ud-primary)]/30 bg-[var(--ud-primary)]/[0.07] p-2.5 dark:border-[var(--ud-primary)]/25">
               <p className="text-[11px] font-black text-[var(--ud-primary)]">시즌 · 육각</p>
-              <p className="mt-1 text-[10px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
+              <p className="mt-1 text-[11px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
                 그 시즌 기록만으로 다시 도전. 컷이 통산보다 낮습니다.
               </p>
             </div>
           </div>
 
           <div className="mt-3 flex items-start gap-2 rounded-xl border border-gray-200 bg-gray-50 p-2.5 dark:border-white/10 dark:bg-white/[0.06]">
-            <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500 dark:text-amber-300" />
+            <Lightbulb strokeWidth={2.2} className="mt-0.5 h-4 w-4 shrink-0 text-amber-500 dark:text-amber-300" />
             <p className="text-[11px] font-semibold leading-relaxed text-gray-500 dark:text-slate-300">
               칭호와 조건은 주기적으로 추가되거나 변경될 수 있습니다. 재미있는 칭호 아이디어가 있다면 언제든 알려주세요.
             </p>
@@ -190,9 +190,9 @@ export default function TitlesPage() {
         </section>
 
         <section>
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-[12px] font-black">등급 안내</h2>
-            <span className="text-[10px] font-bold text-gray-400">누적 기록에 따라 성장</span>
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <h2 className="whitespace-nowrap text-[12px] font-black">등급 안내</h2>
+            <span className="min-w-0 truncate text-[11px] font-bold text-gray-400">누적 기록에 따라 성장</span>
           </div>
           <div className="grid grid-cols-4 gap-1.5 rounded-2xl border border-gray-200 bg-white p-2.5 dark:border-white/[0.07] dark:bg-[#111827]">
             {TIER_NAMES.map((name, index) => {
@@ -200,7 +200,7 @@ export default function TitlesPage() {
               return (
                 <div key={name} className="flex flex-col items-center gap-1.5 rounded-xl bg-gray-50 py-2 dark:bg-white/[0.035]">
                   <TitleBadge title={sample} size={22} />
-                  <span className="text-[10px] font-black text-gray-600 dark:text-gray-300">{name}</span>
+                  <span className="whitespace-nowrap text-[11px] font-black text-gray-600 dark:text-gray-300">{name}</span>
                 </div>
               );
             })}
@@ -211,29 +211,29 @@ export default function TitlesPage() {
           <div className="mb-2.5 flex items-center gap-2">
             <span className="h-4 w-1 rounded-full bg-[var(--ud-primary)]" />
             <h2 className="text-[13px] font-black">히든 칭호</h2>
-            <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-black text-gray-500 dark:bg-white/[0.07] dark:text-gray-400">
+            <span className="whitespace-nowrap rounded-full bg-gray-100 px-1.5 py-0.5 text-[11px] font-black text-gray-500 dark:bg-white/[0.07] dark:text-gray-400">
               {hiddenTitles.length}개 존재
             </span>
           </div>
-          <div className="relative overflow-hidden rounded-[20px] border border-white/[0.08] bg-[#10182f] p-3">
+          <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#10182f] p-3">
             <div className="relative grid grid-cols-3 gap-2">
               {hiddenTitles.slice(0, 3).map((title, index) => (
                 <div
                   key={title.id}
-                  className="relative flex h-[74px] items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.055]"
+                  className="relative flex h-[72px] items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.055]"
                 >
                   <div className="flex flex-col items-center gap-1.5 blur-[5px] select-none">
                     <span className="h-7 w-7 rounded-lg border border-white/20 bg-white/15" />
                     <span className="h-1.5 rounded-full bg-white/35" style={{ width: 34 + index * 5 }} />
                     <span className="h-1 w-8 rounded-full bg-white/15" />
                   </div>
-                  <LockKeyhole className="absolute h-4 w-4 text-white/70" />
+                  <LockKeyhole strokeWidth={2.2} className="absolute h-4 w-4 text-white/70" />
                 </div>
               ))}
             </div>
             <div className="relative mt-3 text-center">
-              <p className="text-[10px] font-black text-white">조건은 비공개입니다</p>
-              <p className="mt-0.5 text-[10px] font-semibold text-white/50">
+              <p className="text-[11px] font-black text-white">조건은 비공개입니다</p>
+              <p className="mt-0.5 text-[11px] font-semibold text-white/50">
                 기록을 쌓다 보면 어느 날 조용히 해금됩니다.
               </p>
             </div>
@@ -250,7 +250,7 @@ export default function TitlesPage() {
                   style={{ background: CATEGORY_COLORS[category] ?? "var(--ud-primary)" }}
                 />
                 <h2 className="text-[13px] font-black">{category}</h2>
-                <span className="text-[10px] font-bold text-gray-400">{titles.length}</span>
+                <span className="text-[11px] font-bold text-gray-400">{titles.length}</span>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {titles.map((title) => (
@@ -283,11 +283,11 @@ export default function TitlesPage() {
                 <article key={title.id} className="rounded-2xl border border-amber-300/40 bg-white p-3 dark:bg-[#111827]">
                   <div className="flex items-center gap-2">
                     <TitleBadge title={earned} size={23} />
-                    <div>
-                      <h2 className="text-[11px] font-black">{title.name}</h2>
-                      <p className="text-[10px] font-semibold text-gray-400">{title.desc}</p>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="truncate text-[11px] font-black">{title.name}</h2>
+                      <p className="text-[11px] font-semibold text-gray-400">{title.desc}</p>
                     </div>
-                    <TitleIcon name={title.icon} className="ml-auto h-3 w-3 text-amber-400/50" />
+                    <TitleIcon name={title.icon} className="ml-auto h-3 w-3 shrink-0 text-amber-400/50" />
                   </div>
                 </article>
               );
@@ -295,9 +295,9 @@ export default function TitlesPage() {
             <article className="rounded-2xl border border-amber-300/40 bg-white p-3 dark:bg-[#111827]">
               <div className="flex items-center gap-2">
                 <TitleBadge title={managerTitle()} size={23} />
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-[11px] font-black">감독</h2>
-                  <p className="text-[10px] font-semibold text-gray-400">팀을 이끄는 특별 칭호</p>
+                  <p className="text-[11px] font-semibold text-gray-400">팀을 이끄는 특별 칭호</p>
                 </div>
               </div>
             </article>

@@ -51,7 +51,7 @@ function CaptainBadge({ role }: { role: "c" | "vc" }) {
     <span
       aria-label={captain ? "주장" : "부주장"}
       title={captain ? "주장" : "부주장"}
-      className="shrink-0 rounded-[3px] bg-[#FBBF24] px-1 text-[11px] font-black leading-[16px] text-[#4A2E00] shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
+      className="shrink-0 rounded-md bg-[#FBBF24] px-1 text-[11px] font-black leading-[16px] text-[#4A2E00] shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
     >
       {captain ? "C" : "VC"}
     </span>
@@ -77,6 +77,7 @@ function SquadPhoto({ name, accent }: { name: string; accent: string }) {
           src={src!}
           alt={name}
           loading="lazy"
+          decoding="async"
           onError={() => setFailed(true)}
           className="absolute inset-0 h-full w-full object-contain object-bottom drop-shadow-[0_6px_10px_rgba(0,0,0,0.5)]"
         />
@@ -211,7 +212,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
             aria-label="뒤로"
             className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300"
           >
-            <ArrowLeft width={18} height={18} strokeWidth={2.4} />
+            <ArrowLeft width={20} height={20} strokeWidth={2.2} />
           </Link>
           <span className="app-header-label">선수단</span>
         </div>
@@ -224,7 +225,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
               title="선수 추가"
               className="app-icon-action app-icon-action-primary press-icon -my-1"
             >
-              <UserPlus width={16} height={16} strokeWidth={2.4} />
+              <UserPlus width={20} height={20} strokeWidth={2.2} />
             </button>
           )}
           <button
@@ -233,8 +234,8 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
             aria-label="테마 전환"
             className="app-icon-action app-icon-action-neutral press-icon -my-1"
           >
-            <Moon className="block h-4 w-4 text-gray-700 dark:hidden" />
-            <Sun className="hidden h-4 w-4 text-[var(--ud-primary)] dark:block" />
+            <Moon className="block h-5 w-5 text-gray-700 dark:hidden" strokeWidth={2.2} />
+            <Sun className="hidden h-5 w-5 text-[var(--ud-primary)] dark:block" strokeWidth={2.2} />
           </button>
         </div>
       </header>
@@ -258,16 +259,16 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
             }}
           />
           <div className="relative">
-            <p className="text-[10px] font-black  text-[var(--ud-primary)]">
+            <p className="text-[11px] font-black  text-[var(--ud-primary)]">
               UNDERDUCK FC
             </p>
-            <h1 className="mt-2 text-[25px] font-black leading-tight tracking-[-0.04em] text-gray-900 dark:text-white">
+            <h1 className="mt-2 text-[24px] font-black leading-tight tracking-[-0.04em] text-gray-900 dark:text-white">
               언더덕 스쿼드
             </h1>
             <p className="mt-2 text-[11px] font-bold text-gray-500 dark:text-white/45">
               함께 뛰는 {playerList.length}명의 선수들
             </p>
-            <div className="mt-4 flex items-center gap-3 text-[10px] font-black">
+            <div className="mt-4 flex items-center gap-3 whitespace-nowrap text-[12px] font-black">
               <span className="text-[var(--ud-primary)]">
                 활동 {statusCounts.active}
               </span>
@@ -275,7 +276,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                 <span className="text-red-500 dark:text-red-400">부상 {statusCounts.injured}</span>
               )}
               {statusCounts.inactive > 0 && (
-                <span className="text-gray-400 dark:text-white/35">
+                <span className="text-gray-500 dark:text-white/55">
                   비활동 {statusCounts.inactive}
                 </span>
               )}
@@ -288,15 +289,15 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
             className="press-card relative mt-5 flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-3.5 py-3 dark:border-white/[0.08] dark:bg-white/[0.04]"
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--ud-primary)]/15 text-[var(--ud-primary)]">
-              <Shirt width={17} height={17} strokeWidth={2.3} />
+              <Shirt width={20} height={20} strokeWidth={2.2} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[13px] font-black text-gray-900 dark:text-white">유니폼 · 사이즈표</span>
-              <span className="mt-0.5 block text-[10px] font-bold text-gray-400 dark:text-white/35">
+              <span className="block truncate text-[14px] font-black text-gray-900 dark:text-white">유니폼 · 사이즈표</span>
+              <span className="mt-0.5 block truncate text-[12px] font-bold text-gray-500 dark:text-white/50">
                 하계 반팔 세트 · 동계 하프집업
               </span>
             </span>
-            <ChevronRight width={16} height={16} strokeWidth={2.4} className="shrink-0 text-gray-300 dark:text-white/25" />
+            <ChevronRight width={16} height={16} strokeWidth={2.2} className="shrink-0 text-gray-400 dark:text-white/40" />
           </Link>
         </section>
 
@@ -311,15 +312,15 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                 {/* 그룹 헤더 */}
                 <div className="mb-3 flex items-baseline gap-2 px-4">
                   <h2
-                    className="text-[11px] font-black uppercase "
+                    className="text-[12px] font-black uppercase"
                     style={{ color: meta.color }}
                   >
                     {key}
                   </h2>
-                  <span className="text-[11px] font-black text-gray-700 dark:text-white/75">
+                  <span className="text-[12px] font-black text-gray-700 dark:text-white/75">
                     {meta.label}
                   </span>
-                  <span className="ml-auto text-[11px] font-black tabular-nums text-gray-400 dark:text-white/35">
+                  <span className="ml-auto text-[12px] font-black tabular-nums text-gray-500 dark:text-white/50">
                     {group.length}
                   </span>
                 </div>
@@ -375,11 +376,11 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                           {/* 하단 그라데이션 + 꼭 필요한 정보만 */}
                           <div className="absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-black/90 via-black/45 to-transparent px-2 pb-2 pt-9">
                             <div className="flex items-center gap-1">
-                              <span className="truncate text-[12px] font-black leading-tight text-white">{name}</span>
+                              <span className="min-w-0 truncate text-[13px] font-black leading-tight text-white">{name}</span>
                               {isC && <CaptainBadge role="c" />}
                               {isVC && <CaptainBadge role="vc" />}
                             </div>
-                            <div className="mt-1 flex items-center gap-1.5 text-[11px] font-black">
+                            <div className="mt-1 flex items-center gap-1.5 whitespace-nowrap text-[11px] font-black">
                               <span className="tabular-nums text-white/65">
                                 {hasNo ? `No. ${rawNo}` : "No. -"}
                               </span>
@@ -396,8 +397,8 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                             className="absolute left-1.5 top-1.5 z-10 flex min-h-9 items-center gap-1 rounded-full bg-black/55 px-2.5 text-white/90 backdrop-blur-sm active:opacity-70"
                             aria-label="선수 수정"
                           >
-                            <Pencil className="h-3 w-3" />
-                            <span className="text-[10px] font-black">편집</span>
+                            <Pencil className="h-3.5 w-3.5" strokeWidth={2.2} />
+                            <span className="whitespace-nowrap text-[11px] font-black">편집</span>
                           </button>
                         )}
                       </div>
@@ -417,7 +418,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
             <DrawerTitle className="text-[15px] font-black text-gray-900 dark:text-white">
               {mode === "add" ? "선수 추가" : "선수 수정"}
             </DrawerTitle>
-            <p className="mt-0.5 text-[11px] font-bold text-gray-400 dark:text-white/30">
+            <p className="mt-0.5 text-[11px] font-bold text-gray-400 dark:text-white/50">
               명단에 표시되는 기본 정보를 입력해 주세요.
             </p>
           </DrawerHeader>
@@ -425,33 +426,41 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-4">
             {/* 이름 */}
             <div>
-              <p className="mb-2 text-[10px] font-black  text-gray-400 dark:text-white/35">이름 *</p>
+              <p className="app-section-label mb-2 text-[12px]">이름 *</p>
               <input
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                 placeholder="선수 이름"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                enterKeyHint="next"
                 className="app-field-surface app-control-md w-full rounded-xl px-3.5 py-2.5 font-medium"
               />
             </div>
 
             {/* 등번호 */}
             <div>
-              <p className="mb-2 text-[10px] font-black  text-gray-400 dark:text-white/35">등번호 <span className="font-medium normal-case tracking-normal text-gray-300 dark:text-white/20">(미입력 시 -)</span></p>
+              <p className="app-section-label mb-2 text-[12px]">등번호 <span className="font-medium normal-case tracking-normal text-gray-400 dark:text-white/40">(미입력 시 -)</span></p>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                enterKeyHint="done"
+                maxLength={2}
                 value={form.no}
-                onChange={(e) => setForm((p) => ({ ...p, no: e.target.value }))}
+                onChange={(e) => setForm((p) => ({ ...p, no: e.target.value.replace(/\D/g, "") }))}
                 placeholder="등번호"
-                min={0}
-                max={99}
                 className="app-field-surface app-control-md w-full rounded-xl px-3.5 py-2.5 font-medium"
               />
             </div>
 
             {/* 포지션 */}
             <div>
-              <p className="mb-2 text-[10px] font-black  text-gray-400 dark:text-white/35">포지션</p>
+              <p className="app-section-label mb-2 text-[12px]">포지션</p>
               <div className="grid grid-cols-4 gap-2">
                 {["GK", "DF", "MF", "FW"].map((p) => {
                   const styles: Record<string, string> = {
@@ -482,7 +491,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
 
             {/* 상태 */}
             <div>
-              <p className="mb-2 text-[10px] font-black  text-gray-400 dark:text-white/35">상태</p>
+              <p className="app-section-label mb-2 text-[12px]">상태</p>
               <div className="flex gap-2">
                 {["활동", "부상", "비활동"].map((s) => (
                   <button
@@ -507,7 +516,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
 
             {/* 주장 역할 — 완장(FormationField)과 명단 표시가 이 값을 본다. */}
             <div>
-              <p className="mb-2 text-[10px] font-black  text-gray-400 dark:text-white/35">주장</p>
+              <p className="app-section-label mb-2 text-[12px]">주장</p>
               <div className="flex gap-2">
                 {[
                   { value: "", label: "없음" },
@@ -530,7 +539,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
                   </button>
                 ))}
               </div>
-              <p className="mt-1.5 text-[10px] font-bold text-gray-400 dark:text-white/30">
+              <p className="mt-1.5 text-[11px] font-bold text-gray-400 dark:text-white/50">
                 주장은 한 명만 두세요. 부주장은 여럿이어도 됩니다.
               </p>
             </div>

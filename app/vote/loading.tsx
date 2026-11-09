@@ -30,7 +30,7 @@ export default function Loading() {
     >
       {/* 상단 바 — 실제와 같은 높이 */}
       <div className="app-page-header safe-header-py-3">
-        <div className={`h-[18px] w-[18px] rounded ${SHIMMER}`} />
+        <div className={`h-[16px] w-[16px] rounded ${SHIMMER}`} />
         <div className={`h-3 w-12 rounded ${SOFT}`} />
       </div>
 
@@ -59,12 +59,12 @@ export default function Loading() {
             {/* 참석 · 미정 · 불참 버튼 */}
             <div className="mt-5 grid grid-cols-3 gap-2">
               {[0, 1, 2].map((i) => (
-                <div key={i} className={`h-[50px] rounded-2xl ${i === 0 ? SHIMMER : SOFT}`} />
+                <div key={i} className={`h-[48px] rounded-2xl ${i === 0 ? SHIMMER : SOFT}`} />
               ))}
             </div>
 
             {/* 집계 막대 + 수치 */}
-            <div className={`mt-4 h-[7px] w-full rounded-full ${SOFT}`} />
+            <div className={`mt-4 h-[8px] w-full rounded-full ${SOFT}`} />
             <div className="mt-2.5 flex gap-3">
               <div className="h-2.5 w-12 rounded bg-[var(--ud-primary)]/15 skeleton-shimmer" />
               <div className="h-2.5 w-12 rounded bg-amber-400/15 skeleton-shimmer" />
@@ -111,7 +111,7 @@ export default function Loading() {
                     <div className={`h-3.5 w-24 rounded ${SHIMMER}`} />
                   </div>
                   <div className={`mt-1.5 h-2.5 w-40 rounded ${SOFT}`} />
-                  <div className={`mt-2 h-[5px] w-full rounded-full ${SOFT}`} />
+                  <div className={`mt-2 h-[4px] w-full rounded-full ${SOFT}`} />
                   <div className="mt-1.5 flex gap-2.5">
                     <div className="h-2.5 w-11 rounded bg-[var(--ud-primary)]/15 skeleton-shimmer" />
                     <div className="h-2.5 w-11 rounded bg-amber-400/15 skeleton-shimmer" />

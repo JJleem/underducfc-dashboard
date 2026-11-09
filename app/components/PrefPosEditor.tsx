@@ -66,14 +66,14 @@ export default function PrefPosEditor({
             <span
               key={p}
               style={{ color: posColor(p), backgroundColor: `${posColor(p)}1a` }}
-              className="rounded-lg px-2.5 py-1 text-[11px] font-black"
+              className="whitespace-nowrap rounded-lg px-2.5 py-1 text-[12px] font-black"
             >
               {p}
             </span>
           ))
         ) : (
-          // 칩과 같은 py-1·text-[11px] 이라야 옆에 놓였을 때 높낮이가 안 어긋난다
-          <span className="py-1 text-[11px] text-gray-400">
+          // 칩과 같은 py-1·text-[12px] 이라야 옆에 놓였을 때 높낮이가 안 어긋난다
+          <span className="py-1 text-[12px] text-gray-500 dark:text-white/50">
             {canEdit ? "선호 포지션을 설정해보세요" : "미설정"}
           </span>
         )}
@@ -81,9 +81,9 @@ export default function PrefPosEditor({
           // 보조 동작이라 테두리 없이 조용하게
           <button
             onClick={() => { setSel(saved); setEditing(true); }}
-            className="flex items-center gap-1 py-1 text-[10px] font-bold text-gray-400 active:opacity-60 dark:text-white/40"
+            className="flex min-h-9 items-center gap-1 whitespace-nowrap px-1 text-[12px] font-bold text-gray-500 active:opacity-60 dark:text-white/55"
           >
-            <Pencil className="h-3 w-3" /> 편집
+            <Pencil className="h-4 w-4" strokeWidth={2.2} /> 편집
           </button>
         )}
       </div>
@@ -94,9 +94,9 @@ export default function PrefPosEditor({
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-[#161618]">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400">최대 {MAX}개 선택 ({sel.length}/{MAX})</p>
-        <button onClick={() => setEditing(false)} className="p-1 text-gray-400 active:opacity-60" aria-label="닫기">
-          <X className="h-4 w-4" />
+        <p className="text-[12px] font-bold tabular-nums text-gray-500 dark:text-gray-400">최대 {MAX}개 선택 ({sel.length}/{MAX})</p>
+        <button onClick={() => setEditing(false)} className="-m-1.5 flex h-9 w-9 items-center justify-center text-gray-500 active:opacity-60 dark:text-white/55" aria-label="닫기">
+          <X className="h-5 w-5" strokeWidth={2.2} />
         </button>
       </div>
       <div className="flex flex-wrap gap-1.5">
@@ -109,11 +109,11 @@ export default function PrefPosEditor({
               onClick={() => toggle(p)}
               disabled={disabled}
               style={on ? { backgroundColor: posColor(p), color: "#fff" } : undefined}
-              className={`rounded-lg px-2.5 py-1.5 text-[11px] font-black transition-colors ${
+              className={`min-h-9 whitespace-nowrap rounded-lg px-3 text-[12px] font-black transition-colors ${
                 on
                   ? ""
                   : disabled
-                    ? "bg-gray-50 text-gray-300 dark:bg-white/5 dark:text-gray-600"
+                    ? "bg-gray-50 text-gray-400 dark:bg-white/5 dark:text-gray-600"
                     : "bg-gray-100 text-gray-600 active:opacity-70 dark:bg-white/5 dark:text-gray-300"
               }`}
             >
@@ -122,13 +122,13 @@ export default function PrefPosEditor({
           );
         })}
       </div>
-      {error && <p className="mt-2 text-[11px] font-bold text-red-500">{error}</p>}
+      {error && <p className="mt-2 text-[12px] font-bold text-red-500">{error}</p>}
       <button
         onClick={save}
         disabled={saving}
         className="app-action-primary app-cta-md mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 font-black active:opacity-80 disabled:opacity-40"
       >
-        <Check className="h-4 w-4" /> {saving ? "저장 중…" : "저장"}
+        <Check className="h-4 w-4" strokeWidth={2.2} /> {saving ? "저장 중…" : "저장"}
       </button>
     </div>
   );

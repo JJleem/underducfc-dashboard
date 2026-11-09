@@ -129,7 +129,7 @@ function NavBar({ active }: { active: NavKey | null }) {
           }}
           transition={{ duration: 0.2, ease: "easeOut" }}
         >
-          <div className="mx-auto mt-1 h-8 w-11 rounded-[14px] bg-[var(--ud-primary)]/11 ring-1 ring-[var(--ud-primary)]/10 dark:bg-[var(--ud-primary)]/10 dark:ring-[var(--ud-primary)]/10" />
+          <div className="mx-auto mt-1 h-8 w-11 rounded-xl bg-[var(--ud-primary)]/11 ring-1 ring-[var(--ud-primary)]/10 dark:bg-[var(--ud-primary)]/10 dark:ring-[var(--ud-primary)]/10" />
         </motion.div>
         {ITEMS.map(({ key, label, icon: Icon, href }) => {
           const selected = active === key;
@@ -139,7 +139,7 @@ function NavBar({ active }: { active: NavKey | null }) {
               href={href}
               onClick={(event) => handleNavClick(event, key)}
               aria-current={selected ? "page" : undefined}
-              className={`relative z-10 flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-extrabold transition-colors ${
+              className={`relative z-10 flex min-h-12 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-xl text-[11px] font-extrabold transition-colors ${
                 selected
                   ? "text-[var(--ud-primary)]"
                   : "text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200"
@@ -150,7 +150,7 @@ function NavBar({ active }: { active: NavKey | null }) {
                 animate={{ y: selected ? -1 : 0 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
               >
-                <Icon className="h-[19px] w-[19px]" strokeWidth={selected ? 2.6 : 2} />
+                <Icon className="h-[20px] w-[20px]" strokeWidth={selected ? 2.6 : 2} />
               </motion.span>
               {label}
             </Link>
@@ -161,7 +161,7 @@ function NavBar({ active }: { active: NavKey | null }) {
           <Link
             href={`/players/${encodeURIComponent(currentUserName)}`}
             aria-current={active === "my" ? "page" : undefined}
-            className={`relative z-10 flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-extrabold transition-colors ${
+            className={`relative z-10 flex min-h-12 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-xl text-[11px] font-extrabold transition-colors ${
               active === "my"
                 ? "text-[var(--ud-primary)]"
                 : "text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200"
@@ -172,7 +172,7 @@ function NavBar({ active }: { active: NavKey | null }) {
               animate={{ y: active === "my" ? -1 : 0 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
             >
-              <UserRound className="h-[19px] w-[19px]" strokeWidth={active === "my" ? 2.6 : 2} />
+              <UserRound className="h-[20px] w-[20px]" strokeWidth={active === "my" ? 2.6 : 2} />
             </motion.span>
             MY
           </Link>
@@ -180,10 +180,10 @@ function NavBar({ active }: { active: NavKey | null }) {
           <button
             type="button"
             onClick={() => signIn("kakao")}
-            className="relative z-10 flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-extrabold text-gray-400 transition-colors hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200"
+            className="relative z-10 flex min-h-12 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-xl text-[11px] font-extrabold text-gray-400 transition-colors hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200"
           >
             <span className="rounded-xl p-1.5">
-              <UserRound className="h-[18px] w-[18px]" />
+              <UserRound className="h-[20px] w-[20px]" strokeWidth={2} />
             </span>
             MY
           </button>

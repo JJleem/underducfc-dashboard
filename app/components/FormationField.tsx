@@ -616,7 +616,7 @@ export function FormationField({
           <div className="absolute left-3 top-3 z-40 flex items-center gap-1.5">
             {tactic && (
               <span
-                className="rounded-lg px-2 py-1 text-[9px] font-black leading-none text-white"
+                className="whitespace-nowrap rounded-lg px-2 py-1 text-[11px] font-black leading-none text-white"
                 style={{
                   background: "rgba(3,8,26,0.82)",
                   border: "1px solid color-mix(in srgb, var(--ud-primary) 35%, transparent)",
@@ -629,7 +629,7 @@ export function FormationField({
             )}
             {shapeIsCustom && (
               <span
-                className="rounded-lg px-2 py-1 text-[9px] font-black leading-none text-white/70"
+                className="whitespace-nowrap rounded-lg px-2 py-1 text-[11px] font-black leading-none text-white/75"
                 style={{
                   background: "rgba(3,8,26,0.72)",
                   border: "1px solid rgba(255,255,255,0.14)",
@@ -669,7 +669,7 @@ export function FormationField({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[12px] font-black text-white truncate">{selectedName}</span>
+                  <span className="min-w-0 text-[13px] font-black text-white truncate">{selectedName}</span>
                   {selectedRole && (
                     <span
                       className="shrink-0 rounded px-1 text-[8px] font-black text-white"
@@ -693,7 +693,7 @@ export function FormationField({
                     <span className="text-[8px] font-black px-1 rounded bg-yellow-400/20 text-yellow-300">MOM</span>
                   )}
                 </div>
-                <div className="text-[10px] text-white/60 font-bold mt-0.5 leading-snug">
+                <div className="text-[11px] text-white/70 font-bold mt-0.5 leading-snug">
                   {selectedStat
                     ? `시즌 출전 ${selectedStat.apps} · 골 ${selectedStat.goals} · 도움 ${selectedStat.assists}${selectedStat.mom ? ` · MOM ${selectedStat.mom}` : ""}`
                     : "시즌 기록 없음 (게스트)"}
@@ -712,16 +712,17 @@ export function FormationField({
               <button
                 type="button"
                 onClick={() => setSelected(null)}
-                className="shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-white/10"
+                aria-label="닫기"
+                className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-white/10"
               >
-                <X className="w-3 h-3 text-white/60" />
+                <X className="w-4 h-4 text-white/70" strokeWidth={2.2} />
               </button>
               <Link
                 href={`/players/${encodeURIComponent(selectedName)}`}
-                className="shrink-0 flex h-7 items-center gap-1 rounded-lg bg-[var(--ud-primary)] px-2 text-[9px] font-black text-white transition-opacity hover:opacity-85"
+                className="shrink-0 flex h-7 items-center gap-1 whitespace-nowrap rounded-lg bg-[var(--ud-primary)] px-2 text-[11px] font-black text-white transition-opacity hover:opacity-85"
               >
                 프로필 보기
-                <ExternalLink className="h-3 w-3" />
+                <ExternalLink className="h-3.5 w-3.5" strokeWidth={2.2} />
               </Link>
             </motion.div>
           )}
@@ -733,7 +734,7 @@ export function FormationField({
         style={{ background: "var(--pitch-bar)", borderTop: "1px solid var(--pitch-bar-border)" }}
       >
         <div className="flex items-center gap-2">
-          <span className="text-[9px] font-black  text-gray-500 dark:text-white/50">
+          <span className="app-section-label whitespace-nowrap text-[11px]">
             선발 라인업
           </span>
         </div>
@@ -746,7 +747,7 @@ export function FormationField({
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-              <span className="text-[9px] font-bold text-gray-600 dark:text-white/60">{item.label}</span>
+              <span className="text-[11px] font-bold text-gray-600 dark:text-white/60">{item.label}</span>
             </div>
           ))}
         </div>

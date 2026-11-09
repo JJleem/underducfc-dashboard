@@ -50,11 +50,12 @@ import useAppOverlay from "../useAppOverlay";
 //
 // 처음엔 9~11px 에 전부 몰아넣었더니 정보가 많아서가 아니라 "붙어 있어서" 답답했다.
 // 한 단계씩 올리고 줄간·섹션간을 벌린다. 줄 수는 그대로다.
-const ICON = { meta: 13, action: 15, logo: 22, thumb: 52 } as const;
-const STROKE = { base: 2.2, bold: 2.6 } as const;
+// 아이콘은 앱 공통 16(글자 옆)·20(단독), 굵기 2.
+const ICON = { meta: 16, action: 16, logo: 22, thumb: 52 } as const;
+const STROKE = { base: 2, bold: 2 } as const;
 
 // 라벨은 전부 같은 모양이어야 여섯 섹션이 한 규칙으로 읽힌다.
-const LABEL = "text-[10px] font-black uppercase  text-gray-400 dark:text-white/35";
+const LABEL = "text-[11px] font-black uppercase  text-gray-400 dark:text-white/50";
 
 const thumb = (url: string, size: number) => cldThumb(url, size);
 
@@ -67,7 +68,7 @@ function shortDate(raw: string): string {
 /** 닫힌 줄에 뜨는 요약 조각. 아이콘 + 값. */
 function Meta({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
   return (
-    <span className="flex items-center gap-1">
+    <span className="flex min-w-0 items-center gap-1 whitespace-nowrap">
       <Icon width={ICON.meta} height={ICON.meta} strokeWidth={STROKE.base} className="shrink-0" />
       {children}
     </span>
@@ -173,7 +174,7 @@ export default function MatchRow({
           markFeedbackSeen();
         }}
         aria-expanded={open}
-        className="-mx-4 flex w-[calc(100%+2rem)] items-center gap-3.5 px-4 py-[18px] text-left transition-colors active:bg-gray-50 dark:active:bg-white/[0.03]"
+        className="-mx-4 flex w-[calc(100%+2rem)] items-center gap-3.5 px-4 py-[16px] text-left transition-colors active:bg-gray-50 dark:active:bg-white/[0.03]"
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
@@ -184,14 +185,16 @@ export default function MatchRow({
                 alt=""
                 width={ICON.logo}
                 height={ICON.logo}
+                loading="lazy"
+                decoding="async"
                 className="shrink-0 rounded-full bg-white object-cover ring-1 ring-black/[0.06] dark:ring-white/10"
               />
             )}
-            <span className="truncate text-[15px] font-black tracking-[-0.02em] text-gray-900 dark:text-white">
+            <span className="min-w-0 truncate text-[15px] font-black tracking-[-0.02em] text-gray-900 dark:text-white">
               {match.opponent}
             </span>
             <span
-              className={`shrink-0 text-[11px] font-black ${
+              className={`shrink-0 whitespace-nowrap text-[11px] font-black ${
                 upcoming ? "text-[var(--ud-primary)]" : resultTextTone(match.result)
               }`}
             >
@@ -205,27 +208,27 @@ export default function MatchRow({
             </span>
           </div>
 
-          <p className="mt-1.5 truncate text-[11px] font-bold text-gray-400 dark:text-white/35">
+          <p className="mt-1.5 truncate text-[11px] font-bold text-gray-400 dark:text-white/50">
             {shortDate(match.date)} · {match.location}
           </p>
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-bold text-gray-400 dark:text-white/35">
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-bold text-gray-400 dark:text-white/50">
             {upcoming && votes && votes.attending + votes.maybe + votes.absent > 0 && (
               <Meta icon={Users}>
                 <span className="tabular-nums">참석 {votes.attending}</span>
-                <span className="text-gray-300 dark:text-white/20">·</span>
+                <span className="text-gray-400 dark:text-white/40">·</span>
                 <span className="tabular-nums">미정 {votes.maybe}</span>
               </Meta>
             )}
             {goals.length > 0 && (
               <Meta icon={Volleyball}>
-                <span className="truncate">{goals.slice(0, 2).join(" · ")}</span>
+                <span className="min-w-0 truncate">{goals.slice(0, 2).join(" · ")}</span>
                 {goals.length > 2 && <span className="tabular-nums">외 {goals.length - 2}</span>}
               </Meta>
             )}
             {moms.length > 0 && (
               <Meta icon={Star}>
-                <span className="truncate">{moms[0]}</span>
+                <span className="min-w-0 truncate">{moms[0]}</span>
                 {moms.length > 1 && <span className="tabular-nums">외 {moms.length - 1}</span>}
               </Meta>
             )}
@@ -250,17 +253,17 @@ export default function MatchRow({
 
         <div className="flex shrink-0 flex-col items-end gap-2">
           {upcoming ? (
-            <span className="text-[13px] font-black text-gray-400 dark:text-white/35">
+            <span className="whitespace-nowrap text-[13px] font-black text-gray-400 dark:text-white/50">
               {match.time && match.time !== "미정" ? match.time : "시간 미정"}
             </span>
           ) : scored ? (
-            <span className="text-[20px] font-black leading-none tabular-nums text-gray-900 dark:text-white">
-              <span className="text-gray-300 dark:text-white/30">{match.ourScore}</span>
-              <span className="mx-0.5 text-gray-300 dark:text-white/20">:</span>
+            <span className="whitespace-nowrap text-[20px] font-black leading-none tabular-nums text-gray-900 dark:text-white">
+              <span className="text-gray-400 dark:text-white/50">{match.ourScore}</span>
+              <span className="mx-0.5 text-gray-400 dark:text-white/40">:</span>
               {match.theirScore}
             </span>
             ) : (
-            <span className="text-[12px] font-black text-gray-300 dark:text-white/25">
+            <span className="text-[12px] font-black text-gray-400 dark:text-white/40">
               {internal ? "기록 없음" : "-"}
             </span>
           )}
@@ -270,6 +273,7 @@ export default function MatchRow({
               src={thumb(photos[0], ICON.thumb * 3)}
               alt=""
               loading="lazy"
+              decoding="async"
               width={ICON.thumb}
               height={ICON.thumb}
               className="rounded-lg object-cover"
@@ -284,7 +288,7 @@ export default function MatchRow({
           height={ICON.action}
           strokeWidth={STROKE.bold}
           aria-hidden="true"
-          className={`shrink-0 text-gray-300 transition-transform duration-200 dark:text-white/25 ${
+          className={`shrink-0 text-gray-400 transition-transform duration-200 ease-out dark:text-white/40 ${
             open ? "rotate-180 text-gray-500 dark:text-white/50" : ""
           }`}
         />
@@ -294,7 +298,7 @@ export default function MatchRow({
       {open && (
         <div className="flex flex-col gap-5 pb-6">
           {upcoming && (
-            <p className="text-[12px] font-bold leading-[1.7] text-gray-400 dark:text-white/35">
+            <p className="text-[12px] font-bold leading-[1.7] text-gray-400 dark:text-white/50">
               아직 치르지 않은 경기예요. 여기서 미리 이야기 나눠요.
             </p>
           )}
@@ -319,7 +323,7 @@ export default function MatchRow({
                     {scorer}
                     {assists[i] && (
                       // 도움은 득점자에 딸린 부연이라 색을 주지 않는다.
-                      <span className="ml-2 text-[11px] font-bold text-gray-400 dark:text-white/35">
+                      <span className="ml-2 text-[11px] font-bold text-gray-400 dark:text-white/50">
                         assist by {assists[i]}
                       </span>
                     )}
@@ -354,7 +358,7 @@ export default function MatchRow({
               <p className="text-[12px] font-bold leading-[1.9] text-gray-500 dark:text-white/50">
                 {attendees.map((name, i) => (
                   <span key={name}>
-                    {i > 0 && <span className="text-gray-300 dark:text-white/20"> · </span>}
+                    {i > 0 && <span className="text-gray-400 dark:text-white/40"> · </span>}
                     <Link href={`/players/${encodeURIComponent(name)}`} className="active:opacity-60">
                       {name}
                     </Link>
@@ -386,6 +390,7 @@ export default function MatchRow({
                       src={thumb(url, 300)}
                       alt=""
                       loading="lazy"
+                      decoding="async"
                       className="aspect-square w-full object-cover"
                     />
                   </button>
@@ -405,7 +410,7 @@ export default function MatchRow({
                 className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-gray-200 py-3 text-[12px] font-black text-gray-600 transition-colors active:bg-gray-50 dark:border-white/10 dark:text-white/60 dark:active:bg-white/[0.03]"
               >
                 라인업
-                <span className="font-bold text-gray-400 dark:text-white/35">
+                <span className="font-bold text-gray-400 dark:text-white/50">
                   {lineups.length === 1
                     ? lineups[0].quarter
                     : `${lineups[0].quarter}–${lineups[lineups.length - 1].quarter}`}
@@ -415,7 +420,7 @@ export default function MatchRow({
                   height={ICON.action}
                   strokeWidth={STROKE.bold}
                   aria-hidden="true"
-                  className={`text-gray-300 transition-transform duration-200 dark:text-white/25 ${
+                  className={`text-gray-400 transition-transform duration-200 dark:text-white/40 ${
                     openLineup ? "rotate-180" : ""
                   }`}
                 />

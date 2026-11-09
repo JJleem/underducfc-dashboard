@@ -21,7 +21,7 @@ export default function PlayerProfileBackButton() {
       aria-label="이전 화면으로"
       className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 active:opacity-60 dark:text-gray-300"
     >
-      <ArrowLeft width={18} height={18} strokeWidth={2.4} />
+      <ArrowLeft width={20} height={20} strokeWidth={2.2} />
     </button>
   );
 }

@@ -114,7 +114,7 @@ export function ResultRevealView({
             style={won ? { textShadow: `0 0 40px ${GOLD}88` } : undefined}
           >
             {data.our}
-            <span className="mx-2 text-white/35">:</span>
+            <span className="mx-2 text-white/50">:</span>
             {data.their}
           </motion.p>
           <motion.div initial={from({ opacity: 0, x: 60 })} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
@@ -122,7 +122,7 @@ export function ResultRevealView({
               // eslint-disable-next-line @next/next/no-img-element -- 정적 로고
               <img src={data.logo} alt="" className="h-16 w-16 rounded-full bg-white object-cover" />
             ) : (
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-[26px] font-black text-white/70">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-[24px] font-black text-white/70">
                 {data.opponent.trim().charAt(0)}
               </span>
             )}
@@ -159,7 +159,7 @@ export function ResultRevealView({
           >
             {scorers && (
               <p>
-                <span className="mr-2 text-white/40">득점</span>
+                <span className="mr-2 text-white/55">득점</span>
                 {scorers}
               </p>
             )}

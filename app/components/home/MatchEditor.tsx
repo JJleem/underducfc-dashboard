@@ -66,7 +66,7 @@ function toMatchDateStr(date: Date): string {
 
 const FIELD =
   "app-field-surface app-control-md w-full rounded-xl px-4 py-2.5 font-medium";
-const LABEL = "mb-2 text-[10px] font-semibold text-gray-400";
+const LABEL = "mb-2 text-[11px] font-semibold text-gray-400";
 const CHIP = "rounded-xl px-3 py-1.5 text-[11px] font-black transition-colors";
 const CHIP_ON = "bg-[var(--ud-primary)] text-white dark:bg-[var(--ud-primary)] dark:text-black";
 const CHIP_OFF = "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300";
@@ -231,7 +231,7 @@ export default function MatchEditor({
             <div>
               <p className={LABEL}>
                 상대팀{" "}
-                <span className="font-medium normal-case tracking-normal text-gray-300 dark:text-gray-600">
+                <span className="font-medium normal-case tracking-normal text-gray-400 dark:text-gray-600">
                   (미입력 시 미정)
                 </span>
               </p>
@@ -239,6 +239,8 @@ export default function MatchEditor({
                 value={opponent}
                 onChange={(e) => setOpponent(e.target.value)}
                 placeholder="상대팀 이름"
+                enterKeyHint="next"
+                autoComplete="off"
                 className={FIELD}
               />
             </div>
@@ -250,6 +252,8 @@ export default function MatchEditor({
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="경기장 이름"
+                enterKeyHint="done"
+                autoComplete="off"
                 className={FIELD}
               />
             </div>
@@ -301,22 +305,26 @@ export default function MatchEditor({
                   <p className={LABEL}>스코어</p>
                   <div className="flex items-center gap-3">
                     <div className="flex-1 text-center">
-                      <p className="mb-1 text-[10px] text-gray-400">언더덕</p>
+                      <p className="mb-1 text-[11px] text-gray-400">언더덕</p>
                       <input
                         type="number"
                         min={0}
+                        inputMode="numeric"
+                        enterKeyHint="done"
                         value={ourScore}
                         onChange={(e) => setOurScore(e.target.value)}
                         placeholder="0"
                         className="app-field-surface w-full rounded-xl px-3 py-3 text-center text-[20px] font-black"
                       />
                     </div>
-                    <span className="text-[20px] font-black text-gray-300 dark:text-gray-600">:</span>
+                    <span className="text-[20px] font-black text-gray-400 dark:text-gray-600">:</span>
                     <div className="flex-1 text-center">
-                      <p className="mb-1 truncate text-[10px] text-gray-400">{opponent || "상대팀"}</p>
+                      <p className="mb-1 truncate text-[11px] text-gray-400">{opponent || "상대팀"}</p>
                       <input
                         type="number"
                         min={0}
+                        inputMode="numeric"
+                        enterKeyHint="done"
                         value={theirScore}
                         onChange={(e) => setTheirScore(e.target.value)}
                         placeholder="0"
@@ -354,7 +362,7 @@ export default function MatchEditor({
                 {attendees.size > 0 && (
                   <div>
                     <div className="mb-2 flex items-center justify-between">
-                      <p className="text-[10px] font-semibold text-gray-400">
+                      <p className="text-[11px] font-semibold text-gray-400">
                         골 기록{" "}
                         <span className="text-[var(--ud-primary)]">{goalEvents.length}골</span>
                       </p>
@@ -366,9 +374,9 @@ export default function MatchEditor({
                             setPickScorer("");
                             setPickAssister("");
                           }}
-                          className="flex items-center gap-1 rounded-lg bg-[var(--ud-primary)]/10 px-2.5 py-1 text-[11px] font-black text-[var(--ud-primary)] dark:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)]"
+                          className="flex items-center gap-1 whitespace-nowrap rounded-lg bg-[var(--ud-primary)]/10 px-2.5 py-1 text-[11px] font-black text-[var(--ud-primary)] dark:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)]"
                         >
-                          <Plus width={12} height={12} strokeWidth={2.6} /> 골 추가
+                          <Plus width={16} height={16} strokeWidth={2} /> 골 추가
                         </button>
                       )}
                     </div>
@@ -381,7 +389,7 @@ export default function MatchEditor({
                             className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5 dark:bg-white/5"
                           >
                             <div className="flex items-center gap-2">
-                              <span className="w-4 text-[10px] font-semibold text-gray-400">{i + 1}</span>
+                              <span className="w-4 text-[11px] font-semibold text-gray-400">{i + 1}</span>
                               {event.scorer === "자책골" ? (
                                 <span className="text-[13px] font-bold text-orange-500 dark:text-orange-400">
                                   자책골 (OG)
@@ -409,7 +417,7 @@ export default function MatchEditor({
                               aria-label="골 삭제"
                               className="p-1 text-gray-400"
                             >
-                              <X width={14} height={14} strokeWidth={2.4} />
+                              <X width={16} height={16} strokeWidth={2} />
                             </button>
                           </div>
                         ))}
@@ -473,7 +481,7 @@ export default function MatchEditor({
                           <div>
                             <p className={LABEL}>
                               어시스트{" "}
-                              <span className="font-medium normal-case tracking-normal text-gray-300 dark:text-gray-600">
+                              <span className="font-medium normal-case tracking-normal text-gray-400 dark:text-gray-600">
                                 (선택)
                               </span>
                             </p>
@@ -541,7 +549,7 @@ export default function MatchEditor({
               disabled={saving || !date}
               className="app-action-primary app-cta-md flex items-center justify-center gap-1.5 rounded-2xl py-3 font-black disabled:opacity-40"
             >
-              {saving && <Loader2 width={16} height={16} className="animate-spin" />}
+              {saving && <Loader2 width={16} height={16} strokeWidth={2} className="animate-spin" />}
               {mode === "create" ? "등록하기" : "저장하기"}
             </button>
           </div>

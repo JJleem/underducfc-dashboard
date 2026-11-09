@@ -87,7 +87,7 @@ export default function VoterChip({
             suppressClick.current = false;
           }
         }}
-        className={`select-none rounded-full px-2.5 py-0.5 text-[12px] font-bold [-webkit-touch-callout:none] active:opacity-60 ${chipTone} ${
+        className={`app-chip select-none [-webkit-touch-callout:none] active:opacity-60 ${chipTone} ${
           held ? "opacity-70" : ""
         }`}
       >

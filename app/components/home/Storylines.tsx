@@ -98,10 +98,10 @@ export default function Storylines({
             <div
               className={`flex items-center justify-between border-b pb-2 ${group.dividerTone}`}
             >
-              <p className={`text-[10px] font-black  ${group.labelTone}`}>
+              <p className={`text-[11px] font-black  ${group.labelTone}`}>
                 {group.label}
               </p>
-              <span className="text-[11px] font-bold tabular-nums text-gray-400 dark:text-white/35">
+              <span className="whitespace-nowrap text-[11px] font-bold tabular-nums text-gray-400 dark:text-white/50">
                 {group.items.length}개
               </span>
             </div>
@@ -120,7 +120,7 @@ export default function Storylines({
                       aria-hidden="true"
                       className={`flex h-6 w-6 shrink-0 items-center justify-center ${group.iconTone}`}
                     >
-                      <StoryIcon width={16} height={16} strokeWidth={2.25} />
+                      <StoryIcon width={16} height={16} strokeWidth={2} />
                     </span>
                     <p className="min-w-0 pt-0.5 text-[13px] leading-[1.55] text-gray-600 dark:text-white/60">
                       {who && (
@@ -148,7 +148,7 @@ export default function Storylines({
             className=""
           >
             {i > 0 && (
-              <span className="mx-1.5 text-gray-300 dark:text-white/20">·</span>
+              <span className="mx-1.5 text-gray-400 dark:text-white/40">·</span>
             )}
             {who && <b className="font-black text-gray-900 dark:text-white">{who}</b>}
             {who && " "}

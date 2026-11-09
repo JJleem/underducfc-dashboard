@@ -16,7 +16,7 @@ export default function Loading() {
     >
       {/* 상단 바 */}
       <div className="app-page-header safe-header-py-3">
-        <div className={`h-[18px] w-[18px] rounded ${SHIMMER}`} />
+        <div className={`h-[16px] w-[16px] rounded ${SHIMMER}`} />
         <div className={`h-3 w-12 rounded ${SOFT}`} />
       </div>
 
@@ -31,7 +31,7 @@ export default function Loading() {
             </div>
 
             {/* 승/무/패 비율 막대 */}
-            <div className={`mt-3.5 h-[7px] w-full rounded-full ${SOFT}`} />
+            <div className={`mt-3.5 h-[8px] w-full rounded-full ${SOFT}`} />
 
             {/* 득점 · 실점 · 경기당 4칸 */}
             <div className="mt-4 grid grid-cols-4 gap-1">
@@ -87,7 +87,7 @@ export default function Loading() {
                   <div className={`h-3.5 w-20 rounded ${SHIMMER}`} />
                   <div className={`mt-1.5 h-2.5 w-12 rounded ${SOFT}`} />
                 </div>
-                <div className="grid w-[146px] shrink-0 grid-cols-4 gap-2">
+                <div className="grid w-[144px] shrink-0 grid-cols-4 gap-2">
                   {[0, 1, 2, 3].map((c) => (
                     <div key={c} className={`h-3.5 rounded ${SOFT}`} />
                   ))}

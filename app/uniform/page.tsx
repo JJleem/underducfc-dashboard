@@ -71,7 +71,7 @@ function Table({ table }: { table: SizeTable }) {
         <thead>
           <tr className="border-b border-gray-200 bg-gray-50 dark:border-white/[0.08] dark:bg-white/[0.04]">
             {table.head.map((h) => (
-              <th key={h} className="whitespace-nowrap px-2 py-2.5 text-[10px] font-black text-gray-500 dark:text-white/50">
+              <th key={h} className="whitespace-nowrap px-2 py-2.5 text-[11px] font-black text-gray-500 dark:text-white/50">
                 {h}
               </th>
             ))}
@@ -110,7 +110,7 @@ export default function UniformPage() {
             aria-label="뒤로"
             className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300"
           >
-            <ArrowLeft width={18} height={18} strokeWidth={2.4} />
+            <ArrowLeft width={20} height={20} strokeWidth={2.2} />
           </Link>
           <span className="app-header-label">유니폼</span>
         </div>
@@ -118,8 +118,8 @@ export default function UniformPage() {
 
       <main className="space-y-10 px-4 pb-28 pt-5">
         <section>
-          <p className="text-[10px] font-black  text-[var(--ud-primary)]">UNDERDUCK FC</p>
-          <h1 className="mt-2 text-[25px] font-black leading-tight tracking-[-0.04em] text-gray-900 dark:text-white">
+          <p className="text-[11px] font-black text-[var(--ud-primary)]">UNDERDUCK FC</p>
+          <h1 className="mt-2 text-[24px] font-black leading-tight tracking-[-0.04em] text-gray-900 dark:text-white">
             유니폼 · 사이즈표
           </h1>
           <p className="mt-2 text-[11px] font-bold text-gray-500 dark:text-white/45">
@@ -129,15 +129,15 @@ export default function UniformPage() {
 
         {KITS.map((kit) => (
           <section key={kit.key}>
-            <div className="mb-3 flex items-baseline gap-2">
-              <h2 className="text-[11px] font-black  text-[var(--ud-primary)]">{kit.season}</h2>
-              <span className="text-[13px] font-black text-gray-900 dark:text-white">{kit.title}</span>
-              <span className="text-[11px] font-bold text-gray-400 dark:text-white/35">{kit.sub}</span>
+            <div className="mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <h2 className="whitespace-nowrap text-[11px] font-black text-[var(--ud-primary)]">{kit.season}</h2>
+              <span className="whitespace-nowrap text-[13px] font-black text-gray-900 dark:text-white">{kit.title}</span>
+              <span className="whitespace-nowrap text-[11px] font-bold text-gray-400 dark:text-white/50">{kit.sub}</span>
             </div>
             {/* 누르면 원본 크기로 연다 — 등번호·스폰서 로고를 자세히 보려는 사람이 있다 */}
             <a href={kit.photo} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-2xl">
               {/* eslint-disable-next-line @next/next/no-img-element -- public 정적 이미지 */}
-              <img src={kit.photo} alt={`${kit.title} 사진`} loading="lazy" className="w-full bg-gray-100 dark:bg-white/5" />
+              <img src={kit.photo} alt={`${kit.title} 사진`} loading="lazy" decoding="async" className="w-full bg-gray-100 dark:bg-white/5" />
             </a>
             <div className="mt-3">
               <Table table={kit.table} />

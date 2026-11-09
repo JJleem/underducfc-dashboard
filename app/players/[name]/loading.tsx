@@ -5,7 +5,7 @@ export default function Loading() {
   return (
     <div className="mx-auto min-h-dvh max-w-md bg-gray-50 pb-28 dark:bg-background">
       <div className="app-page-header safe-header-py-3">
-        <div className={`h-[18px] w-[18px] rounded ${SHIMMER}`} />
+        <div className={`h-[16px] w-[16px] rounded ${SHIMMER}`} />
         <div className={`h-3 w-16 rounded ${SOFT}`} />
       </div>
 
@@ -42,7 +42,7 @@ export default function Loading() {
       <div className="mt-5 grid min-h-14 grid-cols-3 border-y border-gray-200/70 dark:border-white/[0.08]">
         {[0, 1, 2].map((item) => (
           <div key={item} className="flex flex-col items-center justify-center gap-1">
-            <div className={`h-[19px] w-[19px] rounded ${SHIMMER}`} />
+            <div className={`h-[20px] w-[20px] rounded ${SHIMMER}`} />
             <div className={`h-2 w-6 rounded ${SOFT}`} />
           </div>
         ))}

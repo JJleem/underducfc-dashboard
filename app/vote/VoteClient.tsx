@@ -108,14 +108,14 @@ const ROSTER_GROUPS = [
   {
     key: "absent",
     label: "불참",
-    labelTone: "text-gray-400 dark:text-white/35",
-    chipTone: "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-white/45",
+    labelTone: "text-gray-500 dark:text-white/60",
+    chipTone: "bg-gray-200/70 text-gray-600 dark:bg-white/10 dark:text-white/65",
   },
   {
     key: "noReply",
     label: "미투표",
-    labelTone: "text-gray-300 dark:text-white/25",
-    chipTone: "bg-gray-50 text-gray-300 dark:bg-white/5 dark:text-white/25",
+    labelTone: "text-gray-500 dark:text-white/55",
+    chipTone: "bg-gray-100 text-gray-500 dark:bg-white/[0.06] dark:text-white/55",
   },
 ] as const;
 
@@ -404,10 +404,10 @@ export default function VoteClient({
         <div className="relative">
           <div className="flex items-end justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[11px] font-black  text-gray-400 dark:text-white/35">
+              <p className="text-[11px] font-black  text-gray-400 dark:text-white/50">
                 {match.type}
               </p>
-              <h2 className="mt-1.5 flex items-center gap-1.5 text-[21px] font-black leading-none tracking-[-0.035em] text-gray-900 dark:text-white">
+              <h2 className="mt-1.5 flex items-center gap-1.5 text-[20px] font-black leading-none tracking-[-0.035em] text-gray-900 dark:text-white">
                 {logo && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -416,15 +416,15 @@ export default function VoteClient({
                     className="h-5 w-5 shrink-0 rounded-full bg-white object-contain ring-1 ring-black/5"
                   />
                 )}
-                <span className="truncate">{opponentLabel}</span>
+                <span className="min-w-0 truncate">{opponentLabel}</span>
               </h2>
-              <p className="mt-2 text-[11px] font-bold text-gray-500 dark:text-white/50">
+              <p className="mt-2 whitespace-nowrap text-[11px] font-bold text-gray-500 dark:text-white/50">
                 {formatDate(match.date)}
                 {!isUndecided(match.time) && ` · ${match.time}`}
               </p>
               <p className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-white/50">
                 <MapPin width={12} height={12} strokeWidth={2.2} className="shrink-0" />
-                <span className="truncate">
+                <span className="min-w-0 truncate">
                   {isUndecided(match.location) ? "장소 미정" : match.location}
                 </span>
               </p>
@@ -437,11 +437,11 @@ export default function VoteClient({
                 </p>
               )}
               {weather?.available && (
-                <p className="mt-2 text-[11px] font-bold text-gray-500 dark:text-white/50">
+                <p className="mt-2 whitespace-nowrap text-[11px] font-bold text-gray-500 dark:text-white/50">
                   {weatherEmoji(weather.icon)} {weather.temp}°
                   {weather.pop >= 40 && (
                     <span className="ml-1 inline-flex items-center gap-0.5 text-blue-400">
-                      <Droplets width={10} height={10} />
+                      <Droplets width={12} height={12} strokeWidth={2.2} />
                       {weather.pop}%
                     </span>
                   )}
@@ -452,7 +452,7 @@ export default function VoteClient({
 
           {/* 투표 버튼 — 이 화면에서 제일 큰 것 */}
           {voteClosed ? (
-            <p className="mt-5 rounded-2xl bg-gray-100 py-3.5 text-center text-[12px] font-black text-gray-400 dark:bg-white/[0.06] dark:text-white/35">
+            <p className="mt-5 rounded-2xl bg-gray-100 py-3.5 text-center text-[12px] font-black text-gray-400 dark:bg-white/[0.06] dark:text-white/50">
               투표가 마감됐어요 · 명단은 아래에서 확인하세요
             </p>
           ) : currentUser ? (
@@ -468,14 +468,14 @@ export default function VoteClient({
                     onClick={() => submitVote(match.id, key)}
                     disabled={!!submittingVote}
                     aria-pressed={selected}
-                    className={`app-choice flex items-center justify-center gap-1 rounded-2xl py-3.5 text-[14px] font-black ${
+                    className={`app-choice flex items-center justify-center gap-1 whitespace-nowrap rounded-2xl py-3.5 text-[14px] font-black ${
                       selected
                         ? tone
                         : "app-choice-idle"
                     }`}
                   >
                     {busy ? (
-                      <Loader2 width={15} height={15} className="animate-spin" />
+                      <Loader2 width={16} height={16} className="animate-spin" />
                     ) : (
                       <>
                         {key}
@@ -500,7 +500,7 @@ export default function VoteClient({
 
           {/* 언제 닫히는지 안 보이면 갑자기 막힌 것처럼 느낀다. 버튼 바로 아래 한 줄. */}
           {!voteClosed && voteDeadlineLabel(match.date) && (
-            <p className="mt-2 text-center text-[11px] font-bold text-gray-400 dark:text-white/30">
+            <p className="mt-2 text-center text-[11px] font-bold text-gray-400 dark:text-white/50">
               경기 전날 23:00에 자동으로 닫혀요 · {voteDeadlineLabel(match.date)}
             </p>
           )}
@@ -509,7 +509,7 @@ export default function VoteClient({
           <div className="mt-4">
             {total > 0 ? (
               <>
-                <div className="flex h-[7px] overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
+                <div className="flex h-[8px] overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
                   {tally.attending.length > 0 && (
                     <div className="bg-[var(--ud-primary)]" style={{ width: pct(tally.attending.length) }} />
                   )}
@@ -523,25 +523,25 @@ export default function VoteClient({
                     />
                   )}
                 </div>
-                <p className="mt-2 flex gap-3 text-[11px] font-black">
+                <p className="mt-2 flex gap-3 whitespace-nowrap text-[12px] font-black">
                   <span className="text-[var(--ud-primary)]">
                     참석 <span className="tabular-nums">{tally.attending.length}</span>
                   </span>
                   <span className="text-amber-500 dark:text-amber-400">
                     미정 <span className="tabular-nums">{tally.maybe.length}</span>
                   </span>
-                  <span className="text-gray-400 dark:text-white/35">
+                  <span className="text-gray-500 dark:text-white/60">
                     불참 <span className="tabular-nums">{tally.absent.length}</span>
                   </span>
                   {tally.noReply.length > 0 && (
-                    <span className="ml-auto text-gray-300 dark:text-white/25">
+                    <span className="ml-auto text-gray-500 dark:text-white/55">
                       무응답 <span className="tabular-nums">{tally.noReply.length}</span>
                     </span>
                   )}
                 </p>
               </>
             ) : (
-              <p className="text-[11px] font-bold text-gray-300 dark:text-white/25">
+              <p className="text-[11px] font-bold text-gray-400 dark:text-white/40">
                 아직 아무도 응답하지 않았어요.
               </p>
             )}
@@ -562,11 +562,11 @@ export default function VoteClient({
                 return (
                   <div key={key} className="flex items-start gap-2">
                     <span
-                      className={`w-11 shrink-0 pt-0.5 text-[12px] font-black ${labelTone}`}
+                      className={`w-11 shrink-0 whitespace-nowrap pt-1.5 text-[12px] font-black ${labelTone}`}
                     >
                       {label}
                     </span>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
                       {asVoters(names).map((v) => (
                         <VoterChip key={v.name} voter={v} chipTone={chipTone} />
                       ))}
@@ -579,7 +579,7 @@ export default function VoteClient({
 
           {/* 댓글 */}
           <div className="mt-4 border-t border-gray-200 pt-3.5 dark:border-white/[0.08]">
-            <p className="mb-2.5 text-[10px] font-black uppercase  text-gray-400 dark:text-white/35">
+            <p className="app-section-label mb-2.5 text-[12px]">
               댓글 <span className="tabular-nums">{matchComments.length}</span>
             </p>
             <div className="flex flex-col gap-3">
@@ -595,7 +595,7 @@ export default function VoteClient({
                         >
                           {c.nickname}
                         </Link>
-                        <span className="shrink-0 text-[10px] font-bold text-gray-300 dark:text-white/25">
+                        <span className="shrink-0 text-[11px] font-bold text-gray-400 dark:text-white/40">
                           {formatTime(c.timestamp)}
                         </span>
                       </p>
@@ -622,9 +622,9 @@ export default function VoteClient({
                           })
                         }
                         aria-label="댓글 삭제"
-                        className="shrink-0 p-1 text-gray-300 active:opacity-60 dark:text-white/25"
+                        className="shrink-0 p-1 text-gray-400 active:opacity-60 dark:text-white/40"
                       >
-                        <Trash2 width={14} height={14} strokeWidth={2.2} />
+                        <Trash2 width={16} height={16} strokeWidth={2.2} />
                       </button>
                     )}
                   </div>
@@ -632,7 +632,7 @@ export default function VoteClient({
               })}
 
               {matchComments.length === 0 && (
-                <p className="text-[12px] font-bold text-gray-300 dark:text-white/25">
+                <p className="text-[12px] font-bold text-gray-400 dark:text-white/40">
                   아직 댓글이 없어요.
                 </p>
               )}
@@ -657,7 +657,7 @@ export default function VoteClient({
                 {commentEmoticon[match.id] && (
                   <div className="flex items-center gap-2">
                     <Emoticon id={commentEmoticon[match.id]} size={36} />
-                    <span className="flex-1 text-[11px] font-bold text-gray-400 dark:text-white/30">
+                    <span className="flex-1 text-[11px] font-bold text-gray-400 dark:text-white/50">
                       이 이모티콘과 함께 올라가요
                     </span>
                     <button
@@ -679,10 +679,10 @@ export default function VoteClient({
                     className={`shrink-0 transition-colors ${
                       pickerFor === match.id
                         ? "text-[var(--ud-primary)]"
-                        : "text-gray-400 dark:text-white/30"
+                        : "text-gray-400 dark:text-white/50"
                     }`}
                   >
-                    <Smile width={17} height={17} strokeWidth={2.1} />
+                    <Smile width={20} height={20} strokeWidth={2.2} />
                   </button>
                   <input
                     value={commentInput[match.id] || ""}
@@ -694,7 +694,9 @@ export default function VoteClient({
                     }}
                     placeholder="댓글 달기…"
                     maxLength={300}
-                    className="min-w-0 flex-1 bg-transparent text-[16px] text-gray-900 outline-none placeholder:text-gray-300 dark:text-white dark:placeholder:text-white/25"
+                    enterKeyHint="send"
+                    autoComplete="off"
+                    className="min-w-0 flex-1 bg-transparent text-[17px] text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-white/40"
                   />
                   <button
                     type="button"
@@ -707,15 +709,15 @@ export default function VoteClient({
                     className="shrink-0 text-[var(--ud-primary)] disabled:opacity-30 dark:text-[var(--ud-primary)]"
                   >
                     {submittingComment ? (
-                      <Loader2 width={16} height={16} className="animate-spin" />
+                      <Loader2 width={20} height={20} className="animate-spin" />
                     ) : (
-                      <Send width={16} height={16} strokeWidth={2.2} />
+                      <Send width={20} height={20} strokeWidth={2.2} />
                     )}
                   </button>
                 </div>
                 </>
               ) : (
-                <p className="text-[12px] font-bold text-gray-300 dark:text-white/25">
+                <p className="text-[12px] font-bold text-gray-400 dark:text-white/40">
                   로그인하면 댓글을 달 수 있어요.
                 </p>
               )}
@@ -735,7 +737,7 @@ export default function VoteClient({
           aria-label="뒤로"
           className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300"
         >
-          <ArrowLeft width={18} height={18} strokeWidth={2.4} />
+          <ArrowLeft width={20} height={20} strokeWidth={2.2} />
         </Link>
         <span className="app-header-label">투표</span>
       </div>
@@ -749,7 +751,7 @@ export default function VoteClient({
           <p className="text-[13px] font-bold text-gray-400 dark:text-gray-500">
             {restPlan.dates.map((d) => formatDate(d)).join(" · ")} 휴식이에요.
           </p>
-          <p className="mt-1 text-[11px] font-bold text-gray-300 dark:text-gray-600">
+          <p className="mt-1 text-[11px] font-bold text-gray-400 dark:text-gray-600">
             {formatDate(restPlan.returnDate)} 복귀전 일정이 등록되면 투표가 열립니다.
           </p>
         </div>
@@ -758,7 +760,7 @@ export default function VoteClient({
           <p className="text-[13px] font-bold text-gray-400 dark:text-gray-500">
             진행 중인 투표가 없어요.
           </p>
-          <p className="mt-1 text-[11px] font-bold text-gray-300 dark:text-gray-600">
+          <p className="mt-1 text-[11px] font-bold text-gray-400 dark:text-gray-600">
             다음 경기 일정이 등록되면 투표가 열립니다.
           </p>
         </div>
@@ -766,7 +768,7 @@ export default function VoteClient({
 
       {closedMatches.length > 0 && (
         <section className="px-4 pb-24 pt-6">
-          <p className="mb-1 text-[10px] font-black uppercase  text-gray-400 dark:text-white/35">
+          <p className="app-section-label mb-1 text-[12px]">
             지난 투표 <span className="tabular-nums">{closedMatches.length}</span>
           </p>
           <div className="divide-y divide-gray-100 dark:divide-white/[0.06]">
@@ -799,9 +801,9 @@ export default function VoteClient({
                     <button
                       type="button"
                       onClick={() => setReopenTarget(m.id)}
-                      className="mb-3 flex items-center gap-1 text-[11px] font-black text-gray-400 active:opacity-60 dark:text-white/35"
+                      className="mb-3 flex items-center gap-1 text-[11px] font-black text-gray-400 active:opacity-60 dark:text-white/50"
                     >
-                      <LockOpen width={12} height={12} strokeWidth={2.2} />
+                      <LockOpen width={16} height={16} strokeWidth={2.2} />
                       투표 다시 열기
                     </button>
                   )}

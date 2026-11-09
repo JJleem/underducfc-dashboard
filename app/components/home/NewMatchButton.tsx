@@ -22,15 +22,15 @@ export default function NewMatchButton({
         title="경기 등록"
         className={
           variant === "header"
-            ? "press-icon touch-target flex h-8 w-8 items-center justify-center rounded-full bg-[var(--ud-primary)] text-white shadow-sm active:opacity-70 dark:bg-[var(--ud-primary)]"
-            : "flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-gray-300 py-3 text-[12px] font-black text-gray-400 active:opacity-60 dark:border-white/15 dark:text-white/35"
+            ? "press-icon touch-target flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--ud-primary)] text-white shadow-sm active:opacity-70 dark:bg-[var(--ud-primary)]"
+            : "flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-dashed border-gray-300 py-3 text-[12px] font-black text-gray-400 active:opacity-60 dark:border-white/15 dark:text-white/50"
         }
       >
         {variant === "header" ? (
-          <CalendarPlus width={16} height={16} strokeWidth={2.4} />
+          <CalendarPlus width={16} height={16} strokeWidth={2} />
         ) : (
           <>
-            <Plus width={15} height={15} strokeWidth={2.6} />
+            <Plus width={16} height={16} strokeWidth={2} />
             경기 등록
           </>
         )}

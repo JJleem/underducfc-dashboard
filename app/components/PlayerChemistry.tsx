@@ -4,7 +4,7 @@ import type { ChemistryPartner, PlayerChemistry as ChemistryReport } from "../li
 import PlayerFace from "./PlayerFace";
 
 function ResultDots({ results }: { results: ChemistryPartner["record"]["recent"] }) {
-  if (!results.length) return <span className="text-[10px] text-gray-400">전적 없음</span>;
+  if (!results.length) return <span className="text-[11px] text-gray-400">전적 없음</span>;
   return (
     <span className="flex gap-1" aria-label={`최근 동반 전적 ${results.join(" ")}`}>
       {results.map((result, index) => (
@@ -15,7 +15,7 @@ function ResultDots({ results }: { results: ChemistryPartner["record"]["recent"]
               ? "bg-[var(--ud-primary)]/15 text-[var(--ud-primary-strong)] dark:bg-[var(--ud-primary)]/15 dark:text-[var(--ud-primary)]"
               : result === "무"
                 ? "bg-gray-200 text-gray-500 dark:bg-white/10 dark:text-white/50"
-                : "bg-gray-100 text-gray-400 dark:bg-white/[0.05] dark:text-white/30"
+                : "bg-gray-100 text-gray-400 dark:bg-white/[0.05] dark:text-white/50"
           }`}
         >
           {result}
@@ -28,9 +28,9 @@ function ResultDots({ results }: { results: ChemistryPartner["record"]["recent"]
 function Metric({ label, value, note }: { label: string; value: string; note: string }) {
   return (
     <div className="min-w-0 border-l border-gray-200/80 pl-3 first:border-l-0 first:pl-0 dark:border-white/[0.08]">
-      <p className="text-[11px] font-bold text-gray-400 dark:text-white/35">{label}</p>
-      <p className="mt-1 text-[18px] font-black leading-none tabular-nums text-gray-900 dark:text-white">{value}</p>
-      <p className="mt-1.5 truncate text-[11px] font-medium text-gray-400 dark:text-white/30">{note}</p>
+      <p className="truncate text-[11px] font-bold text-gray-400 dark:text-white/50">{label}</p>
+      <p className="mt-1 whitespace-nowrap text-[17px] font-black leading-none tabular-nums text-gray-900 dark:text-white">{value}</p>
+      <p className="mt-1.5 truncate text-[11px] font-medium text-gray-400 dark:text-white/50">{note}</p>
     </div>
   );
 }
@@ -44,10 +44,10 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
   return (
     <div className="space-y-7 pb-3">
       <section className="px-4">
-        <div className="relative overflow-hidden rounded-[22px] border border-gray-200/80 bg-white px-4 pb-4 pt-4 dark:border-white/[0.07] dark:bg-white/[0.04]">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-black  text-gray-400 dark:text-white/35">단짝</p>
-            <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-black text-gray-500 dark:bg-white/[0.07] dark:text-white/45">
+        <div className="relative overflow-hidden rounded-2xl border border-gray-200/80 bg-white px-4 pb-4 pt-4 dark:border-white/[0.07] dark:bg-white/[0.04]">
+          <div className="flex items-center justify-between gap-3">
+            <p className="app-section-label text-[11px]">단짝</p>
+            <span className="shrink-0 whitespace-nowrap rounded-full bg-gray-100 px-2 py-1 text-[11px] font-black text-gray-500 dark:bg-white/[0.07] dark:text-white/45">
               {featured.strength}
             </span>
           </div>
@@ -58,9 +58,9 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
               <PlayerFace name={featured.name} size={48} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">{featured.label}</p>
-              <p className="mt-0.5 truncate text-[18px] font-black tracking-tight text-gray-950 dark:text-white">
-                {playerName} <span className="font-light text-gray-300 dark:text-white/20">×</span> {featured.name}
+              <p className="truncate text-[11px] font-bold text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">{featured.label}</p>
+              <p className="mt-0.5 truncate text-[17px] font-black tracking-tight text-gray-950 dark:text-white">
+                {playerName} <span className="font-light text-gray-400 dark:text-white/40">×</span> {featured.name}
               </p>
             </div>
           </div>
@@ -78,30 +78,30 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
       </section>
 
       <section>
-        <div className="mb-2 flex items-end justify-between px-4">
-          <div>
-            <p className="text-[10px] font-black  text-gray-500 dark:text-gray-400">파트너</p>
-            <p className="mt-1 text-[10px] font-medium text-gray-400 dark:text-white/30">같은 쿼터에 선 조합 기준</p>
+        <div className="mb-2 flex items-end justify-between gap-3 px-4">
+          <div className="min-w-0">
+            <p className="app-section-label text-[11px]">파트너</p>
+            <p className="mt-1 text-[11px] font-medium text-gray-400 dark:text-white/50">같은 쿼터에 선 조합 기준</p>
           </div>
-          <span className="text-[10px] font-bold tabular-nums text-gray-400">{report.partners.length}명</span>
+          <span className="shrink-0 whitespace-nowrap text-[11px] font-bold tabular-nums text-gray-400">{report.partners.length}명</span>
         </div>
 
         <div className="border-y border-gray-200/70 dark:border-white/[0.07]">
           {report.partners.map((partner, index) => (
             <details key={partner.name} className="group border-b border-gray-100 last:border-b-0 dark:border-white/[0.055]">
-              <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
-                <span className="w-4 shrink-0 text-center text-[10px] font-black tabular-nums text-gray-300 dark:text-white/20">{index + 1}</span>
+              <summary className="app-row cursor-pointer list-none px-4 py-2 [&::-webkit-details-marker]:hidden">
+                <span className="w-4 shrink-0 text-center text-[11px] font-black tabular-nums text-gray-400 dark:text-white/40">{index + 1}</span>
                 <PlayerFace name={partner.name} size={36} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="truncate text-[13px] font-black text-gray-900 dark:text-white">{partner.name}</span>
-                    <span className="truncate text-[11px] font-bold text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">{partner.label}</span>
+                    <span className="min-w-0 shrink-0 truncate text-[13px] font-black text-gray-900 dark:text-white">{partner.name}</span>
+                    <span className="min-w-0 truncate text-[11px] font-bold text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">{partner.label}</span>
                   </div>
-                  <p className="mt-0.5 text-[10px] font-medium text-gray-400 dark:text-white/30">
+                  <p className="mt-0.5 truncate text-[11px] font-medium text-gray-400 dark:text-white/50">
                     {partner.sharedQuarters}쿼터 · {partner.sharedMatches}경기 · 합작 {partner.combinedGoals}
                   </p>
                 </div>
-                <ChevronDown className="h-4 w-4 shrink-0 text-gray-300 transition-transform group-open:rotate-180 dark:text-white/20" />
+                <ChevronDown className="h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 ease-out group-open:rotate-180 dark:text-white/40" strokeWidth={2.2} />
               </summary>
 
               <div className="mx-4 mb-4 ml-[4.25rem] border-l border-gray-200 pl-3 dark:border-white/[0.08]">
@@ -123,9 +123,9 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
                     </div>
                     <Link
                       href={`/players/${encodeURIComponent(partner.name)}`}
-                      className="inline-flex items-center gap-1 text-[10px] font-black text-gray-500 active:opacity-60 dark:text-white/45"
+                      className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] font-black text-gray-500 active:opacity-60 dark:text-white/45"
                     >
-                      프로필 <ArrowUpRight className="h-3 w-3" />
+                      프로필 <ArrowUpRight className="h-4 w-4" strokeWidth={2.2} />
                     </Link>
                   </div>
                 </div>
@@ -133,7 +133,7 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
             </details>
           ))}
         </div>
-        <p className="px-4 pt-2.5 text-[11px] leading-relaxed text-gray-400 dark:text-white/25">
+        <p className="px-4 pt-2.5 text-[11px] leading-relaxed text-gray-400 dark:text-white/40">
           동반 전적은 두 선수가 같은 쿼터에 출전한 경기 결과이며, 개인 기여도를 뜻하지 않아요.
         </p>
       </section>

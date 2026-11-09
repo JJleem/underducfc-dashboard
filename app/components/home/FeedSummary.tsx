@@ -8,7 +8,7 @@ export const FEED_SUMMARY_ROW =
 
 export function FeedSummaryLabel({ children }: { children: ReactNode }) {
   return (
-    <span className="w-[68px] shrink-0 text-[12px] font-black text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
+    <span className="w-[68px] shrink-0 whitespace-nowrap text-[12px] font-black text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
       {children}
     </span>
   );
@@ -18,14 +18,14 @@ export function FeedSummaryEnd({ label }: { label?: string }) {
   return (
     <span className="flex shrink-0 items-center gap-2">
       {label && (
-        <span className="text-[12px] font-bold tabular-nums text-gray-500 dark:text-white/50">
+        <span className="whitespace-nowrap text-[12px] font-bold tabular-nums text-gray-500 dark:text-white/50">
           {label}
         </span>
       )}
       <ChevronRight
-        width={15}
-        height={15}
-        strokeWidth={2.4}
+        width={16}
+        height={16}
+        strokeWidth={2}
         aria-hidden="true"
         className="shrink-0 text-[var(--ud-primary)]/70"
       />

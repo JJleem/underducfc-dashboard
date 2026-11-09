@@ -150,7 +150,7 @@ export default function CommentSheet({
           // 드래그가 안 되니, 결과적으로 이 시트만 내릴 방법이 없었다.
           handleClassName="!absolute left-1/2 top-0 z-20 -translate-x-1/2"
           overlayClassName="touch-none overscroll-none"
-          className="mx-auto h-[62dvh] max-h-none w-full max-w-md overflow-visible bg-white transition-[bottom,height] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-none dark:bg-[#161618]"
+          className="mx-auto h-[62dvh] max-h-none w-full max-w-md overflow-visible bg-white transition-[bottom,height] duration-250 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-none dark:bg-[#161618]"
           style={height > 0 ? { height, bottom: bottomInset } : undefined}
         >
           <div className="relative z-10 flex h-full min-h-0 w-full flex-col overflow-hidden rounded-t-lg bg-white dark:bg-[#161618]">
@@ -159,7 +159,7 @@ export default function CommentSheet({
                 {title}
               </DrawerTitle>
               {subtitle && (
-                <p className="text-center text-[11px] font-bold text-gray-400 dark:text-white/30">
+                <p className="text-center text-[11px] font-bold text-gray-400 dark:text-white/50">
                   {subtitle}
                 </p>
               )}

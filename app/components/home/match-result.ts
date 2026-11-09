@@ -158,7 +158,7 @@ export function resultWord(result: string): string {
 export function resultTextTone(result: string): string {
   if (result === "승") return "text-[var(--ud-primary)]";
   if (result === "자체전") return "text-violet-500 dark:text-violet-400";
-  return "text-gray-400 dark:text-white/35";
+  return "text-gray-400 dark:text-white/50";
 }
 
 /** 최근 폼 뱃지 배경. */

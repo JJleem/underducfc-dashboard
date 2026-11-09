@@ -234,7 +234,7 @@ export default function LoungeDetailClient({
             aria-label="뒤로"
             className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300"
           >
-            <ArrowLeft width={18} height={18} strokeWidth={2.4} />
+            <ArrowLeft width={20} height={20} strokeWidth={2.2} />
           </Link>
           <span className="app-header-label">라운지</span>
           {(post.mine || admin) && (
@@ -243,19 +243,19 @@ export default function LoungeDetailClient({
               aria-label="글 삭제"
               className="press-icon -my-1.5 ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-400 active:opacity-70"
             >
-              <Trash2 width={16} height={16} strokeWidth={2.2} />
+              <Trash2 width={20} height={20} strokeWidth={2.2} />
             </button>
           )}
         </div>
       </header>
 
-      <article className="px-5 pt-5">
+      <article className="px-4 pt-5">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="rounded-md bg-gray-100 px-2 py-1 text-[10px] font-black text-gray-500 dark:bg-white/10 dark:text-white/45">
+          <span className="whitespace-nowrap rounded-md bg-gray-100 px-2 py-1 text-[11px] font-black text-gray-600 dark:bg-white/10 dark:text-white/60">
             {CATEGORY_LABEL[post.category]}
           </span>
           {post.category === "suggestion" && (
-            <span className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-black ${meta.chip}`}>
+            <span className={`flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-black ${meta.chip}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
               {meta.label}
             </span>
@@ -268,10 +268,10 @@ export default function LoungeDetailClient({
             <Emoticon id={post.icon} size={56} />
           </div>
         )}
-        <h1 className="mt-3 text-[19px] font-black leading-[1.4] tracking-[-0.01em]">
+        <h1 className="mt-3 text-[20px] font-black leading-[1.4] tracking-[-0.01em] [overflow-wrap:anywhere]">
           {post.title}
         </h1>
-        <p className="mt-2 text-[11px] font-bold text-gray-400 dark:text-white/30">
+        <p className="mt-2 text-[12px] font-bold text-gray-500 dark:text-white/50">
           {/* 라벨은 백엔드가 준 걸 쓴다. 여기 "익명"을 박아두면 규칙이 두 군데로 갈린다. */}
           {post.authorLabel} · {relativeTime(post.createdAt)}
         </p>
@@ -285,16 +285,16 @@ export default function LoungeDetailClient({
           onClick={toggleLike}
           aria-pressed={liked}
           aria-label={liked ? "좋아요 취소" : "좋아요"}
-          className={`mt-5 flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-[12px] font-black transition-colors ${
+          className={`mt-5 flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-black tabular-nums transition-colors ${
             liked
               ? "border-[var(--ud-primary)]/40 bg-[var(--ud-primary)]/10 text-[var(--ud-primary-strong)] dark:border-[var(--ud-primary)]/30 dark:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)]"
-              : "border-gray-200 text-gray-400 dark:border-white/10 dark:text-white/35"
+              : "border-gray-200 text-gray-500 dark:border-white/10 dark:text-white/55"
           }`}
         >
           <Heart
-            width={15}
-            height={15}
-            strokeWidth={2.3}
+            width={16}
+            height={16}
+            strokeWidth={2.2}
             className={liked ? "fill-current" : ""}
           />
           {likeCount > 0 ? likeCount : "좋아요"}
@@ -302,8 +302,8 @@ export default function LoungeDetailClient({
 
         {/* 운영진에게만 보이는 작성자. 백엔드가 운영진 요청일 때만 내려준다. */}
         {admin && post.author && (
-          <p className="mt-5 flex items-center gap-1.5 rounded-xl bg-gray-50 px-3 py-2.5 text-[11px] font-bold text-gray-500 dark:bg-white/[0.04] dark:text-white/40">
-            <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+          <p className="mt-5 flex items-center gap-1.5 rounded-xl bg-gray-50 px-3 py-2.5 text-[12px] font-bold text-gray-500 dark:bg-white/[0.04] dark:text-white/55">
+            <ShieldCheck className="h-4 w-4 shrink-0" strokeWidth={2.2} />
             운영진만 보임 — 작성자 {post.author}
           </p>
         )}
@@ -311,14 +311,14 @@ export default function LoungeDetailClient({
 
       {/* 운영진 답변 — 본문 바로 아래. 답이 달린다는 게 보여야 다음 사람이 쓴다. */}
       {savedReply && (
-        <section className="mx-5 mt-6 rounded-2xl border border-[var(--ud-primary)]/25 bg-[var(--ud-primary)]/[0.06] p-4 dark:border-[var(--ud-primary)]/20 dark:bg-[var(--ud-primary)]/[0.06]">
-          <p className="flex flex-wrap items-center gap-1.5 text-[11px] font-black text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
-            <ShieldCheck className="h-3.5 w-3.5" />
+        <section className="mx-4 mt-6 rounded-2xl border border-[var(--ud-primary)]/25 bg-[var(--ud-primary)]/[0.06] p-4 dark:border-[var(--ud-primary)]/20 dark:bg-[var(--ud-primary)]/[0.06]">
+          <p className="flex flex-wrap items-center gap-1.5 text-[12px] font-black text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
+            <ShieldCheck className="h-4 w-4" strokeWidth={2.2} />
             운영진 답변
-            {replyAuthor && <span className="opacity-70">· {replyAuthor}</span>}
-            <span className="opacity-70">· {relativeTime(replyAt)}</span>
+            {replyAuthor && <span className="whitespace-nowrap opacity-80">· {replyAuthor}</span>}
+            <span className="whitespace-nowrap opacity-80">· {relativeTime(replyAt)}</span>
           </p>
-          <p className="mt-2.5 whitespace-pre-wrap break-words text-[14px] leading-[1.8] text-gray-700 dark:text-white/70">
+          <p className="mt-2.5 whitespace-pre-wrap break-words text-[14px] leading-[1.8] text-gray-700 [overflow-wrap:anywhere] dark:text-white/70">
             {savedReply}
           </p>
         </section>
@@ -326,8 +326,8 @@ export default function LoungeDetailClient({
 
       {/* 운영진 조작 */}
       {admin && post.category === "suggestion" && (
-        <section className="mx-5 mt-6 rounded-2xl border border-gray-200 p-4 dark:border-white/10">
-          <p className="text-[10px] font-black  text-gray-400">운영진</p>
+        <section className="mx-4 mt-6 rounded-2xl border border-gray-200 p-4 dark:border-white/10">
+          <p className="app-section-label text-[12px]">운영진</p>
 
           <div className="mt-3 grid grid-cols-4 gap-1.5">
             {STATUS_ORDER.map((s: LoungeStatus) => (
@@ -336,10 +336,10 @@ export default function LoungeDetailClient({
                 disabled={adminBusy}
                 onClick={() => patch({ status: s }, "상태를 바꿨어요")}
                 aria-pressed={status === s}
-                className={`min-h-10 rounded-lg text-[12px] font-black transition-colors disabled:opacity-40 ${
+                className={`min-h-10 whitespace-nowrap rounded-lg text-[12px] font-black transition-colors disabled:opacity-40 ${
                   status === s
                     ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
-                    : "border border-gray-200 text-gray-400 dark:border-white/10 dark:text-white/35"
+                    : "border border-gray-200 text-gray-400 dark:border-white/10 dark:text-white/50"
                 }`}
               >
                 {STATUS_META[s].label}
@@ -365,13 +365,13 @@ export default function LoungeDetailClient({
       )}
 
       {/* 댓글 */}
-      <section className="mt-8 border-t border-gray-100 px-5 pt-5 dark:border-white/[0.06]">
-        <p className="text-[11px] font-black  text-gray-400">
+      <section className="mt-8 border-t border-gray-100 px-4 pt-5 dark:border-white/[0.06]">
+        <p className="app-section-label text-[12px]">
           댓글 {comments.length}
         </p>
 
         {comments.length === 0 ? (
-          <p className="py-10 text-center text-[13px] font-bold text-gray-400 dark:text-white/30">
+          <p className="py-10 text-center text-[13px] font-bold text-gray-400 dark:text-white/50">
             첫 댓글을 남겨 보세요.
           </p>
         ) : (
@@ -428,7 +428,7 @@ export default function LoungeDetailClient({
         {emoticon && (
           <div className="mt-4 flex items-center gap-2.5">
             <Emoticon id={emoticon} size={40} />
-            <span className="flex-1 text-[11px] font-bold text-gray-400 dark:text-white/30">
+            <span className="flex-1 text-[12px] font-bold text-gray-500 dark:text-white/50">
               이 이모티콘과 함께 올라가요
             </span>
             <button
@@ -442,14 +442,14 @@ export default function LoungeDetailClient({
         )}
 
         {replyTo && (
-          <div className="mt-4 flex items-center gap-1.5 text-[11px] font-bold text-gray-400 dark:text-white/30">
-            <CornerDownRight width={13} height={13} strokeWidth={2.2} className="shrink-0" />
+          <div className="mt-4 flex items-center gap-1.5 text-[12px] font-bold text-gray-500 dark:text-white/50">
+            <CornerDownRight width={16} height={16} strokeWidth={2.2} className="shrink-0" />
             <span className="min-w-0 flex-1 truncate">
               <b className="font-black text-gray-600 dark:text-white/60">{replyTo.authorLabel}</b>
               님에게 답글
             </span>
             <button onClick={() => setReplyTo(null)} aria-label="답글 취소" className="p-1 active:opacity-60">
-              <X className="h-3.5 w-3.5" />
+              <X className="h-4 w-4" strokeWidth={2.2} />
             </button>
           </div>
         )}
@@ -464,10 +464,10 @@ export default function LoungeDetailClient({
             className={`shrink-0 transition-colors ${
               pickerOpen
                 ? "text-[var(--ud-primary)]"
-                : "text-gray-400 dark:text-white/30"
+                : "text-gray-400 dark:text-white/50"
             }`}
           >
-            <Smile width={19} height={19} strokeWidth={2.1} />
+            <Smile width={20} height={20} strokeWidth={2.2} />
           </button>
           <input
             ref={inputRef}
@@ -478,7 +478,9 @@ export default function LoungeDetailClient({
             }}
             placeholder={replyTo ? "답글 남기기…" : "댓글도 익명으로 달려요"}
             maxLength={300}
-            className="min-w-0 flex-1 bg-transparent text-[14px] text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-white/25"
+            enterKeyHint="send"
+            autoComplete="off"
+            className="min-w-0 flex-1 bg-transparent text-[14px] text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-white/40"
           />
           <button
             onClick={addComment}
@@ -487,9 +489,9 @@ export default function LoungeDetailClient({
             className="shrink-0 text-[var(--ud-primary)] disabled:opacity-30 dark:text-[var(--ud-primary)]"
           >
             {sending ? (
-              <Loader2 width={18} height={18} className="animate-spin" />
+              <Loader2 width={20} height={20} className="animate-spin" />
             ) : (
-              <Send width={18} height={18} strokeWidth={2.2} />
+              <Send width={20} height={20} strokeWidth={2.2} />
             )}
           </button>
         </div>
@@ -532,14 +534,14 @@ function CommentRow({
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
           {/* 이름은 백엔드가 글 단위로 매긴다 — 글이 달라지면 이름도 새로 매겨진다. */}
-          <span className="text-[13px] font-black text-gray-900 dark:text-white">
+          <span className="min-w-0 truncate text-[13px] font-black text-gray-900 dark:text-white">
             {c.authorLabel}
           </span>
-          <span className="text-[10px] font-bold text-gray-300 dark:text-white/25">
+          <span className="whitespace-nowrap text-[11px] font-bold text-gray-500 dark:text-white/45">
             {relativeTime(c.createdAt)}
           </span>
           {admin && c.author && (
-            <span className="text-[10px] font-bold text-gray-300 dark:text-white/25">
+            <span className="whitespace-nowrap text-[11px] font-bold text-gray-500 dark:text-white/45">
               · {c.author}
             </span>
           )}
@@ -557,7 +559,7 @@ function CommentRow({
         {!pending && (
           <button
             onClick={onReply}
-            className="mt-1.5 text-[11px] font-black text-gray-400 active:opacity-60 dark:text-white/30"
+            className="mt-1.5 text-[12px] font-black text-gray-500 active:opacity-60 dark:text-white/55"
           >
             답글
           </button>
@@ -567,9 +569,9 @@ function CommentRow({
         <button
           onClick={onDelete}
           aria-label="댓글 삭제"
-          className="shrink-0 p-1 text-gray-300 active:opacity-60 dark:text-white/25"
+          className="shrink-0 p-1 text-gray-400 active:opacity-60 dark:text-white/40"
         >
-          <Trash2 width={14} height={14} strokeWidth={2.2} />
+          <Trash2 width={16} height={16} strokeWidth={2.2} />
         </button>
       )}
     </div>

@@ -14,8 +14,8 @@ import { ChevronDown } from "lucide-react";
 import { useUnseen } from "./useUnseen";
 
 // MatchRow 와 같은 스케일을 쓴다. 두 곳의 화살표가 다른 크기면 다른 동작으로 읽힌다.
-const CHEVRON = 14;
-const STROKE = 2.6;
+const CHEVRON = 16;
+const STROKE = 2;
 
 /**
  * row    — 목록의 한 줄. 눌리는 영역이 화면 끝까지 닿고 화살표는 오른쪽 끝에 붙는다.
@@ -69,7 +69,7 @@ export default function Disclosure({
         {showDot && (
           <span
             aria-label="새 내용"
-            className="pulse-new shrink-0 rounded-full bg-[var(--ud-primary)] px-1.5 py-[1px] text-[10px] font-black leading-[1.5] tracking-[0.06em] text-white dark:bg-[var(--ud-primary)] dark:text-gray-950"
+            className="pulse-new shrink-0 whitespace-nowrap rounded-full bg-[var(--ud-primary)] px-1.5 py-[0px] text-[11px] font-black leading-[1.5] tracking-[0.06em] text-white dark:bg-[var(--ud-primary)] dark:text-gray-950"
           >
             NEW
           </span>
@@ -79,9 +79,9 @@ export default function Disclosure({
           height={CHEVRON}
           strokeWidth={STROKE}
           aria-hidden="true"
-          className={`shrink-0 transition-transform duration-200 ${
+          className={`shrink-0 transition-transform duration-200 ease-out ${
             variant === "row" ? "ml-auto" : ""
-          } ${open ? "rotate-180 text-gray-500 dark:text-white/50" : "text-gray-300 dark:text-white/25"}`}
+          } ${open ? "rotate-180 text-gray-500 dark:text-white/50" : "text-gray-400 dark:text-white/40"}`}
         />
       </button>
       {open && <div className="mt-3">{children}</div>}

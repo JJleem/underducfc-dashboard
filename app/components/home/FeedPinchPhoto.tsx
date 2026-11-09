@@ -129,6 +129,7 @@ export default function FeedPinchPhoto({
           src={src}
           alt={alt}
           loading={loading}
+          decoding={loading === "lazy" ? "async" : undefined}
           fetchPriority={fetchPriority}
           draggable={false}
           className="aspect-square w-full bg-gray-100 object-cover dark:bg-white/5"

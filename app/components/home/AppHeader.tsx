@@ -36,7 +36,7 @@ function SeasonMark({ id }: { id: string }) {
   const [head, tail] = seasonLabel(id).split("-");
   return (
     <span
-      className="season-scope ml-0.5 text-[10px] font-black tabular-nums tracking-tight text-gray-400 dark:text-white/35"
+      className="season-scope ml-0.5 text-[11px] font-black tabular-nums tracking-tight text-gray-400 dark:text-white/50"
       style={{ "--season-light": accent.light, "--season-dark": accent.dark } as CSSProperties}
     >
       {tail ? (
@@ -60,7 +60,7 @@ function OpeningCountdown() {
   const accent = seasonAccent(next.seasonId);
   return (
     <span
-      className="season-scope absolute -right-1 -top-3 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-black normal-case leading-none tabular-nums text-white shadow-sm"
+      className="season-scope absolute -right-1 -top-3 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[11px] font-black normal-case leading-none tabular-nums text-white shadow-sm"
       style={
         {
           "--season-light": accent.light,
@@ -103,8 +103,8 @@ export default function AppHeader({
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white px-5 safe-header-py-35 dark:border-white/[0.06] dark:bg-background">
-      <span className="flex items-center gap-2 text-[15px] font-extrabold uppercase tracking-tight text-gray-900 dark:text-white">
+    <header className="sticky top-0 z-50 flex items-center justify-between gap-1 border-b border-gray-200/70 bg-white px-4 safe-header-py-35 dark:border-white/[0.06] dark:bg-background">
+      <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[15px] min-[360px]:gap-1.5 font-extrabold uppercase tracking-tight text-gray-900 dark:text-white">
         <span className="h-1.5 w-1.5 rounded-full bg-[var(--ud-primary)]" />
         UNDERDUCK
         <span className="relative">
@@ -113,7 +113,9 @@ export default function AppHeader({
         </span>
       </span>
 
-      <div className="flex items-center gap-2">
+      {/* 320px 에서도 버튼 넷(관리자)이 다 들어가야 한다. 좁으면 이름·화살표부터 접는다.
+          이름은 관리자(버튼 하나 더)면 420, 아니면 390 부터 낸다. 이름은 메뉴 안에도 있다. */}
+      <div className="flex shrink-0 items-center gap-1 min-[360px]:gap-1.5">
         {newMatchRoster && <NewMatchButton roster={newMatchRoster} variant="header" />}
 
         <Link
@@ -124,11 +126,11 @@ export default function AppHeader({
             localStorage.setItem(MATCHDAY_GALLERY_SEEN_KEY, "1");
             setShowGalleryNew(false);
           }}
-          className="press-icon touch-target relative flex h-8 w-8 items-center justify-center rounded-full bg-[var(--ud-primary)]/10 text-[var(--ud-primary)] dark:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)]"
+          className="press-icon touch-target relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--ud-primary)]/10 text-[var(--ud-primary)] dark:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)]"
         >
-          <Images className="h-4 w-4" />
+          <Images width={16} height={16} strokeWidth={2} />
           {showGalleryNew && (
-            <span className="absolute -right-2 -top-2 rounded-full bg-[#FF5F7E] px-1.5 py-0.5 text-[10px] font-black leading-none text-white shadow-sm">
+            <span className="absolute -right-2 -top-2 whitespace-nowrap rounded-full bg-[#FF5F7E] px-1.5 py-0.5 text-[11px] font-black leading-none text-white shadow-sm">
               NEW
             </span>
           )}
@@ -139,7 +141,8 @@ export default function AppHeader({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className={`flex h-8 items-center gap-1.5 rounded-full pl-1 pr-2 outline-none transition ${
+                aria-label={`${name || "회원"} 계정 메뉴`}
+                className={`flex h-8 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-1 outline-none transition min-[360px]:pr-2 ${
                   menuOpen
                     ? "bg-gray-200 ring-2 ring-[var(--ud-primary)]/20 dark:bg-white/15"
                     : "bg-gray-100 dark:bg-white/10"
@@ -147,17 +150,24 @@ export default function AppHeader({
               >
                 {user.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.image} alt="" className="h-6 w-6 rounded-full object-cover" />
+                  <img src={user.image} alt="" decoding="async" className="h-6 w-6 shrink-0 rounded-full object-cover" />
                 ) : (
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--ud-primary)] text-[10px] font-bold text-white">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--ud-primary)] text-[11px] font-bold text-white">
                     {name.slice(0, 1) || "U"}
                   </span>
                 )}
-                <span className="max-w-[64px] truncate text-xs font-semibold text-gray-700 dark:text-gray-200">
+                <span
+                  className={`hidden max-w-16 truncate text-xs font-semibold text-gray-700 dark:text-gray-200 ${
+                    newMatchRoster ? "min-[420px]:inline" : "min-[390px]:inline"
+                  }`}
+                >
                   {name || "회원"}
                 </span>
                 <ChevronDown
-                  className={`h-3 w-3 text-gray-400 transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`}
+                  width={12}
+                  height={12}
+                  strokeWidth={2}
+                  className={`hidden shrink-0 text-gray-400 transition-transform duration-200 ease-out min-[360px]:block ${menuOpen ? "rotate-180" : ""}`}
                 />
               </button>
             </DropdownMenuTrigger>
@@ -167,7 +177,7 @@ export default function AppHeader({
               className="w-44 rounded-2xl border-gray-200/80 bg-white/95 p-1.5 backdrop-blur-xl dark:border-white/10 dark:bg-[#17171a]/95"
             >
               <DropdownMenuLabel className="px-2.5 py-2 font-normal">
-                <p className="text-[10px] font-bold text-gray-400">로그인 계정</p>
+                <p className="text-[11px] font-bold text-gray-400">로그인 계정</p>
                 <p className="mt-0.5 truncate text-xs font-extrabold text-gray-800 dark:text-gray-100">
                   {name || "회원"}
                 </p>
@@ -178,7 +188,7 @@ export default function AppHeader({
                 className="rounded-xl px-2.5 py-2 text-xs font-bold text-gray-700 dark:text-gray-200"
               >
                 <Link href={`/players/${encodeURIComponent(name)}`}>
-                  <User className="h-4 w-4 !text-[var(--ud-primary)]" />
+                  <User width={16} height={16} strokeWidth={2} className="!text-[var(--ud-primary)]" />
                   마이페이지
                 </Link>
               </DropdownMenuItem>
@@ -187,7 +197,7 @@ export default function AppHeader({
                 onSelect={() => signOut()}
                 className="rounded-xl px-2.5 py-2 text-xs font-bold"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut width={16} height={16} strokeWidth={2} />
                 로그아웃
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -196,10 +206,11 @@ export default function AppHeader({
           <button
             type="button"
             onClick={() => signIn("kakao")}
-            className="flex h-8 items-center gap-1.5 rounded-full bg-[#FEE500] px-3 text-xs font-bold text-black"
+            aria-label="카카오 로그인"
+            className="flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#FEE500] px-3 text-xs font-bold text-black"
           >
-            <LogIn className="h-3.5 w-3.5" />
-            카카오 로그인
+            <LogIn width={16} height={16} strokeWidth={2} className="hidden shrink-0 min-[360px]:block" />
+            <span className="hidden min-[390px]:inline">카카오 </span>로그인
           </button>
         )}
 
@@ -207,10 +218,10 @@ export default function AppHeader({
           type="button"
           onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
           aria-label="테마 전환"
-          className="press-icon touch-target flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10"
+          className="press-icon touch-target flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10"
         >
-          <Moon className="block h-4 w-4 text-gray-700 dark:hidden" />
-          <Sun className="hidden h-4 w-4 text-[var(--ud-primary)] dark:block" />
+          <Moon width={16} height={16} strokeWidth={2} className="block text-gray-700 dark:hidden" />
+          <Sun width={16} height={16} strokeWidth={2} className="hidden text-[var(--ud-primary)] dark:block" />
         </button>
       </div>
     </header>

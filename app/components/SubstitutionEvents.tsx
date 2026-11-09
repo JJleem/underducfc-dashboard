@@ -16,11 +16,11 @@ export default function SubstitutionEvents({
         {events.map((event, index) => (
           <div
             key={`${event.out}-${event.in}-${index}`}
-            className="flex items-center gap-1.5 text-[10px] font-bold"
+            className="flex items-center gap-1.5 text-[11px] font-bold"
           >
             {event.time && <span className="w-7 shrink-0 text-gray-400">{event.time}</span>}
             <span className="truncate text-red-400">{event.out || "미정"}</span>
-            <ArrowRight className="w-3 h-3 shrink-0 text-gray-300 dark:text-gray-600" />
+            <ArrowRight className="w-3 h-3 shrink-0 text-gray-400 dark:text-gray-600" />
             <span className="truncate text-emerald-500">{event.in || "미정"}</span>
           </div>
         ))}
@@ -49,7 +49,7 @@ export default function SubstitutionEvents({
                 {event.time}
               </span>
             )}
-            <ArrowRight className="h-4 w-4 text-gray-300 dark:text-gray-600" />
+            <ArrowRight className="h-4 w-4 text-gray-400 dark:text-gray-600" />
           </div>
           <div className="min-w-0 text-right">
             <span className="flex items-center justify-end gap-1 text-[11px] font-black uppercase text-emerald-500">

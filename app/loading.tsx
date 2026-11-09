@@ -20,12 +20,12 @@ function FeedSkeleton({ goals = false }: { goals?: boolean }) {
       <div className="flex items-start gap-1 px-4 pt-3.5">
         {[0, 1, 2, 3].map((item) => (
           <div key={item} className="flex w-11 flex-col items-center gap-1">
-            <div className={`h-[18px] w-[18px] rounded-md ${SHIMMER}`} />
+            <div className={`h-5 w-5 rounded-md ${SHIMMER}`} />
             <div className={`h-2 w-6 rounded ${SOFT_SHIMMER}`} />
           </div>
         ))}
         <div className="ml-auto flex w-11 flex-col items-center gap-1">
-          <div className={`h-[18px] w-[18px] rounded-md ${SHIMMER}`} />
+          <div className={`h-5 w-5 rounded-md ${SHIMMER}`} />
           <div className={`h-2 w-5 rounded ${SOFT_SHIMMER}`} />
         </div>
       </div>
@@ -94,14 +94,15 @@ export default function Loading() {
       aria-busy="true"
     >
       {/* 앱 헤더는 실제 높이를 그대로 유지한다. */}
-      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/70 bg-white px-5 safe-header-py-35 dark:border-white/[0.06] dark:bg-background">
-        <span className="flex items-center gap-2 text-[15px] font-extrabold uppercase tracking-tight text-gray-900 dark:text-white">
+      <header className="sticky top-0 z-50 flex items-center justify-between gap-1 border-b border-gray-200/70 bg-white px-4 safe-header-py-35 dark:border-white/[0.06] dark:bg-background">
+        <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[15px] font-extrabold uppercase tracking-tight text-gray-900 min-[360px]:gap-1.5 dark:text-white">
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--ud-primary)]" />
           UNDERDUCK
         </span>
-        <div className="flex items-center gap-2">
+        {/* 실제 헤더(AppHeader)처럼 좁은 폭에선 계정 칩이 아바타만 남는다 */}
+        <div className="flex shrink-0 items-center gap-1 min-[360px]:gap-1.5">
           <span className="h-8 w-8 rounded-full bg-[var(--ud-primary)]/10 skeleton-shimmer" />
-          <span className={`h-8 w-[76px] rounded-full ${SHIMMER}`} />
+          <span className={`h-8 w-8 rounded-full min-[360px]:w-14 min-[390px]:w-[76px] ${SHIMMER}`} />
           <span className={`h-8 w-8 rounded-full ${SHIMMER}`} />
         </div>
       </header>
@@ -124,7 +125,7 @@ export default function Loading() {
             </div>
             <div className={`mt-4 h-3.5 w-32 rounded ${SHIMMER}`} />
             <div className={`mt-2 h-2.5 w-44 rounded ${SOFT_SHIMMER}`} />
-            <div className={`mt-4 h-[7px] w-full rounded-full ${SOFT_SHIMMER}`} />
+            <div className={`mt-4 h-[8px] w-full rounded-full ${SOFT_SHIMMER}`} />
             <div className="mt-2 flex gap-3">
               <div className="h-2.5 w-14 rounded bg-[var(--ud-primary)]/15 skeleton-shimmer" />
               <div className="h-2.5 w-14 rounded bg-amber-400/15 skeleton-shimmer" />

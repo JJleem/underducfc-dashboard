@@ -38,8 +38,8 @@ export default function Loading() {
             <div className="min-w-0 flex-1">
               {/* 종류 · 상태 칩 */}
               <div className="flex items-center gap-1.5">
-                <div className={`h-[22px] w-10 rounded-md ${SOFT}`} />
-                <div className={`h-[22px] w-14 rounded-md ${SOFT}`} />
+                <div className={`h-[24px] w-10 rounded-md ${SOFT}`} />
+                <div className={`h-[24px] w-14 rounded-md ${SOFT}`} />
               </div>
               <div className={`mt-2 h-4 rounded ${SHIMMER}`} style={{ width: `${72 - (i % 3) * 14}%` }} />
               <div className={`mt-1.5 h-2.5 w-24 rounded ${SOFT}`} />

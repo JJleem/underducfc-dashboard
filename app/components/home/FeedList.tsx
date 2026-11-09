@@ -39,13 +39,13 @@ export default function FeedList({ children }: { children: React.ReactNode[] }) 
       {children.slice(0, shown)}
       {!done && (
         <div ref={sentinel} className="py-8 text-center">
-          <span className="text-[11px] font-bold text-gray-300 dark:text-white/20">
+          <span className="text-[11px] font-bold text-gray-400 dark:text-white/40">
             불러오는 중…
           </span>
         </div>
       )}
       {done && children.length > PAGE && (
-        <p className="py-8 text-center text-[11px] font-bold text-gray-300 dark:text-white/20">
+        <p className="py-8 text-center text-[11px] font-bold text-gray-400 dark:text-white/40">
           경기 {children.length}개를 모두 봤어요
         </p>
       )}

@@ -234,24 +234,24 @@ export default function BoardLineupClient({
     <div className="min-h-dvh bg-gray-50 text-gray-900 dark:bg-background dark:text-zinc-100 font-sans max-w-md mx-auto shadow-2xl">
       <header className="app-workspace-header safe-header-py-3">
         <Link href="/board" aria-label="전술 게시판으로" className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300">
-          <ArrowLeft className="h-[18px] w-[18px]" />
+          <ArrowLeft className="h-5 w-5" strokeWidth={2.2} />
         </Link>
         <span className="app-header-label mr-auto">전술</span>
         <button
           onClick={submit}
           disabled={submitting || done}
-          className={`-my-2 flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-[12px] font-black transition ${
+          className={`-my-2 flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-black transition ${
             done ? "bg-green-500 text-white" : "bg-[var(--ud-primary)] text-black hover:bg-[var(--ud-primary)]"
           } disabled:opacity-70`}
         >
-          {done ? <Check className="h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
+          {done ? <Check className="h-4 w-4" strokeWidth={2.2} /> : <Save className="h-4 w-4" strokeWidth={2.2} />}
           {done ? "올렸어요" : submitting ? "올리는 중…" : existing ? "수정" : "올리기"}
         </button>
       </header>
 
       <main className="space-y-4 p-4 pb-16">
         {existing && (
-          <p className="rounded-xl bg-[var(--ud-primary)]/10 px-3 py-2 text-[11px] font-bold text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
+          <p className="rounded-xl bg-[var(--ud-primary)]/10 px-3 py-2 text-[12px] font-bold text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
             이미 올린 전술이 있어 수정 모드예요. 저장하면 기존 글이 갱신되고 목록 맨 위로 올라갑니다.
           </p>
         )}
@@ -261,6 +261,8 @@ export default function BoardLineupClient({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="제목 (예: 어미새전 이렇게 가면 어때요)"
+            enterKeyHint="next"
+            autoComplete="off"
             className="app-field-surface app-control-md w-full rounded-xl border border-gray-200 px-3 py-2.5 font-bold dark:border-white/10"
           />
           <textarea
@@ -270,11 +272,11 @@ export default function BoardLineupClient({
             rows={2}
             className="app-field-surface app-control-md w-full resize-none rounded-xl border border-gray-200 px-3 py-2.5 dark:border-white/10"
           />
-          <p className="px-1 text-[11px] font-bold text-gray-400">작성자 · {author}</p>
+          <p className="px-1 text-[12px] font-bold text-gray-500 dark:text-white/50">작성자 · {author}</p>
         </div>
 
         {/* 쿼터 탭 — 한 사람이 쿼터별로 다른 안을 낼 수 있다 */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+        <div className="scrollbar-none flex items-center gap-1.5 overflow-x-auto">
           {quarters.map((q, i) => {
             const done = new Set(q.assignments.filter(Boolean)).size >= 11;
             return (
@@ -286,7 +288,7 @@ export default function BoardLineupClient({
                   setSwapFrom(null);
                   setLiveShape(null);
                 }}
-                className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl px-3 text-[11px] font-black transition ${
+                className={`flex min-h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-xl px-3 text-[12px] font-black transition ${
                   active === i
                     ? "bg-[var(--ud-primary)] text-white"
                     : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
@@ -294,10 +296,10 @@ export default function BoardLineupClient({
               >
                 {q.quarter}
                 {done ? (
-                  <span className="text-[8px] opacity-70">●</span>
+                  <span className="text-[11px] opacity-70">●</span>
                 ) : (
                   <span
-                    className={`rounded px-1 text-[8px] font-black leading-[1.6] ${
+                    className={`rounded px-1 text-[11px] font-black leading-[1.5] ${
                       active === i
                         ? "bg-white/25 text-white"
                         : "bg-amber-500 text-white"
@@ -312,9 +314,9 @@ export default function BoardLineupClient({
           {quarters.length < MAX_QUARTERS && (
             <button
               onClick={addQuarter}
-              className="flex min-h-9 shrink-0 items-center gap-1 rounded-xl border border-dashed border-gray-300 px-2.5 text-[11px] font-black text-gray-400 dark:border-white/15"
+              className="flex min-h-9 shrink-0 items-center gap-1 rounded-xl border border-dashed border-gray-300 px-2.5 text-[12px] font-black text-gray-500 whitespace-nowrap dark:border-white/15 dark:text-white/55"
             >
-              <Plus className="h-3 w-3" /> 쿼터
+              <Plus className="h-4 w-4" strokeWidth={2.2} /> 쿼터
             </button>
           )}
           {quarters.length > 1 && (
@@ -323,7 +325,7 @@ export default function BoardLineupClient({
               aria-label="현재 쿼터 삭제"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-gray-400 active:bg-red-50 active:text-red-500 dark:active:bg-red-500/10"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-4 w-4" strokeWidth={2.2} />
             </button>
           )}
         </div>
@@ -331,18 +333,18 @@ export default function BoardLineupClient({
         {/* 포메이션 — 이름은 실제 배치에서 계산된다 */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
-            <span className="shrink-0 text-[11px] font-black text-gray-500 dark:text-gray-400">포메이션</span>
+            <span className="app-section-label shrink-0 text-[12px]">포메이션</span>
             <span className="rounded-lg bg-gray-900 px-2 py-1 text-[13px] font-black leading-none text-white dark:bg-white dark:text-black">
               {shapeName}
             </span>
-            {isCustom && <span className="text-[10px] font-black text-[var(--ud-primary)]">커스텀 배치</span>}
+            {isCustom && <span className="whitespace-nowrap text-[12px] font-black text-[var(--ud-primary)]">커스텀 배치</span>}
           </div>
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
+          <div className="scrollbar-none flex gap-1.5 overflow-x-auto">
             {FORMATIONS.map((f) => (
               <button
                 key={f}
                 onClick={() => handleFormationChange(f)}
-                className={`min-h-9 flex-shrink-0 rounded-lg px-2.5 text-[10px] font-black transition ${
+                className={`min-h-9 flex-shrink-0 whitespace-nowrap rounded-lg px-2.5 text-[12px] font-black tabular-nums transition ${
                   matchesPreset(f)
                     ? "bg-gray-900 text-white dark:bg-white dark:text-black"
                     : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
@@ -356,14 +358,14 @@ export default function BoardLineupClient({
 
         {/* 팀 전술 */}
         <div className="flex items-center gap-2">
-          <span className="shrink-0 text-[11px] font-black text-gray-500 dark:text-gray-400">전술</span>
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
+          <span className="app-section-label shrink-0 text-[12px]">전술</span>
+          <div className="scrollbar-none flex min-w-0 gap-1.5 overflow-x-auto">
             {TACTICS.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTactic(tactic === t.id ? "" : t.id)}
                 title={t.desc}
-                className={`min-h-9 flex-shrink-0 rounded-lg px-2.5 text-[10px] font-black transition ${
+                className={`min-h-9 flex-shrink-0 whitespace-nowrap rounded-lg px-2.5 text-[12px] font-black transition ${
                   tactic === t.id
                     ? "bg-[var(--ud-primary)] text-white"
                     : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
@@ -376,8 +378,8 @@ export default function BoardLineupClient({
         </div>
 
         <div>
-          <div className="mb-2 flex items-center justify-between px-1">
-            <span className="text-[10px] font-black uppercase text-gray-400">
+          <div className="mb-2 flex items-center justify-between gap-2 px-1">
+            <span className="app-section-label min-w-0 text-[12px]">
               {swapFrom !== null
                 ? "바꿀 상대 슬롯을 탭하세요"
                 : selected !== null
@@ -386,20 +388,20 @@ export default function BoardLineupClient({
                   : `빈 슬롯 ${selected + 1} → 선수 목록에서 탭`
                 : `선발 ${filled}/11 · 탭해서 배치 · 끌면 위치 이동`}
             </span>
-            <div className="flex items-center gap-2.5">
+            <div className="flex shrink-0 items-center gap-2.5">
               {isCustom && (
                 <button
                   onClick={() => patch({ positions: FORMATION_PRESETS[formation] ?? FORMATION_PRESETS[FORMATIONS[0]] })}
-                  className="-my-2 flex min-h-9 items-center gap-1 px-1 text-[10px] font-bold text-[var(--ud-primary)] hover:opacity-75"
+                  className="-my-2 flex min-h-9 items-center gap-1 whitespace-nowrap px-1 text-[12px] font-bold text-[var(--ud-primary)] hover:opacity-75"
                 >
-                  <Move className="h-3 w-3" /> 배치 복귀
+                  <Move className="h-4 w-4" strokeWidth={2.2} /> 배치 복귀
                 </button>
               )}
               <button
                 onClick={() => setConfirmAction("reset")}
-                className="-my-2 -mr-1 flex min-h-9 items-center gap-1 px-1 text-[10px] font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                className="-my-2 -mr-1 flex min-h-9 items-center gap-1 whitespace-nowrap px-1 text-[12px] font-bold text-gray-500 hover:text-gray-600 dark:text-white/55 dark:hover:text-gray-200"
               >
-                <RotateCcw className="h-3 w-3" /> 초기화
+                <RotateCcw className="h-4 w-4" strokeWidth={2.2} /> 초기화
               </button>
             </div>
           </div>
@@ -426,20 +428,20 @@ export default function BoardLineupClient({
         {/* 선수 풀 — 활동 중인 전원 */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <p className="text-[10px] font-black uppercase text-gray-400">
+            <p className="app-section-label text-[12px]">
               선수 ({pool.length}명)
             </p>
             {selected !== null && assignments[selected] && (
               <button
                 onClick={clearSlot}
-                className="min-h-9 rounded-lg bg-gray-100 px-2.5 text-[10px] font-black text-gray-500 dark:bg-white/5 dark:text-gray-400"
+                className="min-h-9 whitespace-nowrap rounded-lg bg-gray-100 px-2.5 text-[12px] font-black text-gray-500 dark:bg-white/5 dark:text-gray-400"
               >
                 이 자리 비우기
               </button>
             )}
           </div>
           {pool.length === 0 ? (
-            <p className="text-[12px] text-gray-400">활동 중인 선수가 없어요</p>
+            <p className="text-[12px] text-gray-500 dark:text-white/50">활동 중인 선수가 없어요</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {pool.map((name) => {
@@ -450,7 +452,7 @@ export default function BoardLineupClient({
                     <button
                       onClick={() => placePlayer(name)}
                       disabled={selected === null}
-                      className={`min-h-9 rounded-xl px-3 text-[11px] font-black transition ${
+                      className={`min-h-9 whitespace-nowrap rounded-xl px-3 text-[12px] font-black transition ${
                         used
                           ? "border border-[var(--ud-primary)]/30 bg-[var(--ud-primary)]/20 text-[var(--ud-primary)]"
                           : selected !== null
@@ -458,7 +460,7 @@ export default function BoardLineupClient({
                           : "cursor-default border border-gray-200 bg-white text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400"
                       }`}
                     >
-                      {used && <Check className="mr-1 inline-block h-2.5 w-2.5 align-middle" />}
+                      {used && <Check className="mr-1 inline-block h-3 w-3 align-middle" strokeWidth={2.2} />}
                       {name}
                     </button>
                     {/* 선호 포지션 — 로스터 전원이 뜨는 화면이라 배치 힌트가 특히 중요 */}
@@ -467,7 +469,7 @@ export default function BoardLineupClient({
                         {pref.map((v) => (
                           <span
                             key={v}
-                            className="rounded px-1 text-[8px] font-black leading-[1.5]"
+                            className="rounded px-1 text-[11px] font-black leading-[1.4]"
                             style={{
                               color: PREF_POS_COLOR[v] ?? "#94A3B8",
                               backgroundColor: `${PREF_POS_COLOR[v] ?? "#94A3B8"}1f`,

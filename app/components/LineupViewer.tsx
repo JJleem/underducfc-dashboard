@@ -364,13 +364,13 @@ export default function LineupViewer({
         {/* 쿼터 선택 + 우측 이미지 저장 */}
         <div className="flex items-center gap-2">
           {sortedQuarters.length > 1 && (
-            <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto pb-0.5">
+            <div className="scrollbar-none flex min-w-0 flex-1 gap-1 overflow-x-auto">
               {sortedQuarters.map((quarter) => (
                 <button
                   key={quarter}
                   type="button"
                   onClick={() => setActiveQuarter(quarter)}
-                  className={`shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-black transition-colors ${
+                  className={`app-chip transition-colors ${
                     activeQuarter === quarter
                       ? "bg-[var(--ud-primary)] text-white dark:bg-[var(--ud-primary)] dark:text-black"
                       : "bg-black/5 text-gray-500 dark:bg-white/[0.06] dark:text-white/45"
@@ -384,19 +384,22 @@ export default function LineupViewer({
           <button
             type="button"
             onClick={() => setRevealOpen(true)}
-            className={`${sortedQuarters.length > 1 ? "" : "ml-auto "}flex h-7 shrink-0 items-center gap-1 rounded-lg bg-black/5 px-2 text-[9px] font-black text-gray-500 dark:bg-white/[0.06] dark:text-white/55`}
+            className={`${sortedQuarters.length > 1 ? "" : "ml-auto "}flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg bg-black/5 px-2 text-[12px] font-black text-gray-600 dark:bg-white/[0.06] dark:text-white/60`}
+            aria-label="공개 영상"
           >
-            <Play className="h-2.5 w-2.5 fill-current" />
-            공개 영상
+            <Play className="h-3 w-3 fill-current" />
+            {/* 320px 에선 쿼터 탭 넷과 버튼 둘이 한 줄에 안 들어간다 — 아이콘만 남긴다. */}
+            <span className="max-[359px]:hidden">공개 영상</span>
           </button>
           <button
             type="button"
             onClick={saveLineupCard}
             disabled={savingCard}
-            className="flex h-7 shrink-0 items-center gap-1 rounded-lg border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/10 px-2 text-[9px] font-black text-[var(--ud-primary-strong)] transition-opacity disabled:opacity-60 dark:text-[var(--ud-primary)]"
+            aria-label={savingCard ? "만드는 중" : "이미지 저장"}
+            className="flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/10 px-2 text-[12px] font-black text-[var(--ud-primary-strong)] transition-opacity disabled:opacity-60 dark:text-[var(--ud-primary)]"
           >
-            <Download className={`h-3 w-3 ${savingCard ? "" : ""}`} />
-            {savingCard ? "만드는 중" : "저장"}
+            <Download className="h-4 w-4" strokeWidth={2.2} />
+            <span className="max-[359px]:hidden">{savingCard ? "만드는 중" : "저장"}</span>
           </button>
         </div>
 
@@ -427,17 +430,17 @@ export default function LineupViewer({
             type="button"
             className="group flex w-full items-center justify-between rounded-2xl border border-gray-200 bg-gray-50/70 px-3.5 py-3 text-left transition-colors hover:border-[var(--ud-primary)]/40 hover:bg-[var(--ud-primary)]/5 dark:border-white/[0.07] dark:bg-white/[0.03] dark:hover:border-[var(--ud-primary)]/25"
           >
-            <div>
-              <p className="text-[11px] font-black text-gray-800 dark:text-gray-100">
+            <div className="min-w-0">
+              <p className="truncate text-[13px] font-black text-gray-800 dark:text-gray-100">
                 {lineup.quarter} 라인업 · {lineup.formation}
               </p>
-              <p className="mt-0.5 text-[9px] font-semibold text-gray-400">
+              <p className="mt-0.5 text-[11px] font-semibold text-gray-500 dark:text-white/55">
                 선발 {lineup.players.filter(Boolean).length}명 · 대기 {lineup.subs.length}명
               </p>
             </div>
-            <span className="flex items-center gap-1.5 text-[10px] font-black text-[var(--ud-primary)]">
+            <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[12px] font-black text-[var(--ud-primary)]">
               라인업 보기
-              <Maximize2 className="h-3.5 w-3.5 transition-transform " />
+              <Maximize2 className="h-4 w-4" strokeWidth={2.2} />
             </span>
           </button>
         </DialogTrigger>
@@ -456,13 +459,13 @@ export default function LineupViewer({
           className="min-h-full bg-gray-50 text-gray-900 dark:bg-[#070b18] dark:text-white"
         >
         <div className="border-b border-gray-200 bg-gray-50/90 px-4 pb-3 pt-4 dark:border-white/10 dark:bg-[#070b18]/90">
-          <p className="pr-12 text-[9px] font-black  text-[var(--ud-primary)]">
+          <p className="pr-12 text-[11px] font-black text-[var(--ud-primary)]">
             라인업
           </p>
           <div className="mt-1 flex items-end justify-between gap-3 pr-10">
             <div className="min-w-0">
               <h2 className="truncate text-[18px] font-black">언더덕 vs {match.opponent}</h2>
-              <p className="mt-0.5 text-[10px] font-semibold text-gray-500 dark:text-white/40">
+              <p className="mt-0.5 truncate text-[12px] font-semibold text-gray-500 dark:text-white/55">
                 {match.date} · {activeQuarter} · {lineup.formation}
               </p>
             </div>
@@ -471,30 +474,30 @@ export default function LineupViewer({
                 type="button"
                 onClick={share}
                 disabled={sharing}
-                className="flex h-8 items-center gap-1 rounded-xl bg-black/5 px-2.5 text-[9px] font-black text-gray-600 dark:bg-white/10 dark:text-white/80"
+                className="flex h-8 items-center gap-1 whitespace-nowrap rounded-xl bg-black/5 px-2.5 text-[12px] font-black text-gray-600 dark:bg-white/10 dark:text-white/80"
               >
-                {sharing ? <Download className="h-3 w-3" /> : <Share2 className="h-3 w-3" />}
+                {sharing ? <Download className="h-4 w-4" strokeWidth={2.2} /> : <Share2 className="h-4 w-4" strokeWidth={2.2} />}
                 공유
               </button>
               {editHref && (
                 <Link
                   href={editHref}
-                  className="flex h-8 items-center gap-1 rounded-xl bg-[var(--ud-primary)] px-2.5 text-[9px] font-black text-white"
+                  className="flex h-8 items-center gap-1 whitespace-nowrap rounded-xl bg-[var(--ud-primary)] px-2.5 text-[12px] font-black text-white"
                 >
-                  <Pencil className="h-3 w-3" /> 편집
+                  <Pencil className="h-4 w-4" strokeWidth={2.2} /> 편집
                 </Link>
               )}
             </div>
           </div>
 
           {sortedQuarters.length > 1 && (
-            <div className="mt-3 flex gap-1.5 overflow-x-auto pb-0.5">
+            <div className="scrollbar-none mt-3 flex gap-1.5 overflow-x-auto">
               {sortedQuarters.map((quarter) => (
                 <button
                   key={quarter}
                   type="button"
                   onClick={() => setActiveQuarter(quarter)}
-                  className={`shrink-0 rounded-xl px-3 py-1.5 text-[10px] font-black transition-colors ${
+                  className={`app-chip transition-colors ${
                     activeQuarter === quarter
                       ? "bg-[var(--ud-primary)] text-white dark:bg-[var(--ud-primary)] dark:text-black"
                       : "bg-black/5 text-gray-500 dark:bg-white/[0.06] dark:text-white/45"
@@ -547,7 +550,7 @@ export default function LineupViewer({
 
           {lineup.subs.length > 0 && (
             <section className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.04]">
-              <p className="mb-2 text-[9px] font-black  text-gray-400 dark:text-white/35">
+              <p className="app-section-label mb-2 text-[12px]">
                 대기 선수
               </p>
               <div className="grid grid-cols-2 gap-2">
@@ -559,10 +562,10 @@ export default function LineupViewer({
                   >
                     <BenchFaceOn name={name} no={rosterMap[name]} />
                     <span className="min-w-0 flex-1 pb-0.5">
-                      <span className="block truncate text-[10px] font-black text-gray-700 dark:text-white/80">
+                      <span className="block truncate text-[12px] font-black text-gray-700 dark:text-white/80">
                         {name}
                       </span>
-                      <span className="block text-[8px] font-bold text-gray-400 dark:text-white/35">
+                      <span className="block whitespace-nowrap text-[11px] font-bold text-gray-500 dark:text-white/50">
                         No. {rosterMap[name] || "-"}
                       </span>
                     </span>
@@ -579,7 +582,7 @@ export default function LineupViewer({
 
           {lineup.substitutions.length > 0 && (
             <section className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.04]">
-              <p className="mb-2 text-[9px] font-black  text-gray-400 dark:text-white/35">
+              <p className="app-section-label mb-2 text-[12px]">
                 교체 기록
               </p>
               <SubstitutionEvents events={lineup.substitutions} />

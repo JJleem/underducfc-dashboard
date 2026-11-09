@@ -51,7 +51,7 @@ export default function DetailSheet({
             <DrawerTitle className="text-[15px] font-bold text-gray-900 dark:text-white">
               {title}
             </DrawerTitle>
-            {subtitle && <p className="mt-0.5 text-[11px] font-bold text-gray-400">{subtitle}</p>}
+            {subtitle && <p className="mt-0.5 truncate text-[11px] font-bold text-gray-400">{subtitle}</p>}
           </DrawerHeader>
           <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-4">
             {children}
