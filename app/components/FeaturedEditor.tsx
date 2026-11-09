@@ -119,7 +119,7 @@ export default function FeaturedEditor({
         </p>
         <Link
           href="/titles"
-          className="flex shrink-0 items-center gap-0.5 rounded-lg bg-[var(--ud-primary)]/10 px-2 py-1.5 text-[9px] font-black text-[#E96882] active:opacity-60 dark:text-[var(--ud-primary)]"
+          className="flex shrink-0 items-center gap-0.5 rounded-lg bg-[var(--ud-primary)]/10 px-2 py-1.5 text-[9px] font-black text-[var(--ud-primary-strong)] active:opacity-60 dark:text-[var(--ud-primary)]"
         >
           칭호 상세보기
           <ChevronRight className="h-3 w-3" />

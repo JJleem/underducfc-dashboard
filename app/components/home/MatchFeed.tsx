@@ -275,7 +275,7 @@ export default function MatchFeed({
       className="relative aspect-square w-full overflow-hidden bg-[#0b0a1a] text-center text-white"
       style={{
         background:
-          "radial-gradient(circle at 16% 4%,rgba(196,181,253,.18),transparent 36%),radial-gradient(circle at 84% 0%,rgba(255,182,193,.14),transparent 38%),linear-gradient(160deg,#0b0a1a 0%,#1d1740 52%,#0b0a1a 100%)",
+          "radial-gradient(circle at 16% 4%,rgba(196,181,253,.18),transparent 36%),radial-gradient(circle at 84% 0%,color-mix(in srgb, var(--ud-primary) 14%, transparent),transparent 38%),linear-gradient(160deg,#0b0a1a 0%,#1d1740 52%,#0b0a1a 100%)",
       }}
     >
       {resultArt && (
@@ -348,7 +348,7 @@ export default function MatchFeed({
           className="relative aspect-square w-full overflow-hidden bg-[#070d20] text-center text-white"
           style={{
             background:
-              "radial-gradient(circle at 14% 5%,rgba(147,197,253,.16),transparent 34%),radial-gradient(circle at 86% 0%,rgba(255,182,193,.20),transparent 38%),linear-gradient(160deg,#070d20 0%,#111d3d 52%,#070d20 100%)",
+              "radial-gradient(circle at 14% 5%,rgba(147,197,253,.16),transparent 34%),radial-gradient(circle at 86% 0%,color-mix(in srgb, var(--ud-primary) 20%, transparent),transparent 38%),linear-gradient(160deg,#070d20 0%,#111d3d 52%,#070d20 100%)",
           }}
         >
           {/* 배경 그림. 이 카드는 스코어·득점자·MOM까지 글자가 빽빽해서 예정 경기보다
@@ -426,7 +426,7 @@ export default function MatchFeed({
               <span
                 className={`${goals.length > 0 ? "mt-3" : "mt-5"} inline-flex min-w-16 justify-center rounded-full border px-4 py-1.5 text-[11px] font-black ${
                   won
-                    ? "border-[var(--ud-primary)]/70 bg-[var(--ud-primary)] text-white shadow-[0_0_28px_rgba(255,143,163,.28)]"
+                    ? "border-[var(--ud-primary)]/70 bg-[var(--ud-primary)] text-white shadow-[0_0_28px_color-mix(in_srgb,var(--ud-primary)_28%,transparent)]"
                     : "border-white/10 bg-white/[0.06] text-white/55"
                 }`}
               >
@@ -613,7 +613,7 @@ export default function MatchFeed({
         // 숫자와 로고는 그림에 굽지 않고 여기서 그린다 — 이유는 lib/matchday-art.ts.
         <div
           className="relative flex aspect-square w-full flex-col items-center justify-center overflow-hidden"
-          style={{ background: "linear-gradient(160deg,#FFD9E1 0%,var(--ud-primary) 100%)" }}
+          style={{ background: "linear-gradient(160deg,color-mix(in srgb, var(--ud-primary) 30%, white) 0%,var(--ud-primary) 100%)" }}
         >
           {art && (
             <>

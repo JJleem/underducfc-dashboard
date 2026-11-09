@@ -250,9 +250,9 @@ export default function LineupPitch({
                     width: `${zone.x1 - zone.x0}%`,
                     height: `${zone.y1 - zone.y0}%`,
                     border: isHere
-                      ? "1.5px solid rgba(255,143,163,0.95)"
+                      ? "1.5px solid color-mix(in srgb, var(--ud-primary) 95%, transparent)"
                       : "1px dashed rgba(255,255,255,0.22)",
-                    background: isHere ? "rgba(255,143,163,0.22)" : "transparent",
+                    background: isHere ? "color-mix(in srgb, var(--ud-primary) 22%, transparent)" : "transparent",
                   }}
                 >
                   <span
@@ -345,7 +345,7 @@ export default function LineupPitch({
                     : "2px dashed rgba(255,255,255,0.4)",
                   color: hasPlayer ? (color === "#F59E0B" && !isTbd ? "#78350F" : "#fff") : "rgba(255,255,255,0.6)",
                   boxShadow: isDragging
-                    ? "0 0 0 4px rgba(255,143,163,0.45), 0 6px 14px rgba(0,0,0,0.5)"
+                    ? "0 0 0 4px color-mix(in srgb, var(--ud-primary) 45%, transparent), 0 6px 14px rgba(0,0,0,0.5)"
                     : isActive
                     ? "0 0 0 3px rgba(251,191,36,0.4)"
                     : "0 2px 6px rgba(0,0,0,0.4)",
@@ -365,7 +365,7 @@ export default function LineupPitch({
                 <div
                   key={id}
                   className="relative z-10 mt-px rounded-sm px-0.5 text-[6px] font-black leading-[1.5] text-white whitespace-nowrap"
-                  style={{ background: "rgba(255,143,163,0.9)", boxShadow: "0 1px 2px rgba(0,0,0,0.6)" }}
+                  style={{ background: "color-mix(in srgb, var(--ud-primary) 90%, transparent)", boxShadow: "0 1px 2px rgba(0,0,0,0.6)" }}
                 >
                   {instructionShort(id)}
                 </div>
@@ -397,7 +397,7 @@ export default function LineupPitch({
                 className="flex items-center gap-1 rounded-xl px-1.5 py-1.5"
                 style={{
                   background: "rgba(3,8,26,0.92)",
-                  border: "1px solid rgba(255,182,193,0.35)",
+                  border: "1px solid color-mix(in srgb, var(--ud-primary) 35%, transparent)",
                   boxShadow: "0 6px 18px rgba(0,0,0,0.5)",
                 }}
               >

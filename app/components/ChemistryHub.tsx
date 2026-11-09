@@ -73,7 +73,7 @@ function TeamMap({ report, playerName }: { report: TeamChemistry; playerName: st
           <div className="grid" style={{ gridTemplateColumns: `64px repeat(${orderedPlayers.length}, 42px)` }}>
             <div className="sticky left-0 z-20 border-r border-white/70 bg-gray-50/75 shadow-[8px_0_18px_-14px_rgba(17,24,39,0.45)] backdrop-blur-md dark:border-white/[0.07] dark:bg-background/70" />
             {orderedPlayers.map((name) => (
-              <div key={name} className={`relative h-16 ${name === playerName ? "bg-[var(--ud-primary)]/10 text-[#F56F88] dark:bg-[var(--ud-primary)]/[0.08] dark:text-[var(--ud-primary)]" : "text-gray-400 dark:text-white/30"}`}>
+              <div key={name} className={`relative h-16 ${name === playerName ? "bg-[var(--ud-primary)]/10 text-[var(--ud-primary-strong)] dark:bg-[var(--ud-primary)]/[0.08] dark:text-[var(--ud-primary)]" : "text-gray-400 dark:text-white/30"}`}>
                 <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black leading-none [writing-mode:vertical-rl]">
                   {name}
                 </span>
@@ -81,7 +81,7 @@ function TeamMap({ report, playerName }: { report: TeamChemistry; playerName: st
             ))}
             {orderedPlayers.map((rowName) => (
               <div key={`row-${rowName}`} className="contents">
-                <div className={`sticky left-0 z-10 flex h-10 items-center truncate border-r border-t px-2 text-[9px] font-black shadow-[8px_0_18px_-14px_rgba(17,24,39,0.45)] backdrop-blur-md ${rowName === playerName ? "border-r-white/70 border-t-[var(--ud-primary)]/20 bg-[#FFDCE3]/75 text-[#F56F88] dark:border-r-white/[0.07] dark:border-t-[var(--ud-primary)]/15 dark:bg-[#351D24]/70 dark:text-[var(--ud-primary)]" : "border-r-white/70 border-t-gray-100 bg-gray-50/75 text-gray-500 dark:border-r-white/[0.07] dark:border-t-white/[0.04] dark:bg-background/70 dark:text-white/35"}`}>{rowName}</div>
+                <div className={`sticky left-0 z-10 flex h-10 items-center truncate border-r border-t px-2 text-[9px] font-black shadow-[8px_0_18px_-14px_rgba(17,24,39,0.45)] backdrop-blur-md ${rowName === playerName ? "border-r-white/70 border-t-[var(--ud-primary)]/20 bg-[var(--ud-primary)]/20 text-[var(--ud-primary-strong)] dark:border-r-white/[0.07] dark:border-t-[var(--ud-primary)]/15 dark:bg-[#351D24]/70 dark:text-[var(--ud-primary)]" : "border-r-white/70 border-t-gray-100 bg-gray-50/75 text-gray-500 dark:border-r-white/[0.07] dark:border-t-white/[0.04] dark:bg-background/70 dark:text-white/35"}`}>{rowName}</div>
                 {orderedPlayers.map((colName) => {
                   const pair = rowName === colName ? null : pairs.get(pairId(rowName, colName));
                   const value = pair ? valueOf(pair) : 0;
@@ -97,7 +97,7 @@ function TeamMap({ report, playerName }: { report: TeamChemistry; playerName: st
                       aria-label={pair ? `${rowName}, ${colName}: ${value}${suffix}` : `${rowName}, ${colName}: 기록 없음`}
                       onClick={() => pair && setSelected(pair)}
                       className={`m-1 flex h-8 items-center justify-center rounded-md text-[8px] font-black tabular-nums text-gray-800 disabled:opacity-20 dark:text-white ${isMine ? "ring-1 ring-inset ring-[var(--ud-primary)]/35" : ""}`}
-                      style={pair ? { backgroundColor: `rgba(255,143,163,${isMine ? Math.max(alpha, 0.18) : alpha})` } : isMine ? { backgroundColor: "rgba(255,143,163,0.08)" } : undefined}
+                      style={pair ? { backgroundColor: `color-mix(in srgb, var(--ud-primary) ${(isMine ? Math.max(alpha, 0.18) : alpha) * 100}%, transparent)` } : isMine ? { backgroundColor: "color-mix(in srgb, var(--ud-primary) 8%, transparent)" } : undefined}
                     >
                       {pair && value > 0 ? `${value}${suffix}` : ""}
                     </button>

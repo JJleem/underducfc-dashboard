@@ -71,10 +71,10 @@ export default function HeroLocationActions({
               aria-label={`${location} 복사`}
               className={`press-cta flex h-6 w-14 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border px-1.5 text-[9.5px] font-black transition-colors ${
                 copyState === "copied"
-                  ? "border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/12 text-[#F45F7A] dark:border-[var(--ud-primary)]/25 dark:bg-[var(--ud-primary)]/12 dark:text-[var(--ud-primary)]"
+                  ? "border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/12 text-[var(--ud-primary-strong)] dark:border-[var(--ud-primary)]/25 dark:bg-[var(--ud-primary)]/12 dark:text-[var(--ud-primary)]"
                   : copyState === "failed"
                     ? "border-red-500/25 bg-red-500/10 text-red-500"
-                    : "border-gray-200 bg-black/[0.04] text-gray-400 active:border-[var(--ud-primary)]/30 active:bg-[var(--ud-primary)]/10 active:text-[#F45F7A] dark:border-white/10 dark:bg-white/[0.06] dark:text-white/40"
+                    : "border-gray-200 bg-black/[0.04] text-gray-400 active:border-[var(--ud-primary)]/30 active:bg-[var(--ud-primary)]/10 active:text-[var(--ud-primary-strong)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white/40"
               }`}
             >
               {copyState === "copied" ? (
@@ -91,7 +91,7 @@ export default function HeroLocationActions({
               href={`https://map.kakao.com/link/search/${encodeURIComponent(location)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="press-cta flex h-6 w-14 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/[0.07] px-1.5 text-[9.5px] font-black text-[#F45F7A] dark:border-[var(--ud-primary)]/25 dark:bg-[var(--ud-primary)]/[0.08] dark:text-[var(--ud-primary)]"
+              className="press-cta flex h-6 w-14 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/[0.07] px-1.5 text-[9.5px] font-black text-[var(--ud-primary-strong)] dark:border-[var(--ud-primary)]/25 dark:bg-[var(--ud-primary)]/[0.08] dark:text-[var(--ud-primary)]"
             >
               <Navigation width={11} height={11} strokeWidth={2.3} />
               길찾기

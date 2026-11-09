@@ -171,7 +171,7 @@ export function resultBadgeTone(result: string): string {
 
 /** 사진 없는 경기의 배경. 승=핑크, 자체전=보라, 나머지=차콜. */
 export function resultPanelGradient(result: string): string {
-  if (result === "승") return "linear-gradient(160deg,#FFD9E1 0%,var(--ud-primary) 100%)";
+  if (result === "승") return "linear-gradient(160deg,color-mix(in srgb, var(--ud-primary) 30%, white) 0%,var(--ud-primary) 100%)";
   if (result === "자체전") return "linear-gradient(160deg,#DDD3FA 0%,#8B7BD8 100%)";
   return "linear-gradient(160deg,#2A2A31 0%,#141416 100%)";
 }

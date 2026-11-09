@@ -8,7 +8,7 @@ export const FEED_SUMMARY_ROW =
 
 export function FeedSummaryLabel({ children }: { children: ReactNode }) {
   return (
-    <span className="w-[68px] shrink-0 text-[12px] font-black text-[#FF718B] dark:text-[var(--ud-primary)]">
+    <span className="w-[68px] shrink-0 text-[12px] font-black text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
       {children}
     </span>
   );

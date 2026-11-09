@@ -138,7 +138,7 @@ export default function LoginGate() {
                   </ol>
                 </div>
               </div>
-              <p className="mt-3 border-t border-gray-100 pt-3 text-center text-[10px] font-bold text-[#e9758b] dark:border-white/[0.06] dark:text-[var(--ud-primary)]">
+              <p className="mt-3 border-t border-gray-100 pt-3 text-center text-[10px] font-bold text-[var(--ud-primary-strong)] dark:border-white/[0.06] dark:text-[var(--ud-primary)]">
                 이제 홈 화면의 언더덕 로고로 바로 들어오면 돼요.
               </p>
             </div>

@@ -136,7 +136,7 @@ export default function LoungeClient({
       </header>
 
       {/* 익명이라는 걸 모르면 아무도 안 쓴다. 목록 맨 위에 한 줄로 계속 붙여 둔다. */}
-      <p className="mx-5 mt-4 flex items-center gap-2 rounded-xl bg-[var(--ud-primary)]/[0.07] px-3.5 py-2.5 text-[11px] font-bold text-[#e9758b] dark:bg-[var(--ud-primary)]/[0.07] dark:text-[var(--ud-primary)]">
+      <p className="mx-5 mt-4 flex items-center gap-2 rounded-xl bg-[var(--ud-primary)]/[0.07] px-3.5 py-2.5 text-[11px] font-bold text-[var(--ud-primary-strong)] dark:bg-[var(--ud-primary)]/[0.07] dark:text-[var(--ud-primary)]">
         <MessageSquareHeart className="h-3.5 w-3.5 shrink-0" />
         {ANON_NOTICE}
       </p>
@@ -181,7 +181,7 @@ export default function LoungeClient({
                         </span>
                       )}
                       {post.mine && (
-                        <span className="rounded-md bg-[var(--ud-primary)]/12 px-2 py-1 text-[10px] font-black text-[#e9758b] dark:bg-[var(--ud-primary)]/12 dark:text-[var(--ud-primary)]">
+                        <span className="rounded-md bg-[var(--ud-primary)]/12 px-2 py-1 text-[10px] font-black text-[var(--ud-primary-strong)] dark:bg-[var(--ud-primary)]/12 dark:text-[var(--ud-primary)]">
                           내 글
                         </span>
                       )}
@@ -201,7 +201,7 @@ export default function LoungeClient({
                       {post.likeCount > 0 && (
                         <span
                           className={`flex items-center gap-1 ${
-                            post.likedByMe ? "text-[#e9758b] dark:text-[var(--ud-primary)]" : ""
+                            post.likedByMe ? "text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]" : ""
                           }`}
                         >
                           <Heart

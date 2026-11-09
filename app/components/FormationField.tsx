@@ -207,7 +207,7 @@ export function FormationField({
           className="absolute pointer-events-none"
           style={{
             left: "-10%", top: "-8%", width: "60%", height: "70%",
-            background: "linear-gradient(125deg, rgba(255,182,193,0.14) 0%, rgba(255,255,255,0.05) 30%, transparent 60%)",
+            background: "linear-gradient(125deg, color-mix(in srgb, var(--ud-primary) 14%, transparent) 0%, rgba(255,255,255,0.05) 30%, transparent 60%)",
           }}
         />
         <div
@@ -574,7 +574,7 @@ export function FormationField({
                             <span
                               className="rounded-md px-1.5 py-0.5 text-[11px] font-black text-white text-center leading-tight truncate"
                               style={{
-                                background: isSel ? "rgba(255,143,163,0.92)" : "rgba(2,6,23,0.72)",
+                                background: isSel ? "color-mix(in srgb, var(--ud-primary) 92%, transparent)" : "rgba(2,6,23,0.72)",
                                 border: "1px solid rgba(255,255,255,0.15)",
                                 textShadow: "0 1px 2px rgba(0,0,0,0.8)",
                               }}
@@ -587,7 +587,7 @@ export function FormationField({
                             className="mt-1 px-1.5 rounded-md text-[9px] font-black text-white text-center leading-tight overflow-hidden text-ellipsis whitespace-nowrap"
                             style={{
                               maxWidth: isSel ? 96 : 50,
-                              background: isSel ? "rgba(255,143,163,0.92)" : "rgba(2,6,23,0.72)",
+                              background: isSel ? "color-mix(in srgb, var(--ud-primary) 92%, transparent)" : "rgba(2,6,23,0.72)",
                               border: "1px solid rgba(255,255,255,0.15)",
                               textShadow: "0 1px 2px rgba(0,0,0,0.8)",
                             }}
@@ -649,7 +649,7 @@ export function FormationField({
                 className="rounded-lg px-2 py-1 text-[9px] font-black leading-none text-white"
                 style={{
                   background: "rgba(3,8,26,0.82)",
-                  border: "1px solid rgba(255,182,193,0.35)",
+                  border: "1px solid color-mix(in srgb, var(--ud-primary) 35%, transparent)",
                   boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
                 }}
                 title={tactic.desc}
@@ -682,7 +682,7 @@ export function FormationField({
               className="absolute left-3 right-3 bottom-3 z-40 rounded-xl px-3.5 py-2.5 flex items-center gap-3"
               style={{
                 background: "rgba(3,8,26,0.92)",
-                border: "1px solid rgba(255,182,193,0.25)",
+                border: "1px solid color-mix(in srgb, var(--ud-primary) 25%, transparent)",
                 boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
               }}
             >
@@ -690,8 +690,8 @@ export function FormationField({
                 className="flex items-center justify-center rounded-full font-black shrink-0"
                 style={{
                   width: 30, height: 30, fontSize: 12,
-                  background: "rgba(255,143,163,0.18)",
-                  border: "1.5px solid rgba(255,182,193,0.5)",
+                  background: "color-mix(in srgb, var(--ud-primary) 18%, transparent)",
+                  border: "1.5px solid color-mix(in srgb, var(--ud-primary) 50%, transparent)",
                   color: "var(--ud-primary)",
                 }}
               >

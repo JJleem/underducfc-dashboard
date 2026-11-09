@@ -6,8 +6,6 @@
 :root {
   --background: #f7f6f6;
   --foreground: #18181b;
-  --app-brand: #ff8fa3;
-  --app-brand-strong: #f56f88;
   --app-surface: #f9fafb;
   --app-surface-raised: #ffffff;
   --app-border-subtle: rgba(17, 24, 39, 0.08);
@@ -18,7 +16,7 @@
   /* 라인업 피치: 라이트(주간 경기장) */
   --pitch-frame: linear-gradient(180deg, #c7d7ee 0%, #e2ebf8 55%, #c7d7ee 100%);
   --pitch-frame-shadow: 0 12px 40px rgba(80, 110, 160, 0.25),
-    0 0 28px rgba(255, 143, 163, 0.08);
+    0 0 28px color-mix(in srgb, var(--ud-primary) 8%, transparent);
   --pitch-bar: rgba(255, 255, 255, 0.92);
   --pitch-bar-border: rgba(0, 0, 0, 0.06);
 }
@@ -27,8 +25,6 @@
   /* 순검정(#09090b)에서 한 톤 올린 먹색. 화면이 덜 꺼져 보이고 카드 경계가 부드러워진다. */
   --background: #0f0f13;
   --foreground: #f4f4f5;
-  --app-brand: #ffb6c1;
-  --app-brand-strong: #ff8fa3;
   --app-surface: #0f0f13;
   --app-surface-raised: #09090b;
   --app-border-subtle: rgba(255, 255, 255, 0.065);
@@ -36,7 +32,7 @@
   /* 라인업 피치: 다크(야간 경기장) */
   --pitch-frame: linear-gradient(180deg, #070d20 0%, #0d1733 55%, #070d20 100%);
   --pitch-frame-shadow: 0 12px 40px rgba(5, 10, 30, 0.55),
-    0 0 28px rgba(255, 143, 163, 0.1);
+    0 0 28px color-mix(in srgb, var(--ud-primary) 10%, transparent);
   --pitch-bar: rgba(3, 8, 26, 0.9);
   --pitch-bar-border: rgba(255, 255, 255, 0.06);
 }
@@ -206,13 +202,13 @@ body {
    화면이 재촉하는 것처럼 읽힌다. 주기를 늘리고 링을 얇게 해서 "숨 쉬는" 정도로만 둔다. */
 @keyframes udk-pulse-new {
   0% {
-    box-shadow: 0 0 0 0 rgba(255, 143, 163, 0.4);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ud-primary) 40%, transparent);
   }
   70% {
-    box-shadow: 0 0 0 5px rgba(255, 143, 163, 0);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--ud-primary) 0%, transparent);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 143, 163, 0);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ud-primary) 0%, transparent);
   }
 }
 .pulse-new {
@@ -395,7 +391,7 @@ body {
 .app-button-primary {
   background: var(--app-brand);
   color: white;
-  box-shadow: 0 8px 22px -12px rgba(245, 111, 136, 0.7);
+  box-shadow: 0 8px 22px -12px color-mix(in srgb, var(--app-brand-strong) 70%, transparent);
 }
 .app-button-primary:active:not(:disabled) {
   background: var(--app-brand-strong);
@@ -459,7 +455,7 @@ body {
 .app-icon-action-primary {
   background: var(--app-brand);
   color: white;
-  box-shadow: 0 4px 14px -8px rgba(245, 111, 136, 0.9);
+  box-shadow: 0 4px 14px -8px color-mix(in srgb, var(--app-brand-strong) 90%, transparent);
 }
 .app-icon-action-neutral {
   background: #f3f4f6;
@@ -488,7 +484,7 @@ body {
   color: rgba(255, 255, 255, 0.45);
 }
 .app-choice-attending {
-  background: #ff8fa3;
+  background: var(--app-brand);
   color: white;
 }
 .app-choice-maybe {
@@ -609,10 +605,16 @@ body {
 .season-scope {
   --season: var(--season-light);
   --ud-primary: var(--season-light);
+  --ud-primary-strong: color-mix(in srgb, var(--season-light) 86%, #000);
+  --app-brand: var(--season-light);
+  --app-brand-strong: var(--ud-primary-strong);
 }
 .dark .season-scope {
   --season: var(--season-dark);
   --ud-primary: var(--season-dark);
+  --ud-primary-strong: var(--season-dark);
+  --app-brand: var(--season-dark);
+  --app-brand-strong: var(--season-light);
 }
 .season-accent {
   color: var(--season);
@@ -627,6 +629,11 @@ body {
 
    --ud-primary 는 **이미 테마가 반영된 값**이다. 그래서 소비처는
    `text-[#FF8FA3] dark:text-[#FFB6C1]` 대신 `text-[var(--ud-primary)]` 한 줄만 쓴다.
+   --ud-primary-strong 은 라이트에서 흰 배경 위 글자용으로 한 톤 진한 값, 다크에선 primary 와 같다.
+   --app-brand(-strong) 은 공통 버튼(.app-button-primary 등)이 쓰는 이름 — 같은 시즌색을 가리킨다.
+
+   ⚠️ 파생 변수는 .season-scope 에서도 **다시 선언**해야 한다. 커스텀 프로퍼티는 계산된 값으로
+      상속되므로 :root 에서만 정의하면 지난 시즌 화면에서도 현재 시즌색이 박혀 내려온다.
 
    값은 [[app/lib/seasons.ts]] 의 SeasonAccent 에서 온다. 루트 레이아웃이 현재 시즌으로
    깔고, 지난 시즌을 보는 화면이 자기 컨테이너에서 덮어쓴다. */
@@ -636,8 +643,14 @@ body {
   --season-dark: #ffb6c1;
   --season: var(--season-light);
   --ud-primary: var(--season-light);
+  --ud-primary-strong: color-mix(in srgb, var(--season-light) 86%, #000);
+  --app-brand: var(--season-light);
+  --app-brand-strong: var(--ud-primary-strong);
 }
 .dark {
   --season: var(--season-dark);
   --ud-primary: var(--season-dark);
+  --ud-primary-strong: var(--season-dark);
+  --app-brand: var(--season-dark);
+  --app-brand-strong: var(--season-light);
 }

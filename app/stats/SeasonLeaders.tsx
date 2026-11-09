@@ -25,7 +25,7 @@ function Plate({ title }: { title: EarnedTitle }) {
   return (
     <span
       className="relative inline-flex h-[20px] w-[20px] items-center justify-center rounded-full text-white shadow-[0_2px_6px_rgba(0,0,0,0.3)]"
-      style={{ background: "linear-gradient(180deg, #FFB6C1 0%, #E0607A 100%)" }}
+      style={{ background: "linear-gradient(180deg, var(--ud-primary) 0%, var(--ud-primary-strong) 100%)" }}
     >
       <TitleIcon name={title.icon} width={11} height={11} strokeWidth={2.6} />
     </span>

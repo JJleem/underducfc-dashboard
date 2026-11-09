@@ -251,7 +251,7 @@ export default function BoardLineupClient({
 
       <main className="space-y-4 p-4 pb-16">
         {existing && (
-          <p className="rounded-xl bg-[var(--ud-primary)]/10 px-3 py-2 text-[11px] font-bold text-[#e75f7c] dark:text-[var(--ud-primary)]">
+          <p className="rounded-xl bg-[var(--ud-primary)]/10 px-3 py-2 text-[11px] font-bold text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
             이미 올린 전술이 있어 수정 모드예요. 저장하면 기존 글이 갱신되고 목록 맨 위로 올라갑니다.
           </p>
         )}

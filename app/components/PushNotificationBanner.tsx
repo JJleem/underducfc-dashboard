@@ -96,7 +96,7 @@ export default function PushNotificationBanner() {
             <button
               onClick={handleAllow}
               disabled={loading}
-              className="flex-1 py-2 rounded-xl bg-gradient-to-b from-[#FF9FB0] to-[var(--ud-primary)] dark:from-[#FFC3CD] dark:to-[var(--ud-primary)] text-[12px] font-black text-white dark:text-black disabled:opacity-50"
+              className="flex-1 py-2 rounded-xl bg-gradient-to-b from-[color-mix(in_srgb,var(--ud-primary)_75%,white)] to-[var(--ud-primary)] dark:from-[#FFC3CD] dark:to-[var(--ud-primary)] text-[12px] font-black text-white dark:text-black disabled:opacity-50"
             >
               {loading ? "처리중..." : "알림 허용"}
             </button>

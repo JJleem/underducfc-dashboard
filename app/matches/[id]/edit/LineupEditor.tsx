@@ -849,7 +849,7 @@ export default function LineupEditor({
                         onClick={() => setSelectedImportPostId(group.postId)}
                         className="flex w-full items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-left transition-all hover:border-[var(--ud-primary)]/50 dark:border-white/10"
                       >
-                        <span className="shrink-0 rounded-lg bg-[var(--ud-primary)]/15 px-2 py-1 text-[11px] font-black text-[#e75f7c] dark:text-[var(--ud-primary)]">
+                        <span className="shrink-0 rounded-lg bg-[var(--ud-primary)]/15 px-2 py-1 text-[11px] font-black text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
                           {group.options.length}쿼터
                         </span>
                         <span className="min-w-0 flex-1">
@@ -872,7 +872,7 @@ export default function LineupEditor({
               </div>
             )}
             {importNote && (
-              <p className="rounded-xl bg-[var(--ud-primary)]/10 px-3 py-2 text-[11px] font-bold text-[#e75f7c] dark:text-[var(--ud-primary)]">
+              <p className="rounded-xl bg-[var(--ud-primary)]/10 px-3 py-2 text-[11px] font-bold text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
                 {importNote}
               </p>
             )}
@@ -1020,7 +1020,7 @@ export default function LineupEditor({
                   onClick={() => handleSlotClick("sub", i)}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-black transition-all border ${
                     isSwapSource
-                      ? "border-[var(--ud-primary)] bg-[var(--ud-primary)]/10 text-[#e75f7c] dark:text-[var(--ud-primary)]"
+                      ? "border-[var(--ud-primary)] bg-[var(--ud-primary)]/10 text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]"
                       : isActive
                       ? "border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300"
                       : sub

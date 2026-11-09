@@ -12,7 +12,7 @@ function ResultDots({ results }: { results: ChemistryPartner["record"]["recent"]
           key={`${result}-${index}`}
           className={`flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-black ${
             result === "승"
-              ? "bg-[var(--ud-primary)]/15 text-[#F56F88] dark:bg-[var(--ud-primary)]/15 dark:text-[var(--ud-primary)]"
+              ? "bg-[var(--ud-primary)]/15 text-[var(--ud-primary-strong)] dark:bg-[var(--ud-primary)]/15 dark:text-[var(--ud-primary)]"
               : result === "무"
                 ? "bg-gray-200 text-gray-500 dark:bg-white/10 dark:text-white/50"
                 : "bg-gray-100 text-gray-400 dark:bg-white/[0.05] dark:text-white/30"
@@ -59,7 +59,7 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
               <PlayerFace name={featured.name} size={48} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold text-[#F56F88] dark:text-[var(--ud-primary)]">{featured.label}</p>
+              <p className="text-[10px] font-bold text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">{featured.label}</p>
               <p className="mt-0.5 truncate text-[18px] font-black tracking-tight text-gray-950 dark:text-white">
                 {playerName} <span className="font-light text-gray-300 dark:text-white/20">×</span> {featured.name}
               </p>
@@ -96,7 +96,7 @@ export default function PlayerChemistry({ playerName, report }: { playerName: st
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="truncate text-[13px] font-black text-gray-900 dark:text-white">{partner.name}</span>
-                    <span className="truncate text-[9px] font-bold text-[#F56F88] dark:text-[var(--ud-primary)]">{partner.label}</span>
+                    <span className="truncate text-[9px] font-bold text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">{partner.label}</span>
                   </div>
                   <p className="mt-0.5 text-[10px] font-medium text-gray-400 dark:text-white/30">
                     {partner.sharedQuarters}쿼터 · {partner.sharedMatches}경기 · 합작 {partner.combinedGoals}

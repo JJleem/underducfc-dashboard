@@ -76,7 +76,7 @@ function PlayerCell({
         className="pointer-events-none absolute inset-x-0 top-0 h-1/2"
         style={{
           background:
-            "linear-gradient(150deg, rgba(255,182,193,0.24), transparent 54%)",
+            "linear-gradient(150deg, color-mix(in srgb, var(--ud-primary) 24%, transparent), transparent 54%)",
         }}
       />
       {/* 정면 콘텐츠: 박스 skew 상쇄 */}
@@ -110,7 +110,7 @@ function PlayerCell({
             className="pointer-events-none absolute inset-0 z-[15]"
             style={{
               background:
-                "linear-gradient(90deg, rgba(9,5,9,0.3) 0%, transparent 12%, transparent 88%, rgba(9,5,9,0.3) 100%), linear-gradient(180deg, rgba(255,143,163,0.04) 35%, rgba(113,22,58,0.24) 78%, rgba(0,0,0,0.48) 100%)",
+                "linear-gradient(90deg, rgba(9,5,9,0.3) 0%, transparent 12%, transparent 88%, rgba(9,5,9,0.3) 100%), linear-gradient(180deg, color-mix(in srgb, var(--ud-primary) 4%, transparent) 35%, rgba(113,22,58,0.24) 78%, rgba(0,0,0,0.48) 100%)",
             }}
           />
         )}
@@ -179,7 +179,7 @@ function SubsCell({
           className="pointer-events-none absolute inset-x-0 top-0 h-1/2"
           style={{
             background:
-            "linear-gradient(150deg, rgba(255,182,193,0.22), transparent 54%)",
+            "linear-gradient(150deg, color-mix(in srgb, var(--ud-primary) 22%, transparent), transparent 54%)",
           }}
         />
         {/* 정면 콘텐츠: 박스 skew 상쇄 */}
@@ -261,7 +261,7 @@ const StartingElevenCard = forwardRef<
         className="pointer-events-none absolute -left-6 right-[-20%] top-[84px] z-0 h-10 -rotate-[4deg]"
         style={{
           background:
-            "linear-gradient(90deg, transparent 0%, rgba(255,79,123,0.66) 32%, rgba(255,143,163,0.22) 72%, transparent 100%)",
+            "linear-gradient(90deg, transparent 0%, rgba(255,79,123,0.66) 32%, color-mix(in srgb, var(--ud-primary) 22%, transparent) 72%, transparent 100%)",
         }}
       />
       <span
@@ -269,7 +269,7 @@ const StartingElevenCard = forwardRef<
         className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-16"
         style={{
           background:
-            "radial-gradient(100% 100% at 50% 100%, rgba(255,143,163,0.22), transparent 70%)",
+            "radial-gradient(100% 100% at 50% 100%, color-mix(in srgb, var(--ud-primary) 22%, transparent), transparent 70%)",
         }}
       />
       <span
@@ -277,7 +277,7 @@ const StartingElevenCard = forwardRef<
         className="pointer-events-none absolute inset-0 z-50"
         style={{
           boxShadow:
-            "inset 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,182,193,0.18)",
+            "inset 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 color-mix(in srgb, var(--ud-primary) 18%, transparent)",
         }}
       />
 

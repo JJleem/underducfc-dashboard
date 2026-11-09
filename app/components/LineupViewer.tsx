@@ -393,7 +393,7 @@ export default function LineupViewer({
             type="button"
             onClick={saveLineupCard}
             disabled={savingCard}
-            className="flex h-7 shrink-0 items-center gap-1 rounded-lg border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/10 px-2 text-[9px] font-black text-[#e75f7c] transition-opacity disabled:opacity-60 dark:text-[var(--ud-primary)]"
+            className="flex h-7 shrink-0 items-center gap-1 rounded-lg border border-[var(--ud-primary)]/35 bg-[var(--ud-primary)]/10 px-2 text-[9px] font-black text-[var(--ud-primary-strong)] transition-opacity disabled:opacity-60 dark:text-[var(--ud-primary)]"
           >
             <Download className={`h-3 w-3 ${savingCard ? "animate-bounce" : ""}`} />
             {savingCard ? "만드는 중" : "저장"}

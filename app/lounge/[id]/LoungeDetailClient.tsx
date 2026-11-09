@@ -287,7 +287,7 @@ export default function LoungeDetailClient({
           aria-label={liked ? "좋아요 취소" : "좋아요"}
           className={`mt-5 flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-[12px] font-black transition-colors ${
             liked
-              ? "border-[var(--ud-primary)]/40 bg-[var(--ud-primary)]/10 text-[#e9758b] dark:border-[var(--ud-primary)]/30 dark:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)]"
+              ? "border-[var(--ud-primary)]/40 bg-[var(--ud-primary)]/10 text-[var(--ud-primary-strong)] dark:border-[var(--ud-primary)]/30 dark:bg-[var(--ud-primary)]/10 dark:text-[var(--ud-primary)]"
               : "border-gray-200 text-gray-400 dark:border-white/10 dark:text-white/35"
           }`}
         >
@@ -312,7 +312,7 @@ export default function LoungeDetailClient({
       {/* 운영진 답변 — 본문 바로 아래. 답이 달린다는 게 보여야 다음 사람이 쓴다. */}
       {savedReply && (
         <section className="mx-5 mt-6 rounded-2xl border border-[var(--ud-primary)]/25 bg-[var(--ud-primary)]/[0.06] p-4 dark:border-[var(--ud-primary)]/20 dark:bg-[var(--ud-primary)]/[0.06]">
-          <p className="flex flex-wrap items-center gap-1.5 text-[11px] font-black text-[#e9758b] dark:text-[var(--ud-primary)]">
+          <p className="flex flex-wrap items-center gap-1.5 text-[11px] font-black text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
             <ShieldCheck className="h-3.5 w-3.5" />
             운영진 답변
             {replyAuthor && <span className="opacity-70">· {replyAuthor}</span>}

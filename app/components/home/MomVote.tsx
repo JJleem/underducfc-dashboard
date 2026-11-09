@@ -56,7 +56,7 @@ function VoteBar({
     <div className="flex items-center gap-2">
       <span
         className={`flex w-16 shrink-0 items-center gap-0.5 text-[11px] font-bold ${
-          leader ? "text-[#FF718B] dark:text-[var(--ud-primary)]" : "text-gray-800 dark:text-white/65"
+          leader ? "text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]" : "text-gray-800 dark:text-white/65"
         }`}
       >
         {leader && <Star width={10} height={10} className="shrink-0 fill-current" />}
@@ -99,7 +99,7 @@ function CandidateBallot({
 }) {
   const roleTone =
     tone === "attack"
-      ? "text-[#FF718B] dark:text-[var(--ud-primary)]"
+      ? "text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]"
       : "text-blue-500 dark:text-blue-400";
   return (
     <section className="border-t border-[var(--ud-primary)]/20 pt-4 dark:border-[var(--ud-primary)]/15">
@@ -110,7 +110,7 @@ function CandidateBallot({
         </p>
         <span
           className={`text-[10.5px] font-bold ${
-            selected ? "text-[#FF718B] dark:text-[var(--ud-primary)]" : "text-gray-400 dark:text-white/35"
+            selected ? "text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]" : "text-gray-400 dark:text-white/35"
           }`}
         >
           {selected ? `${selected} 선택` : "한 명 선택"}
@@ -142,7 +142,7 @@ function CandidateBallot({
                 <span
                   className={`block truncate text-[12.5px] font-black ${
                     active
-                      ? "text-[#F45F7A] dark:text-[var(--ud-primary)]"
+                      ? "text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]"
                       : "text-gray-800 dark:text-white/75"
                   }`}
                 >
@@ -405,7 +405,7 @@ export default function MomVote({
               <>
                 {confirmedAttack.length > 0 && (
                   <>
-                    <span className="text-[#FF718B] dark:text-[var(--ud-primary)]">공격</span>{" "}
+                    <span className="text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">공격</span>{" "}
                     {confirmedAttack.join(" · ")}
                   </>
                 )}
@@ -430,7 +430,7 @@ export default function MomVote({
               <>
                 {atkLeader && (
                   <>
-                    <span className="text-[#FF718B] dark:text-[var(--ud-primary)]">공격</span> {atkLeader}
+                    <span className="text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">공격</span> {atkLeader}
                   </>
                 )}
                 {atkLeader && defLeader && (
@@ -499,13 +499,13 @@ export default function MomVote({
                 <section className="mt-5">
                   <div className="mb-3 flex items-center justify-between">
                     <p className="text-[13px] font-black text-gray-900 dark:text-white">현재 득표</p>
-                    <span className="text-[10.5px] font-bold tabular-nums text-[#FF718B] dark:text-[var(--ud-primary)]">
+                    <span className="text-[10.5px] font-bold tabular-nums text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
                       {total}표
                     </span>
                   </div>
                   {Object.keys(atkTally).length > 0 && (
                     <div>
-                      <p className="mb-2 flex items-center gap-1 text-[11px] font-black text-[#FF718B] dark:text-[var(--ud-primary)]">
+                      <p className="mb-2 flex items-center gap-1 text-[11px] font-black text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
                         <Target width={12} height={12} strokeWidth={2.4} /> 공격
                       </p>
                       <div className="flex flex-col gap-1.5">
@@ -579,7 +579,7 @@ export default function MomVote({
                   type="button"
                   onClick={submit}
                   disabled={(!atk && !def) || saving}
-                  className="app-action-primary flex flex-1 items-center justify-center gap-1.5 rounded-xl py-3 text-[12px] font-black shadow-[0_6px_18px_rgba(255,143,163,0.24)] disabled:bg-[var(--ud-primary)]/20 disabled:text-white disabled:shadow-none dark:disabled:bg-[var(--ud-primary)]/15 dark:disabled:text-white/30"
+                  className="app-action-primary flex flex-1 items-center justify-center gap-1.5 rounded-xl py-3 text-[12px] font-black shadow-[0_6px_18px_color-mix(in_srgb,var(--ud-primary)_24%,transparent)] disabled:bg-[var(--ud-primary)]/20 disabled:text-white disabled:shadow-none dark:disabled:bg-[var(--ud-primary)]/15 dark:disabled:text-white/30"
                 >
                   {saving && <Loader2 width={14} height={14} className="animate-spin" />}
                   {selectedCount > 0 ? `${selectedCount}명 선택 · 투표하기` : "선수를 선택해 주세요"}

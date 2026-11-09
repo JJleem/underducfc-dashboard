@@ -85,7 +85,7 @@ function PreviewCard({
 
       <div
         className="relative flex aspect-square w-full flex-col items-center justify-center overflow-hidden"
-        style={{ background: "linear-gradient(160deg,#FFD9E1 0%,var(--ud-primary) 100%)" }}
+        style={{ background: "linear-gradient(160deg,color-mix(in srgb, var(--ud-primary) 30%, white) 0%,var(--ud-primary) 100%)" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
