@@ -32,6 +32,10 @@ export default function TitleReveal({
   const mainUpgraded = !!upgraded && !!titleKey && upgraded.has(titleKey(main));
   const label = (t: EarnedTitle) =>
     `${t.scope === "season" && t.seasonLabel ? `${t.seasonLabel} ` : ""}${t.name}${t.tierLabel ? ` · ${t.tierLabel}` : ""}`;
+  // 큰 제목은 등급을 따로 다룬다. 길면 한 줄에 다 못 들어가 "· 준프로" 가 다음 줄 첫머리에 걸렸다
+  // → 길 땐 등급을 점 없이 다음 줄로 내리고, 짧을 땐 한 줄에 " · 등급" 으로 붙인다.
+  const mainName = `${main.scope === "season" && main.seasonLabel ? `${main.seasonLabel} ` : ""}${main.name}`;
+  const tierOwnLine = !!main.tierLabel && mainName.length + main.tierLabel.length > 12;
 
   return (
     <Celebration color={accent} onClose={onClose}>
@@ -78,7 +82,15 @@ export default function TitleReveal({
         className="fx-shimmer mt-1.5 text-[30px] font-black leading-tight tracking-[-0.03em]"
         style={shimmerStyle(accent)}
       >
-        {label(main)}
+        {tierOwnLine ? (
+          <>
+            {mainName}
+            <br />
+            {main.tierLabel}
+          </>
+        ) : (
+          label(main)
+        )}
       </motion.p>
       {main.desc && (
         <motion.p

@@ -950,7 +950,7 @@ function Film({
             가장 짜릿했던 날
           </motion.p>
           <p className="mt-2 text-[13px] font-bold tabular-nums text-white/60">{dot(w.date)}</p>
-          <div className="relative mt-8 flex items-center justify-center gap-4">
+          <div className="relative mt-8 flex items-center justify-center gap-3 min-[360px]:gap-4">
             {!reduce && <Rings delay={SLAM} color={GOLD} />}
             {!reduce && <Burst delay={SLAM} count={30} radius={190} colors={[GOLD, "#fff", accent]} />}
             <motion.div initial={from({ opacity: 0, x: -60 })} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4, ease: EASE_OUT }}>
@@ -961,7 +961,8 @@ function Film({
               initial={from({ opacity: 0, scale: 4, filter: "blur(12px)" })}
               animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
               transition={{ delay: SLAM - 0.3, duration: 0.3, ease: [0.7, 0, 0.84, 0] }}
-              className="text-[72px] font-black tabular-nums tracking-[-0.04em] text-white"
+              // 작은 폰(320)에서 "11 : 0" 이 두 줄로 갈려 로고가 어긋났다 — 한 줄 고정 + 화면 폭에 맞춰 줄인다.
+              className="whitespace-nowrap text-[clamp(44px,15vw,72px)] font-black tabular-nums tracking-[-0.04em] text-white"
               style={{ textShadow: `0 0 40px ${GOLD}88` }}
             >
               {w.our}
@@ -1074,7 +1075,7 @@ function Film({
 
   return (
     <main
-      className="relative flex min-h-dvh flex-col overflow-hidden bg-[#060409]"
+      className="fx-scope relative flex min-h-dvh flex-col overflow-hidden bg-[#060409]"
       onClick={() => !last && next()}
     >
       <style>{FILM_CSS}</style>

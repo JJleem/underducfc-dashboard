@@ -73,7 +73,7 @@ export default function Celebration({
     <motion.div
       role="dialog"
       aria-modal
-      className="pointer-events-auto fixed inset-0 z-[200] flex cursor-pointer items-center justify-center overflow-hidden bg-[#060409]/90 px-6 backdrop-blur-md"
+      className="fx-scope pointer-events-auto fixed inset-0 z-[200] flex cursor-pointer items-center justify-center overflow-hidden bg-[#060409]/[0.96] px-6 backdrop-blur-md"
       initial={{ opacity: 0 }}
       animate={{ opacity: closing ? 0 : 1 }}
       transition={{ duration: closing ? 0.22 : 0.35 }}

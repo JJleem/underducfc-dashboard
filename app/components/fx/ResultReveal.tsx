@@ -99,7 +99,7 @@ export function ResultRevealView({
           FULL TIME
         </motion.p>
 
-        <div className="relative mt-8 flex items-center justify-center gap-4">
+        <div className="relative mt-8 flex items-center justify-center gap-3 min-[360px]:gap-4">
           {!reduce && !lost && <Rings delay={SLAM} color={color} />}
           {!reduce && won && <Burst delay={SLAM} count={30} radius={190} colors={[GOLD, "#fff", accent]} />}
           <motion.div initial={from({ opacity: 0, x: -60 })} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
@@ -110,7 +110,7 @@ export function ResultRevealView({
             initial={from({ opacity: 0, scale: 4, filter: "blur(12px)" })}
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             transition={{ delay: SLAM - 0.3, duration: 0.3, ease: [0.7, 0, 0.84, 0] }}
-            className="text-[64px] font-black tabular-nums tracking-[-0.04em] text-white"
+            className="whitespace-nowrap text-[clamp(48px,16vw,64px)] font-black tabular-nums tracking-[-0.04em] text-white"
             style={won ? { textShadow: `0 0 40px ${GOLD}88` } : undefined}
           >
             {data.our}

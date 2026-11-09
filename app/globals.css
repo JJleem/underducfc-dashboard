@@ -764,3 +764,12 @@ html[data-season-pending] .season-pending-dim {
   opacity: 0.4;
   pointer-events: none;
 }
+
+/* ── 연출 화면은 원래 굵기 ──
+   앱 전체는 굵기를 한 단계 낮췄지만(900→700), 축하 연출(Celebration)·시즌 래핑은
+   화면이 "한 순간" 이라 큰 숫자·제목의 힘이 그대로 필요하다. 그 안에서만 원래 값으로 되돌린다. */
+.fx-scope {
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
+}

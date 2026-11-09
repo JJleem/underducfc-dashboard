@@ -885,7 +885,7 @@ export default function WrappedStory({
 
   return (
     <main
-      className="relative flex min-h-dvh flex-col bg-[#060409]"
+      className="fx-scope relative flex min-h-dvh flex-col bg-[#060409]"
       onTouchStart={(e) => {
         touchX.current = e.touches[0].clientX;
       }}
