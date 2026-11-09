@@ -13,6 +13,8 @@ import {
 } from "./ui/dialog";
 import { FormationField, type SeasonStat } from "./FormationField";
 import StartingElevenCard from "./StartingElevenCard";
+import StartingElevenCard2627, { CARD_2627_BG } from "./StartingElevenCard2627";
+import { seasonOf } from "../lib/seasons";
 import AppToast from "./AppToast";
 import { TitleBadges } from "./TitleBadges";
 import SubstitutionEvents from "./SubstitutionEvents";
@@ -50,12 +52,15 @@ async function inlineImgs(root: HTMLElement): Promise<{ imgs: HTMLImageElement[]
   const imgs = Array.from(root.querySelectorAll("img"));
   const originals = imgs.map((img) => img.getAttribute("src") || "");
 
+  // 아직 안 온 이미지는 기다린다 — 단, 끝없이 매달리지 않게 4초에서 끊는다.
   await Promise.all(
     imgs.map((img) => {
       if (!img.src || img.src.startsWith("data:") || img.complete) return;
       return new Promise<void>((resolve) => {
-        img.addEventListener("load", () => resolve(), { once: true });
-        img.addEventListener("error", () => resolve(), { once: true });
+        const done = () => resolve();
+        img.addEventListener("load", done, { once: true });
+        img.addEventListener("error", done, { once: true });
+        setTimeout(done, 4000);
       });
     }),
   );
@@ -85,7 +90,19 @@ async function inlineImgs(root: HTMLElement): Promise<{ imgs: HTMLImageElement[]
       }
     }
   }
+  // data URL 로 바꾼 직후엔 아직 디코딩 전일 수 있다. 다 풀린 뒤에 그려야 빠지는 얼굴이 없다.
+  await Promise.all(imgs.map((img) => img.decode().catch(() => undefined)));
   return { imgs, originals };
+}
+
+/**
+ * html-to-image 로 노드를 PNG 로. 아이폰 사파리(WebKit)는 SVG foreignObject 안의 이미지를
+ * **첫 번째 그리기에서 일부 빼먹는다** — "누구 얼굴은 나오고 누구는 빠지는" 증상의 원인.
+ * 한 번 그려서 버리고 다시 그린 결과를 쓰면 다 채워진다(라이브러리 이슈에 알려진 우회).
+ */
+async function captureBlob(node: HTMLElement, options: Parameters<typeof toBlob>[1]): Promise<Blob | null> {
+  await toBlob(node, options).catch(() => null);
+  return toBlob(node, options);
 }
 
 function restoreImgs(imgs: HTMLImageElement[], originals: string[]) {
@@ -161,6 +178,8 @@ export default function LineupViewer({
   const captureRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const lineup = lineups.find((item) => item.quarter === activeQuarter) ?? lineups[0];
+  // 발표 포스터 판 — 경기 날짜가 속한 시즌으로 고른다.
+  const is2627 = seasonOf(match.date) === "2627";
 
   // ── 라인업 공개 연출(1쿼터 선발만)
   const revealStore = `fx_lineup_${match.id}`;
@@ -237,7 +256,7 @@ export default function LineupViewer({
       const captureHeight = captureNode.scrollHeight;
       let blob: Blob | null = null;
       try {
-        blob = await toBlob(captureNode, {
+        blob = await captureBlob(captureNode, {
           pixelRatio: 2,
           width: captureWidth,
           height: captureHeight,
@@ -306,11 +325,11 @@ export default function LineupViewer({
         const bounds = node.getBoundingClientRect();
         const width = Math.round(bounds.width);
         const height = Math.round(bounds.height);
-        blob = await toBlob(node, {
+        blob = await captureBlob(node, {
           pixelRatio: 3,
           width,
           height,
-          backgroundColor: "#07050A",
+          backgroundColor: is2627 ? CARD_2627_BG : "#07050A",
           style: {
             width: `${width}px`,
             height: `${height}px`,
@@ -409,19 +428,39 @@ export default function LineupViewer({
             type="button"
             className="block min-w-0 w-full overflow-hidden text-left transition-transform active:scale-[0.99]"
           >
-            <StartingElevenCard
-              ref={cardRef}
-              interactive={false}
-              formation={lineup.formation}
-              players={lineup.players}
-              rosterMap={rosterMap}
-              captainRoles={captainRoles}
-              opponent={match.opponent}
-              date={match.date}
-              time={match.time}
-              location={match.location}
-              subs={lineup.subs}
-            />
+            {/* 발표 포스터는 시즌별로 따로 둔다 — 25-26 경기는 25-26 판 그대로(손대지 않음), 26-27 부터 새 판.
+                25-26 판은 앱 전체 굵기 하향(900→700) 전에 만든 디자인이라 .fx-scope 로 원래 굵기를 준다. */}
+            {is2627 ? (
+              <StartingElevenCard2627
+                ref={cardRef}
+                interactive={false}
+                formation={lineup.formation}
+                players={lineup.players}
+                rosterMap={rosterMap}
+                captainRoles={captainRoles}
+                opponent={match.opponent}
+                date={match.date}
+                time={match.time}
+                location={match.location}
+                subs={lineup.subs}
+              />
+            ) : (
+              <span className="fx-scope block">
+                <StartingElevenCard
+                  ref={cardRef}
+                  interactive={false}
+                  formation={lineup.formation}
+                  players={lineup.players}
+                  rosterMap={rosterMap}
+                  captainRoles={captainRoles}
+                  opponent={match.opponent}
+                  date={match.date}
+                  time={match.time}
+                  location={match.location}
+                  subs={lineup.subs}
+                />
+              </span>
+            )}
           </button>
         </DialogTrigger>
 
