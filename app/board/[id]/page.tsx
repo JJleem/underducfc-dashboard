@@ -5,7 +5,7 @@ import { getBoardPost, listBoardComments, getMyLikedPostIds, listBoardPosts } fr
 import { getRosterRows, getStatsRows, getFeaturedRows } from "../../lib/backend";
 import type { EarnedTitle } from "../../lib/titles";
 import { buildPlayerBadges, getTeamTitleData } from "../../lib/titles-cache";
-import { getActiveSeasonId } from "../../lib/matches-backend";
+import { currentSeasonId } from "../../lib/seasons";
 import BoardDetailClient from "./BoardDetailClient";
 
 export const dynamic = "force-dynamic";
@@ -55,7 +55,7 @@ export default async function BoardDetailPage({
   if (post.lineup) {
     // 칭호 계산에 쓰던 나머지 소스는 titles-cache 로 옮겨갔다. 여기 남는 건
     // 시즌 기록(stats) 과 대표 칭호(featured) 둘뿐이다 → rows(0), rows(1).
-    const season = await getActiveSeasonId();
+    const season = currentSeasonId();
     const results = await Promise.allSettled([
       // 전술 글은 특정 경기에 묶이지 않는다 → 기본 시즌 기록을 붙인다.
       getStatsRows(season), getFeaturedRows(),

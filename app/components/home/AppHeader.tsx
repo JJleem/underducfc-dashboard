@@ -84,7 +84,7 @@ export default function AppHeader({
   seasonId,
   newMatchRoster,
 }: {
-  /** 로고 옆에 찍을 시즌. 서버의 activeSeasonId — 새 시즌 첫 경기 전엔 지난 시즌이다. */
+  /** 로고 옆에 찍을 시즌. 오늘이 속한 시즌. */
   seasonId: string;
   newMatchRoster?: string[];
 }) {

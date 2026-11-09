@@ -11,7 +11,7 @@ import { Bell, MapPin } from "lucide-react";
 import { auth } from "@/auth";
 import { isAdmin } from "../../lib/admin";
 import { getLoungeStamp } from "../../lib/lounge";
-import { getActiveSeasonId, getMatchesRows, getMyLikedMatchIds } from "../../lib/matches-backend";
+import { getMatchesRows, getMyLikedMatchIds } from "../../lib/matches-backend";
 import {
   getAttendanceVoteRows,
   getFeedbackRows,
@@ -29,6 +29,7 @@ import { buildPlayerBadges, getTeamTitleData } from "../../lib/titles-cache";
 import {
   ALL_SEASONS,
   SEASONS,
+  currentSeasonId,
   daysSince,
   latestPublicWrappedSeason,
   seasonAccent,
@@ -156,8 +157,8 @@ export default async function NewHome({
     }
   };
 
-  // 새 시즌 첫 경기 전까지는 지난 시즌이 홈의 "이번 시즌"이다(activeSeasonId).
-  const homeSeason = await getActiveSeasonId();
+  // 홈의 "이번 시즌" = 오늘이 속한 시즌.
+  const homeSeason = currentSeasonId();
   const [rawMatches, rawVotes, rawNotices, rawLineups, rawRoster, rawFeedback, rawStats, rawMomVotes, rawFeatured, myLikedMatchIds, teamTitleData, loungeStamp] =
     await Promise.all([
       getMatchesRows(),

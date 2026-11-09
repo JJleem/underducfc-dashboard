@@ -98,10 +98,8 @@ FAL_KEY=                        # 매치데이 아트 생성 스크립트 전용
 - **행을 지우지 말고 id 로 거릅니다.** `rawMatches` 의 배열 index 가 곧 `matchId` 이고
   lineup · mom_vote · attendance 가 그 id 를 참조합니다. `seasonMatchIds()` /
   `rowsOfMatchIds()` / `maskMatchRowsToSeason()` 이 그래서 있습니다.
-- 기본 시즌은 `activeSeasonId()`(서버에선 `getActiveSeasonId()`)입니다 — 오늘이 속한 시즌인데,
-  그 시즌에 **치른 경기가 아직 없으면 바로 앞 시즌**입니다(휴식·예정·야유회는 안 셉니다).
-  앱 기본색(레이아웃), 홈, 프로필·/stats·/record 의 기본 시즌이 전부 이걸 씁니다.
-  날짜만 보는 `currentSeasonId()` 와 다릅니다.
+- 기본 시즌은 **오늘이 속한 시즌**(`currentSeasonId()`)입니다. 개막일이 지나면 첫 경기 전이라도
+  앱 기본색(레이아웃)·헤더·홈·프로필·/stats·/record 가 전부 새 시즌으로 넘어갑니다.
 - 경기 카드·경기 상세·홈 히어로는 **그 경기의 시즌색**(`.season-scope`)입니다.
 - 시즌마다 `accent`(대표색)가 다릅니다. **팀 브랜드 핑크와는 다른 축**입니다 —
   `#FF8FA3`/`#FFB6C1` 은 CSS 토큰 없이 415군데 하드코딩돼 있어 시즌마다 못 바꿉니다.
