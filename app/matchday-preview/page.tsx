@@ -168,7 +168,7 @@ export default async function MatchdayPreviewPage({
 
   return (
     <main className="min-h-dvh bg-[#f6f6f7] pb-16 text-gray-900 dark:bg-background dark:text-white">
-      <div className="sticky top-0 z-20 border-b border-black/[0.06] bg-[#f6f6f7] px-4 pb-3 pt-[max(14px,env(safe-area-inset-top))] dark:border-white/[0.08] dark:bg-background">
+      <div className="sticky top-0 z-20 border-b border-black/[0.06] bg-[#f6f6f7] px-4 pb-3 pt-[calc(max(14px,env(safe-area-inset-top))+var(--safe-header-extra))] dark:border-white/[0.08] dark:bg-background">
         <div className="mx-auto max-w-[430px]">
           <p className="text-[9px] font-black tracking-[0.18em] text-[var(--ud-primary)]">
             MATCHDAY LAB

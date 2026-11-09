@@ -304,23 +304,27 @@ body {
    viewport(viewportFit: "cover") 때문에 화면이 상태바 아래까지 확장된다.
    헤더 배경은 화면 끝까지 이어지게 두고, 내용만 상태바 높이만큼 밀어 가림을 막는다.
    기존 py-* 를 그대로 두고 pt-* 를 덧붙이면 어느 쪽이 이길지 순서에 의존하므로,
-   세로 패딩을 calc()로 한 번에 지정한다. standalone이 아니면 env()는 0 → 기존과 동일. */
+   세로 패딩을 calc()로 한 번에 지정한다. standalone이 아니면 env()는 0.
+   --safe-header-extra: 상태바(시간·배터리) 바로 밑이 답답하지 않게 위에 더 주는 여백. */
+:root {
+  --safe-header-extra: 10px;
+}
 .safe-header-py-3 {
-  padding-top: calc(0.75rem + env(safe-area-inset-top));
+  padding-top: calc(0.75rem + var(--safe-header-extra) + env(safe-area-inset-top));
   padding-bottom: 0.75rem;
 }
 .safe-header-py-35 {
-  padding-top: calc(0.875rem + env(safe-area-inset-top));
+  padding-top: calc(0.875rem + var(--safe-header-extra) + env(safe-area-inset-top));
   padding-bottom: 0.875rem;
 }
 /* 고정 높이 헤더용: 높이에 상태바를 더하고 그만큼 위를 비운다. */
 .safe-header-h-14 {
-  height: calc(3.5rem + env(safe-area-inset-top));
-  padding-top: env(safe-area-inset-top);
+  height: calc(3.5rem + var(--safe-header-extra) + env(safe-area-inset-top));
+  padding-top: calc(var(--safe-header-extra) + env(safe-area-inset-top));
 }
 .safe-header-h-61 {
-  height: calc(61px + env(safe-area-inset-top));
-  padding-top: env(safe-area-inset-top);
+  height: calc(61px + var(--safe-header-extra) + env(safe-area-inset-top));
+  padding-top: calc(var(--safe-header-extra) + env(safe-area-inset-top));
 }
 
 /* ── 앱 공통 시각 문법 ────────────────────────────────

@@ -180,7 +180,7 @@ export default function RecordArchive({
 
   return (
     <>
-      <div className="sticky top-[49px] z-[9] border-b border-gray-200/60 bg-gray-50 px-4 py-3 dark:border-white/[0.06] dark:bg-background">
+      <div className="sticky top-[calc(49px+var(--safe-header-extra)+env(safe-area-inset-top))] z-[9] border-b border-gray-200/60 bg-gray-50 px-4 py-3 dark:border-white/[0.06] dark:bg-background">
         <div className="grid grid-cols-2 rounded-xl bg-gray-200/65 p-1 dark:bg-white/[0.07]">
           <button
             type="button"
