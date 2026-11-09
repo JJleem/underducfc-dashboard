@@ -28,8 +28,8 @@ const EDGE = 5;
 // 이 거리 이상 움직여야 드래그로 본다 (그 미만은 탭)
 const DRAG_THRESHOLD_PX = 6;
 
-const snap = (v: number) =>
-  Math.min(100 - EDGE, Math.max(EDGE, Math.round(v / SNAP) * SNAP));
+const clampPct = (v: number) => Math.min(100 - EDGE, Math.max(EDGE, v));
+const snap = (v: number) => clampPct(Math.round(v / SNAP) * SNAP);
 
 // 포지션이 바뀌는 순간의 짧은 진동 (미지원 기기는 무시)
 const buzz = () => {
@@ -94,12 +94,14 @@ export default function LineupPitch({
     zone: number;
   } | null>(null);
 
+  // 드래그 중에는 격자에 맞추지 않고 손가락을 그대로 따라간다(칸 단위로 툭툭 튀면 딱딱하다).
+  // 격자 스냅은 손을 뗄 때 한 번만 — 그 차이만큼 살짝 미끄러지며 자리를 잡는다.
   const pointToPercent = (clientX: number, clientY: number): Point | null => {
     const rect = fieldRef.current?.getBoundingClientRect();
     if (!rect || !rect.width || !rect.height) return null;
     return {
-      x: snap(((clientX - rect.left) / rect.width) * 100),
-      y: snap(((clientY - rect.top) / rect.height) * 100),
+      x: clampPct(((clientX - rect.left) / rect.width) * 100),
+      y: clampPct(((clientY - rect.top) / rect.height) * 100),
     };
   };
 
@@ -143,6 +145,7 @@ export default function LineupPitch({
       setDragZone(state.zone);
       reportShape(state.index, state.zone);
       onDragStart?.();
+      buzz(); // 집어 들었다는 손맛
     }
     const next = pointToPercent(e.clientX, e.clientY);
     if (!next) return;
@@ -173,8 +176,16 @@ export default function LineupPitch({
       onSlotTap(i); // 움직이지 않았으면 탭
       return;
     }
+    const dropped = { x: snap(state.latest.x), y: snap(state.latest.y) };
+    // 스냅한 자리가 원래 자리와 같으면 React 가 style 을 안 건드려서 손가락 위치에 남는다 — 직접 맞춘다.
+    const el = slotRefs.current[state.index];
+    if (el) {
+      el.style.left = `${dropped.x}%`;
+      el.style.top = `${dropped.y}%`;
+    }
+    buzz();
     onPositionsChange(
-      positions.map((p, idx) => (idx === state.index ? state.latest : p))
+      positions.map((p, idx) => (idx === state.index ? dropped : p))
     );
     // 개인 전술은 포지션이 바뀌어도 선수에게 그대로 유지된다.
   };
@@ -291,7 +302,7 @@ export default function LineupPitch({
             <div
               key={i}
               ref={(el) => { slotRefs.current[i] = el; }}
-              className="absolute flex flex-col items-center cursor-grab active:cursor-grabbing"
+              className={`lineup-slot absolute flex flex-col items-center cursor-grab active:cursor-grabbing ${isDragging ? "is-dragging" : ""}`}
               style={{
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,
@@ -328,7 +339,7 @@ export default function LineupPitch({
                 )}
               </span>
               <div
-                className="relative z-10 flex items-center justify-center rounded-full font-black transition"
+                className="lineup-token relative z-10 flex items-center justify-center rounded-full font-black"
                 style={{
                   width: 36, height: 36,
                   fontSize: hasPlayer ? (displayLabel.length > 2 ? 9 : 13) : 11,

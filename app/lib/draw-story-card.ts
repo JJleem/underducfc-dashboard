@@ -4,6 +4,13 @@
 import type { MatchData } from "./match-types";
 import { matchCasualArt, matchResultArt } from "./matchday-art";
 import { casualKind, isCasualMatch } from "../components/home/match-result";
+import { SEASONS, seasonAccent, seasonOf } from "./seasons";
+
+/** "#RRGGBB" → "r,g,b" (rgba() 에 넣는 용도) */
+function rgbOf(hex: string): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`;
+}
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -81,6 +88,14 @@ export async function drawStoryCanvas(
   const kind = casualKind(match.result, match.type);
   const attendees = (match.attendees || "").split(",").map((s) => s.trim()).filter(Boolean);
 
+  // 시즌색 — 캔버스는 CSS 변수를 못 읽어서 경기 날짜로 시즌을 골라 직접 넣는다.
+  // 카드 배경이 어두우니 메인은 accent.light, 빛·구분선은 한 톤 밝은 accent.dark.
+  // (25-26 기준 light=#FF8FA3, dark=#FFB6C1 — 예전에 하드코딩돼 있던 바로 그 두 색)
+  const season = seasonAccent(seasonOf(match.date) ?? SEASONS[0].id);
+  const PINK = season.light;
+  const GLOW = rgbOf(season.dark);
+  const PINK_RGB = rgbOf(season.light);
+
   // ── 배경: 다크 네이비 / 자체전은 보라 ────────────────────────
   const bg = ctx.createLinearGradient(0, 0, 0, H);
   bg.addColorStop(0, casual ? "#0b0a1a" : "#070d20");
@@ -91,7 +106,7 @@ export async function drawStoryCanvas(
 
   // 스타디움 스포트라이트 (좌우 대각 빔)
   const beamL = ctx.createLinearGradient(0, 0, W * 0.55, H * 0.5);
-  beamL.addColorStop(0, "rgba(255,182,193,0.13)");
+  beamL.addColorStop(0, `rgba(${GLOW},0.13)`);
   beamL.addColorStop(0.4, "rgba(255,255,255,0.04)");
   beamL.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = beamL;
@@ -106,8 +121,8 @@ export async function drawStoryCanvas(
 
   // 핑크 글로우 (상단 중앙)
   const glow = ctx.createRadialGradient(W / 2, 120, 0, W / 2, 120, H * 0.36);
-  glow.addColorStop(0, "rgba(255,182,193,0.15)");
-  glow.addColorStop(1, "rgba(255,182,193,0)");
+  glow.addColorStop(0, `rgba(${GLOW},0.15)`);
+  glow.addColorStop(1, `rgba(${GLOW},0)`);
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
 
@@ -173,8 +188,8 @@ export async function drawStoryCanvas(
   setLetterSpacing(ctx, 0);
 
   const brand = ctx.createLinearGradient(W / 2 - 260, 0, W / 2 + 260, 0);
-  brand.addColorStop(0, "#FF8FA3");
-  brand.addColorStop(1, "#FF8FA3");
+  brand.addColorStop(0, PINK);
+  brand.addColorStop(1, PINK);
   ctx.fillStyle = brand;
   ctx.font = `900 66px ${FONT}`;
   ctx.fillText("UNDERDUCK FC", W / 2, L.brandY);
@@ -189,7 +204,7 @@ export async function drawStoryCanvas(
   ctx.fillText(subtitle, W / 2, L.subY);
 
   // 구분선 (양끝 페이드)
-  const line = casual ? "196,181,253" : "255,182,193";
+  const line = casual ? "196,181,253" : GLOW;
   const divider = ctx.createLinearGradient(140, 0, W - 140, 0);
   divider.addColorStop(0, `rgba(${line},0)`);
   divider.addColorStop(0.5, `rgba(${line},0.45)`);
@@ -231,7 +246,7 @@ export async function drawStoryCanvas(
   setLetterSpacing(ctx, 0);
 
   const resultColor =
-    match.result === "승" ? "#FF8FA3" : match.result === "무" ? "#cbd5e1" : "#94a3b8";
+    match.result === "승" ? PINK : match.result === "무" ? "#cbd5e1" : "#94a3b8";
 
   ctx.font = `900 ${L.scoreSize}px ${FONT}`;
   ctx.fillStyle = resultColor;
@@ -248,10 +263,10 @@ export async function drawStoryCanvas(
     const bw = 170, bh = L.badgeH, bx = W / 2 - bw / 2, by = L.badgeY;
     if (match.result === "승") {
       const pill = ctx.createLinearGradient(bx, by, bx, by + bh);
-      pill.addColorStop(0, "#FF9FB0");
-      pill.addColorStop(1, "#FF8FA3");
+      pill.addColorStop(0, `rgba(${GLOW},1)`);
+      pill.addColorStop(1, PINK);
       ctx.fillStyle = pill;
-      ctx.shadowColor = "rgba(255,143,163,0.5)";
+      ctx.shadowColor = `rgba(${PINK_RGB},0.5)`;
       ctx.shadowBlur = 36;
     } else {
       ctx.fillStyle = "rgba(255,255,255,0.08)";
@@ -305,7 +320,7 @@ export async function drawStoryCanvas(
       ctx.fillText(goalText, startX, gy);
       if (assistant) {
         ctx.font = `700 ${L.assistFont}px ${FONT}`;
-        ctx.fillStyle = "#FF8FA3";
+        ctx.fillStyle = PINK;
         ctx.fillText(assistText, startX + gw, gy);
       }
       ctx.textAlign = "center";
@@ -382,7 +397,7 @@ export async function drawStoryCanvas(
   // ── 푸터 ─────────────────────────────────────────────────────
   const accent = ctx.createLinearGradient(W / 2 - 90, 0, W / 2 + 90, 0);
   accent.addColorStop(0, `rgba(${line},0)`);
-  accent.addColorStop(0.5, casual ? "#c4b5fd" : "#FF8FA3");
+  accent.addColorStop(0.5, casual ? "#c4b5fd" : PINK);
   accent.addColorStop(1, `rgba(${line},0)`);
   ctx.fillStyle = accent;
   ctx.fillRect(W / 2 - 90, H - (format === "story" ? 158 : 108), 180, 3);

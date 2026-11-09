@@ -162,13 +162,6 @@ export default function LineupEditor({
     const timer = window.setTimeout(() => setToastError(null), 2800);
     return () => window.clearTimeout(timer);
   }, [toastError]);
-  // Q 배지를 눌렀을 때 그게 무슨 숫자인지 알려주는 안내
-  const [toastHint, setToastHint] = useState<string | null>(null);
-  React.useEffect(() => {
-    if (!toastHint) return;
-    const timer = window.setTimeout(() => setToastHint(null), 2400);
-    return () => window.clearTimeout(timer);
-  }, [toastHint]);
   // 드래그 중 LineupPitch가 알려주는 실시간 포메이션 이름 (끝나면 null)
   const [liveShape, setLiveShape] = useState<string | null>(null);
   // 게시판 불러오기
@@ -1088,7 +1081,9 @@ export default function LineupEditor({
               matches 시트 L열에 참석자를 입력하거나 게스트를 추가하세요
             </p>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            // 2열 카드 — 이름과 참고 정보(평균 Q·선호 포지션)를 한 칸에 왼쪽 정렬로.
+            // 칩 + 아래 줄로 따로 두면 줄마다 가운데 정렬이 달라 지그재그로 보였다.
+            <div className="grid grid-cols-2 gap-2">
               {allPlayers.map((name) => {
                 const used = assignedPlayers.has(name);
                 const isGuest = guests.includes(name);
@@ -1096,60 +1091,60 @@ export default function LineupEditor({
                 const pref = prefPosMap[name] || [];
                 const avgQ = avgQuartersMap[name];
                 return (
-                  <div key={name} className="flex flex-col items-center gap-1">
-                  <div className="relative flex items-center">
+                  <div key={name} className="relative">
                     <button
                       onClick={() => handlePlayerClick(name)}
-                      className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-[12px] font-black transition cursor-pointer ${
+                      className={`flex min-h-[56px] w-full flex-col justify-center gap-1 rounded-xl px-3 py-2 text-left transition-colors active:scale-[0.98] ${
                         isPicked
-                          ? "bg-[var(--ud-primary)] text-white border border-[var(--ud-primary)] ring-2 ring-[var(--ud-primary)]/40"
+                          ? "bg-[var(--ud-primary)] text-white ring-2 ring-[var(--ud-primary)]/40"
                           : isGuest
                           ? used
-                            ? "bg-gray-200 dark:bg-white/10 text-gray-500 border border-gray-300 dark:border-white/10"
-                            : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 border border-dashed border-gray-400 dark:border-white/30 hover:bg-gray-200 dark:hover:bg-white/20"
+                            ? "bg-gray-100 text-gray-500 ring-1 ring-gray-200 dark:bg-white/[0.06] dark:ring-white/10"
+                            : "border border-dashed border-gray-300 bg-white text-gray-800 dark:border-white/20 dark:bg-white/[0.04] dark:text-gray-100"
                           : used
-                          ? "bg-[var(--ud-primary)]/20 text-[var(--ud-primary)] border border-[var(--ud-primary)]/30"
-                          : "bg-white dark:bg-white/10 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-white/20"
-                      }`}
+                          ? "bg-[var(--ud-primary)]/12 text-[var(--ud-primary-strong)] ring-1 ring-[var(--ud-primary)]/30 dark:text-[var(--ud-primary)]"
+                          : "bg-white text-gray-900 ring-1 ring-gray-200 dark:bg-white/[0.04] dark:text-gray-100 dark:ring-white/10"
+                      } ${isGuest ? "pr-9" : ""}`}
                     >
-                      {isGuest && <span className="mr-1 text-[11px] text-gray-500">G</span>}
-                      {used && !isGuest && <Check className="mr-1 h-3 w-3 inline-block align-middle" strokeWidth={2.2} />}
-                      {name}
+                      <span className="flex min-w-0 items-center gap-1 text-[14px] font-black">
+                        {used && !isGuest && <Check className="h-4 w-4 shrink-0" strokeWidth={2.4} />}
+                        {isGuest && <span className="shrink-0 text-[11px] opacity-60">G</span>}
+                        <span className="truncate">{name}</span>
+                      </span>
+                      {(avgQ || pref.length > 0) && (
+                        <span className="flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap">
+                          {avgQ && (
+                            <span
+                              className={`text-[11px] font-bold tabular-nums ${isPicked ? "text-white/80" : "text-gray-500 dark:text-white/50"}`}
+                              title="경기당 평균 출전 쿼터 (프로필과 같은 값)"
+                            >
+                              평균 {avgQ}Q
+                            </span>
+                          )}
+                          {pref.map((p) => (
+                            <span
+                              key={p}
+                              className="rounded px-1 text-[11px] font-black leading-[1.4]"
+                              style={
+                                isPicked
+                                  ? { color: "#fff", backgroundColor: "rgba(255,255,255,0.2)" }
+                                  : { color: PREF_POS_COLOR[p] ?? "#94A3B8", backgroundColor: `${PREF_POS_COLOR[p] ?? "#94A3B8"}1f` }
+                              }
+                            >
+                              {p}
+                            </span>
+                          ))}
+                        </span>
+                      )}
                     </button>
                     {isGuest && (
                       <button
                         onClick={() => removeGuest(name)}
                         aria-label={`${name} 게스트 빼기`}
-                        className="ml-1 w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 dark:bg-white/10 text-gray-500 hover:bg-red-100 hover:text-red-500 transition-colors"
+                        className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors active:bg-red-100 active:text-red-500 dark:bg-white/10"
                       >
-                        <X className="h-3.5 w-3.5" strokeWidth={2.2} />
+                        <X className="h-4 w-4" strokeWidth={2.2} />
                       </button>
-                    )}
-                  </div>
-                    {/* 경기당 Q · 선호 포지션 (라인업 참고용) */}
-                    {(avgQ || pref.length > 0) && (
-                      <div className="flex items-center gap-0.5">
-                        {avgQ && (
-                          <button
-                            type="button"
-                            onClick={() => setToastHint(`${name} · 경기당 평균 ${avgQ}Q`)}
-                            aria-label={`${name} 경기당 평균 출전 쿼터 ${avgQ}`}
-                            title="경기당 평균 출전 쿼터 (프로필과 같은 값)"
-                            className="rounded bg-gray-100 px-1 text-[11px] font-black leading-[1.4] tabular-nums text-gray-500 dark:bg-white/10 dark:text-gray-400"
-                          >
-                            {avgQ}Q
-                          </button>
-                        )}
-                        {pref.map((p) => (
-                          <span
-                            key={p}
-                            className="rounded px-1 text-[11px] font-black leading-[1.4]"
-                            style={{ color: PREF_POS_COLOR[p] ?? "#94A3B8", backgroundColor: `${PREF_POS_COLOR[p] ?? "#94A3B8"}1f` }}
-                          >
-                            {p}
-                          </span>
-                        ))}
-                      </div>
                     )}
                   </div>
                 );
@@ -1308,7 +1303,6 @@ export default function LineupEditor({
         </div>
       </main>
       <AppToast message={toastError} tone="error" />
-      <AppToast message={toastHint} />
     </div>
   );
 }
