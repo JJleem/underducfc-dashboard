@@ -528,7 +528,10 @@ export function FormationField({
                           )}
                         </div>
                         {mode === "faceon" ? (
-                          <div className="mt-1 flex items-center justify-center gap-1" style={{ maxWidth: 88 }}>
+                          // 포지션 칩과 이름이 한 상자(88px)를 나눠 쓰면 LCB 처럼 긴 포지션 옆에선
+                          // 세 글자 이름도 "황…" 으로 잘렸다. 상자 제한을 없애고 이름에만 폭을 준다
+                          // — 한글 4자까지는 다 보이고, "동주게스트2" 같은 긴 게스트 이름만 줄인다.
+                          <div className="mt-1 flex items-center justify-center gap-0.5 whitespace-nowrap">
                             {!isTbd && (
                               <span
                                 className="shrink-0 rounded px-1 py-0.5 text-[9px] font-black leading-none text-white"
@@ -542,7 +545,7 @@ export function FormationField({
                               </span>
                             )}
                             <span
-                              className="rounded-md px-1.5 py-0.5 text-[11px] font-black text-white text-center leading-tight truncate"
+                              className="max-w-[60px] truncate rounded-md px-1 py-0.5 text-center text-[11px] font-black leading-tight text-white"
                               style={{
                                 background: isSel ? "color-mix(in srgb, var(--ud-primary) 92%, transparent)" : "rgba(2,6,23,0.72)",
                                 border: "1px solid rgba(255,255,255,0.15)",
