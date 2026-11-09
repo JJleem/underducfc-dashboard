@@ -662,7 +662,7 @@ export default async function NewHome({
           </p>
         )}
         {/* 경기 목록 — 두 방향 중 하나를 통째로 갈아 끼운다 */}
-        <div className="divide-y divide-gray-100 dark:divide-white/[0.06]">
+        <div className="season-pending-dim divide-y divide-gray-100 dark:divide-white/[0.06]">
           <FeedList>
           {recent.map((m, idx) => {
             const match: MatchData = { ...m };

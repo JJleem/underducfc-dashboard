@@ -750,3 +750,17 @@ body {
     transition: none;
   }
 }
+
+/* ── 시즌 전환 중 ──
+   SeasonSelector 가 서버 응답을 기다리는 동안 html[data-season-pending] 를 단다.
+   헤더(셀렉터가 있는 곳)는 그대로 두고 본문만 흐리게 — "바뀌는 중" 이 눈에 보이게.
+   /stats · /record · /players 는 헤더 뒤 형제 전부, 홈은 경기 목록(.season-pending-dim). */
+.season-scope .app-page-header ~ *,
+.season-pending-dim {
+  transition: opacity 180ms ease-out;
+}
+html[data-season-pending] .season-scope .app-page-header ~ *,
+html[data-season-pending] .season-pending-dim {
+  opacity: 0.4;
+  pointer-events: none;
+}

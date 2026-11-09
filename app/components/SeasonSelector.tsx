@@ -8,9 +8,10 @@
 // 색은 **선택한 시즌의 대표색**을 쓴다. 시즌마다 다른 핑크라, 지금 어느 시즌을
 // 보고 있는지 라벨을 안 읽어도 알게 된다. [[seasons]] 의 SeasonAccent 참고.
 
+import { useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,19 +38,32 @@ export default function SeasonSelector({
   const pathname = usePathname();
   const params = useSearchParams();
   const { resolvedTheme } = useTheme();
+  // 시즌을 바꾸면 서버가 화면을 새로 만든다. 같은 페이지라 loading.tsx 도 안 떠서
+  // 아무 반응 없이 멈춘 것처럼 보였다 → 누르는 즉시 고른 시즌을 라벨에 띄우고(낙관적),
+  // 받아오는 동안 스피너 + 본문을 흐리게(html[data-season-pending], globals.css) 한다.
+  const [isPending, startTransition] = useTransition();
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isPending) root.dataset.seasonPending = "1";
+    else delete root.dataset.seasonPending;
+    return () => { delete root.dataset.seasonPending; };
+  }, [isPending]);
+  const shownId = isPending && pendingId ? pendingId : current;
 
   const isLight = resolvedTheme !== "dark";
   const accentOf = (id: string) => {
     const a = seasonAccent(id);
     return isLight ? a.light : a.dark;
   };
-  const isAll = current === ALL_SEASONS;
+  const isAll = shownId === ALL_SEASONS;
   // 전체는 특정 시즌색이 없다 — 팀 핑크로 중립을 준다.
-  const accent = isAll ? (isLight ? "var(--ud-primary)" : "var(--ud-primary)") : accentOf(current);
+  const accent = isAll ? (isLight ? "var(--ud-primary)" : "var(--ud-primary)") : accentOf(shownId);
   const played = new Set(withMatches ?? SEASONS.map((s) => s.id));
-  const currentLabel = isAll ? "전체" : seasonLabel(current);
+  const currentLabel = isAll ? "전체" : seasonLabel(shownId);
 
   const go = (id: string) => {
+    if (id === current) return;
     const next = new URLSearchParams(params.toString());
     // 오늘이 속한 시즌이 기본값이라 쿼리를 지운다 — 주소가 짧고, 시즌이 넘어가면
     // 예전에 공유된 링크가 자동으로 그때의 현재 시즌을 가리킨다.
@@ -60,7 +74,11 @@ export default function SeasonSelector({
     if (id === fallback) next.delete("season");
     else next.set("season", id);
     const qs = next.toString();
-    router.push(qs ? `${pathname}?${qs}` : pathname);
+    setPendingId(id);
+    // scroll:false — 홈에선 셀렉터가 화면 중간이라, 맨 위로 튀면 어디 있었는지 잃는다.
+    startTransition(() => {
+      router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    });
   };
 
   // 시즌이 하나뿐이면 고를 게 없다. 라벨만 조용히 보여 준다.
@@ -85,7 +103,11 @@ export default function SeasonSelector({
           style={{ color: accent, background: `${accent}1f`, border: `1px solid ${accent}40` }}
         >
           {currentLabel}
-          <ChevronDown width={11} height={11} strokeWidth={3} />
+          {isPending ? (
+            <Loader2 width={11} height={11} strokeWidth={3} className="animate-spin" />
+          ) : (
+            <ChevronDown width={11} height={11} strokeWidth={3} />
+          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -105,7 +127,7 @@ export default function SeasonSelector({
         )}
         {/* 최신 시즌이 위로 오게 뒤집는다 */}
         {[...SEASONS].reverse().map((s) => {
-          const selected = s.id === current;
+          const selected = s.id === shownId;
           // "경기가 아직 없다" 와 "아직 개막을 안 했다" 는 다른 말이다.
           // 개막 전 시즌에 "기록 없음" 이라고 쓰면 기록이 날아간 것처럼 읽힌다.
           const upcoming = seasonStatus(s.id) === "future";
