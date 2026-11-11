@@ -422,6 +422,14 @@ html:not([data-booted]) .boot-skeleton {
   font-weight: 600;
 }
 
+/* 하단 탭으로 들어오는 최상위 화면의 제목. 뒤로가기가 없고 화면 이름이 탭 이름과 같다. */
+.app-header-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
 /* 버튼은 역할만 공유한다. 포지션·상태 선택처럼 의미색이 있는 컨트롤은 제외한다. */
 .app-button {
   display: inline-flex;

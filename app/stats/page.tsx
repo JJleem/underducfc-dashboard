@@ -138,6 +138,7 @@ export default async function StatsPage({
     >
       <PageHeader
         label="스탯"
+        back={null}
         right={<SeasonSelector current={season} withMatches={seasonsPlayed} />}
       />
 

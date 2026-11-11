@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useTheme } from "next-themes";
+import { koreanDate } from "../../lib/format-date";
 import {
   ArrowLeft,
   Camera,
@@ -11,10 +11,8 @@ import {
   ChevronRight,
   Crown,
   MapPin,
-  Moon,
   Pencil,
   Play,
-  Sun,
   Target,
   Users,
 } from "lucide-react";
@@ -84,7 +82,6 @@ export default function MatchDetailClient({
   const { data: session } = useSession();
   // 축하 화면 다시 보기 — 스코어(결과) · MOM 줄(MOM)을 누르면 연다.
   const [replay, setReplay] = useState<"result" | "mom" | null>(null);
-  const { resolvedTheme, setTheme } = useTheme();
   const [lightbox, setLightbox] = useState<{ urls: string[]; index: number } | null>(null);
   const closeLightbox = useAppOverlay(!!lightbox, () => setLightbox(null));
   const weather = parseWeather(match.weather || "");
@@ -114,15 +111,6 @@ export default function MatchDetailClient({
           <ArrowLeft width={20} height={20} strokeWidth={2.2} />
         </Link>
         <span className="app-header-label">경기</span>
-        <button
-          type="button"
-          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-          aria-label="테마 전환"
-          className="press-icon -my-2 ml-auto flex h-11 w-11 items-center justify-center rounded-full text-gray-500 active:bg-gray-100 dark:text-gray-400 dark:active:bg-white/10"
-        >
-          <Moon className="h-5 w-5 dark:hidden" strokeWidth={2.2} />
-          <Sun className="hidden h-5 w-5 text-[var(--ud-primary)] dark:block" strokeWidth={2.2} />
-        </button>
       </header>
 
       {/* 이 화면의 주인공은 카드가 아니라 경기 자체다. 스코어를 넓게 두고 나머지는 헤어라인으로 잇는다. */}
@@ -130,7 +118,7 @@ export default function MatchDetailClient({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="whitespace-nowrap text-[12px] font-black tabular-nums text-gray-900 dark:text-white">
-              {match.date}
+              {koreanDate(match.date, true)}
               {match.time && match.time !== "미정" ? ` · ${match.time}` : ""}
             </p>
             <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-bold text-gray-500 dark:text-white/50">

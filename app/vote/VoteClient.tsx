@@ -14,7 +14,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import {
-  ArrowLeft,
   Check,
   Droplets,
   Loader2,
@@ -732,14 +731,7 @@ export default function VoteClient({
   return (
     <main className="relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-background dark:text-zinc-100">
       <div className="app-page-header safe-header-py-3">
-        <Link
-          href="/"
-          aria-label="뒤로"
-          className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300"
-        >
-          <ArrowLeft width={20} height={20} strokeWidth={2.2} />
-        </Link>
-        <span className="app-header-label">투표</span>
+        <span className="app-header-title">투표</span>
       </div>
 
       {activeMatches.length > 0 ? (

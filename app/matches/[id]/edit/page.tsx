@@ -97,6 +97,13 @@ export default async function LineupEditPage({
   // 프로필의 "경기당 Q" 와 같은 값 — 누가 덜 뛰었는지 보면서 라인업을 짜라고 넘긴다.
   const avgQuartersMap = buildAvgQuartersMap(rawLineups);
 
+  // 팀이 가장 자주 쓰는 포메이션으로 첫 쿼터를 연다.
+  const formationCounts = new Map<string, number>();
+  rawLineups.slice(1).forEach((row: string[]) => {
+    if (row[2]) formationCounts.set(row[2], (formationCounts.get(row[2]) ?? 0) + 1);
+  });
+  const defaultFormation = [...formationCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+
   const attendees = (match.attendees || "")
     .split(",")
     .map((s) => s.trim())
@@ -111,6 +118,7 @@ export default async function LineupEditPage({
       prefPosMap={prefPosMap}
       avgQuartersMap={avgQuartersMap}
       boardLineups={boardLineups}
+      defaultFormation={defaultFormation}
     />
   );
 }

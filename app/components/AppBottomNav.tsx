@@ -117,7 +117,7 @@ function NavBar({ active }: { active: NavKey | null }) {
   return (
     <nav
       aria-label="주요 메뉴"
-      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md border-t border-gray-200/80 bg-white/92 px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-1.5 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#101013]/92 dark:shadow-[0_-12px_30px_rgba(0,0,0,0.3)]"
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md border-t border-gray-200/80 bg-white px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-1.5 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] dark:border-white/[0.08] dark:bg-[#101013] dark:shadow-[0_-12px_30px_rgba(0,0,0,0.3)]"
     >
       <div className="relative grid grid-cols-6">
         <motion.div

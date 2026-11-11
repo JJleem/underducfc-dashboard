@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ArrowLeft, Plus, Youtube, Instagram, Search, X, Loader2, ClipboardList } from "lucide-react";
+import { Plus, Youtube, Instagram, Search, X, Loader2, ClipboardList } from "lucide-react";
 import { youtubeId } from "../lib/youtube";
 import { isInstagramUrl } from "../lib/instagram";
 import type { BoardPost } from "../lib/board";
@@ -114,18 +114,11 @@ export default function BoardClient({
 
   return (
     <div className="pb-24 text-gray-900 dark:text-white">
-      {/* 헤더 — /vote·/stats·/record 와 같은 문법: 뒤로가기 + 영문 라벨.
+      {/* 헤더 — /vote·/stats·/roster 와 같은 문법: 탭 루트라 뒤로가기 없이 탭 이름을 제목으로.
           페이지마다 상단 바가 다르면 같은 앱으로 안 읽힌다. */}
       <header className="app-header-surface sticky top-0 z-40 px-4 safe-header-py-3">
         <div className="flex items-center gap-2">
-          <Link
-            href="/"
-            aria-label="뒤로"
-            className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300"
-          >
-            <ArrowLeft width={20} height={20} strokeWidth={2.2} />
-          </Link>
-          <span className="app-header-label">게시판</span>
+          <span className="app-header-title">전술</span>
           <button
             onClick={() => (currentUser ? setComposer("choose") : signIn("kakao"))}
             aria-label="글쓰기"

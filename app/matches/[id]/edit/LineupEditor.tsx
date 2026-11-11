@@ -1,8 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Sun, Moon, RotateCcw, Save, Check, UserPlus, UserMinus, X, ArrowRightLeft, Plus, Trash2, Move, ClipboardList } from "lucide-react";
-import { useTheme } from "next-themes";
+import ModalPortal from "../../../components/ModalPortal";
+import { koreanDate } from "../../../lib/format-date";
+import { ArrowLeft, Copy, RotateCcw, Save, Check, UserPlus, UserMinus, X, ArrowRightLeft, Plus, Trash2, Move, ClipboardList } from "lucide-react";
 import { MatchData, LineupData } from "../../../lib/match-types";
 import type { SubstitutionEvent } from "../../../lib/lineup";
 import LineupPitch from "../../../components/LineupPitch";
@@ -110,6 +111,8 @@ interface LineupEditorProps {
   /** 선수별 "경기당 Q" — 프로필에 나오는 값과 같다 */
   avgQuartersMap?: Record<string, string>;
   boardLineups?: BoardLineupOption[];
+  /** 팀이 가장 자주 쓰는 포메이션. 첫 쿼터를 여기서 시작한다(매번 4-3-3 에서 바꾸지 않게). */
+  defaultFormation?: string;
 }
 
 // 선호 포지션 카테고리 색 (GK 주황 / 수비 파랑 / 미드 초록 / 공격 핑크)
@@ -128,13 +131,15 @@ export default function LineupEditor({
   prefPosMap = {},
   avgQuartersMap = {},
   boardLineups = [],
+  defaultFormation,
 }: LineupEditorProps) {
-  const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
 
+  const initialFormation =
+    defaultFormation && FORMATION_PRESETS[defaultFormation] ? defaultFormation : FORMATIONS[0];
   const [quarter, setQuarter] = useState(QUARTERS[0]);
-  const [formation, setFormation] = useState(FORMATIONS[0]);
-  const [positions, setPositions] = useState<Point[]>(FORMATION_PRESETS[FORMATIONS[0]]);
+  const [formation, setFormation] = useState(initialFormation);
+  const [positions, setPositions] = useState<Point[]>(FORMATION_PRESETS[initialFormation]);
   const [tactic, setTactic] = useState("");
   const [instructions, setInstructions] = useState<string[][]>(() => Array.from({ length: 11 }, () => []));
   const [assignments, setAssignments] = useState<(string | null)[]>(Array(11).fill(null));
@@ -459,6 +464,66 @@ export default function LineupEditor({
 
   const dirtyQuarters = QUARTERS.filter(isQuarterDirty);
 
+  /** 그 쿼터의 지금 모습 — 편집 중이면 편집본, 아니면 저장본. 아무것도 없으면 null. */
+  const viewOfQuarter = (q: string): QuarterState | null =>
+    stateOfQuarter(q) ?? (lineups.some((l) => l.quarter === q) ? savedStateOf(q) : null);
+
+  // 이번 경기에서 선수별 선발 쿼터 수. 시즌 평균만 보여서는 "오늘 누가 덜 뛰는지"를 알 수 없다.
+  const quartersPlayed: Record<string, number> = {};
+  QUARTERS.forEach((q) => {
+    viewOfQuarter(q)?.assignments.forEach((n) => {
+      if (n) quartersPlayed[n] = (quartersPlayed[n] ?? 0) + 1;
+    });
+  });
+
+  // 빈 쿼터에서 직전 쿼터를 그대로 가져온다. 대부분 몇 명만 바꾸면 되기 때문이다.
+  const prevQuarter: string | undefined = QUARTERS[QUARTERS.indexOf(quarter) - 1];
+  const prevState = prevQuarter ? viewOfQuarter(prevQuarter) : null;
+  const canCopyPrev = !hasCurrentData && !!prevState?.assignments.some(Boolean);
+  const copyPrevQuarter = () => {
+    if (!prevState) return;
+    setFormation(prevState.formation);
+    setPositions(prevState.positions);
+    setTactic(prevState.tactic);
+    setInstructions(prevState.instructions);
+    setAssignments(prevState.assignments);
+    setSubs(prevState.subs);
+    setActiveSlot(null);
+    setPickedPlayer(null);
+  };
+
+  // 빈 자리를 누르면 선수 목록이 아래에서 올라온다. 목록이 피치 한 화면 아래에 있어서
+  // 자리를 고르고 내려가 선수를 고르는 동안 피치가 안 보였다.
+  const pickerSlot =
+    activeSlot && !swapFrom &&
+    !(activeSlot.type === "player" ? assignments[activeSlot.index] : subs[activeSlot.index])
+      ? activeSlot
+      : null;
+  const pickerPlayers = [...allPlayers].sort((a, b) => {
+    const placed = Number(assignedPlayers.has(a)) - Number(assignedPlayers.has(b));
+    return placed || (quartersPlayed[a] ?? 0) - (quartersPlayed[b] ?? 0);
+  });
+  const pitchWrapRef = React.useRef<HTMLDivElement>(null);
+  const subsWrapRef = React.useRef<HTMLDivElement>(null);
+  const pickerRef = React.useRef<HTMLDivElement>(null);
+  const pickerType = pickerSlot?.type;
+  const pickerIndex = pickerSlot?.index;
+  // 고른 자리가 패널에 가리지 않게 화면을 맞춘다(자동으로 다음 빈 자리로 넘어갈 때도).
+  React.useEffect(() => {
+    if (pickerType === undefined || pickerIndex === undefined) return;
+    const wrap = (pickerType === "player" ? pitchWrapRef : subsWrapRef).current;
+    if (!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    const slotY =
+      pickerType === "player" ? rect.top + (rect.height * positions[pickerIndex].y) / 100 : rect.top + rect.height / 2;
+    const top = 72;
+    const bottom = window.innerHeight - (pickerRef.current?.offsetHeight ?? 320);
+    if (slotY > top + 48 && slotY < bottom - 48) return;
+    window.scrollBy({ top: slotY - (top + bottom) / 2, behavior: "smooth" });
+    // positions 는 드래그 중 계속 바뀐다 — 자리를 고른 순간에만 맞춘다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pickerType, pickerIndex]);
+
   /** 어느 쿼터에도 못 들어간 참석/게스트 선수를 빈 대기 슬롯에 채운다 */
   const withLeftoversInSubs = (state: QuarterState): QuarterState => {
     const placed = new Set(
@@ -599,14 +664,6 @@ export default function LineupEditor({
         </button>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            aria-label="테마 전환"
-            className="touch-target flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10"
-          >
-            <Moon className="block dark:hidden w-4 h-4 text-gray-700" />
-            <Sun className="hidden dark:block w-4 h-4 text-[var(--ud-primary)]" />
-          </button>
-          <button
             onClick={handleSave}
             disabled={saving || saved}
             className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl text-[13px] font-black transition ${
@@ -631,7 +688,7 @@ export default function LineupEditor({
       <main className="p-4 space-y-4 pb-10 animate-fade">
         {/* 경기 정보 */}
         <div className="text-center py-2">
-          <p className="truncate text-[12px] font-bold text-gray-500 dark:text-white/50">{match.date} · {match.location}</p>
+          <p className="truncate text-[12px] font-bold text-gray-500 dark:text-white/50">{koreanDate(match.date)} · {match.location}</p>
           <p className="truncate text-[15px] font-black text-gray-800 dark:text-white mt-0.5">
             언더덕 vs {match.opponent}
           </p>
@@ -664,6 +721,16 @@ export default function LineupEditor({
             );
           })}
         </div>
+
+        {canCopyPrev && (
+          <button
+            onClick={copyPrevQuarter}
+            className="flex items-center gap-1.5 rounded-xl border border-[var(--ud-primary)]/40 bg-[var(--ud-primary)]/10 px-3 py-2 text-[12px] font-black text-[var(--ud-primary-strong)] active:opacity-70 dark:text-[var(--ud-primary)]"
+          >
+            <Copy className="h-4 w-4" />
+            {prevQuarter} 라인업 그대로 가져오기
+          </button>
+        )}
 
         {/* 쿼터 이동 */}
         {hasCurrentData && (
@@ -932,9 +999,9 @@ export default function LineupEditor({
                 : activeSlot?.type === "player"
                 ? assignments[activeSlot.index]
                   ? `${assignments[activeSlot.index]} 선택됨 → 아래에서 개인 전술 설정`
-                  : `빈 슬롯 ${activeSlot.index + 1} 선택됨 → 선수 목록에서 탭`
+                  : `빈 자리 선택됨 → 아래에서 선수를 고르세요`
                 : activeSlot?.type === "sub"
-                ? `대기 슬롯 ${activeSlot.index + 1} 선택됨 → 선수 목록에서 탭`
+                ? `대기 ${activeSlot.index + 1} 선택됨 → 아래에서 선수를 고르세요`
                 : "탭 = 선수 선택·개인 전술 · 끌면 위치 이동"}
             </span>
             <div className="flex shrink-0 items-center gap-2.5">
@@ -963,6 +1030,7 @@ export default function LineupEditor({
             </div>
           </div>
 
+          <div ref={pitchWrapRef}>
           <LineupPitch
             positions={positions}
             players={assignments}
@@ -979,6 +1047,7 @@ export default function LineupEditor({
             onClearSlot={(i) => clearSlot({ type: "player", index: i })}
             onCloseSlot={() => setActiveSlot(null)}
           />
+          </div>
         </div>
 
         {/* 대기 선수 슬롯 */}
@@ -1002,7 +1071,7 @@ export default function LineupEditor({
               </>
             )}
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div ref={subsWrapRef} className="flex gap-2 flex-wrap">
             {Array.from({ length: MAX_SUBS }).map((_, i) => {
               const sub = subs[i];
               const isActive = activeSlot?.type === "sub" && activeSlot.index === i;
@@ -1110,6 +1179,18 @@ export default function LineupEditor({
                         {used && !isGuest && <Check className="h-4 w-4 shrink-0" strokeWidth={2.4} />}
                         {isGuest && <span className="shrink-0 text-[11px] opacity-60">G</span>}
                         <span className="truncate">{name}</span>
+                        <span
+                          className={`ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-black tabular-nums ${
+                            isPicked
+                              ? "bg-white/20 text-white"
+                              : quartersPlayed[name]
+                              ? "bg-gray-900 text-white dark:bg-white dark:text-black"
+                              : "bg-gray-100 text-gray-400 dark:bg-white/10 dark:text-white/40"
+                          }`}
+                          title="이번 경기 선발 쿼터 수"
+                        >
+                          오늘 {quartersPlayed[name] ?? 0}Q
+                        </span>
                       </span>
                       {(avgQ || pref.length > 0) && (
                         <span className="flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap">
@@ -1302,6 +1383,58 @@ export default function LineupEditor({
           </button>
         </div>
       </main>
+
+      {pickerSlot && (
+        <ModalPortal>
+          <div
+            ref={pickerRef}
+            className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md rounded-t-2xl border-t border-gray-200 bg-white pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-12px_30px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-[#161618]"
+          >
+            <div className="flex items-center justify-between gap-2 px-4 pb-2 pt-3">
+              <p className="min-w-0 truncate text-[13px] font-black text-gray-900 dark:text-white">
+                <span className="text-[var(--ud-primary)]">
+                  {pickerSlot.type === "player"
+                    ? roleFromPoint(positions[pickerSlot.index])
+                    : `대기 ${pickerSlot.index + 1}`}
+                </span>{" "}
+                자리에 넣을 선수
+              </p>
+              <button
+                onClick={() => setActiveSlot(null)}
+                aria-label="선수 선택 닫기"
+                className="-mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 active:bg-gray-100 dark:text-white/60 dark:active:bg-white/10"
+              >
+                <X className="h-5 w-5" strokeWidth={2.2} />
+              </button>
+            </div>
+            <div className="grid max-h-[38dvh] grid-cols-3 gap-1.5 overflow-y-auto overscroll-contain px-4 pb-1">
+              {[...pickerPlayers, "미정"].map((name) => {
+                const used = assignedPlayers.has(name);
+                const pref = prefPosMap[name]?.[0];
+                return (
+                  <button
+                    key={name}
+                    onClick={() => handlePlayerClick(name)}
+                    className={`flex min-h-12 flex-col justify-center rounded-xl px-2.5 py-1.5 text-left active:scale-[0.97] ${
+                      used
+                        ? "bg-gray-50 text-gray-400 dark:bg-white/[0.03] dark:text-white/35"
+                        : "bg-gray-100 text-gray-900 dark:bg-white/[0.08] dark:text-white"
+                    }`}
+                  >
+                    <span className="truncate text-[13px] font-black">{name}</span>
+                    {name !== "미정" && (
+                      <span className="flex items-center gap-1 text-[11px] font-bold tabular-nums opacity-70">
+                        {used ? "배치됨" : `오늘 ${quartersPlayed[name] ?? 0}Q`}
+                        {pref && <span style={{ color: PREF_POS_COLOR[pref] }}>{pref}</span>}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </ModalPortal>
+      )}
       <AppToast message={toastError} tone="error" />
     </div>
   );

@@ -3,9 +3,6 @@
 import React from "react";
 import Link from "next/link";
 import {
-  Sun,
-  Moon,
-  ArrowLeft,
   Pencil,
   Loader2,
   User,
@@ -13,7 +10,6 @@ import {
   Shirt,
   ChevronRight,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "../components/ui/drawer";
 import { playerFaceOnSrc } from "../lib/player-faceons";
 import { useRouter } from "next/navigation";
@@ -87,7 +83,6 @@ function SquadPhoto({ name, accent }: { name: string; accent: string }) {
 }
 
 export default function RosterClient({ players: initialPlayers, isAdmin = false }: RosterClientProps) {
-  const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
   const [playerList, setPlayerList] = React.useState<string[][]>(initialPlayers);
 
@@ -207,14 +202,7 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
     <div className="relative mx-auto min-h-[100dvh] max-w-md overflow-hidden bg-gray-50 font-sans text-gray-900 transition-colors duration-300 dark:bg-background dark:text-zinc-100">
       <header className="app-workspace-header safe-header-py-3">
         <div className="flex items-center gap-2">
-          <Link
-            href="/"
-            aria-label="뒤로"
-            className="press-icon -my-2.5 -ml-2.5 flex h-11 w-11 items-center justify-center text-gray-700 dark:text-gray-300"
-          >
-            <ArrowLeft width={20} height={20} strokeWidth={2.2} />
-          </Link>
-          <span className="app-header-label">선수단</span>
+          <span className="app-header-title">명단</span>
         </div>
         <div className="flex items-center gap-2">
           {isAdmin && (
@@ -228,15 +216,6 @@ export default function RosterClient({ players: initialPlayers, isAdmin = false 
               <UserPlus width={20} height={20} strokeWidth={2.2} />
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            aria-label="테마 전환"
-            className="app-icon-action app-icon-action-neutral press-icon -my-1"
-          >
-            <Moon className="block h-5 w-5 text-gray-700 dark:hidden" strokeWidth={2.2} />
-            <Sun className="hidden h-5 w-5 text-[var(--ud-primary)] dark:block" strokeWidth={2.2} />
-          </button>
         </div>
       </header>
 

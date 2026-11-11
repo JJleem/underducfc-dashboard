@@ -267,6 +267,12 @@ export default function MatchFeed({
   // 예정 경기는 붙이지 않는다 — 아직 스코어도 MOM도 없어서 빈 판이 나온다.
   const showResultSlide = photos.length > 0 && !upcoming;
   const slideCount = photos.length + (showResultSlide ? 1 : 0);
+  // 사진이 없으면 결과 카드가 곧 게시물 그림이고, 바로 아래 캡션이 같은 내용을 다시 적는다.
+  // 그때는 카드에서 득점 상자를, 캡션에서 스코어 줄을 뺀다 — 스코어는 카드에, 득점은 캡션에 한 번씩만.
+  // (득점 상자가 배경 엠블럼과 겹쳐 잘 안 읽히던 것도 같이 없어진다.)
+  // 캐러셀 끝 장으로 쓸 때는 그 한 장이 요약이라 전부 싣는다.
+  const cardIsPost = photos.length === 0 && !upcoming && !casual;
+  const showScoreRow = !(cardIsPost && scored);
 
   // 자체전 카드. 스코어 카드를 그대로 쓰면 "언더덕 A : 언더덕 B" 라는 있지도 않은
   // 대진이 생기고("A/B" 명단은 어디에도 없다) 큰 글씨와 뱃지에 "자체전"이 두 번 찍힌다.
@@ -426,16 +432,16 @@ export default function MatchFeed({
               )}
 
               <span
-                className={`${goals.length > 0 ? "mt-3" : "mt-5"} inline-flex min-w-16 justify-center rounded-full border px-4 py-1.5 text-[11px] font-black ${
+                className={`${goals.length > 0 && !cardIsPost ? "mt-3" : "mt-5"} inline-flex min-w-16 justify-center rounded-full border px-4 py-1.5 text-[11px] font-black ${
                   won
                     ? "border-[var(--ud-primary)]/70 bg-[var(--ud-primary)] text-white"
-                    : "border-white/10 bg-white/[0.06] text-white/55"
+                    : "border-white/15 bg-black/45 text-white/85"
                 }`}
               >
                 {resultWord(match.result)}
               </span>
 
-              {goals.length > 0 && (
+              {goals.length > 0 && !cardIsPost && (
                 <div className="mx-auto mt-3 w-full max-w-[280px] rounded-xl border border-white/[0.09] bg-white/[0.045] px-3 py-2.5 backdrop-blur-[2px]">
                   <p className="mb-1.5 text-[11px] font-black  text-white/50">
                     득점
@@ -546,7 +552,7 @@ export default function MatchFeed({
               className="flex w-10 flex-col items-center gap-0.5 whitespace-nowrap py-0.5 text-[var(--ud-primary)] active:opacity-60 dark:text-[var(--ud-primary)]"
             >
               <ClipboardList width={ICON.action} height={ICON.action} strokeWidth={2} />
-              <span className="text-[11px] font-black leading-none">라인업</span>
+              <span className="text-[11px] font-black leading-none">짜기</span>
             </Link>
             <button
               type="button"
@@ -913,12 +919,13 @@ export default function MatchFeed({
             <FeedSummaryEnd />
           </Link>
         )}
-        {!upcoming && (
+        {!upcoming && (showScoreRow || goals.length > 0) && (
           <div
             className={`border-t border-gray-100 dark:border-white/[0.06] ${
               showFollowUp ? "" : "border-b"
             }`}
           >
+            {showScoreRow && (
             <div className="flex min-h-10 items-center gap-2 py-2.5">
               <FeedSummaryLabel>경기 결과</FeedSummaryLabel>
               {scored ? (
@@ -944,10 +951,11 @@ export default function MatchFeed({
                 {resultWord(match.result)}
               </span>
             </div>
+            )}
 
             {/* 득점자와 도움을 한 골 단위로 짝지어 보여 준다. */}
             {goals.length > 0 && (
-              <div className="flex items-start gap-2 border-t border-gray-100 py-2.5 dark:border-white/[0.06]">
+              <div className={`flex items-start gap-2 py-2.5 ${showScoreRow ? "border-t border-gray-100 dark:border-white/[0.06]" : ""}`}>
                 <FeedSummaryLabel>득점</FeedSummaryLabel>
                 <div className="min-w-0 flex-1 space-y-1.5">
                   {goals.map((scorer, i) => (

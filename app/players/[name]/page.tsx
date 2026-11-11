@@ -39,6 +39,7 @@ import { Sparkles, ChevronRight } from "lucide-react";
 import ProfileTabs from "../../components/ProfileTabs";
 import PrefPosEditor from "../../components/PrefPosEditor";
 import PlayerAvatar from "../../components/PlayerAvatar";
+import SeasonEmpty from "../../components/SeasonEmpty";
 import PlayerProfileBackButton from "../../components/PlayerProfileBackButton";
 import PlayerMatchGrid, { type GridMatch } from "../../components/PlayerMatchGrid";
 import ChemistryHub from "../../components/ChemistryHub";
@@ -336,8 +337,14 @@ export default async function PlayerPage({
       <div className="max-w-md mx-auto pb-28">
         {/* 상단 바 */}
         <div className="app-page-header safe-header-py-3">
-          <PlayerProfileBackButton />
-          <span className="app-header-label">선수</span>
+          {canEdit ? (
+            <span className="app-header-title">MY</span>
+          ) : (
+            <>
+              <PlayerProfileBackButton />
+              <span className="app-header-label">선수</span>
+            </>
+          )}
           <span className="ml-auto flex items-center">
             <SeasonSelector current={season} withMatches={seasonsPlayed} />
           </span>
@@ -503,6 +510,15 @@ export default async function PlayerPage({
           feed={
             myMatches.length > 0 ? (
               <PlayerMatchGrid matches={myMatches} />
+            ) : completed.length === 0 && otherSeasons.length > 0 ? (
+              // 팀이 이 시즌에 아직 한 경기도 끝내지 않았다 — 내 기록이 없어진 게 아니라는 걸 알리고
+              // 지난 시즌으로 가는 길을 준다(/stats · /record 와 같은 빈 상태).
+              <SeasonEmpty
+                seasonId={season}
+                accent="var(--season)"
+                basePath={`/players/${encodeURIComponent(name)}`}
+                withMatches={otherSeasons}
+              />
             ) : (
               <p className="px-4 py-10 text-center text-[12px] font-bold text-gray-400 dark:text-white/50">
                 아직 출전한 경기가 없어요.

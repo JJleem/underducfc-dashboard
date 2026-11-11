@@ -193,6 +193,15 @@ export default function AppHeader({
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem
+                onSelect={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                className="rounded-xl px-2.5 py-2 text-xs font-bold text-gray-700 dark:text-gray-200"
+              >
+                <Moon width={16} height={16} strokeWidth={2} className="!text-[var(--ud-primary)] dark:hidden" />
+                <Sun width={16} height={16} strokeWidth={2} className="hidden !text-[var(--ud-primary)] dark:block" />
+                <span className="dark:hidden">다크 모드</span>
+                <span className="hidden dark:inline">라이트 모드</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 variant="destructive"
                 onSelect={async () => {
                   // 서비스워커가 저장해 둔 홈 화면(팀 데이터)을 로그아웃한 기기에 남기지 않는다.
@@ -218,15 +227,6 @@ export default function AppHeader({
           </button>
         )}
 
-        <button
-          type="button"
-          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-          aria-label="테마 전환"
-          className="press-icon touch-target flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10"
-        >
-          <Moon width={16} height={16} strokeWidth={2} className="block text-gray-700 dark:hidden" />
-          <Sun width={16} height={16} strokeWidth={2} className="hidden text-[var(--ud-primary)] dark:block" />
-        </button>
       </div>
     </header>
   );

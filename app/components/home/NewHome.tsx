@@ -7,6 +7,7 @@
 // 실제 `/`는 이 화면으로 확정됐다. `/home-preview`는 상태별 확인 용도로만 남긴다.
 
 import Link from "next/link";
+import { koreanDate } from "../../lib/format-date";
 import { Bell, MapPin } from "lucide-react";
 import { auth } from "@/auth";
 import { isAdmin } from "../../lib/admin";
@@ -584,7 +585,7 @@ export default async function NewHome({
               <span className="flex min-w-0 flex-1 items-center gap-2">
                 <Bell width={16} height={16} strokeWidth={2} className="shrink-0 text-gray-400" />
                 <span className="min-w-0 truncate text-[12px] font-black">{notice[1] || "공지"}</span>
-                <span className="shrink-0 whitespace-nowrap text-[11px] font-bold text-gray-400">{notice[0]}</span>
+                <span className="shrink-0 whitespace-nowrap text-[11px] font-bold text-gray-400">{koreanDate(notice[0] || "")}</span>
               </span>
             }
           >

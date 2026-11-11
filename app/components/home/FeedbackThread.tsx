@@ -30,9 +30,7 @@ export function feedbackTimestamp(raw: string): string {
   const date = new Date(raw);
   if (isNaN(date.getTime())) return "";
   const pad = (value: number) => String(value).padStart(2, "0");
-  return `${date.getMonth() + 1}/${date.getDate()} ${pad(date.getHours())}:${pad(
-    date.getMinutes(),
-  )}:${pad(date.getSeconds())}`;
+  return `${date.getMonth() + 1}/${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 export default function FeedbackThread({
