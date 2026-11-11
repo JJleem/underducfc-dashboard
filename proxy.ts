@@ -15,7 +15,13 @@ export default auth((request) => {
       : NextResponse.next();
   }
 
-  if (request.auth) return NextResponse.next();
+  if (request.auth) {
+    // 서비스워커가 "로그인된 진짜 화면"만 저장하도록 표시한다(public/sw.js 의 홈 캐시).
+    // 로그아웃 상태의 "/" 는 로그인 화면으로 rewrite 되므로 이 헤더가 없다.
+    const response = NextResponse.next();
+    response.headers.set("x-ud-authed", "1");
+    return response;
+  }
   return NextResponse.rewrite(new URL("/login", request.nextUrl));
 });
 

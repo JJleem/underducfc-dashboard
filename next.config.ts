@@ -2,10 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   async headers() {
-    return [{
-      source: "/matchday/:path*",
-      headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
-    }];
+    const immutable = [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }];
+    return [
+      { source: "/matchday/:path*", headers: immutable },
+      // 폰트는 버전 고정(v1.3.9)이라 바뀌지 않는다. 버전을 올릴 땐 폴더 이름을 바꾼다.
+      { source: "/fonts/:path*", headers: immutable },
+    ];
   },
   images: {
     remotePatterns: [

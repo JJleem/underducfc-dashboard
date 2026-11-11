@@ -194,7 +194,11 @@ export default function AppHeader({
               </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
-                onSelect={() => signOut()}
+                onSelect={async () => {
+                  // 서비스워커가 저장해 둔 홈 화면(팀 데이터)을 로그아웃한 기기에 남기지 않는다.
+                  await globalThis.caches?.delete("udk-home-v1").catch(() => {});
+                  signOut();
+                }}
                 className="rounded-xl px-2.5 py-2 text-xs font-bold"
               >
                 <LogOut width={16} height={16} strokeWidth={2} />

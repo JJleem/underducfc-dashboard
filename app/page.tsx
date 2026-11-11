@@ -1,4 +1,8 @@
 import NewHome from "./components/home/NewHome";
+import HomeFreshness from "./components/home/HomeFreshness";
+
+// 요청마다 렌더되는 페이지라 "서버가 그린 시각"이 곧 응답 시각이다.
+const renderedNow = () => Date.now();
 
 /** 홈은 인스타 피드형 NewHome으로 확정한다. 환경변수·쿼리로 이전 홈에 돌아가지 않는다. */
 export default async function TeamDashboardPage({
@@ -8,5 +12,10 @@ export default async function TeamDashboardPage({
 }) {
   // 피드를 한 시즌으로 좁히는 선택. 기본(없음)은 전체다 — 개막일 아침에 홈이 비면 안 된다.
   const { season } = await searchParams;
-  return <NewHome season={season} />;
+  return (
+    <>
+      <HomeFreshness renderedAt={renderedNow()} />
+      <NewHome season={season} />
+    </>
+  );
 }

@@ -15,7 +15,10 @@
 
 const SHELL_CACHE = 'udk-shell-v1';
 const ASSET_CACHE = 'udk-assets-v1';
-const KEEP = [SHELL_CACHE, ASSET_CACHE];
+// 마지막으로 본 홈 화면. 앱을 켜면 이걸 먼저 띄우고 뒤에서 새로 받는다.
+// ⚠️ 팀 데이터가 든 HTML 이다. 로그아웃 때 AppHeader 가 이 캐시를 지운다 — 이름을 바꾸면 거기도 바꾼다.
+const HOME_CACHE = 'udk-home-v1';
+const KEEP = [SHELL_CACHE, ASSET_CACHE, HOME_CACHE];
 
 const OFFLINE_URL = '/offline.html';
 
@@ -53,7 +56,33 @@ self.addEventListener('activate', (event) => {
 
 /** 빌드 해시가 붙은 불변 정적 자산 → 캐시 우선. */
 function isImmutableAsset(url) {
-  return url.pathname.startsWith('/_next/static/');
+  return url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/fonts/');
+}
+
+/**
+ * 홈을 새로 받아 캐시를 갱신한다.
+ * 로그인된 응답(proxy.ts 가 x-ud-authed 를 붙인다)만 저장하고, 로그인 화면이 오면 저장본을 지운다.
+ * 네트워크 실패·5xx 는 저장본을 건드리지 않는다.
+ */
+async function refreshHome(event) {
+  const res = (await event.preloadResponse) ?? (await fetch(event.request));
+  if (res.ok && !res.redirected) {
+    const cache = await caches.open(HOME_CACHE);
+    if (res.headers.get('x-ud-authed') === '1') await cache.put('/', res.clone());
+    else await cache.delete('/');
+  }
+  return res;
+}
+
+async function offlinePage() {
+  const cache = await caches.open(SHELL_CACHE);
+  return (
+    (await cache.match(OFFLINE_URL)) ??
+    new Response('오프라인입니다.', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    })
+  );
 }
 
 /** public 폴더 이미지·폰트 → 있으면 즉시 쓰고 뒤에서 갱신. */
@@ -97,20 +126,26 @@ self.addEventListener('fetch', (event) => {
   // 데이터 경로는 절대 캐시하지 않는다.
   if (url.pathname.startsWith('/api/')) return;
 
-  // 문서 요청: 항상 네트워크. 실패(= 오프라인)일 때만 폴백 화면.
-  // 캐시된 HTML을 돌려주면 오래된 점수가 보일 수 있어 캐시 자체를 하지 않는다.
+  // 문서 요청: 홈만 저장본을 먼저 띄우고, 나머지는 항상 네트워크.
+  // 실패(= 오프라인)일 때만 폴백 화면.
   if (request.mode === 'navigate') {
+    // 홈: 저장해 둔 지난 화면을 즉시 띄우고, 뒤에서 새로 받아 저장본을 바꿔 둔다.
+    // 화면 갱신은 페이지 쪽 HomeFreshness 가 router.refresh() 로 한다.
+    if (url.pathname === '/' && !url.search) {
+      event.respondWith(
+        (async () => {
+          const hit = await (await caches.open(HOME_CACHE)).match('/');
+          const fresh = refreshHome(event);
+          if (!hit) return await fresh;
+          event.waitUntil(fresh.catch(() => {}));
+          return hit;
+        })().catch(offlinePage)
+      );
+      return;
+    }
+
     event.respondWith(
-      (async () => (await event.preloadResponse) ?? (await fetch(request)))().catch(async () => {
-        const cache = await caches.open(SHELL_CACHE);
-        return (
-          (await cache.match(OFFLINE_URL)) ??
-          new Response('오프라인입니다.', {
-            status: 503,
-            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-          })
-        );
-      })
+      (async () => (await event.preloadResponse) ?? (await fetch(request)))().catch(offlinePage)
     );
     return;
   }

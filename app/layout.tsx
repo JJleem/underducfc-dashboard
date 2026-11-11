@@ -117,16 +117,9 @@ export default async function RootLayout({
       style={{ "--season-light": rootAccent.light, "--season-dark": rootAccent.dark } as CSSProperties}
     >
       <head>
-        {/* Pretendard: 한글 가독성 + 고급스러운 타이포 (동적 서브셋) */}
-        <link
-          rel="preconnect"
-          href="https://cdn.jsdelivr.net"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
-        />
+        {/* Pretendard v1.3.9 (동적 서브셋) — 자체 호스팅. 외부 CDN 연결을 기다리지 않고,
+            서비스워커가 캐시해서 두 번째 실행부터는 네트워크 없이 뜬다. */}
+        <link rel="stylesheet" href="/fonts/pretendard/pretendard.css" />
         {/* iOS 스플래시 (Next의 metadata API가 지원하지 않아 직접 link 태그로 넣는다) */}
         {IOS_SPLASH.map(([w, h, dpr]) => (
           <link
