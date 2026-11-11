@@ -20,14 +20,14 @@ import Link from "next/link";
 import LoginGate from "./components/LoginGate";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://underducfc-dashboard.vercel.app"),
+  metadataBase: new URL("https://underduckfc-dashboard.vercel.app"),
   title: "UNDERDUCK FC | 언더덕 FC",
   description: "언더덕 FC 팀 대시보드 - Not 'Because of', but 'Thanks to'",
   // 💡 공유 시 보여줄 오픈 그래프(Open Graph) 설정
   openGraph: {
     title: "UNDERDUCK FC | 팀 대시보드",
     description: "언더덕 FC 팀원들을 위한 경기 일정 및 기록 확인 대시보드",
-    url: "https://underducfc-dashboard.vercel.app/", // 나중에 배포할 실제 주소로 바꿔주세요!
+    url: "https://underduckfc-dashboard.vercel.app/", // 나중에 배포할 실제 주소로 바꿔주세요!
     siteName: "UNDERDUCK FC",
     images: [
       {

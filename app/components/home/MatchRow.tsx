@@ -12,6 +12,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   Camera,
   ChevronDown,
@@ -22,7 +23,6 @@ import {
   Users,
   Volleyball,
 } from "lucide-react";
-import LineupViewer from "../LineupViewer";
 import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
 import ModalPortal from "../ModalPortal";
@@ -33,12 +33,14 @@ import type { Storyline } from "../../lib/storylines";
 import { useUnseen } from "./useUnseen";
 import FeedbackThread, { type Feedback } from "./FeedbackThread";
 import Storylines from "./Storylines";
-import { shareStoryCard } from "../../lib/draw-story-card";
 import type { MomVote as MomVoteData } from "./MomVote";
 import PinchZoomImage from "../PinchZoomImage";
 import { cldFit, cldThumb } from "../../lib/cloudinary";
 import AppToast from "../AppToast";
 import useAppOverlay from "../useAppOverlay";
+
+// 라인업 뷰어는 무겁다(html-to-image·포메이션·발표 카드). 그려질 때만 내려받는다.
+const LineupViewer = dynamic(() => import("../LineupViewer"));
 
 // ── 디자인 스케일 ───────────────────────────────────────────
 // 이 파일에서 크기를 즉흥으로 정하지 않기 위한 기준. 값이 필요하면 여기서 고른다.
@@ -469,7 +471,7 @@ export default function MatchRow({
                 const shareMatch = match.mom?.trim()
                   ? match
                   : { ...match, mom: momFromVotes(momVotes) };
-                await shareStoryCard(shareMatch);
+                await (await import("../../lib/draw-story-card")).shareStoryCard(shareMatch);
               } catch (e) {
                 if (e instanceof Error && e.name !== "AbortError") {
                   setShareError("공유하지 못했어요.");

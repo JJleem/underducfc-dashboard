@@ -3,7 +3,10 @@
 
 import { useState } from "react";
 import { CalendarPlus, Plus } from "lucide-react";
-import MatchEditor from "./MatchEditor";
+import dynamic from "next/dynamic";
+
+// 경기 편집기는 운영진이 눌렀을 때만 필요하다(달력 포함).
+const MatchEditor = dynamic(() => import("./MatchEditor"), { ssr: false });
 
 export default function NewMatchButton({
   roster,

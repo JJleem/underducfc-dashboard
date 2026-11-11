@@ -14,6 +14,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   Crown,
   ClipboardList,
@@ -25,7 +26,6 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import LineupViewer from "../LineupViewer";
 import ResultReplay, { resultRevealData } from "../fx/ResultReplay";
 import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
@@ -52,18 +52,22 @@ import {
 } from "../../lib/matchday-art";
 import type { Storyline } from "../../lib/storylines";
 import Storylines from "./Storylines";
-import { shareStoryCard } from "../../lib/draw-story-card";
 import { feedbackTimestamp, type Feedback } from "./FeedbackThread";
 import Emoticon from "../Emoticon";
 import PhotoUploader from "./PhotoUploader";
 import DetailSheet from "./DetailSheet";
 import PlayerFace from "../PlayerFace";
 import MomVote, { type MomVote as MomVoteData } from "./MomVote";
-import MatchEditor, { type EditableMatch } from "./MatchEditor";
+import type { EditableMatch } from "./MatchEditor";
 import CommentSheet from "./CommentSheet";
 import { FEED_SUMMARY_ROW, FeedSummaryEnd, FeedSummaryLabel } from "./FeedSummary";
 import FeedPinchPhoto from "./FeedPinchPhoto";
 import AppToast from "../AppToast";
+
+// 라인업 뷰어는 무겁다(html-to-image·포메이션·발표 카드). 그려질 때만 내려받는다.
+const LineupViewer = dynamic(() => import("../LineupViewer"));
+// 경기 편집기는 운영진이 눌렀을 때만 필요하다(달력 포함).
+const MatchEditor = dynamic(() => import("./MatchEditor"), { ssr: false });
 
 
 // ── 디자인 스케일 (피드) ─────────────────────────────────────
@@ -859,7 +863,7 @@ export default function MatchFeed({
               const shareMatch = match.mom?.trim()
                 ? match
                 : { ...match, mom: momFromVotes(momVotes) };
-              await shareStoryCard(shareMatch);
+              await (await import("../../lib/draw-story-card")).shareStoryCard(shareMatch);
             } catch (e) {
               if (e instanceof Error && e.name !== "AbortError") {
                 setToastError("공유 이미지를 만들지 못했어요. 다시 시도해 주세요.");

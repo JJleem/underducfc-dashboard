@@ -6,8 +6,8 @@
 // 바뀌는 건 그 안에 들어가는 "지금 할 일" 뿐이다.
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { CalendarDays, Check, Clock, Flame, MapPin } from "lucide-react";
-import LineupViewer from "../LineupViewer";
 import ResultReplay from "../fx/ResultReplay";
 import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
@@ -21,6 +21,9 @@ import MomVote, { type MomVote as MomVoteData } from "./MomVote";
 import AttendanceHeroVote from "./AttendanceHeroVote";
 import HeroStateTransition from "./HeroStateTransition";
 import HeroLocationActions from "./HeroLocationActions";
+
+// 라인업 뷰어는 무겁다(html-to-image·포메이션·발표 카드). 그려질 때만 내려받는다.
+const LineupViewer = dynamic(() => import("../LineupViewer"));
 
 const PINK = "text-[var(--ud-primary)]";
 

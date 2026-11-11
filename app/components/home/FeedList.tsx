@@ -14,6 +14,12 @@ const PAGE = 4;
 
 export default function FeedList({ children }: { children: React.ReactNode[] }) {
   const [shown, setShown] = useState(Math.min(PAGE, children.length));
+
+  // 라인업 뷰어는 지연 로드다. 첫 화면이 뜬 뒤 미리 받아 둬서 드로어를 처음 열 때도 바로 뜬다.
+  useEffect(() => {
+    const t = setTimeout(() => void import("../LineupViewer"), 2500);
+    return () => clearTimeout(t);
+  }, []);
   const sentinel = useRef<HTMLDivElement>(null);
   const done = shown >= children.length;
 

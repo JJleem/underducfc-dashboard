@@ -42,6 +42,10 @@ self.addEventListener('activate', (event) => {
       await Promise.all(
         names.filter((n) => n.startsWith('udk-') && !KEEP.includes(n)).map((n) => caches.delete(n))
       );
+      // 서비스워커가 깨어나는 동안 네비게이션 요청을 미리 보내 둔다(앱 실행 지연 제거).
+      if (!IS_LOCAL && self.registration.navigationPreload) {
+        await self.registration.navigationPreload.enable();
+      }
       await self.clients.claim();
     })()
   );
@@ -97,7 +101,7 @@ self.addEventListener('fetch', (event) => {
   // 캐시된 HTML을 돌려주면 오래된 점수가 보일 수 있어 캐시 자체를 하지 않는다.
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(async () => {
+      (async () => (await event.preloadResponse) ?? (await fetch(request)))().catch(async () => {
         const cache = await caches.open(SHELL_CACHE);
         return (
           (await cache.match(OFFLINE_URL)) ??
