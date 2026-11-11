@@ -311,6 +311,18 @@ body {
   }
 }
 
+/* 앱을 켠 첫 문서 로드에서만 스켈레톤을 200ms 늦게 보인다.
+   서비스워커 저장본으로 뜰 때는 HTML 안에 스켈레톤과 실제 화면이 같이 들어 있어서,
+   파싱되는 동안 스켈레톤이 한순간 번쩍였다. 그 사이에 실제 화면으로 바뀌면 아예 안 보인다.
+   앱이 뜬 뒤(data-booted)의 탭 이동은 전처럼 즉시 보인다. */
+html:not([data-booted]) .boot-skeleton {
+  animation: boot-skeleton-in 1ms 200ms both;
+}
+@keyframes boot-skeleton-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .skeleton-shimmer {
   background-image: linear-gradient(
     100deg,

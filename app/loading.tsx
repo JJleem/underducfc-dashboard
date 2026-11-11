@@ -89,7 +89,7 @@ function FeedSkeleton({ goals = false }: { goals?: boolean }) {
 export default function Loading() {
   return (
     <div
-      className="mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-background dark:text-zinc-100"
+      className="boot-skeleton mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-background dark:text-zinc-100"
       aria-label="홈을 불러오는 중"
       aria-busy="true"
     >
