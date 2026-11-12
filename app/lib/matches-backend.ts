@@ -9,6 +9,7 @@
 
 import { udGet, udPost, udPatch, udDelete } from "./underduck";
 import { UD_TAG, udReadOptsFor } from "./cache";
+import { getMatchWeather, serializeWeather } from "./weather";
 
 const matchReadOpts = udReadOptsFor(UD_TAG.matches);
 
@@ -82,7 +83,30 @@ export async function getMatchesRows(): Promise<string[][]> {
   for (let i = 0; i <= maxId; i++) {
     if (!rows[i]) rows[i] = Array(HEADER.length).fill("");
   }
+  await withLiveWeather(rows);
   return [HEADER, ...rows];
+}
+
+/**
+ * 다가오는 경기의 날씨 칸(N)을 지금 예보로 덮어쓴다(저장은 하지 않는다).
+ *
+ * 예전엔 처음 받은 예보를 한 번 저장하고 끝이라, 닷새 전 예보가 경기 날까지 그대로 떠 있었다.
+ * 어제 경기까지 포함하는 건 크론(finalize-weather)이 실제 값으로 저장하기 전의 틈을 메우려는 것.
+ * 조회는 30분 캐시 + 2.5초 제한이고, 실패하면 저장돼 있던 값이 그대로 나간다.
+ */
+async function withLiveWeather(rows: string[][]): Promise<void> {
+  const kstDay = (offsetDays: number) =>
+    new Date(Date.now() + 9 * 3_600_000 + offsetDays * 86_400_000).toISOString().slice(0, 10);
+  const from = kstDay(-1);
+  const to = kstDay(14);
+  await Promise.all(
+    rows.map(async (row) => {
+      const date = row[0];
+      if (!date || date < from || date > to) return;
+      const weather = await getMatchWeather(date, row[1], row[2]);
+      if (weather.available) row[13] = serializeWeather(weather);
+    }),
+  );
 }
 
 /** 전체 경기 목록(원본 스키마 그대로). */

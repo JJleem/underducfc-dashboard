@@ -807,11 +807,11 @@ export const TITLES: TitleDef[] = [
   { id: "return", name: "리턴 오브 더 킹", icon: "rotate-ccw", category: "근성 · 출석", state: "future", flat: true, desc: "기존 출전자가 5경기 이상 결장 후 복귀", check: (c) => c.returnedAfterLongAbsence },
 
   // ── 날씨 · 환경
-  { id: "rain_scorer", name: "수중전 골잡이", icon: "cloud-rain", category: "날씨 · 환경", state: "future", flagship: true, flat: true, desc: "비 오는 날 득점", check: (c) => c.goalsInRain >= 1 },
-  { id: "rain_warrior", name: "빗속의 전사", icon: "umbrella", category: "날씨 · 환경", state: "future", flat: true, desc: "비 오는 날 출전", check: (c) => c.playedRain },
-  { id: "heat", name: "폭염 전사", icon: "sun", category: "날씨 · 환경", state: "future", flat: true, desc: "30℃+ 경기 출전", check: (c) => c.playedHeat },
-  { id: "cold", name: "한파 전사", icon: "snowflake", category: "날씨 · 환경", state: "future", flat: true, desc: "0℃- 경기 출전", check: (c) => c.playedCold },
-  { id: "allweather", name: "악천후 마스터", icon: "cloud-lightning", category: "날씨 · 환경", state: "future", flat: true, desc: "비·폭염·한파 모두 경험", check: (c) => c.playedRain && c.playedHeat && c.playedCold },
+  { id: "rain_scorer", name: "수중전 골잡이", icon: "cloud-rain", category: "날씨 · 환경", state: "live", flagship: true, flat: true, desc: "비 오는 날 득점", check: (c) => c.goalsInRain >= 1 },
+  { id: "rain_warrior", name: "빗속의 전사", icon: "umbrella", category: "날씨 · 환경", state: "live", flat: true, desc: "비 오는 날 출전", check: (c) => c.playedRain },
+  { id: "heat", name: "폭염 전사", icon: "sun", category: "날씨 · 환경", state: "live", flat: true, desc: "30℃+ 경기 출전", check: (c) => c.playedHeat },
+  { id: "cold", name: "한파 전사", icon: "snowflake", category: "날씨 · 환경", state: "live", flat: true, desc: "0℃- 경기 출전", check: (c) => c.playedCold },
+  { id: "allweather", name: "악천후 마스터", icon: "cloud-lightning", category: "날씨 · 환경", state: "live", flat: true, desc: "비·폭염·한파 모두 경험", check: (c) => c.playedRain && c.playedHeat && c.playedCold },
 
   // ── 맞대결 · 승부
   { id: "nemesis", name: "천적 킬러", icon: "swords", category: "맞대결 · 승부", state: "live", flagship: true, flat: true, desc: "한 상대 3골+", check: (c) => c.maxOpponentGoals >= 3 },

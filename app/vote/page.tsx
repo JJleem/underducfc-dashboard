@@ -2,9 +2,8 @@ import { auth } from "@/auth";
 import { isAdmin } from "../lib/admin";
 import { getMatchesRows } from "../lib/matches-backend";
 import { getAttendanceVoteRows, getVoteCommentRows, getUsersRows, getRosterRows } from "../lib/backend";
-import { getMatchWeather, serializeWeather, parseWeather } from "../lib/weather";
+import { parseWeather } from "../lib/weather";
 import { isVoteClosed, isMatchDayOver } from "../lib/vote-deadline";
-import { writeMatchWeather } from "../lib/sheets-write";
 import { buildRestPlan, isRestWeek } from "../lib/home-state";
 import VoteClient from "./VoteClient";
 
@@ -121,28 +120,10 @@ export default async function VotePage() {
     )
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  // 날씨: 시트에 저장된 값 우선, 없으면 API 조회 후 시트에 저장
+  // 날씨: 다가오는 경기는 getMatchesRows 가 지금 예보로, 지난 경기는 저장된 실제 값으로 준다.
   const weatherMap: Record<number, { temp: number; description: string; icon: string; pop: number; available: boolean }> = {};
-
-  const weatherEntries = await Promise.all(
-    [...upcomingMatches, ...pastMatches].map(async (m) => {
-      if (m.weatherRaw) return [m.id, parseWeather(m.weatherRaw)] as const;
-      if (m.result !== "예정") return null;
-
-      // 날씨가 비어 있는 경기가 여러 개여도 외부 조회를 직렬로 기다리지 않는다.
-      const weather = await getMatchWeather(m.date, m.time, m.location);
-      if (weather.available) {
-        try {
-          await writeMatchWeather(m.id, serializeWeather(weather));
-        } catch (e) {
-          console.error(`[vote] 날씨 저장 실패 match=${m.id}:`, e);
-        }
-      }
-      return [m.id, weather] as const;
-    }),
-  );
-  weatherEntries.forEach((entry) => {
-    if (entry) weatherMap[entry[0]] = entry[1];
+  [...upcomingMatches, ...pastMatches].forEach((m) => {
+    if (m.weatherRaw) weatherMap[m.id] = parseWeather(m.weatherRaw);
   });
 
   return (
