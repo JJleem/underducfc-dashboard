@@ -16,9 +16,9 @@ function MiniPitch({ report }: { report: StatsReport }) {
       <div className="absolute left-[31%] right-[31%] top-[7%] h-[14%] border-x border-b border-white/70 dark:border-white/20" />
       <div className="absolute bottom-[7%] left-[31%] right-[31%] h-[14%] border-x border-t border-white/70 dark:border-white/20" />
       {report.roles.map((role, index) => {
-        const size = 22 + Math.min(role.percent, 55) * 0.28;
+        const size = 28 + Math.min(role.percent, 55) * 0.2;
         const color = roleColor(role.role);
-        return <div key={role.role} className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-[0_5px_14px_-5px_rgba(0,0,0,0.55)] dark:border-[#101522]" style={{ left: `${role.point.x}%`, top: `${role.point.y}%`, width: size, height: size, background: color, opacity: Math.max(0.48, 1 - index * 0.12) }}><span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[11px] font-black text-white">{role.role}</span></div>;
+        return <div key={role.role} className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-[0_5px_14px_-5px_rgba(0,0,0,0.55)] dark:border-[#101522]" style={{ left: `clamp(${size / 2}px, ${role.point.x}%, calc(100% - ${size / 2}px))`, top: `clamp(${size / 2}px, ${role.point.y}%, calc(100% - ${size / 2}px))`, width: size, height: size, background: color, opacity: Math.max(0.48, 1 - index * 0.12) }}><span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[11px] font-black text-white">{role.role}</span></div>;
       })}
     </div>
   );
