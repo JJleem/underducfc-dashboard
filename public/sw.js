@@ -20,12 +20,6 @@ const ASSET_CACHE = 'udk-assets-v1';
 const HOME_CACHE = 'udk-home-v1';
 const KEEP = [SHELL_CACHE, ASSET_CACHE, HOME_CACHE];
 
-// 저장본을 내준 직후에 홈 요청이 또 오면 그건 앱 실행이 아니라 새로고침이다 — 저장본을 다시 주지 않는다.
-// 배포 직후엔 저장본이 옛 빌드라, 화면이 최신 데이터를 받는 순간 Next 가 페이지를 통째로 새로고침한다.
-// 그때 또 저장본을 주면 저장본이 바뀔 때까지 새로고침이 반복돼 스크롤이 계속 맨 위로 튄다(실제로 겪었다).
-const HOME_RESERVE_MS = 30000;
-let homeServedAt = 0;
-
 const OFFLINE_URL = '/offline.html';
 
 // 로컬 개발에서는 fetch 가로채기를 하지 않는다.
@@ -66,18 +60,38 @@ function isImmutableAsset(url) {
 }
 
 /**
- * 홈을 새로 받아 캐시를 갱신한다.
- * 로그인된 응답(proxy.ts 가 x-ud-authed 를 붙인다)만 저장하고, 로그인 화면이 오면 저장본을 지운다.
- * 네트워크 실패·5xx 는 저장본을 건드리지 않는다.
+ * 홈: 서버가 "저장본과 같은 빌드"라고 확인해 준 경우에만 저장본을 내준다.
+ *
+ * proxy.ts 가 로그인된 응답에 x-ud-build(배포 id)를 붙인다. 응답 헤더만 오면 비교할 수 있으므로
+ * 본문(백엔드 조회·렌더)을 기다리지 않고 저장본을 띄울 수 있다. 화면 갱신은 HomeFreshness 가 한다.
+ *
+ * ⚠️ 옛 빌드의 저장본은 절대 내주면 안 된다. 그 화면이 최신 데이터를 받는 순간 Next 가 빌드 불일치를
+ *    감지해 페이지를 통째로 새로고침하고, 새로고침에도 저장본이 나가면 그게 반복돼 스크롤이 계속
+ *    맨 위로 튄다(실제로 겪었다). 그래서 서버 확인 없이 저장본을 쓰는 건 오프라인·서버 오류일 때뿐이다.
+ *
+ * 헤더가 없으면(로그인 화면) 저장본을 지운다. 예전 서비스워커가 보던 x-ud-authed 를 더 보내지 않는
+ * 것도 같은 이유다 — 아직 갱신 안 된 폰의 옛 서비스워커가 저장본을 스스로 지우게 된다.
  */
-async function refreshHome(event) {
-  const res = (await event.preloadResponse) ?? (await fetch(event.request));
-  if (res.ok && !res.redirected) {
-    const cache = await caches.open(HOME_CACHE);
-    if (res.headers.get('x-ud-authed') === '1') await cache.put('/', res.clone());
-    else await cache.delete('/');
+async function homeResponse(event) {
+  const cache = await caches.open(HOME_CACHE);
+  const hit = await cache.match('/');
+  let res;
+  try {
+    res = (await event.preloadResponse) ?? (await fetch(event.request));
+  } catch (err) {
+    if (hit) return hit;
+    throw err;
   }
-  return res;
+  if (!res.ok || res.redirected) return res.status >= 500 && hit ? hit : res;
+
+  const build = res.headers.get('x-ud-build');
+  if (!build) {
+    await cache.delete('/');
+    return res;
+  }
+  const sameBuild = !!hit && hit.headers.get('x-ud-build') === build;
+  event.waitUntil(cache.put('/', res.clone()).catch(() => {}));
+  return sameBuild ? hit : res;
 }
 
 async function offlinePage() {
@@ -135,20 +149,8 @@ self.addEventListener('fetch', (event) => {
   // 문서 요청: 홈만 저장본을 먼저 띄우고, 나머지는 항상 네트워크.
   // 실패(= 오프라인)일 때만 폴백 화면.
   if (request.mode === 'navigate') {
-    // 홈: 저장해 둔 지난 화면을 즉시 띄우고, 뒤에서 새로 받아 저장본을 바꿔 둔다.
-    // 화면 갱신은 페이지 쪽 HomeFreshness 가 router.refresh() 로 한다.
     if (url.pathname === '/' && !url.search) {
-      event.respondWith(
-        (async () => {
-          const hit = await (await caches.open(HOME_CACHE)).match('/');
-          const fresh = refreshHome(event);
-          if (!hit) return await fresh;
-          if (Date.now() - homeServedAt < HOME_RESERVE_MS) return await fresh.catch(() => hit);
-          homeServedAt = Date.now();
-          event.waitUntil(fresh.catch(() => {}));
-          return hit;
-        })().catch(offlinePage)
-      );
+      event.respondWith(homeResponse(event).catch(offlinePage));
       return;
     }
 
