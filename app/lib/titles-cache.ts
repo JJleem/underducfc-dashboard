@@ -39,6 +39,7 @@ import {
   getBoardCommentRows,
   getBoardPostRows,
   getBoardLikeGiverRows,
+  getMomVoteRows,
 } from "./backend";
 import {
   buildContexts,
@@ -92,6 +93,7 @@ async function computeTeamTitleData(seasonId: string): Promise<TeamTitleData> {
     rawBoardComments,
     rawBoardPosts,
     rawBoardLikeGivers,
+    rawMomVotes,
   ] = await Promise.all([
     getStatsRows(),
     // 시즌 등급은 시즌 출전·골·도움 위에서 매겨야 한다. 통산 stats 를 그대로 쓰면
@@ -106,6 +108,7 @@ async function computeTeamTitleData(seasonId: string): Promise<TeamTitleData> {
     getBoardCommentRows().catch(optional),
     getBoardPostRows().catch(optional),
     getBoardLikeGiverRows().catch(optional),
+    getMomVoteRows().catch(optional),
   ]);
 
   const sources = {
@@ -118,6 +121,7 @@ async function computeTeamTitleData(seasonId: string): Promise<TeamTitleData> {
     rawBoardComments,
     rawBoardPosts,
     rawBoardLikeGivers,
+    rawMomVotes,
   };
 
   const careerContexts = buildContexts({ ...sources, rawStats });

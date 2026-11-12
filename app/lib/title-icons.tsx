@@ -12,6 +12,7 @@ import {
   AlarmClock, Activity, MessageSquarePlus, HeartHandshake, Handshake,
   Zap, Infinity as InfinityIcon, Trophy, Shield, Sword,
   Medal, Award, ClipboardList, CalendarHeart, WandSparkles, Droplets,
+  MapPin, Eye, Hourglass,
   type LucideIcon,
   type LucideProps,
 } from "lucide-react";
@@ -79,6 +80,10 @@ const ICONS: Record<string, LucideIcon> = {
   "cloud-lightning": CloudLightning,
   sword: Sword,
   swords: Swords,
+  shield: Shield,
+  "map-pin": MapPin,
+  eye: Eye,
+  hourglass: Hourglass,
   lock: Lock,
   rocket: Rocket,
   sparkles: Sparkles,

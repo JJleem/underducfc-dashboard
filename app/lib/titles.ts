@@ -96,6 +96,16 @@ export interface PlayerContext {
   peakGoalPerGame: number; // 5경기 이상 시점들 중 누적 골/경기 최고치 (레이저 박탈 방지)
   bestDuoAssists: number; // 같은 선수에게 어시스트한 최대 횟수
   posGroupsWithMin3: number; // 3경기+ 경험한 포지션 그룹 수
+
+  cleanSheetsAsDF: number; // DF로 뛴 무실점 경기 수(승·무만)
+  maxScoringStreak: number; // 출전한 정식 경기 기준 최대 연속 득점
+  currentScoringStreak: number;
+  maxUnbeatenStreak: number; // 출전한 정식 경기 기준 최대 연속 무패
+  currentUnbeatenStreak: number;
+  opponentsBeaten: number; // 출전해서 이겨 본 서로 다른 상대 수
+  groundsPlayed: number; // 뛰어 본 서로 다른 구장 수
+  momPicksHit: number; // 내가 뽑은 선수가 MOM 이 된 경기 수
+  yearsSinceDebut: number; // 첫 출전 후 지난 햇수(내림)
 }
 
 export type TitleCategory =
@@ -129,6 +139,8 @@ export interface TitleDef {
   unit?: string;
   value?: (c: PlayerContext) => number;
   gate?: (c: PlayerContext) => boolean; // 등급형 진입 조건 (예: 캡틴만)
+  /** 연속 기록형: 등급은 역대 최고(value)로 주되, 다음 등급 진행도는 지금 이어지는 기록으로 센다. */
+  progressValue?: (c: PlayerContext) => number;
   // 달성형
   flat?: boolean;
   check?: (c: PlayerContext) => boolean;
@@ -275,12 +287,16 @@ export interface RawSheets {
   rawBoardComments?: string[][]; // 전술게시판 댓글 (author, created_at)
   rawBoardPosts?: string[][]; // 전술게시판 글 (author, like_count)
   rawBoardLikeGivers?: string[][]; // 전술게시판 좋아요 누른 사람 (name, count)
+  rawMomVotes?: string[][]; // MOM 투표 (matchId, voterName, votedFor, voteType, timestamp)
 }
 
 interface MatchInfo {
   id: number;
   date: string;
   opponent: string;
+  /** 구장. 띄어쓰기만 다른 표기를 한 곳으로 치려고 공백을 뺀다. 미정이면 "". */
+  ground: string;
+  mom: string;
   result: string;
   type: string;
   goals: string;
@@ -352,6 +368,8 @@ export function buildContexts(
     id: i,
     date: r[0] || "",
     opponent: (r[3] || "").trim(),
+    ground: (r[2] || "").replace(/\s/g, "").replace(/^미정$/, ""),
+    mom: r[10] || "",
     result: r[6] || "예정",
     type: r[7] || "일반 매칭",
     goals: r[8] || "",
@@ -483,6 +501,18 @@ export function buildContexts(
     likesGivenByNick.set(nick, (likesGivenByNick.get(nick) ?? 0) + (Number(r[1]) || 0));
   });
 
+  // MOM 투표: 내가 뽑은 선수가 그 경기 MOM 이 된 경기들 ("안목").
+  // 공격·수비 두 표를 던지므로 한 경기에서 둘 다 맞혀도 1경기로 센다.
+  const momHitsByVoter = new Map<string, Set<number>>();
+  scope(sheets.rawMomVotes ?? []).slice(1).forEach((r) => {
+    const m = matchById.get(Number(r[0]));
+    const voter = (r[1] || "").trim();
+    const pick = (r[2] || "").trim();
+    if (!m || !voter || !pick || !namesOf(m.mom).includes(pick)) return;
+    if (!momHitsByVoter.has(voter)) momHitsByVoter.set(voter, new Set());
+    momHitsByVoter.get(voter)!.add(m.id);
+  });
+
   // ── 선수별 컨텍스트 빌드 (로스터에 있는 사람만)
   //
   // 예전엔 "stats 시트의 선수 = 정식 명단" 이었지만 백엔드로 옮기면서 깨졌다.
@@ -547,11 +577,14 @@ export function buildContexts(
     let playedReal = 0;
     let bigWinGames = 0;
     let cleanSheetsAsGK = 0;
+    let cleanSheetsAsDF = 0;
+    const beaten = new Set<string>();
+    const grounds = new Set<string>();
     let ironman = false;
     const goalsByOpp = new Map<string, number>();
 
     const participatedDates: { date: string; played: boolean; casual: boolean }[] = [];
-    const completedParticipation: { date: string; played: boolean; goals: number; casual: boolean }[] = [];
+    const completedParticipation: { date: string; played: boolean; goals: number; casual: boolean; result: string }[] = [];
 
     matches.forEach((m) => {
       const g = countInCsv(m.goals, name);
@@ -580,13 +613,15 @@ export function buildContexts(
         participatedDates.push({ date: m.date, played, casual: m.isCasual });
       }
       if (m.isReal && m.result !== "예정") {
-        completedParticipation.push({ date: m.date, played, goals: g, casual: m.isCasual });
+        completedParticipation.push({ date: m.date, played, goals: g, casual: m.isCasual, result: m.result });
       }
 
       if (played && m.isReal) {
         playedReal += 1;
         if (m.result === "승") wins += 1;
         if (m.result === "승" && m.ourScore - m.theirScore >= 5) bigWinGames += 1;
+        if (m.result === "승" && m.opponent && m.opponent !== "미정") beaten.add(m.opponent);
+        if (m.result !== "예정" && m.ground) grounds.add(m.ground);
         if (m.weather.available) {
           if (m.weather.isRain) playedRain = true;
           if (m.weather.temp >= 30) playedHeat = true;
@@ -599,6 +634,11 @@ export function buildContexts(
       const pos = matchPlayerPos.get(m.id)?.get(name);
       if (pos?.has("GK") && m.theirScore === 0 && m.result !== "예정") {
         cleanSheetsAsGK += 1;
+      }
+
+      // DF 무실점. 점수를 안 적는 자체전이 0실점으로 읽히지 않게 승·무로 한정한다.
+      if (pos?.has("DF") && m.theirScore === 0 && (m.result === "승" || m.result === "무")) {
+        cleanSheetsAsDF += 1;
       }
 
       // 아이언맨: 그 경기 전 쿼터 출전
@@ -668,6 +708,20 @@ export function buildContexts(
       }
     });
 
+    // 연속 득점 · 연속 무패 — **내가 뛴 정식 경기**만 줄 세운다. 빠진 경기와 자체전은 끊지 않는다.
+    let maxScoringStreak = 0;
+    let currentScoringStreak = 0;
+    let maxUnbeatenStreak = 0;
+    let currentUnbeatenStreak = 0;
+    completedParticipation.forEach((d) => {
+      if (!d.played || d.casual) return;
+      currentScoringStreak = d.goals > 0 ? currentScoringStreak + 1 : 0;
+      maxScoringStreak = Math.max(maxScoringStreak, currentScoringStreak);
+      if (d.result === "승" || d.result === "무") currentUnbeatenStreak += 1;
+      else if (d.result === "패") currentUnbeatenStreak = 0;
+      maxUnbeatenStreak = Math.max(maxUnbeatenStreak, currentUnbeatenStreak);
+    });
+
     const isCaptain = captainRoles[name] === "C";
     const captainGames = isCaptain ? playedReal : 0;
 
@@ -686,6 +740,8 @@ export function buildContexts(
       return inAttendees || inLineup;
     });
     const isFirstBlood = firstPlayedMatch ? countInCsv(firstPlayedMatch.goals, name) > 0 : false;
+    const debutMs = firstPlayedMatch ? new Date(firstPlayedMatch.date).getTime() : NaN;
+    const yearsSinceDebut = isNaN(debutMs) ? 0 : Math.max(0, Math.floor((Date.now() - debutMs) / (365.25 * 86_400_000)));
 
     // 히든: 레이저 — 경기당 1골 이상 (골 > 출전, 최소 5경기)
     const goalPerGame = apps > 0 ? goals / apps : 0;
@@ -754,10 +810,18 @@ export function buildContexts(
       peakGoalPerGame,
       bestDuoAssists,
       posGroupsWithMin3,
+      cleanSheetsAsDF,
+      maxScoringStreak,
+      currentScoringStreak,
+      maxUnbeatenStreak,
+      currentUnbeatenStreak,
+      opponentsBeaten: beaten.size,
+      groundsPlayed: grounds.size,
+      momPicksHit: momHitsByVoter.get(name)?.size ?? 0,
+      yearsSinceDebut,
     });
   });
 
-  void matchById; // (향후 확장용)
   return contexts;
 }
 
@@ -786,6 +850,7 @@ export const TITLES: TitleDef[] = [
   { id: "hattrick", name: "해트트릭 영웅", icon: "party-popper", category: "한 경기 폭발", state: "live", flagship: true, desc: "한 경기 3골+ 횟수", tiers: [1, 3, 5, 10, 20], tierLabels: ["첫 해트트릭", "3회", "5회", "10회", "20회"], unit: "회", value: (c) => c.hatTricks },
   { id: "multigoal", name: "멀티골 사냥꾼", icon: "crosshair", category: "한 경기 폭발", state: "live", desc: "2골+ 경기 수", tiers: [3, 7, 15, 30, 50], unit: "경기", value: (c) => c.multiGoalGames },
   { id: "multiassist", name: "멀티어시", icon: "git-fork", category: "한 경기 폭발", state: "live", desc: "2도움+ 경기 수", tiers: [3, 7, 15, 30, 50], unit: "경기", value: (c) => c.multiAssistGames },
+  { id: "scoring_streak", name: "연속 득점", icon: "flame", category: "한 경기 폭발", state: "live", desc: "출전 경기 연속 득점", tiers: [2, 3, 4, 5, 7], unit: "경기 연속", value: (c) => c.maxScoringStreak, progressValue: (c) => c.currentScoringStreak },
   { id: "onemanshow", name: "원맨쇼", icon: "star", category: "한 경기 폭발", state: "live", flat: true, desc: "한 경기 골+도움 4 이상", check: (c) => c.bestSingleGamePoints >= 4 },
 
   // ── 포지션 특성
@@ -804,6 +869,7 @@ export const TITLES: TitleDef[] = [
   { id: "ironman_q", name: "아이언맨", icon: "battery-full", category: "근성 · 출석", state: "live", flat: true, desc: "한 경기 전 쿼터 출전", check: (c) => c.ironman },
   { id: "captain", name: "캡틴", icon: "badge-check", category: "근성 · 출석", state: "live", desc: "주장으로 출전", tiers: [5, 15, 30, 50, 100], unit: "경기", gate: (c) => c.isCaptain, value: (c) => c.captainGames },
   { id: "rookie", name: "새내기", icon: "sprout", category: "근성 · 출석", state: "live", flat: true, desc: "통산 출전 3경기 미만", check: (c) => c.apps > 0 && c.apps < 3 },
+  { id: "veteran", name: "터줏대감", icon: "hourglass", category: "근성 · 출석", state: "future", desc: "첫 출전 후 지난 햇수", tiers: [1, 2, 3, 5, 10], unit: "년차", value: (c) => c.yearsSinceDebut },
   { id: "return", name: "리턴 오브 더 킹", icon: "rotate-ccw", category: "근성 · 출석", state: "future", flat: true, desc: "기존 출전자가 5경기 이상 결장 후 복귀", check: (c) => c.returnedAfterLongAbsence },
 
   // ── 날씨 · 환경
@@ -811,11 +877,15 @@ export const TITLES: TitleDef[] = [
   { id: "rain_warrior", name: "빗속의 전사", icon: "umbrella", category: "날씨 · 환경", state: "live", flat: true, desc: "비 오는 날 출전", check: (c) => c.playedRain },
   { id: "heat", name: "폭염 전사", icon: "sun", category: "날씨 · 환경", state: "live", flat: true, desc: "30℃+ 경기 출전", check: (c) => c.playedHeat },
   { id: "cold", name: "한파 전사", icon: "snowflake", category: "날씨 · 환경", state: "live", flat: true, desc: "0℃- 경기 출전", check: (c) => c.playedCold },
+  { id: "grounds", name: "구장 수집가", icon: "map-pin", category: "날씨 · 환경", state: "live", desc: "뛰어 본 구장 수", tiers: [3, 6, 10, 15, 20], unit: "곳", value: (c) => c.groundsPlayed },
   { id: "allweather", name: "악천후 마스터", icon: "cloud-lightning", category: "날씨 · 환경", state: "live", flat: true, desc: "비·폭염·한파 모두 경험", check: (c) => c.playedRain && c.playedHeat && c.playedCold },
 
   // ── 맞대결 · 승부
   { id: "nemesis", name: "천적 킬러", icon: "swords", category: "맞대결 · 승부", state: "live", flagship: true, flat: true, desc: "한 상대 3골+", check: (c) => c.maxOpponentGoals >= 3 },
   { id: "cleansheet", name: "무실점 수문장", icon: "lock", category: "맞대결 · 승부", state: "live", desc: "GK 무실점 경기", tiers: [1, 3, 5, 10, 20], unit: "경기", gate: (c) => c.playedGK, value: (c) => c.cleanSheetsAsGK },
+  { id: "dfwall", name: "철벽 라인", icon: "shield", category: "맞대결 · 승부", state: "live", desc: "DF 무실점 경기", tiers: [1, 3, 5, 10, 20], unit: "경기", gate: (c) => c.posCounts.DF > 0, value: (c) => c.cleanSheetsAsDF },
+  { id: "unbeaten", name: "무패 행진", icon: "infinity", category: "맞대결 · 승부", state: "live", desc: "출전 경기 연속 무패", tiers: [2, 3, 5, 8, 12], unit: "경기 연속", value: (c) => c.maxUnbeatenStreak, progressValue: (c) => c.currentUnbeatenStreak },
+  { id: "giantkiller", name: "도장깨기", icon: "swords", category: "맞대결 · 승부", state: "live", desc: "이겨 본 상대 팀 수", tiers: [1, 3, 5, 8, 12], unit: "팀", value: (c) => c.opponentsBeaten },
   { id: "bigwin", name: "대승의 주역", icon: "rocket", category: "맞대결 · 승부", state: "live", flat: true, desc: "5골차+ 승리 출전", check: (c) => c.bigWinGames >= 1 },
   { id: "winfairy", name: "승리요정", icon: "sparkles", category: "맞대결 · 승부", state: "live", desc: "출전 경기 승수", tiers: [5, 15, 30, 50, 100], unit: "승", value: (c) => c.wins },
   { id: "invincible", name: "천하무적", icon: "trophy", category: "맞대결 · 승부", state: "live", flat: true, desc: "10경기+ & 승률 70%+", check: (c) => c.apps >= 10 && c.winRate >= 0.7 },
@@ -823,6 +893,7 @@ export const TITLES: TitleDef[] = [
   // ── 대시보드 활동
   { id: "voter", name: "투표러", icon: "vote", category: "대시보드 활동", state: "live", desc: "출석 투표 참여", tiers: [5, 15, 30, 50, 100], unit: "회", value: (c) => c.votesCast },
   { id: "chatter", name: "수다왕", icon: "message-circle", category: "대시보드 활동", state: "live", flagship: true, desc: "댓글 작성", tiers: [5, 15, 30, 50, 200], unit: "개", value: (c) => c.commentsCount },
+  { id: "eye", name: "안목", icon: "eye", category: "대시보드 활동", state: "live", desc: "내가 뽑은 선수가 MOM", tiers: [3, 8, 15, 25, 40], unit: "경기", value: (c) => c.momPicksHit },
   { id: "earlybird", name: "얼리버드", icon: "alarm-clock", category: "대시보드 활동", state: "live", flat: true, desc: "최초 투표 3회+", check: (c) => c.firstVoteCount >= 3 },
   { id: "activeking", name: "활동왕", icon: "activity", category: "대시보드 활동", state: "live", desc: "투표+댓글 종합", tiers: [20, 50, 100, 150, 400], unit: "P", value: (c) => c.activityPoints },
   { id: "opener", name: "오프너", icon: "message-square-plus", category: "대시보드 활동", state: "live", flat: true, desc: "첫 댓글 3회+", check: (c) => c.firstCommentCount >= 3 },
@@ -930,6 +1001,16 @@ const SEASON_OVERRIDES: Record<string, SeasonOverride> = {
   box2box: { check: (c) => c.posCounts.MF >= 18 && c.goals >= 2 && c.assists >= 2, desc: "MF 18쿼터+ & 2골·2도움+" },
   attacking_fullback: { check: (c) => c.fullbackGames >= 12 && c.points >= 5, desc: "좌·우 풀백 12쿼터+ & 공격P 5+" },
   attacking_centerback: { check: (c) => c.centerbackGames >= 12 && c.points >= 4, desc: "센터백 12쿼터+ & 공격P 4+" },
+
+  // ── 연속 기록은 길이가 곧 난이도라 시즌이라고 줄이지 않는다(0.25배 하면 전부 1이 된다).
+  scoring_streak: { tiers: [2, 3, 4, 5, 7] },
+  unbeaten: { tiers: [2, 3, 4, 6, 8] },
+  dfwall: { tiers: [1, 2, 3, 4, 6] },         // GK 무실점과 같은 컷
+  giantkiller: { tiers: [1, 2, 3, 5, 7] },    // 팀 시즌 6승
+  grounds: { tiers: [2, 4, 6, 9, 12] },
+  eye: { tiers: [2, 5, 9, 14, 20] },          // 2026-11 통산 실측 최고 17
+  // 햇수는 통산 개념이다.
+  veteran: { hide: true },
 
   // ── 근성 · 출석 — 여기가 가장 쉬웠던 곳이다. 실측 연속출석 29/20/20/18/15…
   streak: { tiers: [3, 7, 12, 18, 25] },
@@ -1083,7 +1164,7 @@ export function evaluatePlayer(c: PlayerContext, defs: TitleDef[] = TITLES): Ear
         const target = nextTier === null ? d.tiers[tier] : d.tiers[nextTier];
         // 연속출석의 등급은 역대 최고 기록으로 유지하지만, 다음 등급 도전은 현재 이어지는
         // 연속 기록에서 다시 시작한다. 끊긴 20연속에 새 2연속을 더할 수는 없다.
-        const progressCurrent = d.id === "streak" ? c.currentAttendStreak : value;
+        const progressCurrent = d.progressValue ? d.progressValue(c) : d.id === "streak" ? c.currentAttendStreak : value;
         out.push({
           id: d.id,
           name: d.name,
