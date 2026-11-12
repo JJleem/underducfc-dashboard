@@ -20,6 +20,12 @@ const ASSET_CACHE = 'udk-assets-v1';
 const HOME_CACHE = 'udk-home-v1';
 const KEEP = [SHELL_CACHE, ASSET_CACHE, HOME_CACHE];
 
+// 저장본을 내준 직후에 홈 요청이 또 오면 그건 앱 실행이 아니라 새로고침이다 — 저장본을 다시 주지 않는다.
+// 배포 직후엔 저장본이 옛 빌드라, 화면이 최신 데이터를 받는 순간 Next 가 페이지를 통째로 새로고침한다.
+// 그때 또 저장본을 주면 저장본이 바뀔 때까지 새로고침이 반복돼 스크롤이 계속 맨 위로 튄다(실제로 겪었다).
+const HOME_RESERVE_MS = 30000;
+let homeServedAt = 0;
+
 const OFFLINE_URL = '/offline.html';
 
 // 로컬 개발에서는 fetch 가로채기를 하지 않는다.
@@ -137,6 +143,8 @@ self.addEventListener('fetch', (event) => {
           const hit = await (await caches.open(HOME_CACHE)).match('/');
           const fresh = refreshHome(event);
           if (!hit) return await fresh;
+          if (Date.now() - homeServedAt < HOME_RESERVE_MS) return await fresh.catch(() => hit);
+          homeServedAt = Date.now();
           event.waitUntil(fresh.catch(() => {}));
           return hit;
         })().catch(offlinePage)
