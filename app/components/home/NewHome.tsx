@@ -211,6 +211,19 @@ export default async function NewHome({
   const detectedRest = buildRestPlan(upcomingSchedule);
 
   const played = matches.filter((m) => m.result !== "예정" && m.type !== "야유회");
+
+  // 래핑 자동 열기는 그 시즌에 한 경기라도 뛴 사람만. 새로 온 회원을 지난 시즌 필름으로
+  // 끌고 가면 "기록이 아직 없어요" 만 보고 나온다. (버튼으로 들어가는 길은 그대로 둔다.)
+  const wrappedAutoSeason =
+    wrappedSeasonToOpen &&
+    userName &&
+    played.some(
+      (m) =>
+        seasonOf(m.date) === wrappedSeasonToOpen &&
+        m.attendees.split(",").map((x) => x.trim()).includes(userName),
+    )
+      ? wrappedSeasonToOpen
+      : null;
   const lastMatch =
     [...played].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0] ?? null;
 
@@ -458,7 +471,7 @@ export default async function NewHome({
   return (
     <main className="relative mx-auto min-h-dvh max-w-md bg-gray-50 text-gray-900 dark:bg-background dark:text-zinc-100">
       {/* 래핑이 막 공개됐으면 첫 진입 한 번만 데려간다 */}
-      {!preview && userName && wrappedSeasonToOpen && <WrappedAutoOpen seasonId={wrappedSeasonToOpen} />}
+      {!preview && wrappedAutoSeason && <WrappedAutoOpen seasonId={wrappedAutoSeason} />}
       {!preview && userName && (
         <HomeCelebrations
           mom={momReveal}
