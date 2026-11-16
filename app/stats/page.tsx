@@ -34,6 +34,9 @@ const LEADER_ORDER: { id: string; unit: string }[] = [
   { id: "lead_cleansheet", unit: "경기" },
 ];
 
+/** 공동 1위가 이보다 많으면 시즌 리더 줄에서 그 부문을 숨긴다(메달이 겹쳐 읽히지 않는다). */
+const MAX_SHOWN_HOLDERS = 3;
+
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -64,7 +67,9 @@ export default async function StatsPage({
     const won = Object.entries(seasonTitles)
       .map(([name, titles]) => ({ name, t: titles.find((t) => t.id === id) }))
       .filter((x) => x.t);
-    if (!won.length) return [];
+    // 시즌 초반엔 출전 1경기로 수십 명이 공동 1위가 된다 — 이 화면에서만 그 부문을 접는다.
+    // 칭호(프로필 왕관)는 그대로 준다.
+    if (!won.length || won.length > MAX_SHOWN_HOLDERS) return [];
     const t = won[0].t!;
     return [{
       id,
