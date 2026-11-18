@@ -15,12 +15,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import ModalPortal from "../ModalPortal";
+import { cldSquare } from "../../lib/cloudinary";
 
 const MAX_SCALE = 4;
 /** 되돌아가는 시간. 직접 만지던 것이 손을 떼면 따라오는 정도로만 짧게. */
 const SETTLE_MS = 220;
 
 interface Zoom {
+  previewSrc?: string;
   rect: { left: number; top: number; width: number; height: number };
   /** 핀치 중심(요소 기준). 손가락이 있는 곳에서 커져야 자연스럽다. */
   originX: number;
@@ -66,6 +68,7 @@ export default function FeedPinchPhoto({
       const midY = (a.clientY + b.clientY) / 2;
       startRef.current = { dist: Math.max(1, distanceOf(a, b)), midX, midY };
       setZoom({
+        previewSrc: holder.querySelector("img")?.currentSrc,
         rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
         originX: midX - rect.left,
         originY: midY - rect.top,
@@ -126,7 +129,9 @@ export default function FeedPinchPhoto({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={src}
+          src={cldSquare(src, 896)}
+          srcSet={`${cldSquare(src, 448)} 448w, ${cldSquare(src, 896)} 896w, ${cldSquare(src, 1344)} 1344w`}
+          sizes="(max-width: 448px) 100vw, 448px"
           alt={alt}
           loading={loading}
           decoding={loading === "lazy" ? "async" : undefined}
@@ -150,11 +155,13 @@ export default function FeedPinchPhoto({
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={src}
+              src={cldSquare(src)}
               alt=""
               draggable={false}
               className="absolute object-cover"
               style={{
+                backgroundImage: zoom.previewSrc ? `url(${JSON.stringify(zoom.previewSrc)})` : undefined,
+                backgroundSize: "cover",
                 left: zoom.rect.left,
                 top: zoom.rect.top,
                 width: zoom.rect.width,

@@ -30,7 +30,6 @@ import ResultReplay, { resultRevealData } from "../fx/ResultReplay";
 import type { SeasonStat } from "../FormationField";
 import type { EarnedTitle } from "../../lib/titles";
 import type { LineupData, MatchData } from "../../lib/match-types";
-import { cldSquare } from "../../lib/cloudinary";
 import {
   casualKind,
   hasScore,
@@ -76,7 +75,6 @@ const MatchEditor = dynamic(() => import("./MatchEditor"), { ssr: false });
 //   글자    11 보조 · 13 본문 · 15 강조 · 34 스코어
 const ICON = { action: 20, logo: 32 } as const;
 
-const full = (url: string) => cldSquare(url);
 
 /** 자체전 카드에 얼굴로 띄우는 최대 인원. 넘치면 +N 으로 받는다. */
 const CASUAL_FACES = 12;
@@ -582,7 +580,7 @@ export default function MatchFeed({
             {photos.map((url, i) => (
               <FeedPinchPhoto
                 key={url}
-                src={full(url)}
+                src={url}
                 className="w-full shrink-0 snap-center"
                 loading={firstInFeed && i === 0 ? "eager" : "lazy"}
                 fetchPriority={firstInFeed && i === 0 ? "high" : undefined}

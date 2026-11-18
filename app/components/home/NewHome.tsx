@@ -7,6 +7,7 @@
 // 실제 `/`는 이 화면으로 확정됐다. `/home-preview`는 상태별 확인 용도로만 남긴다.
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { koreanDate } from "../../lib/format-date";
 import { Bell, MapPin } from "lucide-react";
 import { auth } from "@/auth";
@@ -114,6 +115,17 @@ function toMatch(row: string[], id: number): MatchRecord {
   };
 }
 
+async function HomeLoungeEntry({
+  stamp,
+  withTopBorder,
+}: {
+  stamp: ReturnType<typeof getLoungeStamp>;
+  withTopBorder: boolean;
+}) {
+  const { latestId, count } = await stamp;
+  return <LoungeEntry withTopBorder={withTopBorder} stamp={count ? `${latestId}:${count}` : ""} />;
+}
+
 export default async function NewHome({
   forcedState,
   list,
@@ -160,7 +172,8 @@ export default async function NewHome({
 
   // 홈의 "이번 시즌" = 오늘이 속한 시즌.
   const homeSeason = currentSeasonId();
-  const [rawMatches, rawVotes, rawNotices, rawLineups, rawRoster, rawFeedback, rawStats, rawMomVotes, rawFeatured, myLikedMatchIds, teamTitleData, loungeStamp] =
+  const loungeStamp = getLoungeStamp().catch(() => ({ latestId: 0, count: 0 }));
+  const [rawMatches, rawVotes, rawNotices, rawLineups, rawRoster, rawFeedback, rawStats, rawMomVotes, rawFeatured, myLikedMatchIds, teamTitleData] =
     await Promise.all([
       getMatchesRows(),
       optionalRows("출석", getAttendanceVoteRows()),
@@ -185,8 +198,6 @@ export default async function NewHome({
         failedSections.push("칭호 계산");
         return { allTitles: {}, posLineupCounts: {} };
       }),
-      // 사랑방은 "새 글 있음" 점을 찍는 데만 쓴다. 실패하면 점 없이 진입점만 그린다.
-      getLoungeStamp().catch(() => ({ latestId: 0, count: 0 })),
     ]);
 
   const matches = rawMatches.slice(1).map(toMatch);
@@ -650,12 +661,9 @@ export default async function NewHome({
       )}
 
       {/* 사랑방 — 공지와 같은 결의 한 줄. 공지가 없어도 항상 보인다. */}
-      <LoungeEntry
-        withTopBorder={!notice}
-        /* 최신 글 id 만 쓰면 글이 지워졌을 때 표시가 안 뜬다. 개수를 같이 넣는다.
-           목록을 못 읽어왔으면 빈 문자열 — 점을 찍지 않는다. */
-        stamp={loungeStamp.count ? `${loungeStamp.latestId}:${loungeStamp.count}` : ""}
-      />
+      <Suspense fallback={<LoungeEntry withTopBorder={!notice} stamp="" />}>
+        <HomeLoungeEntry withTopBorder={!notice} stamp={loungeStamp} />
+      </Suspense>
 
       <section className={layout === "feed" ? "pb-6 pt-2" : "px-4 pb-6 pt-4"}>
         {/* 시즌이 둘 이상 정의돼 있으면 항상 낸다.

@@ -49,8 +49,7 @@ export async function POST(request: NextRequest) {
     const unavailable = await assertVotingOpen(numericMatchId);
     if (unavailable) return NextResponse.json({ error: unavailable }, { status: 409 });
 
-    // 같은 matchId + voterName + voteType 투표가 있으면 삭제 후 재등록
-    await deleteMomVote(numericMatchId, voterName.trim(), voteType.trim());
+    // 백엔드가 같은 경기·투표자·부문의 기존 표를 한 트랜잭션에서 교체한다.
     await appendMomVote({ matchId: numericMatchId, voterName, votedFor, voteType });
     revalidateAppData(UD_TAG.momVote, UD_TAG.stats, UD_TAG.titles);
     return NextResponse.json({ ok: true });
