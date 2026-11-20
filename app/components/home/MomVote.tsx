@@ -250,6 +250,7 @@ export default function MomVote({
   const actualDeadline = getMomVoteDeadline(matchDate, matchTime);
   const deadline = countdownPreview ? previewDeadline : actualDeadline;
   const closed = now !== null && (!deadline || now >= deadline.getTime());
+  const canVote = !closed && !!userName && attendees.includes(userName);
   const shownMoms = countdownPreview ? [] : confirmedMoms;
   const finalizeRequested = useRef(false);
 
@@ -285,7 +286,7 @@ export default function MomVote({
   };
 
   const submit = async () => {
-    if (!userName || (!atk && !def) || saving) return;
+    if (!canVote || (!atk && !def) || saving) return;
     // 두 번의 왕복이 끝날 때까지 드로어를 붙잡아 두면 투표가 멈칫한다.
     // 막대에 내 표를 먼저 얹고 바로 닫은 뒤, 실패했을 때만 되돌려 다시 연다.
     setMyPending({ atk, def });
@@ -301,7 +302,7 @@ export default function MomVote({
         const res = await fetch("/api/mom-vote", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ matchId, voterName: userName, votedFor, voteType }),
+          body: JSON.stringify({ matchId, votedFor, voteType }),
         });
         if (!res.ok) throw new Error((await res.json()).error || "투표 저장 실패");
       }
@@ -484,8 +485,12 @@ export default function MomVote({
           <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
               <div className="flex items-center justify-between gap-2 border-y border-[var(--ud-primary)]/20 py-2.5 text-[11px] font-bold dark:border-[var(--ud-primary)]/15">
                 <span className="min-w-0 truncate text-gray-500 dark:text-white/50">
-                  <b className="font-black text-gray-800 dark:text-white/80">{userName}</b> 님으로 투표
-                  <span className="ml-1 text-gray-400 dark:text-white/40">· 본인 제외</span>
+                  {canVote ? (
+                    <>
+                      <b className="font-black text-gray-800 dark:text-white/80">{userName}</b> 님으로 투표
+                      <span className="ml-1 text-gray-400 dark:text-white/40">· 본인 제외</span>
+                    </>
+                  ) : "MOM 득표 현황"}
                 </span>
                 {!closed && deadline && now !== null && (
                   <span className="shrink-0 whitespace-nowrap text-amber-500 dark:text-amber-300">
@@ -538,6 +543,8 @@ export default function MomVote({
                 <p className="mt-5 text-[12px] font-bold text-gray-400">투표가 마감됐어요.</p>
               ) : !userName ? (
                 <p className="mt-5 text-[12px] font-bold text-gray-400">로그인하면 투표할 수 있어요.</p>
+              ) : !canVote ? (
+                <p className="mt-5 text-[12px] font-bold text-gray-400">이 경기에 참석한 선수만 투표할 수 있어요.</p>
               ) : (
                 <div className="mt-5 flex flex-col gap-6">
                   <CandidateBallot
@@ -572,9 +579,9 @@ export default function MomVote({
                   onClick={() => setOpen(false)}
                   className="w-[64px] shrink-0 whitespace-nowrap py-3 text-[12px] font-black text-gray-400 active:text-gray-700 dark:text-white/50 dark:active:text-white/70"
                 >
-                  {closed || !userName ? "닫기" : "취소"}
+                  {canVote ? "취소" : "닫기"}
                 </button>
-                {!closed && userName && (
+                {canVote && (
                 <button
                   type="button"
                   onClick={submit}
