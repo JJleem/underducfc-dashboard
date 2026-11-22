@@ -87,22 +87,27 @@ export const MATCHDAY_ART: readonly MatchdayArt[] = [
   { src: "/matchday/gallery-group-archive.webp", soft: true },
   { src: "/matchday/gallery-coach.webp", soft: true },
   { src: "/matchday/gallery-hyunjun.webp", soft: true },
-  // 언더덕 크레스트 15장
-  { src: "/matchday/flag-1.webp" },
-  { src: "/matchday/flag-2.webp" },
-  { src: "/matchday/flag-3.webp" },
-  { src: "/matchday/flag-4.webp" },
-  { src: "/matchday/flag-5.webp" },
-  { src: "/matchday/flag-6.webp", light: true },
-  { src: "/matchday/flag-7.webp" },
-  { src: "/matchday/flag-8.webp" },
-  { src: "/matchday/flag-9.webp" },
-  { src: "/matchday/flag-10.webp" },
-  { src: "/matchday/flag-11.webp" },
-  { src: "/matchday/flag-12.webp" },
-  { src: "/matchday/flag-13.webp" },
-  { src: "/matchday/flag-14.webp" },
-  { src: "/matchday/flag-15.webp" },
+  // 언더덕 크레스트 26-27 20장 (25-26 15장은 아래 FLAGS_2526 — 지난 경기 결과 카드·갤러리 전용)
+  { src: "/matchday/flag-2627-01.webp" },
+  { src: "/matchday/flag-2627-02.webp" },
+  { src: "/matchday/flag-2627-03.webp" },
+  { src: "/matchday/flag-2627-04.webp" },
+  { src: "/matchday/flag-2627-05.webp" },
+  { src: "/matchday/flag-2627-06.webp" },
+  { src: "/matchday/flag-2627-07.webp" },
+  { src: "/matchday/flag-2627-08.webp" },
+  { src: "/matchday/flag-2627-09.webp" },
+  { src: "/matchday/flag-2627-10.webp" },
+  { src: "/matchday/flag-2627-11.webp" },
+  { src: "/matchday/flag-2627-12.webp" },
+  { src: "/matchday/flag-2627-13.webp" },
+  { src: "/matchday/flag-2627-14.webp" },
+  { src: "/matchday/flag-2627-15.webp" },
+  { src: "/matchday/flag-2627-16.webp" },
+  { src: "/matchday/flag-2627-17.webp" },
+  { src: "/matchday/flag-2627-18.webp" },
+  { src: "/matchday/flag-2627-19.webp" },
+  { src: "/matchday/flag-2627-20.webp" },
   // 흑백 + 핑크 한 색 3장
   { src: "/matchday/mono-5.webp", soft: true },
   { src: "/matchday/mono-6.webp", soft: true },
@@ -171,6 +176,37 @@ export const MATCHDAY_ART: readonly MatchdayArt[] = [
   { src: "/matchday/dark-6.webp", soft: true }, // 이재욱
   { src: "/matchday/dark-7.webp", soft: true }, // 임재준
 ];
+
+/**
+ * 25-26 시즌 크레스트 15장. 26-27 개막과 함께 예정 경기 로테이션에서 뺐다.
+ * 지난 경기 결과 카드는 "그 경기의 그림"이라 바뀌면 안 되므로 25-26 경기(matchId < FIRST_2627_MATCH_ID)는
+ * 계속 이 중에서 고른다. 갤러리(매치데이 아카이브)에도 그대로 보인다.
+ * 원본 백업: archive/matchday/flags-2526/
+ */
+export const FLAGS_2526: readonly MatchdayArt[] = [
+  { src: "/matchday/flag-1.webp" },
+  { src: "/matchday/flag-2.webp" },
+  { src: "/matchday/flag-3.webp" },
+  { src: "/matchday/flag-4.webp" },
+  { src: "/matchday/flag-5.webp" },
+  { src: "/matchday/flag-6.webp", light: true },
+  { src: "/matchday/flag-7.webp" },
+  { src: "/matchday/flag-8.webp" },
+  { src: "/matchday/flag-9.webp" },
+  { src: "/matchday/flag-10.webp" },
+  { src: "/matchday/flag-11.webp" },
+  { src: "/matchday/flag-12.webp" },
+  { src: "/matchday/flag-13.webp" },
+  { src: "/matchday/flag-14.webp" },
+  { src: "/matchday/flag-15.webp" },
+];
+
+/**
+ * 26-27 시즌 첫 경기 id(2026-10-31). 결과 카드 배경을 시즌별로 나누는 경계다.
+ * 날짜가 아니라 id 로 자르는 건, 결과 카드 그림이 matchId 하나로만 영구 고정돼야 해서다
+ * (경기 날짜를 고쳐도 그림이 바뀌지 않는다).
+ */
+const FIRST_2627_MATCH_ID = 36;
 
 /**
  * 그림 위에 까는 막. 카드와 확인용 페이지가 같은 값을 쓰도록 여기 모아 둔다
@@ -293,6 +329,7 @@ export function matchdayArt(matchId: number, dDay: number): MatchdayArt | null {
  * 밝은 그림(수채화)은 뺀다 — 흰 글씨를 얹는 자리라 바탕이 밝으면 안 읽힌다.
  */
 const RESULT_ART = MATCHDAY_ART.filter((a) => a.src.includes("/flag-") && !a.light);
+const RESULT_ART_2526 = FLAGS_2526.filter((a) => !a.light);
 
 /**
  * 이미 끝난 경기(사진 없는)의 배경. 날짜를 섞지 않는다 — 여기가 예정 경기와 다르다.
@@ -302,8 +339,10 @@ const RESULT_ART = MATCHDAY_ART.filter((a) => a.src.includes("/flag-") && !a.lig
  * 사람마다 달라지기도 한다). matchId 하나로만 뽑아 영구 고정한다.
  */
 export function matchResultArt(matchId: number): MatchdayArt | null {
-  if (RESULT_ART.length === 0) return null;
-  return RESULT_ART[hash(matchId, 0x9e37) % RESULT_ART.length];
+  // 25-26 경기는 그 시즌 깃발에서 — 26-27 깃발로 바꿔도 지난 경기 그림은 그대로다.
+  const pool = matchId < FIRST_2627_MATCH_ID ? RESULT_ART_2526 : RESULT_ART;
+  if (pool.length === 0) return null;
+  return pool[hash(matchId, 0x9e37) % pool.length];
 }
 
 /**
