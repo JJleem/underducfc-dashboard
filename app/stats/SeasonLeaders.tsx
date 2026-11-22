@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { TitleBadge } from "../components/TitleBadges";
 import { TitleIcon } from "../lib/title-icons";
-import { playerFaceOnSrc, type Kit } from "../lib/player-faceons";
+import { playerFaceOnSrc } from "../lib/player-faceons";
 import type { EarnedTitle } from "../lib/titles";
 
 export interface SeasonLeader {
@@ -49,16 +49,7 @@ function Names({ holders, className }: { holders: string[]; className: string })
   );
 }
 
-// 서버 컴포넌트라 레이아웃의 PlayerKitPrefs 를 못 본다 → 고른 유니폼을 직접 받는다.
-export default function SeasonLeaders({
-  leaders,
-  final,
-  kits,
-}: {
-  leaders: SeasonLeader[];
-  final: boolean;
-  kits: Record<string, Kit>;
-}) {
+export default function SeasonLeaders({ leaders, final }: { leaders: SeasonLeader[]; final: boolean }) {
   if (!leaders.length) return null;
 
   return (
@@ -80,7 +71,7 @@ export default function SeasonLeaders({
                 앞사람(가나다순 첫째)이 왼쪽 아래·위층. 셋 이상은 같은 간격으로 이어 붙인다. */}
             <span className="relative flex h-[64px] w-full justify-center">
               {l.holders.length === 1 ? (
-                <TitleBadge title={l.title} size={66} photo={playerFaceOnSrc(l.holders[0], kits[l.holders[0]])} />
+                <TitleBadge title={l.title} size={66} photo={playerFaceOnSrc(l.holders[0])} />
               ) : (
                 l.holders.map((n, i) => {
                   const step = 32 / (l.holders.length - 1);
@@ -94,7 +85,7 @@ export default function SeasonLeaders({
                         zIndex: l.holders.length - i,
                       }}
                     >
-                      <TitleBadge title={l.title} size={48} photo={playerFaceOnSrc(n, kits[n])} />
+                      <TitleBadge title={l.title} size={48} photo={playerFaceOnSrc(n)} />
                     </span>
                   );
                 })

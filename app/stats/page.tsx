@@ -24,7 +24,6 @@ import SeasonEmpty from "../components/SeasonEmpty";
 import SeasonSelector from "../components/SeasonSelector";
 import StatsTable, { type PlayerStat } from "./StatsTable";
 import SeasonLeaders, { type SeasonLeader } from "./SeasonLeaders";
-import { kitPrefsFromRoster } from "../lib/player-faceons";
 
 // 보여 줄 순서와 단위. 리더 판정 자체는 titles.LEADER_TITLES 가 한다.
 const LEADER_ORDER: { id: string; unit: string }[] = [
@@ -158,7 +157,7 @@ export default async function StatsPage({
         />
       ) : (
         <>
-      <SeasonLeaders leaders={leaders} final={seasonStatus(season) === "past"} kits={kitPrefsFromRoster(rawRoster)} />
+      <SeasonLeaders leaders={leaders} final={seasonStatus(season) === "past"} />
 
       {/* 시즌 요약 — 카드로 감싸지 않는다. 프로필 히어로와 같은 문법. */}
       <section className="relative overflow-hidden px-4 pt-5">
