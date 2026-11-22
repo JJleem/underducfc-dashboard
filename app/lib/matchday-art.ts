@@ -13,6 +13,8 @@
 
 export interface MatchdayArt {
   src: string;
+  /** 추가한 날(YYYY-MM-DD). 갤러리(매치데이 아카이브)가 최신순으로 정렬하는 기준. */
+  added: string;
   /** 매치데이 아카이브에서 사용자에게 보여 주는 작품 제목. */
   title?: string;
   /** 배경이 밝은 그림. 흰 글씨가 묻히므로 카드가 어두운 글씨로 뒤집는다. */
@@ -31,150 +33,158 @@ export interface MatchdayArt {
  */
 export const MATCHDAY_ART: readonly MatchdayArt[] = [
   // 사용자가 직접 선별한 언더덕 아카이브
-  { src: "/matchday/아카이브-언더던져.webp", title: "언더던져", light: true },
-  { src: "/matchday/아카이브-튈프-박사의-VAR-판독.webp", title: "튈프 박사의 VAR 판독", soft: true },
-  { src: "/matchday/아카이브-PK-VS-화면.webp", title: "PK VS 화면", soft: true },
-  { src: "/matchday/아카이브-하프타임-작전판.webp", title: "하프타임 작전판", soft: true },
-  { src: "/matchday/아카이브-스티커-앨범.webp", title: "스티커 앨범", light: true },
-  { src: "/matchday/아카이브-순교자.webp", title: "순교자", soft: true },
-  { src: "/matchday/아카이브-누가-찰래.webp", title: "누가 찰래", light: true },
-  { src: "/matchday/아카이브-골대.webp", title: "골대", light: true },
-  { src: "/matchday/아카이브-판정-불복.webp", title: "판정 불복", soft: true },
-  { src: "/matchday/아카이브-물웅덩이.webp", title: "물웅덩이", light: true },
-  { src: "/matchday/아카이브-말리는-중.webp", title: "말리는 중", soft: true },
-  { src: "/matchday/아카이브-벽-뒤에-눕는-사람.webp", title: "벽 뒤에 눕는 사람", soft: true },
-  { src: "/matchday/아카이브-완장의-계승.webp", title: "완장의 계승", light: true },
-  { src: "/matchday/아카이브-공-어디-갔어.webp", title: "공 어디 갔어", light: true },
-  { src: "/matchday/아카이브-엇갈림.webp", title: "엇갈림", light: true },
-  { src: "/matchday/아카이브-스트레칭.webp", title: "스트레칭", soft: true },
-  { src: "/matchday/아카이브-죄목-오프사이드-상습범.webp", title: "죄목: 오프사이드 상습범", light: true },
-  { src: "/matchday/아카이브-프레싱-오-드-퍼퓸.webp", title: "PRESSING — 오 드 퍼퓸", soft: true },
-  { src: "/matchday/아카이브-마법의-축구화.webp", title: "마법의 축구화", soft: true },
-  { src: "/matchday/아카이브-누가-패스를-안-했나.webp", title: "누가 패스를 안 했나", soft: true },
-  { src: "/matchday/아카이브-자전거-레이싱팀.webp", title: "자전거 레이싱팀", soft: true },
-  { src: "/matchday/아카이브-속보-헛발질.webp", title: "속보: 헛발질", soft: true },
-  { src: "/matchday/아카이브-신부는-축구공-v2.webp", title: "신부는 축구공", light: true },
-  { src: "/matchday/아카이브-이번-주-특가-미드필더.webp", title: "이번 주 특가: 미드필더", light: true },
-  { src: "/matchday/아카이브-코너킥-공포.webp", title: "코너킥 공포", soft: true },
-  { src: "/matchday/아카이브-셰프의-특제-전술.webp", title: "셰프의 특제 전술", light: true },
-  { src: "/matchday/아카이브-우주정거장-킥오프.webp", title: "우주정거장 킥오프", soft: true },
-  { src: "/matchday/아카이브-최후의-작전회의.webp", title: "최후의 작전회의", soft: true },
-  { src: "/matchday/아카이브-새벽-편의점-골키퍼.webp", title: "새벽 편의점 골키퍼", light: true },
-  { src: "/matchday/아카이브-홍콩-느와르.webp", title: "홍콩 느와르", soft: true },
-  { src: "/matchday/아카이브-야생의-미드필더.webp", title: "야생의 미드필더", soft: true },
-  { src: "/matchday/아카이브-조선시대-축국.webp", title: "조선시대 축국", light: true },
-  { src: "/matchday/아카이브-무단-도로-축구.webp", title: "무단 도로 축구", light: true },
-  { src: "/matchday/아카이브-벤치-대기.webp", title: "벤치 대기", light: true },
-  { src: "/matchday/아카이브-미드필드의-상속자들.webp", title: "미드필드의 상속자들", soft: true },
-  { src: "/matchday/아카이브-골대-지고-정상까지.webp", title: "골대 지고 정상까지", light: true },
-  { src: "/matchday/아카이브-핸드볼-파울-청문회.webp", title: "핸드볼 파울 청문회", light: true },
-  { src: "/matchday/아카이브-능력이-다-애매한-히어로.webp", title: "능력이 다 애매한 히어로", soft: true },
-  { src: "/matchday/아카이브-러닝머신-마라톤-우승.webp", title: "러닝머신 마라톤 우승", light: true },
-  { src: "/matchday/아카이브-잃어버린-축구공을-찾아서.webp", title: "잃어버린 축구공을 찾아서", soft: true },
-  { src: "/matchday/아카이브-축구공-모양-심장.webp", title: "축구공 모양 심장", light: true },
-  { src: "/matchday/아카이브-찜질방-VAR-판독실.webp", title: "찜질방 VAR 판독실", soft: true },
-  { src: "/matchday/아카이브-야간-스타디움-세이브.webp", title: "야간 스타디움 세이브", soft: true },
-  { src: "/matchday/아카이브-우승-트로피-세리머니.webp", title: "우승 트로피 세리머니", soft: true },
-  { src: "/matchday/아카이브-사이드라인-돌파.webp", title: "사이드라인 돌파", soft: true },
-  { src: "/matchday/아카이브-새벽-훈련-스프린트.webp", title: "새벽 훈련 스프린트", light: true },
+  { src: "/matchday/아카이브-언더던져.webp", added: "2026-09-16", title: "언더던져", light: true },
+  { src: "/matchday/아카이브-튈프-박사의-VAR-판독.webp", added: "2026-09-16", title: "튈프 박사의 VAR 판독", soft: true },
+  { src: "/matchday/아카이브-PK-VS-화면.webp", added: "2026-09-16", title: "PK VS 화면", soft: true },
+  { src: "/matchday/아카이브-하프타임-작전판.webp", added: "2026-09-16", title: "하프타임 작전판", soft: true },
+  { src: "/matchday/아카이브-스티커-앨범.webp", added: "2026-09-16", title: "스티커 앨범", light: true },
+  { src: "/matchday/아카이브-순교자.webp", added: "2026-09-16", title: "순교자", soft: true },
+  { src: "/matchday/아카이브-누가-찰래.webp", added: "2026-09-16", title: "누가 찰래", light: true },
+  { src: "/matchday/아카이브-골대.webp", added: "2026-09-16", title: "골대", light: true },
+  { src: "/matchday/아카이브-판정-불복.webp", added: "2026-09-16", title: "판정 불복", soft: true },
+  { src: "/matchday/아카이브-물웅덩이.webp", added: "2026-09-16", title: "물웅덩이", light: true },
+  { src: "/matchday/아카이브-말리는-중.webp", added: "2026-09-16", title: "말리는 중", soft: true },
+  { src: "/matchday/아카이브-벽-뒤에-눕는-사람.webp", added: "2026-09-16", title: "벽 뒤에 눕는 사람", soft: true },
+  { src: "/matchday/아카이브-완장의-계승.webp", added: "2026-09-16", title: "완장의 계승", light: true },
+  { src: "/matchday/아카이브-공-어디-갔어.webp", added: "2026-09-16", title: "공 어디 갔어", light: true },
+  { src: "/matchday/아카이브-엇갈림.webp", added: "2026-09-16", title: "엇갈림", light: true },
+  { src: "/matchday/아카이브-스트레칭.webp", added: "2026-09-16", title: "스트레칭", soft: true },
+  { src: "/matchday/아카이브-죄목-오프사이드-상습범.webp", added: "2026-09-16", title: "죄목: 오프사이드 상습범", light: true },
+  { src: "/matchday/아카이브-프레싱-오-드-퍼퓸.webp", added: "2026-09-16", title: "PRESSING — 오 드 퍼퓸", soft: true },
+  { src: "/matchday/아카이브-마법의-축구화.webp", added: "2026-09-16", title: "마법의 축구화", soft: true },
+  { src: "/matchday/아카이브-누가-패스를-안-했나.webp", added: "2026-09-16", title: "누가 패스를 안 했나", soft: true },
+  { src: "/matchday/아카이브-자전거-레이싱팀.webp", added: "2026-09-16", title: "자전거 레이싱팀", soft: true },
+  { src: "/matchday/아카이브-속보-헛발질.webp", added: "2026-09-16", title: "속보: 헛발질", soft: true },
+  { src: "/matchday/아카이브-신부는-축구공-v2.webp", added: "2026-09-16", title: "신부는 축구공", light: true },
+  { src: "/matchday/아카이브-이번-주-특가-미드필더.webp", added: "2026-09-16", title: "이번 주 특가: 미드필더", light: true },
+  { src: "/matchday/아카이브-코너킥-공포.webp", added: "2026-09-16", title: "코너킥 공포", soft: true },
+  { src: "/matchday/아카이브-셰프의-특제-전술.webp", added: "2026-09-16", title: "셰프의 특제 전술", light: true },
+  { src: "/matchday/아카이브-우주정거장-킥오프.webp", added: "2026-09-16", title: "우주정거장 킥오프", soft: true },
+  { src: "/matchday/아카이브-최후의-작전회의.webp", added: "2026-09-16", title: "최후의 작전회의", soft: true },
+  { src: "/matchday/아카이브-새벽-편의점-골키퍼.webp", added: "2026-09-16", title: "새벽 편의점 골키퍼", light: true },
+  { src: "/matchday/아카이브-홍콩-느와르.webp", added: "2026-09-16", title: "홍콩 느와르", soft: true },
+  { src: "/matchday/아카이브-야생의-미드필더.webp", added: "2026-09-16", title: "야생의 미드필더", soft: true },
+  { src: "/matchday/아카이브-조선시대-축국.webp", added: "2026-09-16", title: "조선시대 축국", light: true },
+  { src: "/matchday/아카이브-무단-도로-축구.webp", added: "2026-09-16", title: "무단 도로 축구", light: true },
+  { src: "/matchday/아카이브-벤치-대기.webp", added: "2026-09-16", title: "벤치 대기", light: true },
+  { src: "/matchday/아카이브-미드필드의-상속자들.webp", added: "2026-09-16", title: "미드필드의 상속자들", soft: true },
+  { src: "/matchday/아카이브-골대-지고-정상까지.webp", added: "2026-09-16", title: "골대 지고 정상까지", light: true },
+  { src: "/matchday/아카이브-핸드볼-파울-청문회.webp", added: "2026-09-16", title: "핸드볼 파울 청문회", light: true },
+  { src: "/matchday/아카이브-능력이-다-애매한-히어로.webp", added: "2026-09-16", title: "능력이 다 애매한 히어로", soft: true },
+  { src: "/matchday/아카이브-러닝머신-마라톤-우승.webp", added: "2026-09-16", title: "러닝머신 마라톤 우승", light: true },
+  { src: "/matchday/아카이브-잃어버린-축구공을-찾아서.webp", added: "2026-09-16", title: "잃어버린 축구공을 찾아서", soft: true },
+  { src: "/matchday/아카이브-축구공-모양-심장.webp", added: "2026-09-16", title: "축구공 모양 심장", light: true },
+  { src: "/matchday/아카이브-찜질방-VAR-판독실.webp", added: "2026-09-16", title: "찜질방 VAR 판독실", soft: true },
+  { src: "/matchday/아카이브-야간-스타디움-세이브.webp", added: "2026-09-16", title: "야간 스타디움 세이브", soft: true },
+  { src: "/matchday/아카이브-우승-트로피-세리머니.webp", added: "2026-09-16", title: "우승 트로피 세리머니", soft: true },
+  { src: "/matchday/아카이브-사이드라인-돌파.webp", added: "2026-09-16", title: "사이드라인 돌파", soft: true },
+  { src: "/matchday/아카이브-새벽-훈련-스프린트.webp", added: "2026-09-16", title: "새벽 훈련 스프린트", light: true },
   // 2026 FINAL NIGHT gallery selection
-  { src: "/matchday/gallery-final-night-1.webp", soft: true },
-  { src: "/matchday/gallery-final-night-2.webp", soft: true },
-  { src: "/matchday/gallery-final-night-3.webp", soft: true },
-  { src: "/matchday/gallery-final-night-6.webp", soft: true },
-  { src: "/matchday/gallery-final-night-7.webp", soft: true },
-  { src: "/matchday/gallery-final-night-all.webp", soft: true },
-  { src: "/matchday/gallery-group-archive.webp", soft: true },
-  { src: "/matchday/gallery-coach.webp", soft: true },
-  { src: "/matchday/gallery-hyunjun.webp", soft: true },
+  { src: "/matchday/gallery-final-night-1.webp", added: "2026-08-25", soft: true },
+  { src: "/matchday/gallery-final-night-2.webp", added: "2026-08-25", soft: true },
+  { src: "/matchday/gallery-final-night-3.webp", added: "2026-08-25", soft: true },
+  { src: "/matchday/gallery-final-night-6.webp", added: "2026-08-25", soft: true },
+  { src: "/matchday/gallery-final-night-7.webp", added: "2026-08-25", soft: true },
+  { src: "/matchday/gallery-final-night-all.webp", added: "2026-08-25", soft: true },
+  { src: "/matchday/gallery-group-archive.webp", added: "2026-08-25", soft: true },
+  { src: "/matchday/gallery-coach.webp", added: "2026-08-25", soft: true },
+  { src: "/matchday/gallery-hyunjun.webp", added: "2026-08-25", soft: true },
+  // 26-27 동계 7장 (11/28 경기 카운트다운에 고정 — PINNED_MATCHDAY)
+  { src: "/matchday/winter-group-01-snow-shovel-duo.webp", added: "2026-11-22", title: "눈 치우는 듀오" },
+  { src: "/matchday/winter-group-02-tactics-trio.webp", added: "2026-11-22", title: "전술 회의 트리오", soft: true },
+  { src: "/matchday/winter-group-03-frozen-ball-duo.webp", added: "2026-11-22", title: "얼어붙은 공", soft: true },
+  { src: "/matchday/winter-group-04-ice-fishing-duo.webp", added: "2026-11-22", title: "얼음 낚시", soft: true },
+  { src: "/matchday/winter-reimagined-01-expedition.webp", added: "2026-11-22", title: "동계 원정대", soft: true },
+  { src: "/matchday/winter-reimagined-02-heater.webp", added: "2026-11-22", title: "난로 앞에서", soft: true },
+  { src: "/matchday/winter-reimagined-04-touchline.webp", added: "2026-11-22", title: "터치라인", soft: true },
   // 언더덕 크레스트 26-27 20장 (25-26 15장은 아래 FLAGS_2526 — 지난 경기 결과 카드·갤러리 전용)
-  { src: "/matchday/flag-2627-01.webp" },
-  { src: "/matchday/flag-2627-02.webp" },
-  { src: "/matchday/flag-2627-03.webp" },
-  { src: "/matchday/flag-2627-04.webp" },
-  { src: "/matchday/flag-2627-05.webp" },
-  { src: "/matchday/flag-2627-06.webp" },
-  { src: "/matchday/flag-2627-07.webp" },
-  { src: "/matchday/flag-2627-08.webp" },
-  { src: "/matchday/flag-2627-09.webp" },
-  { src: "/matchday/flag-2627-10.webp" },
-  { src: "/matchday/flag-2627-11.webp" },
-  { src: "/matchday/flag-2627-12.webp" },
-  { src: "/matchday/flag-2627-13.webp" },
-  { src: "/matchday/flag-2627-14.webp" },
-  { src: "/matchday/flag-2627-15.webp" },
-  { src: "/matchday/flag-2627-16.webp" },
-  { src: "/matchday/flag-2627-17.webp" },
-  { src: "/matchday/flag-2627-18.webp" },
-  { src: "/matchday/flag-2627-19.webp" },
-  { src: "/matchday/flag-2627-20.webp" },
+  { src: "/matchday/flag-2627-01.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-02.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-03.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-04.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-05.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-06.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-07.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-08.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-09.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-10.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-11.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-12.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-13.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-14.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-15.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-16.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-17.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-18.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-19.webp", added: "2026-11-22" },
+  { src: "/matchday/flag-2627-20.webp", added: "2026-11-22" },
   // 흑백 + 핑크 한 색 3장
-  { src: "/matchday/mono-5.webp", soft: true },
-  { src: "/matchday/mono-6.webp", soft: true },
-  { src: "/matchday/mono-8.webp", soft: true },
+  { src: "/matchday/mono-5.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/mono-6.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/mono-8.webp", added: "2026-08-05", soft: true },
   // 듀오 2장
-  { src: "/matchday/duo-2.webp", soft: true },
-  { src: "/matchday/duo-3.webp", soft: true },
+  { src: "/matchday/duo-2.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/duo-3.webp", added: "2026-08-07", soft: true },
   // 팀 사진 변환 20장
-  { src: "/matchday/team-1.webp", soft: true },
-  { src: "/matchday/team-3.webp", soft: true },
-  { src: "/matchday/team-4.webp", soft: true },
-  { src: "/matchday/team-7.webp", soft: true },
-  { src: "/matchday/team-13.webp", soft: true },
-  { src: "/matchday/team-14.webp", soft: true },
-  { src: "/matchday/team-16.webp", soft: true },
-  { src: "/matchday/team-18.webp", soft: true },
-  { src: "/matchday/team-20.webp", soft: true },
-  { src: "/matchday/team-22.webp", soft: true },
-  { src: "/matchday/team-25.webp", soft: true },
-  { src: "/matchday/team-29.webp", soft: true },
-  { src: "/matchday/team-30.webp", soft: true },
-  { src: "/matchday/team-32.webp", soft: true },
-  { src: "/matchday/team-33.webp", soft: true },
-  { src: "/matchday/team-34.webp", soft: true },
-  { src: "/matchday/team-35.webp", soft: true },
-  { src: "/matchday/team-36.webp", soft: true },
-  { src: "/matchday/team-37.webp", soft: true },
-  { src: "/matchday/team-38.webp", soft: true },
+  { src: "/matchday/team-1.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-3.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-4.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-7.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-13.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-14.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-16.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-18.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-20.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-22.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-25.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-29.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-30.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-32.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-33.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-34.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/team-35.webp", added: "2026-08-07", soft: true },
+  { src: "/matchday/team-36.webp", added: "2026-08-07", soft: true },
+  { src: "/matchday/team-37.webp", added: "2026-08-07", soft: true },
+  { src: "/matchday/team-38.webp", added: "2026-08-07", soft: true },
   // 종이공예 크림 배경. 밝아서 카드가 어두운 글씨로 뒤집는다.
-  { src: "/matchday/team-39.webp", light: true },
+  { src: "/matchday/team-39.webp", added: "2026-08-07", light: true },
   // 위트 5장
-  { src: "/matchday/fun-11.webp", soft: true },
-  { src: "/matchday/fun-16.webp", soft: true },
-  { src: "/matchday/fun-18.webp", soft: true },
+  { src: "/matchday/fun-11.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/fun-16.webp", added: "2026-08-05", soft: true },
+  { src: "/matchday/fun-18.webp", added: "2026-08-05", soft: true },
   // 콜라주. 바탕이 밝은 편이라 기본 막을 그대로 쓴다.
-  { src: "/matchday/fun-19.webp" },
-  { src: "/matchday/fun-20.webp", light: true },
+  { src: "/matchday/fun-19.webp", added: "2026-08-07" },
+  { src: "/matchday/fun-20.webp", added: "2026-08-07", light: true },
   // 단독 인물 3장(제록스 시리즈와 별개 화풍)
-  { src: "/matchday/solo-1.webp", soft: true },
-  { src: "/matchday/solo-2.webp", soft: true },
+  { src: "/matchday/solo-1.webp", added: "2026-08-07", soft: true },
+  { src: "/matchday/solo-2.webp", added: "2026-08-07", soft: true },
   // 실크스크린 GK. 가운데가 크림색이라 기본 막을 그대로 쓴다.
-  { src: "/matchday/solo-3.webp" },
+  { src: "/matchday/solo-3.webp", added: "2026-08-07" },
   // 핑크 만다라 단독 선수. 원본부터 어두워 얇은 막을 쓴다.
-  { src: "/matchday/solo-4.webp", soft: true },
+  { src: "/matchday/solo-4.webp", added: "2026-08-08", soft: true },
   // 핑크 라인 스튜디오 단독 선수.
-  { src: "/matchday/solo-5.webp", soft: true },
+  { src: "/matchday/solo-5.webp", added: "2026-08-08", soft: true },
   // 하트 단체사진도 인물과 종이 질감을 살리려고 얇은 막을 쓴다.
-  { src: "/matchday/team-40.webp", soft: true },
+  { src: "/matchday/team-40.webp", added: "2026-08-08", soft: true },
   // 제록스 단독 선수 포스터 8장. 원본부터 어두워서 전부 soft.
   // (xerox-7은 강환국이었는데 뺐다. 번호는 나머지를 건드리지 않으려고 비워 둔다.)
   // 만드는 법과 규칙은 HANDOFF-matchday-xerox-portraits.md 에 있다.
-  { src: "/matchday/xerox-1.webp", soft: true }, // 시리즈 기준(test36)
-  { src: "/matchday/xerox-2.webp", soft: true }, // 황동주
-  { src: "/matchday/xerox-3.webp", soft: true }, // 박상민
-  { src: "/matchday/xerox-4.webp", soft: true }, // 김준수
-  { src: "/matchday/xerox-6.webp", soft: true }, // 강창훈
-  { src: "/matchday/xerox-8.webp", soft: true }, // 금상덕
-  { src: "/matchday/xerox-9.webp", soft: true }, // 김한별
-  { src: "/matchday/xerox-10.webp", soft: true }, // 문대영
+  { src: "/matchday/xerox-1.webp", added: "2026-08-07", soft: true }, // 시리즈 기준(test36)
+  { src: "/matchday/xerox-2.webp", added: "2026-08-07", soft: true }, // 황동주
+  { src: "/matchday/xerox-3.webp", added: "2026-08-07", soft: true }, // 박상민
+  { src: "/matchday/xerox-4.webp", added: "2026-08-07", soft: true }, // 김준수
+  { src: "/matchday/xerox-6.webp", added: "2026-08-07", soft: true }, // 강창훈
+  { src: "/matchday/xerox-8.webp", added: "2026-08-07", soft: true }, // 금상덕
+  { src: "/matchday/xerox-9.webp", added: "2026-08-07", soft: true }, // 김한별
+  { src: "/matchday/xerox-10.webp", added: "2026-08-07", soft: true }, // 문대영
   // 다크 시네마틱 단독 선수 7장. 검은 경기장 배경이라 전부 soft.
-  { src: "/matchday/dark-1.webp", soft: true }, // 강환국
-  { src: "/matchday/dark-2.webp", soft: true }, // 공도하
-  { src: "/matchday/dark-3.webp", soft: true }, // 김광민
-  { src: "/matchday/dark-4.webp", soft: true }, // 김주성
-  { src: "/matchday/dark-5.webp", soft: true }, // 원석희
-  { src: "/matchday/dark-6.webp", soft: true }, // 이재욱
-  { src: "/matchday/dark-7.webp", soft: true }, // 임재준
+  { src: "/matchday/dark-1.webp", added: "2026-08-10", soft: true }, // 강환국
+  { src: "/matchday/dark-2.webp", added: "2026-08-10", soft: true }, // 공도하
+  { src: "/matchday/dark-3.webp", added: "2026-08-10", soft: true }, // 김광민
+  { src: "/matchday/dark-4.webp", added: "2026-08-10", soft: true }, // 김주성
+  { src: "/matchday/dark-5.webp", added: "2026-08-10", soft: true }, // 원석희
+  { src: "/matchday/dark-6.webp", added: "2026-08-10", soft: true }, // 이재욱
+  { src: "/matchday/dark-7.webp", added: "2026-08-10", soft: true }, // 임재준
 ];
 
 /**
@@ -184,21 +194,21 @@ export const MATCHDAY_ART: readonly MatchdayArt[] = [
  * 원본 백업: archive/matchday/flags-2526/
  */
 export const FLAGS_2526: readonly MatchdayArt[] = [
-  { src: "/matchday/flag-1.webp" },
-  { src: "/matchday/flag-2.webp" },
-  { src: "/matchday/flag-3.webp" },
-  { src: "/matchday/flag-4.webp" },
-  { src: "/matchday/flag-5.webp" },
-  { src: "/matchday/flag-6.webp", light: true },
-  { src: "/matchday/flag-7.webp" },
-  { src: "/matchday/flag-8.webp" },
-  { src: "/matchday/flag-9.webp" },
-  { src: "/matchday/flag-10.webp" },
-  { src: "/matchday/flag-11.webp" },
-  { src: "/matchday/flag-12.webp" },
-  { src: "/matchday/flag-13.webp" },
-  { src: "/matchday/flag-14.webp" },
-  { src: "/matchday/flag-15.webp" },
+  { src: "/matchday/flag-1.webp", added: "2026-08-05" },
+  { src: "/matchday/flag-2.webp", added: "2026-08-05" },
+  { src: "/matchday/flag-3.webp", added: "2026-08-05" },
+  { src: "/matchday/flag-4.webp", added: "2026-08-05" },
+  { src: "/matchday/flag-5.webp", added: "2026-08-05" },
+  { src: "/matchday/flag-6.webp", added: "2026-08-05", light: true },
+  { src: "/matchday/flag-7.webp", added: "2026-08-05" },
+  { src: "/matchday/flag-8.webp", added: "2026-08-05" },
+  { src: "/matchday/flag-9.webp", added: "2026-08-05" },
+  { src: "/matchday/flag-10.webp", added: "2026-08-05" },
+  { src: "/matchday/flag-11.webp", added: "2026-08-05" },
+  { src: "/matchday/flag-12.webp", added: "2026-08-05" },
+  { src: "/matchday/flag-13.webp", added: "2026-08-05" },
+  { src: "/matchday/flag-14.webp", added: "2026-08-05" },
+  { src: "/matchday/flag-15.webp", added: "2026-08-05" },
 ];
 
 /**
@@ -319,6 +329,31 @@ export function matchdayArt(matchId: number, dDay: number): MatchdayArt | null {
   const cycle = Math.floor((matchId * SLOTS_PER_MATCH - (SLOTS_PER_MATCH - 1)) / n);
   const order = shuffledOrder(Math.imul(cycle + DDAY_SALT * 7919, 0x9e3779b1));
   return MATCHDAY_ART[order[((pos % n) + n) % n]];
+}
+
+/**
+ * 특정 경기의 카운트다운 그림을 손으로 고정한다. matchId → { D 값: src }.
+ * 적힌 칸만 바뀌고 나머지 날(그리고 결과 입력 전 D 음수)은 평소 로테이션이다.
+ * 로테이션(matchdayArt) 자체는 건드리지 않는다 — 순열 성질 테스트가 그대로 유지되게.
+ * 일회성이라 경기가 끝나면 지워도 된다.
+ */
+const PINNED_MATCHDAY: Record<number, Record<number, string>> = {
+  // 2026-11-28 — 동계 유니폼 첫 매치데이. D-6(11/22)부터 하루 한 장.
+  40: {
+    6: "/matchday/winter-group-01-snow-shovel-duo.webp",
+    5: "/matchday/winter-group-02-tactics-trio.webp",
+    4: "/matchday/winter-group-03-frozen-ball-duo.webp",
+    3: "/matchday/winter-group-04-ice-fishing-duo.webp",
+    2: "/matchday/winter-reimagined-02-heater.webp",
+    1: "/matchday/winter-reimagined-01-expedition.webp",
+    0: "/matchday/winter-reimagined-04-touchline.webp",
+  },
+};
+
+/** 예정 경기 카드의 배경 — 고정해 둔 그림이 있으면 그것, 없으면 로테이션. */
+export function upcomingMatchArt(matchId: number, dDay: number): MatchdayArt | null {
+  const src = PINNED_MATCHDAY[matchId]?.[dDay];
+  return (src && MATCHDAY_ART.find((a) => a.src === src)) || matchdayArt(matchId, dDay);
 }
 
 /**

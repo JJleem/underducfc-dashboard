@@ -46,8 +46,8 @@ import {
   ART_SCRIM_LIGHT,
   ART_VEIL,
   matchCasualArt,
-  matchdayArt,
   matchResultArt,
+  upcomingMatchArt,
 } from "../../lib/matchday-art";
 import type { Storyline } from "../../lib/storylines";
 import Storylines from "./Storylines";
@@ -250,7 +250,7 @@ export default function MatchFeed({
   // 날짜는 지났는데 아직 결과를 안 넣은 경기. 그냥 두면 "D--3" 이 뜬다.
   // 관리자가 결과를 채우기 전까지 이 상태로 남으므로 문구를 따로 준다.
   const awaitingResult = dDay !== null && dDay < 0;
-  const art = dDay === null ? null : matchdayArt(match.id, dDay);
+  const art = dDay === null ? null : upcomingMatchArt(match.id, dDay);
   // 자체전·풋살·야유회. 승패도 스코어도 없고 MOM 투표도 열지 않는다.
   const casual = isCasualMatch(match.result, match.type, match.opponent);
   const kind = casualKind(match.result, match.type);

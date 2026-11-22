@@ -45,3 +45,15 @@ test("같은 경기·같은 날이면 항상 같은 그림이다 — 서버와 �
   assert.equal(matchResultArt(3).src, matchResultArt(3).src);
   assert.equal(matchCasualArt(3).src, matchCasualArt(3).src);
 });
+
+test("고정해 둔 경기·날짜는 그 그림, 나머지는 평소 로테이션", async () => {
+  const { upcomingMatchArt } = await import("../app/lib/matchday-art.ts");
+  assert.equal(upcomingMatchArt(40, 0).src, "/matchday/winter-reimagined-04-touchline.webp");
+  assert.equal(upcomingMatchArt(40, 6).src, "/matchday/winter-group-01-snow-shovel-duo.webp");
+  // 적히지 않은 날·다른 경기는 로테이션과 같다
+  assert.equal(upcomingMatchArt(40, 7).src, matchdayArt(40, 7).src);
+  assert.equal(upcomingMatchArt(41, 3).src, matchdayArt(41, 3).src);
+  // 고정 그림 7장이 전부 서로 다르다
+  const pinned = [0, 1, 2, 3, 4, 5, 6].map((d) => upcomingMatchArt(40, d).src);
+  assert.equal(new Set(pinned).size, 7);
+});
