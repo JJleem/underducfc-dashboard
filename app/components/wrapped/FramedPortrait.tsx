@@ -21,7 +21,8 @@ export default function FramedPortrait({
   accent: string;
   width?: number;
 }) {
-  const face = playerFaceOnSrc(name);
+  // 지난 시즌 돌아보기라 그 시즌 유니폼(하계)으로 고정한다.
+  const face = playerFaceOnSrc(name, "summer");
   const height = Math.round(width * 1.5); // 프레임 2:3
 
   return (

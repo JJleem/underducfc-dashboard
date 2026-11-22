@@ -18,6 +18,9 @@ import Image from "next/image";
 import "./globals.css";
 import Link from "next/link";
 import LoginGate from "./components/LoginGate";
+import PlayerKitPrefs from "./components/PlayerKitPrefs";
+import { getRosterRows } from "./lib/backend";
+import { kitPrefsFromRoster } from "./lib/player-faceons";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://underduckfc-dashboard.vercel.app"),
@@ -106,6 +109,8 @@ export default async function RootLayout({
   const rootAccent = seasonAccent(currentSeasonId());
   const session = await auth();
   const signedIn = !!session?.user;
+  // 선수 사진 유니폼 선택값. 못 읽으면 기본 규칙(동계 → 하계)으로 그린다.
+  const kitPrefs = kitPrefsFromRoster(await getRosterRows().catch((): string[][] => []));
 
   return (
     // suppressHydrationWarning은 테마 깜빡임 방지용 필수 속성입니다
@@ -131,6 +136,7 @@ export default async function RootLayout({
         ))}
       </head>
       <body className="antialiased bg-zinc-100 dark:bg-black">
+        <PlayerKitPrefs prefs={kitPrefs} />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

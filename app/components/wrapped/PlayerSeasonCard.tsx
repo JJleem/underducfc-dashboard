@@ -37,7 +37,8 @@ const PlayerSeasonCard = forwardRef<
   { name, no, positions = [], seasonLabel, stats, accent, width = 300 },
   ref,
 ) {
-  const face = playerFaceOnSrc(name);
+  // 지난 시즌 돌아보기라 그 시즌 유니폼(하계)으로 고정한다.
+  const face = playerFaceOnSrc(name, "summer");
   const height = Math.round(width * 1.5); // 프레임이 2:3 이라 그대로 맞춘다
   // 시즌 라벨("25-26")은 뒷자리만 팀 색으로 — 헤더 시즌 표기와 같은 문법
   const [labelHead, labelTail] = seasonLabel.split("-");

@@ -198,8 +198,12 @@ The app is **mobile-first** (max-w-md container). Dark mode is supported via `ne
   (`react-dnd` 가 package.json 에 있지만 import 하는 곳은 없습니다).
 - `app/components/ui/` — Shadcn 생성물 6개. 수정하지 마세요.
 
-**선수 사진:** `app/lib/player-faceons.ts` 가 이름 26개를 하드코딩한 Set 을 들고 있고
-`/players/<이름>.webp` 만 내보냅니다. `public/players/*.png` 는 화면에 안 쓰이고
+**선수 사진:** `app/lib/player-faceons.ts` 가 유니폼별 이름 목록(`SUMMER` · `WINTER`)을 하드코딩합니다.
+하계 `/players/<이름>.webp`, 동계 `/players/winter/<이름>.webp`. 파일만 넣으면 안 뜨고 목록에도 추가해야 합니다.
+어느 사진을 쓸지는 본인이 프로필에서 고른 값(`roster.kit`, `KitPicker`) → 없으면 동계 → 하계 순입니다.
+고른 값은 레이아웃의 `PlayerKitPrefs` 가 내려 줘서 `playerFaceOnSrc(name)` 호출부는 그대로입니다 —
+**서버 컴포넌트는 그 값을 못 보니** `SeasonLeaders` 처럼 맵을 직접 받아 두 번째 인자로 넘깁니다.
+지난 시즌 래핑 카드는 `"summer"` 로 고정합니다. `public/players/*.png` 는 화면에 안 쓰이고
 `scripts/gen-*.mts` 의 원본 참고 사진입니다. (`public/players/README.md` 의 "등번호·jpg 도
 된다"는 설명은 지금 코드와 맞지 않습니다.)
 

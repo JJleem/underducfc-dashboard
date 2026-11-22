@@ -38,6 +38,8 @@ import SeasonSelector from "../../components/SeasonSelector";
 import { Sparkles, ChevronRight } from "lucide-react";
 import ProfileTabs from "../../components/ProfileTabs";
 import PrefPosEditor from "../../components/PrefPosEditor";
+import KitPicker from "../../components/KitPicker";
+import { playerKits, type Kit } from "../../lib/player-faceons";
 import PlayerAvatar from "../../components/PlayerAvatar";
 import SeasonEmpty from "../../components/SeasonEmpty";
 import PlayerProfileBackButton from "../../components/PlayerProfileBackButton";
@@ -104,6 +106,13 @@ export default async function PlayerPage({
   const registeredPos = rosterRow?.[2]?.trim().toUpperCase() || "-";
   const role = rosterRow?.[5]?.trim().toUpperCase();
   const prefPos = (rosterRow?.[7] || "").split(",").map((s) => s.trim()).filter(Boolean);
+  // 선수 사진 유니폼. 고른 적 없으면 지금 보이는 것(동계가 있으면 동계)을 선택 상태로 둔다.
+  const kits = playerKits(name);
+  const savedKit = (rosterRow?.[8] || "").trim();
+  const currentKit: Kit =
+    (savedKit === "summer" || savedKit === "winter") && kits.includes(savedKit)
+      ? savedKit
+      : kits.includes("winter") ? "winter" : "summer";
 
   // 스탯
   const statRow = rawStats.slice(1).find((r) => (r[1] || "").trim() === name);
@@ -440,6 +449,14 @@ export default async function PlayerPage({
               <div className="min-w-0 flex-1">
                 <PrefPosEditor initial={prefPos} canEdit={canEdit} />
               </div>
+            </div>
+          )}
+
+          {/* 3단: 사진 유니폼 — 본인 + 하계·동계 사진이 둘 다 있을 때만 */}
+          {rosterRow && canEdit && kits.length > 1 && (
+            <div className="relative mt-2 flex items-center gap-1.5">
+              <span className="shrink-0 text-[11px] font-bold text-gray-400 dark:text-white/55">사진</span>
+              <KitPicker initial={currentKit} />
             </div>
           )}
         </section>

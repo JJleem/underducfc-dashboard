@@ -39,7 +39,7 @@ const SKELETON_PLAYERS = [
 function lineupFaceOnSources(lineups: LineupData[]) {
   return Array.from(new Set(
     lineups.flatMap((item) =>
-      item.players.map(playerFaceOnSrc).filter((src): src is string => !!src),
+      item.players.map((name) => playerFaceOnSrc(name)).filter((src): src is string => !!src),
     ),
   ));
 }
