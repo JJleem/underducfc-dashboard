@@ -62,6 +62,8 @@ import CommentSheet from "./CommentSheet";
 import { FEED_SUMMARY_ROW, FeedSummaryEnd, FeedSummaryLabel } from "./FeedSummary";
 import FeedPinchPhoto from "./FeedPinchPhoto";
 import AppToast from "../AppToast";
+import ResultCard2627 from "./ResultCard2627";
+import { seasonOf, SEASONS } from "../../lib/seasons";
 
 // 라인업 뷰어는 무겁다(html-to-image·포메이션·발표 카드). 그려질 때만 내려받는다.
 const LineupViewer = dynamic(() => import("../LineupViewer"));
@@ -505,7 +507,22 @@ export default function MatchFeed({
         </div>
   );
 
-  const resultCard = casual ? casualCard : scoreCard;
+  // 26-27 부터는 바이에른식 나이트 카드. 지난 시즌 경기는 위의 예전 카드 그대로.
+  const newSeasonCard = (seasonOf(match.date) ?? SEASONS[0].id) !== SEASONS[0].id;
+  const resultCard = casual
+    ? casualCard
+    : newSeasonCard
+      ? (
+          <ResultCard2627
+            match={match}
+            art={resultArt}
+            scored={scored}
+            score={(children, className) => (
+              <ResultReplay match={match} className={className}>{children}</ResultReplay>
+            )}
+          />
+        )
+      : scoreCard;
 
   return (
     <article className="pb-8">

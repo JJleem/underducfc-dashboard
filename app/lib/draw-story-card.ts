@@ -75,6 +75,14 @@ export async function drawStoryCanvas(
   match: MatchData,
   format: CardFormat = "story"
 ): Promise<HTMLCanvasElement> {
+  // 26-27 부터 경기 결과는 피드의 새 카드(ResultCard2627)와 같은 그림. 자체전·지난 시즌은 아래 그대로.
+  if (
+    !isCasualMatch(match.result, match.type, match.opponent) &&
+    (seasonOf(match.date) ?? SEASONS[0].id) !== SEASONS[0].id
+  ) {
+    return (await import("./draw-result-card-2627")).drawResultCard2627(match, format);
+  }
+
   const L = LAYOUTS[format];
   const W = 1080, H = L.H;
   const canvas = document.createElement("canvas");

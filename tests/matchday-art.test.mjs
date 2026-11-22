@@ -57,3 +57,10 @@ test("고정해 둔 경기·날짜는 그 그림, 나머지는 평소 로테이�
   const pinned = [0, 1, 2, 3, 4, 5, 6].map((d) => upcomingMatchArt(40, d).src);
   assert.equal(new Set(pinned).size, 7);
 });
+
+test("26-27 결과 카드 깃발은 20경기 동안 안 겹친다", () => {
+  const srcs = Array.from({ length: 20 }, (_, i) => matchResultArt(36 + i).src);
+  assert.equal(new Set(srcs).size, 20);
+  assert.ok(srcs.every((s) => s.includes("/flag-2627-")));
+  assert.equal(matchResultArt(56).src, matchResultArt(36).src); // 21번째에 한 바퀴
+});

@@ -206,6 +206,10 @@ The app is **mobile-first** (max-w-md container). Dark mode is supported via `ne
 `scripts/gen-*.mts` 의 원본 참고 사진입니다. (`public/players/README.md` 의 "등번호·jpg 도
 된다"는 설명은 지금 코드와 맞지 않습니다.)
 
+**경기 결과 카드:** 26-27 경기부터 피드 카드는 `ResultCard2627`, 공유 이미지는 `draw-result-card-2627.ts`
+(바이에른식 나이트 · 득점자 옆 공 아이콘 = 골 수 + ASSIST · MOM 얼굴 칸). 둘이 `result-card.ts` 의 같은 계산을 씁니다.
+25-26 경기와 자체전은 예전 카드 그대로입니다. 26-27 결과 배경 깃발은 20경기 동안 겹치지 않게 순서대로 돕니다.
+
 Player ranking score = `goals + assists + mom + apps` (descending), ties broken by Korean name alphabetical order.
 
 # CLAUDE.md

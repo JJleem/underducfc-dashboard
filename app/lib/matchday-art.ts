@@ -375,10 +375,19 @@ const RESULT_ART_2526 = FLAGS_2526.filter((a) => !a.light);
  */
 export function matchResultArt(matchId: number): MatchdayArt | null {
   // 25-26 경기는 그 시즌 깃발에서 — 26-27 깃발로 바꿔도 지난 경기 그림은 그대로다.
-  const pool = matchId < FIRST_2627_MATCH_ID ? RESULT_ART_2526 : RESULT_ART;
-  if (pool.length === 0) return null;
-  return pool[hash(matchId, 0x9e37) % pool.length];
+  // (25-26 은 해시로 뽑아 가끔 겹친다 — 이미 박제된 기록이라 건드리지 않는다)
+  if (matchId < FIRST_2627_MATCH_ID) {
+    if (RESULT_ART_2526.length === 0) return null;
+    return RESULT_ART_2526[hash(matchId, 0x9e37) % RESULT_ART_2526.length];
+  }
+  // 26-27 은 섞어 둔 순서대로 한 장씩 넘긴다 — 20경기 동안 같은 깃발이 두 번 안 나온다.
+  if (RESULT_ORDER_2627.length === 0) return null;
+  return RESULT_ORDER_2627[(matchId - FIRST_2627_MATCH_ID) % RESULT_ORDER_2627.length];
 }
+const RESULT_ORDER_2627 = RESULT_ART
+  .map((a, i) => ({ a, k: hash(i, 0x51ed) }))
+  .sort((x, y) => x.k - y.k)
+  .map((x) => x.a);
 
 /**
  * 자체전·풋살·야유회 카드의 배경. 팀·펀 계열만 쓴다.
