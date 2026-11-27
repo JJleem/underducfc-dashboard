@@ -476,18 +476,20 @@ export default function LineupEditor({
     });
   });
 
-  // 빈 쿼터에서 직전 쿼터를 그대로 가져온다. 대부분 몇 명만 바꾸면 되기 때문이다.
-  const prevQuarter: string | undefined = QUARTERS[QUARTERS.indexOf(quarter) - 1];
-  const prevState = prevQuarter ? viewOfQuarter(prevQuarter) : null;
-  const canCopyPrev = !hasCurrentData && !!prevState?.assignments.some(Boolean);
-  const copyPrevQuarter = () => {
-    if (!prevState) return;
-    setFormation(prevState.formation);
-    setPositions(prevState.positions);
-    setTactic(prevState.tactic);
-    setInstructions(prevState.instructions);
-    setAssignments(prevState.assignments);
-    setSubs(prevState.subs);
+  // 빈 쿼터에서 다른 쿼터를 골라 그대로 가져온다. 대부분 몇 명만 바꾸면 되기 때문이다.
+  // 직전 쿼터만 되던 걸 고를 수 있게 했다 — 1Q 멤버를 3Q 에 다시 쓰는 경우가 많다.
+  const copySources = hasCurrentData
+    ? []
+    : QUARTERS.filter((q) => q !== quarter && !!viewOfQuarter(q)?.assignments.some(Boolean));
+  const copyQuarter = (source: string) => {
+    const src = viewOfQuarter(source);
+    if (!src) return;
+    setFormation(src.formation);
+    setPositions(src.positions);
+    setTactic(src.tactic);
+    setInstructions(src.instructions);
+    setAssignments(src.assignments);
+    setSubs(src.subs);
     setActiveSlot(null);
     setPickedPlayer(null);
   };
@@ -722,14 +724,23 @@ export default function LineupEditor({
           })}
         </div>
 
-        {canCopyPrev && (
-          <button
-            onClick={copyPrevQuarter}
-            className="flex items-center gap-1.5 rounded-xl border border-[var(--ud-primary)]/40 bg-[var(--ud-primary)]/10 px-3 py-2 text-[12px] font-black text-[var(--ud-primary-strong)] active:opacity-70 dark:text-[var(--ud-primary)]"
-          >
-            <Copy className="h-4 w-4" />
-            {prevQuarter} 라인업 그대로 가져오기
-          </button>
+        {copySources.length > 0 && (
+          // 쿼터 탭과 똑같이 생기면 탭인 줄 알고 누른다 — 박스로 묶고 칩은 작게(쿼터 이동 줄과 같은 크기).
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--ud-primary)]/40 bg-[var(--ud-primary)]/10 px-3 py-2">
+            <span className="flex items-center gap-1.5 text-[11px] font-black text-[var(--ud-primary-strong)] dark:text-[var(--ud-primary)]">
+              <Copy className="h-4 w-4" />
+              라인업 가져올 쿼터:
+            </span>
+            {copySources.map((q) => (
+              <button
+                key={q}
+                onClick={() => copyQuarter(q)}
+                className="rounded-xl border border-[var(--ud-primary)]/50 bg-white px-3 py-1.5 text-[11px] font-black text-[var(--ud-primary-strong)] transition active:opacity-70 dark:bg-white/10 dark:text-[var(--ud-primary)]"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
         )}
 
         {/* 쿼터 이동 */}
