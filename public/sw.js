@@ -59,15 +59,51 @@ function isImmutableAsset(url) {
   return url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/fonts/');
 }
 
+// 앱을 켰을 때 서버가 이 시간 안에 답하지 않으면 저장해 둔 홈을 그냥 먼저 띄운다.
+// (서버 콜드스타트·폰이 막 깨어나 네트워크가 덜 붙은 상태에서 기다리지 않게)
+const HOME_FAST_MS = 800;
+// 문서 요청의 최대 대기. iOS 는 백그라운드에서 돌아온 직후 fetch 가 실패도 성공도 안 하고
+// 멈춰 있을 때가 있다. 제한이 없으면 HTML 이 영영 안 와서 흰 화면에 갇힌다.
+const NAV_TIMEOUT_MS = 10000;
+// "서버 확인 없이 저장본을 띄웠다" 표시. 아래 homeResponse 의 ⚠️ 참고.
+const BLIND_KEY = '/__ud-blind';
+const BLIND_COOLDOWN_MS = 60000;
+
+const TIMEOUT = Symbol('timeout');
+const FAILED = Symbol('failed');
+const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(TIMEOUT), ms));
+
+function navFetch(event) {
+  return (async () => (await event.preloadResponse) ?? (await fetch(event.request)))();
+}
+
+async function recentlyBlind(cache) {
+  const mark = await cache.match(BLIND_KEY);
+  if (!mark) return false;
+  return Date.now() - Number(await mark.text()) < BLIND_COOLDOWN_MS;
+}
+
+/** 늦게 온 홈 응답으로 저장본만 갱신한다(화면에는 이미 저장본이 나갔다). */
+async function saveHome(cache, res) {
+  if (!res.ok || res.redirected) return;
+  if (!res.headers.get('x-ud-build')) {
+    await cache.delete('/');
+    return;
+  }
+  await cache.put('/', res);
+}
+
 /**
- * 홈: 서버가 "저장본과 같은 빌드"라고 확인해 준 경우에만 저장본을 내준다.
+ * 홈: 저장본을 최대한 빨리 띄운다.
  *
  * proxy.ts 가 로그인된 응답에 x-ud-build(배포 id)를 붙인다. 응답 헤더만 오면 비교할 수 있으므로
  * 본문(백엔드 조회·렌더)을 기다리지 않고 저장본을 띄울 수 있다. 화면 갱신은 HomeFreshness 가 한다.
  *
- * ⚠️ 옛 빌드의 저장본은 절대 내주면 안 된다. 그 화면이 최신 데이터를 받는 순간 Next 가 빌드 불일치를
- *    감지해 페이지를 통째로 새로고침하고, 새로고침에도 저장본이 나가면 그게 반복돼 스크롤이 계속
- *    맨 위로 튄다(실제로 겪었다). 그래서 서버 확인 없이 저장본을 쓰는 건 오프라인·서버 오류일 때뿐이다.
+ * 서버가 HOME_FAST_MS 안에 답하지 않으면 확인 없이 저장본을 띄운다.
+ * ⚠️ 그 저장본이 옛 빌드면 HomeFreshness 가 최신 데이터를 받는 순간 Next 가 빌드 불일치를 감지해
+ *    페이지를 통째로 새로고침한다. 그 새로고침에도 저장본이 나가면 무한 반복된다(실제로 겪었다).
+ *    그래서 확인 없이 띄울 때마다 BLIND_KEY 에 시각을 남기고, BLIND_COOLDOWN_MS 안의 다음 요청은
+ *    서버 답을 기다린다 → 배포 직후엔 새로고침이 많아야 한 번.
  *
  * 헤더가 없으면(로그인 화면) 저장본을 지운다. 예전 서비스워커가 보던 x-ud-authed 를 더 보내지 않는
  * 것도 같은 이유다 — 아직 갱신 안 된 폰의 옛 서비스워커가 저장본을 스스로 지우게 된다.
@@ -75,13 +111,24 @@ function isImmutableAsset(url) {
 async function homeResponse(event) {
   const cache = await caches.open(HOME_CACHE);
   const hit = await cache.match('/');
-  let res;
-  try {
-    res = (await event.preloadResponse) ?? (await fetch(event.request));
-  } catch (err) {
-    if (hit) return hit;
-    throw err;
+  const network = navFetch(event);
+  const canBlind = !!hit && !(await recentlyBlind(cache));
+
+  const first = await Promise.race([
+    network.catch(() => FAILED),
+    wait(canBlind ? HOME_FAST_MS : NAV_TIMEOUT_MS),
+  ]);
+
+  if (first === TIMEOUT || first === FAILED) {
+    if (!hit) throw new Error('home unavailable');
+    if (first === TIMEOUT) {
+      await cache.put(BLIND_KEY, new Response(String(Date.now()))).catch(() => {});
+      event.waitUntil(network.then((res) => saveHome(cache, res)).catch(() => {}));
+    }
+    return hit;
   }
+
+  const res = first;
   if (!res.ok || res.redirected) return res.status >= 500 && hit ? hit : res;
 
   const build = res.headers.get('x-ud-build');
@@ -155,7 +202,12 @@ self.addEventListener('fetch', (event) => {
     }
 
     event.respondWith(
-      (async () => (await event.preloadResponse) ?? (await fetch(request)))().catch(offlinePage)
+      Promise.race([navFetch(event), wait(NAV_TIMEOUT_MS)])
+        .then((res) => {
+          if (res === TIMEOUT) throw new Error('navigation timeout');
+          return res;
+        })
+        .catch(offlinePage)
     );
     return;
   }
