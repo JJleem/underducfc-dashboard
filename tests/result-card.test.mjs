@@ -15,6 +15,14 @@ test("득점자별로 묶고 그 골의 도움을 짝지어 모은다", () => {
   ]);
 });
 
+test("같은 사람이 한 득점자에게 도움을 여러 번 주면 횟수를 붙인다", () => {
+  // 11/28 서강 fc — 게스트 3골 중 2골이 소윤섭 도움
+  assert.deepEqual(scorerLines("게스트,게스트,게스트,신태민", "소윤섭,,소윤섭,"), [
+    { name: "신태민", muted: false, goals: 1, assists: [] },
+    { name: "게스트", muted: true, goals: 3, assists: ["소윤섭 ×2"] },
+  ]);
+});
+
 test("빈 기록", () => {
   assert.deepEqual(scorerLines("", ""), []);
 });

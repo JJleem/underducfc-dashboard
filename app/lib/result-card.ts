@@ -6,7 +6,7 @@ export interface ScorerLine {
   /** 상대 자책골 · 게스트 — 흐리게 그리고 맨 뒤로 보낸다. */
   muted: boolean;
   goals: number;
-  /** 이 득점자에게 도움을 준 사람들(겹치면 한 번). */
+  /** 이 득점자에게 도움을 준 사람들. 두 번 이상이면 "소윤섭 ×2" 처럼 횟수를 붙인다. */
   assists: string[];
 }
 
@@ -20,21 +20,26 @@ const MUTED = /^(OG|자책골|게스트)$/i;
 export function scorerLines(goals: string, assists: string): ScorerLine[] {
   const g = (goals || "").split(",").map((s) => s.trim());
   const a = (assists || "").split(",").map((s) => s.trim());
-  const map = new Map<string, ScorerLine & { first: number }>();
+  const map = new Map<string, ScorerLine & { first: number; helpers: Map<string, number> }>();
   g.forEach((raw, i) => {
     if (!raw) return;
     const name = OWN_GOAL.test(raw) ? "상대 자책골" : raw;
     let line = map.get(name);
     if (!line) {
-      line = { name, muted: MUTED.test(raw), goals: 0, assists: [], first: i };
+      line = { name, muted: MUTED.test(raw), goals: 0, assists: [], first: i, helpers: new Map() };
       map.set(name, line);
     }
     line.goals++;
-    if (a[i] && !line.assists.includes(a[i])) line.assists.push(a[i]);
+    if (a[i]) line.helpers.set(a[i], (line.helpers.get(a[i]) ?? 0) + 1);
   });
   return [...map.values()]
     .sort((x, y) => Number(x.muted) - Number(y.muted) || y.goals - x.goals || x.first - y.first)
-    .map(({ first: _first, ...rest }) => rest);
+    .map(({ name, muted, goals: n, helpers }) => ({
+      name,
+      muted,
+      goals: n,
+      assists: [...helpers].map(([h, c]) => (c > 1 ? `${h} ×${c}` : h)),
+    }));
 }
 
 export interface MomSlot {
